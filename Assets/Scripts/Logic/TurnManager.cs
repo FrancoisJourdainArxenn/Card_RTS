@@ -68,8 +68,6 @@ public class TurnManager : MonoBehaviour { //Presque tout à refaire dans ce scr
         {
             p.LoadCharacterInfoFromAsset();
             p.TransmitInfoAboutPlayerToVisual();
-
-
         }
 
             int rnd = Random.Range(0,2);  // 2 is exclusive boundary

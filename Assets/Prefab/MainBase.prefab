@@ -47,7 +47,7 @@ GameObject:
   - component: {fileID: 811344252162243223}
   m_Layer: 0
   m_Name: PlayerZone
-  m_TagString: Untagged
+  m_TagString: LowPlayer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -279,7 +279,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 704926903746496689}
-  - component: {fileID: 1027859213916877895}
   m_Layer: 0
   m_Name: BasePosition
   m_TagString: Untagged
@@ -303,26 +302,6 @@ Transform:
   - {fileID: 7788373333458774523}
   m_Father: {fileID: 3902872553492800617}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1027859213916877895
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 494712117747211983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e79fae826afd845409621ad2b4c5143c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
-  player: {fileID: 0}
-  baseManager: {fileID: 0}
-  mainRessourceText: {fileID: 0}
-  secondRessourceText: {fileID: 0}
-  MainRessourceIncomeText: {fileID: 0}
-  SecondRessourceIncomeText: {fileID: 0}
-  owner: 0
-  HealthText: {fileID: 0}
 --- !u!1 &794799609350922647
 GameObject:
   m_ObjectHideFlags: 0
@@ -1243,7 +1222,7 @@ Transform:
   m_GameObject: {fileID: 5898923481879132074}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.72, z: 0}
+  m_LocalPosition: {x: 0.15, y: 0.72, z: -0.39}
   m_LocalScale: {x: 0.062484384, y: 1, z: 0.4073747}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1282,6 +1261,7 @@ MonoBehaviour:
   - {fileID: 8873524854825024170}
   - {fileID: 8801925729938876821}
   - {fileID: 1163838156346746675}
+  distanceModifier: 1.5
 --- !u!1 &6375199847664907544
 GameObject:
   m_ObjectHideFlags: 0
@@ -1486,7 +1466,7 @@ Transform:
   m_GameObject: {fileID: 7313403473097718105}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.72, z: 0}
+  m_LocalPosition: {x: 0.15, y: 0.72, z: -0.31}
   m_LocalScale: {x: 0.062484384, y: 1, z: 0.4073747}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1525,6 +1505,7 @@ MonoBehaviour:
   - {fileID: 7198839756856462204}
   - {fileID: 9022868870474842472}
   - {fileID: 4642647441138496549}
+  distanceModifier: 1.5
 --- !u!1 &7413821950351874772
 GameObject:
   m_ObjectHideFlags: 0

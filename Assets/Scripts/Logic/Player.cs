@@ -156,10 +156,12 @@ public class Player : MonoBehaviour, ICharacter
             secondRessourceAvailable += baseAsset.secondRessourceIncome;
         }
 
+        
         // Refresh UI + playable state.
         HighlightPlayableCards();
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
+            baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
 
         if (table != null)
         {

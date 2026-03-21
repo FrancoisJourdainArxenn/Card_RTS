@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using DG.Tweening;
 
@@ -35,6 +35,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     // target is a player
                     target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
+                    target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
                 }
                 else
                     target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();

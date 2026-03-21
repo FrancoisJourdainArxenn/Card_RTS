@@ -12,8 +12,7 @@ public class BaseVisual : MonoBehaviour {
     public TMP_Text mainRessourceText,secondRessourceText;
     public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
     public AreaPosition owner;
-    [Header("Text Component References")]
-    public TMP_Text HealthText;    
+    public TMP_Text HealthText, UiHealthText;    
     
     void Awake()
 	{
@@ -24,6 +23,7 @@ public class BaseVisual : MonoBehaviour {
 	public void ApplyLookFromAsset()
     {
         HealthText.text = baseManager.HealthText.text;
+        UiHealthText.text = baseManager.HealthText.text;
         MainRessourceIncomeText.text = baseManager.MainRessourceIncome.text;
         SecondRessourceIncomeText.text = baseManager.SecondRessourceIncome.text;
         mainRessourceText.text = player.mainRessourceAvailable.ToString();
@@ -37,8 +37,10 @@ public class BaseVisual : MonoBehaviour {
     {
         if (amount > 0)
         {
+            Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
             DamageEffect.CreateDamageEffect(transform.position, amount);
             HealthText.text = healthAfter.ToString();
+            UiHealthText.text = healthAfter.ToString();
         }
     }
 

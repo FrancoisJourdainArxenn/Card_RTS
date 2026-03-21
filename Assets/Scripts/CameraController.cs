@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CameraController : MonoBehaviour
 {
@@ -9,26 +10,37 @@ public class CameraController : MonoBehaviour
     public float panBorderThickness = 10f;
     public Vector2 panLimit;
 
-    // Update is called once per frame
+    [Header("Zoom & pan")]
+    [Tooltip("Multiplicateur de pan quand la caméra est proche du sol (Y ≈ minY, zoom fort).")]
+    [Range(0.05f, 2f)]
+    [FormerlySerializedAs("panSpeedZoomedOut")]
+    public float panScaleWhenZoomedIn = 0.5f;
+
+    [Tooltip("Multiplicateur de pan quand la caméra est haute (Y ≈ maxY, dézoom).")]
+    [Range(0.05f, 2f)]
+    [FormerlySerializedAs("panSpeedZoomedIn")]
+    public float panScaleWhenZoomedOut = 1f;
+
     void Update()
     {
         Vector3 pos = transform.position;
-        if (Input.GetKey("w") || Input.mousePosition.y >= Screen.height - panBorderThickness || pos.y <= minY+5f)
-        {
-            pos.z += panSpeed * Time.deltaTime;            
-        }
-        if (Input.GetKey("s") || Input.mousePosition.y <= panBorderThickness|| pos.y <= minY+5f)
-        {
-            pos.z -= panSpeed * Time.deltaTime;            
-        }
-        if (Input.GetKey("d") || Input.mousePosition.x >= Screen.width - panBorderThickness || pos.y <= minY+5f)
-        {
-            pos.x += panSpeed * Time.deltaTime;            
-        }
-        if (Input.GetKey("q") || Input.mousePosition.x <= panBorderThickness || pos.y <= minY+5f)
-        {
-            pos.x -= panSpeed * Time.deltaTime;            
-        }
+
+        // Y bas = zoom fort (pan plus lent), Y haut = dézoom (pan plus rapide).
+        float zoomT = Mathf.InverseLerp(minY, maxY, pos.y);
+        float panScale = Mathf.Lerp(panScaleWhenZoomedIn, panScaleWhenZoomedOut, zoomT);
+        float effectivePan = panSpeed * panScale;
+
+        if (Input.GetKey("w") || Input.mousePosition.y >= Screen.height - panBorderThickness)
+            pos.z += effectivePan * Time.deltaTime;
+
+        if (Input.GetKey("s") || Input.mousePosition.y <= panBorderThickness)
+            pos.z -= effectivePan * Time.deltaTime;
+
+        if (Input.GetKey("d") || Input.mousePosition.x >= Screen.width - panBorderThickness)
+            pos.x += effectivePan * Time.deltaTime;
+
+        if (Input.GetKey("q") || Input.mousePosition.x <= panBorderThickness)
+            pos.x -= effectivePan * Time.deltaTime;
 
         pos.x = Mathf.Clamp(pos.x, -panLimit.x, panLimit.x);
         pos.z = Mathf.Clamp(pos.z, -panLimit.y, panLimit.y);
@@ -39,5 +51,4 @@ public class CameraController : MonoBehaviour
 
         transform.position = pos;
     }
-
 }

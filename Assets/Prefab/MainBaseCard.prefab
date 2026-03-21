@@ -1473,6 +1473,9 @@ GameObject:
   - component: {fileID: 6933989555177972918}
   - component: {fileID: 5938939194421709501}
   - component: {fileID: 1422888757148048028}
+  - component: {fileID: 5539823569782606735}
+  - component: {fileID: 2820278881990802421}
+  - component: {fileID: 2972207008102704594}
   m_Layer: 0
   m_Name: MainBaseCard
   m_TagString: LowPlayer
@@ -1528,6 +1531,60 @@ MonoBehaviour:
   ArtImage: {fileID: 622591591928127522}
   FrameImage: {fileID: 8334882588036817394}
   CardFaceGlowImage: {fileID: 2299680080893522801}
+--- !u!65 &5539823569782606735
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.2278497, y: 1, z: 1.2056566}
+  m_Center: {x: 0.007571833, y: 0, z: 0.011020589}
+--- !u!114 &2820278881990802421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e79fae826afd845409621ad2b4c5143c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
+  player: {fileID: 0}
+  baseManager: {fileID: 1422888757148048028}
+  mainRessourceText: {fileID: 0}
+  secondRessourceText: {fileID: 0}
+  MainRessourceIncomeText: {fileID: 0}
+  SecondRessourceIncomeText: {fileID: 0}
+  owner: 1
+  HealthText: {fileID: 0}
+--- !u!114 &2972207008102704594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fda01608954b2d4ebe4935505466b01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IDHolder
+  UniqueID: 0
 --- !u!1 &9041235957140898969
 GameObject:
   m_ObjectHideFlags: 0
