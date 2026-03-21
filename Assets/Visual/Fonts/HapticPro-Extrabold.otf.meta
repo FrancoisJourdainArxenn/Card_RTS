@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 144366b360b41d34aba4cb452a0a86cc
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Haptic Pro
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: b0a3e78092feab441b6a6ad0e5471b90, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 1
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

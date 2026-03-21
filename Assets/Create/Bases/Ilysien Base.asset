@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2928f8693ba712248be20e995e8454e4, type: 3}
+  m_Name: Ilysien Base
+  m_EditorClassIdentifier: Assembly-CSharp::BaseAsset
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  BaseImage: {fileID: 21300000, guid: 372d1224729a0534d8055527fe8c7a30, type: 3}
+  BaseName: Command Center
+  MaxHealth: 30
+  mainRessourceIncome: 3
+  secondRessourceIncome: 1
