@@ -767,6 +767,8 @@ MonoBehaviour:
   maxY: 40
   panBorderThickness: 10
   panLimit: {x: 10, y: 20}
+  panScaleWhenZoomedIn: 0.1
+  panScaleWhenZoomedOut: 1
 --- !u!1 &401925632
 GameObject:
   m_ObjectHideFlags: 0
@@ -1013,8 +1015,8 @@ MonoBehaviour:
   CardGlowColor:
     serializedVersion: 2
     rgba: 3559909219
-  CardPreviewTime: 1
-  CardTransitionTime: 1
+  CardPreviewTime: 0.5
+  CardTransitionTime: 0.5
   CardPreviewTimeFast: 0.2
   CardTransitionTimeFast: 0.5
   NoTargetSpellCardPrefab: {fileID: 6744150721965934964, guid: b509d50d5a92e9f469238833110d9074, type: 3}
@@ -3018,7 +3020,7 @@ MonoBehaviour:
   factionAsset: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
   PArea: {fileID: 1030438312}
-  baseVisual: {fileID: 1583306223}
+  baseVisual: {fileID: 8182161546712294166}
   mainRessourceTotal: 20
   mainRessourceAvailable: 0
   secondRessourceTotal: 10
@@ -3380,6 +3382,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 662666357}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1473176695 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7860721602865469860, guid: 580f729c8b2cee9469436b8322d27f1e, type: 3}
+  m_PrefabInstance: {fileID: 3868439319718243846}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1 &1498998919
 GameObject:
   m_ObjectHideFlags: 0
@@ -3447,6 +3460,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 662666357}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1545470472 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7191212524514199971, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+  m_PrefabInstance: {fileID: 413206695824946724}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!114 &1548421714 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8877634160993348563, guid: 9b83918a1cce6874e96f834cf7f9d32b, type: 3}
@@ -3572,7 +3596,6 @@ GameObject:
   - component: {fileID: 1583306220}
   - component: {fileID: 1583306222}
   - component: {fileID: 1583306221}
-  - component: {fileID: 1583306223}
   m_Layer: 5
   m_Name: PlayerPanel
   m_TagString: Untagged
@@ -3640,26 +3663,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1583306219}
   m_CullTransparentMesh: 1
---- !u!114 &1583306223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1583306219}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e79fae826afd845409621ad2b4c5143c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
-  player: {fileID: 1369297962}
-  baseManager: {fileID: 8182161546712294165}
-  mainRessourceText: {fileID: 1006217838}
-  secondRessourceText: {fileID: 1548421714}
-  MainRessourceIncomeText: {fileID: 1117927018}
-  SecondRessourceIncomeText: {fileID: 518307483}
-  owner: 1
-  HealthText: {fileID: 1805255329}
 --- !u!1 &1604141141
 GameObject:
   m_ObjectHideFlags: 0
@@ -4052,6 +4055,7 @@ GameObject:
   - component: {fileID: 1792783438}
   - component: {fileID: 1792783437}
   - component: {fileID: 1792783436}
+  - component: {fileID: 1792783439}
   m_Layer: 5
   m_Name: PlayerPanel (1)
   m_TagString: Untagged
@@ -4101,6 +4105,7 @@ MonoBehaviour:
   SecondRessourceIncomeText: {fileID: 37161077}
   owner: 0
   HealthText: {fileID: 1798011438}
+  UiHealthText: {fileID: 1798011438}
 --- !u!114 &1792783437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4139,6 +4144,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1792783434}
   m_CullTransparentMesh: 1
+--- !u!114 &1792783439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1792783434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fda01608954b2d4ebe4935505466b01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IDHolder
+  UniqueID: 0
 --- !u!1 &1793398062
 GameObject:
   m_ObjectHideFlags: 0
@@ -4690,6 +4708,34 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 163626270}
     m_Modifications:
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 1369297962}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: HealthText
+      value: 
+      objectReference: {fileID: 1545470472}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: UiHealthText
+      value: 
+      objectReference: {fileID: 1805255329}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: mainRessourceText
+      value: 
+      objectReference: {fileID: 1006217838}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: secondRessourceText
+      value: 
+      objectReference: {fileID: 1548421714}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: MainRessourceIncomeText
+      value: 
+      objectReference: {fileID: 1117927018}
+    - target: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: SecondRessourceIncomeText
+      value: 
+      objectReference: {fileID: 518307483}
     - target: {fileID: 6933989555177972918, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.12228187
@@ -4886,6 +4932,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: DeckController
       objectReference: {fileID: 0}
+    - target: {fileID: 4084564501060186362, guid: 580f729c8b2cee9469436b8322d27f1e, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 1369297962}
+    - target: {fileID: 4084564501060186362, guid: 580f729c8b2cee9469436b8322d27f1e, type: 3}
+      propertyPath: countText
+      value: 
+      objectReference: {fileID: 1473176695}
     - target: {fileID: 4212023564739678667, guid: 580f729c8b2cee9469436b8322d27f1e, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5044,14 +5098,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 163626270}
     m_Modifications:
-    - target: {fileID: 174951623416387889, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_TagString
-      value: LowPlayer
-      objectReference: {fileID: 0}
-    - target: {fileID: 542632809478227479, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: distanceModifier
-      value: 1.5
-      objectReference: {fileID: 0}
     - target: {fileID: 1396964329988983042, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: handVisual
       value: 
@@ -5060,14 +5106,6 @@ PrefabInstance:
       propertyPath: handVisual
       value: 
       objectReference: {fileID: 1438455306}
-    - target: {fileID: 3375367147066286501, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 3375367147066286501, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.31
-      objectReference: {fileID: 0}
     - target: {fileID: 3380216749849222320, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -5111,18 +5149,6 @@ PrefabInstance:
     - target: {fileID: 4241607089193490230, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Name
       value: MainBase
-      objectReference: {fileID: 0}
-    - target: {fileID: 8307801932309684713, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 8307801932309684713, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.39
-      objectReference: {fileID: 0}
-    - target: {fileID: 9073973389576226413, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: distanceModifier
-      value: 1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5239,6 +5265,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1583306220}
     m_Modifications:
+    - target: {fileID: 2426282133022423238, guid: 0b88f1c0a9d5f004ebeb9075fd5e08bc, type: 3}
+      propertyPath: baseVisual
+      value: 
+      objectReference: {fileID: 8182161546712294166}
     - target: {fileID: 8107020563708303932, guid: 0b88f1c0a9d5f004ebeb9075fd5e08bc, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5344,6 +5374,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d5ac243b8dfe1541b73da4156c59f73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneBaseManager
+--- !u!114 &8182161546712294166 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2820278881990802421, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+  m_PrefabInstance: {fileID: 413206695824946724}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e79fae826afd845409621ad2b4c5143c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
 --- !u!1001 &8412542200412338673
 PrefabInstance:
   m_ObjectHideFlags: 0
