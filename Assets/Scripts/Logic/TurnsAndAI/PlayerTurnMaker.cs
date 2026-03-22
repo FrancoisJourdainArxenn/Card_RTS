@@ -1,13 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
-public class PlayerTurnMaker : TurnMaker 
+public class PlayerTurnMaker : TurnMaker
 {
-    public override void OnTurnStart()
+    public override void OnRegroupPhaseStart()
     {
-        base.OnTurnStart();
-        // dispay a message that it is player`s turn
-        new ShowMessageCommand("Your Turn!", 2.0f).AddToQueue();
-        p.DrawACard();
+        base.OnRegroupPhaseStart();
     }
 }

@@ -15,8 +15,6 @@ public class RopeTimer : MonoBehaviour, IEventSystemHandler
     private bool counting = false;
     private bool ropeIsBurning;
 
-    [SerializeField]
-    public UnityEvent TimerExpired = new UnityEvent();
 
     void Awake()
     {
@@ -68,7 +66,7 @@ public class RopeTimer : MonoBehaviour, IEventSystemHandler
 			{
 				counting = false;
                 //RopeGameObject.SetActive(false);
-                TimerExpired.Invoke();
+                TurnManager.Instance.OnRopeTimerExpired();
 			}
 		}
 	

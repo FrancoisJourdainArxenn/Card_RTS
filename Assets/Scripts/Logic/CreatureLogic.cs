@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -49,8 +49,9 @@ public class CreatureLogic: ICharacter
     {
         get
         {
-            bool ownersTurn = (TurnManager.Instance.whoseTurn == owner); //nécessiteras du changement de logic.
-            return (ownersTurn && (AttacksLeftThisTurn > 0) && !Frozen);
+            bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
+            bool ownersTurn = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
+            return ownersTurn && (AttacksLeftThisTurn > 0) && !Frozen;
         }
     }
 

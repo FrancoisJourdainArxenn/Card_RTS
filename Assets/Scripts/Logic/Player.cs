@@ -84,12 +84,14 @@ public class Player : MonoBehaviour, ICharacter
             //PArea.ManaBar.AvailableCrystals = manaLeft;
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
-            if (TurnManager.Instance.whoseTurn == this)
-                HighlightPlayableCards();
+            TurnManager.RefreshAllPlayableHighlights();
         }
     }
     
-
+    void Start()
+    {
+        baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
+    }
     //private int secondRessourceTotal;
     public int SecondRessourceTotal
     {
@@ -111,8 +113,7 @@ public class Player : MonoBehaviour, ICharacter
 
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
 
-            if (TurnManager.Instance.whoseTurn == this)
-                HighlightPlayableCards();
+            TurnManager.RefreshAllPlayableHighlights();
         }
     }
     
@@ -161,7 +162,6 @@ public class Player : MonoBehaviour, ICharacter
         HighlightPlayableCards();
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
-            baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
 
         if (table != null)
         {
@@ -217,6 +217,11 @@ public class Player : MonoBehaviour, ICharacter
         {
             // there are no cards in the deck, take fatigue damage.
         }
+
+        if (TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Regroup)
+        {
+            TurnManager.Instance.RegisterEndPhase(this);
+        }
        
     }
 
@@ -266,7 +271,7 @@ public class Player : MonoBehaviour, ICharacter
         SecondRessourceAvailable -= playedCard.SecondCost;
         // cause effect instantly:
         if (playedCard.effect != null)
-            playedCard.effect.ActivateEffect(playedCard.ca.specialSpellAmount, target);
+            playedCard.effect.ActivateEffect(playedCard.ca.specialSpellAmount, target, this);
         else
         {
             Debug.LogWarning("No effect found on card " + playedCard.ca.name);
@@ -321,21 +326,27 @@ public class Player : MonoBehaviour, ICharacter
     // METHOD TO SHOW GLOW HIGHLIGHTS
     public void HighlightPlayableCards(bool removeAllHighlights = false)
     {
-        //Debug.Log("HighlightPlayable remove: "+ removeAllHighlights);
+        bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
+        bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
+        bool canPlayCards = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
+
         foreach (CardLogic cl in hand.CardsInHand)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
-            if (g!=null)
-                g.GetComponent<OneCardManager>().CanBePlayedNow = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable) && !removeAllHighlights;
+            if (g != null)
+            {
+                bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
+                g.GetComponent<OneCardManager>().CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;
+            }
         }
 
+        bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
         foreach (CreatureLogic crl in table.CreaturesOnTable)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
-            if(g!= null)
-                g.GetComponent<OneCreatureManager>().CanAttackNow = (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-        }   
-       
+            if (g != null)
+                g.GetComponent<OneCreatureManager>().CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !crl.Frozen && !removeAllHighlights;
+        }
     }
 
     // START GAME METHODS

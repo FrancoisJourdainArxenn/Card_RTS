@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -32,8 +32,10 @@ public class CardLogic: IIdentifiable
     {
         get
         {
-            bool ownersTurn = (TurnManager.Instance.whoseTurn == owner);
-            // for spells the amount of characters on the field does not matter
+            TurnManager tm = TurnManager.Instance;
+            bool ownersTurn = tm != null
+                && tm.IsCommandPhase
+                && tm.MayPlayerUseControlsInPhase(owner);
             bool fieldNotFull = true;
             // but if this is a creature, we have to check if there is room on board (table)
             /*if (ca.MaxHealth > 0)

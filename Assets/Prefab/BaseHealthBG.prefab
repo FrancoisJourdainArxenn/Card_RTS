@@ -223,7 +223,6 @@ GameObject:
   - component: {fileID: 8107020563708303932}
   - component: {fileID: 7341265483202877059}
   - component: {fileID: 5745243666469115997}
-  - component: {fileID: 2426282133022423238}
   m_Layer: 5
   m_Name: BaseHealthBG
   m_TagString: Untagged
@@ -290,17 +289,3 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2426282133022423238
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9078643470877339648}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7cd51bc7708f55649b8fb782b24e8c01, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HealthBarVisual
-  factionAsset: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
-  HealthText: {fileID: 7964414350537565624}

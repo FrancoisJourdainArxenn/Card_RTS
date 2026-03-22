@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public abstract class TurnMaker : MonoBehaviour {
@@ -12,8 +12,20 @@ public abstract class TurnMaker : MonoBehaviour {
 
     public virtual void OnTurnStart()
     {
-        // add one mana crystal to the pool;
         p.OnTurnStart();
     }
+
+    /// <summary>Round upkeep: resources and one draw for this player (both players in Regroup).</summary>
+    public virtual void OnRegroupPhaseStart()
+    {
+        p.OnTurnStart();
+        p.DrawACard();
+    }
+
+    public virtual void OnCommandPhaseEntered() { }
+
+    public virtual void OnBattlePhaseEntered() { }
+
+    public virtual void OnEndPhaseEntered() { }
 
 }

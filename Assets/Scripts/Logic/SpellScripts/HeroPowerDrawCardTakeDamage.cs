@@ -1,15 +1,14 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class HeroPowerDrawCardTakeDamage : SpellEffect {
 
-    public override void ActivateEffect(int specialAmount = 0, ICharacter target = null)
+    public override void ActivateEffect(int specialAmount = 0, ICharacter target = null, Player caster = null)
     {
-        // Take 2 damage
-        new DealDamageCommand(TurnManager.Instance.whoseTurn.PlayerID, 2, TurnManager.Instance.whoseTurn.Health - 2).AddToQueue();
-        TurnManager.Instance.whoseTurn.Health -= 2;
-        // Draw a card
-        TurnManager.Instance.whoseTurn.DrawACard();
-
+        if (caster == null)
+            return;
+        new DealDamageCommand(caster.PlayerID, 2, caster.Health - 2).AddToQueue();
+        caster.Health -= 2;
+        caster.DrawACard();
     }
 }

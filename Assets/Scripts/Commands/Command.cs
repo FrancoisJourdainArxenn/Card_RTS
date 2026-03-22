@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -28,8 +28,7 @@ public class Command
             PlayFirstCommandFromQueue();
         else
             playingQueue = false;
-        if (TurnManager.Instance.whoseTurn != null)
-            TurnManager.Instance.whoseTurn.HighlightPlayableCards();
+        TurnManager.RefreshAllPlayableHighlights();
     }
 
     public static void PlayFirstCommandFromQueue()

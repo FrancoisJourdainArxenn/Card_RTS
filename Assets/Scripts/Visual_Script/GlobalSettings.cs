@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class GlobalSettings: MonoBehaviour 
+public class GlobalSettings : MonoBehaviour
 {
     [Header("Players")]
     public Player TopPlayer;
@@ -14,7 +14,7 @@ public class GlobalSettings: MonoBehaviour
     public Color32 CardGlowColor;
     [Header("Numbers and Values")]
     public float CardPreviewTime = 1f;
-    public float CardTransitionTime= 1f;
+    public float CardTransitionTime = 1f;
     public float CardPreviewTimeFast = 0.2f;
     public float CardTransitionTimeFast = 0.5f;
     [Header("Prefabs and Assets")]
@@ -25,15 +25,14 @@ public class GlobalSettings: MonoBehaviour
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;
     [Header("Other")]
+    [Tooltip("End phase button for the low-area human player.")]
     public Button EndTurnButton;
-    //public CardAsset CoinCard;
+    [Tooltip("End phase button for the top-area human player (assign in the scene).")]
+    public Button EndPhaseButtonTopPlayer;
     public GameObject GameOverPanel;
-    //public Sprite HeroPowerCrossMark;
 
     public Dictionary<AreaPosition, Player> Players = new Dictionary<AreaPosition, Player>();
 
-
-    // SINGLETON
     public static GlobalSettings Instance;
 
     void Awake()
@@ -45,25 +44,40 @@ public class GlobalSettings: MonoBehaviour
 
     public bool CanControlThisPlayer(AreaPosition owner)
     {
-        bool PlayersTurn = (TurnManager.Instance.whoseTurn == Players[owner]);
-        bool NotDrawingAnyCards = !Command.CardDrawPending();
-        return Players[owner].PArea.AllowedToControlThisPlayer && Players[owner].PArea.ControlsON && PlayersTurn && NotDrawingAnyCards;
+        return CanControlThisPlayer(Players[owner]);
     }
 
     public bool CanControlThisPlayer(Player ownerPlayer)
     {
-        bool PlayersTurn = (TurnManager.Instance.whoseTurn == ownerPlayer);
+        if (ownerPlayer == null || TurnManager.Instance == null)
+            return false;
         bool NotDrawingAnyCards = !Command.CardDrawPending();
-        return ownerPlayer.PArea.AllowedToControlThisPlayer && ownerPlayer.PArea.ControlsON && PlayersTurn && NotDrawingAnyCards;
+        return ownerPlayer.PArea.AllowedToControlThisPlayer
+            && ownerPlayer.PArea.ControlsON
+            && TurnManager.Instance.MayPlayerUseControlsInPhase(ownerPlayer)
+            && NotDrawingAnyCards;
     }
 
-    public void EnableEndTurnButtonOnStart(Player P)
+    public void RefreshEndPhaseButtons()
     {
-        if (P == LowPlayer && CanControlThisPlayer(AreaPosition.Low) ||
-            P == TopPlayer && CanControlThisPlayer(AreaPosition.Top))
-            EndTurnButton.interactable = true;
-        else
-            EndTurnButton.interactable = false;
-            
+        foreach (EndTurnButton eb in Object.FindObjectsByType<EndTurnButton>(FindObjectsSortMode.None))
+        {
+            Button btn = eb.GetComponent<Button>();
+            if (btn == null)
+                continue;
+            Player player = eb.GetParticipantPlayer();
+            SetEndPhaseButtonState(btn, player);
+        }
     }
+
+    static void SetEndPhaseButtonState(Button button, Player player)
+    {
+        if (button == null || player == null)
+            return;
+        bool human = player.PArea.AllowedToControlThisPlayer;
+        bool gameActive = player.PArea.ControlsON;
+        bool notYetReady = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
+        button.interactable = human && gameActive && notYetReady;
+    }
+
 }

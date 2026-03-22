@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class GiveRessourcesBonus: SpellEffect 
 {
-    public override void ActivateEffect(int specialAmount = 0, ICharacter target = null)
+    public override void ActivateEffect(int specialAmount = 0, ICharacter target = null, Player caster = null)
     {
-        TurnManager.Instance.whoseTurn.GetBonusRessources(specialAmount, 0);
+        if (caster != null)
+            caster.GetBonusRessources(specialAmount, 0);
     }
 }
