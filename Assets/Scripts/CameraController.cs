@@ -42,12 +42,12 @@ public class CameraController : MonoBehaviour
         if (Input.GetKey("q") || Input.mousePosition.x <= panBorderThickness)
             pos.x -= effectivePan * Time.deltaTime;
 
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        pos.y -= scroll * scrollSpeed * 100f * Time.deltaTime;
+
         pos.x = Mathf.Clamp(pos.x, -panLimit.x, panLimit.x);
         pos.z = Mathf.Clamp(pos.z, -panLimit.y, panLimit.y);
         pos.y = Mathf.Clamp(pos.y, minY, maxY);
-
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
-        pos.y -= scroll * scrollSpeed * 100f * Time.deltaTime;
 
         transform.position = pos;
     }

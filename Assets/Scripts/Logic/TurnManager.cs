@@ -240,7 +240,7 @@ public class TurnManager : MonoBehaviour
 
     public bool MayPlayerUseControlsInPhase(Player player)
     {
-        if (player == null || !player.PArea.ControlsON)
+        if (player == null || !player.MainPArea.ControlsON)
             return false;
         if (Command.CardDrawPending())
             return false;

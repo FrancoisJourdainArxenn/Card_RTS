@@ -9,6 +9,7 @@ public class DragCreatureOnTable : DraggingActions {
     private IDHolder idScript;
     private VisualStates tempState;
     private OneCardManager manager;
+    public int maxCreatureOnBoard = 10;
 
     public override bool CanDrag
     {
@@ -48,12 +49,14 @@ public class DragCreatureOnTable : DraggingActions {
         // 1) Check if we are holding a card over the table
         if (DragSuccessful())
         {
-            // determine table position
-            int tablePos = playerOwner.PArea.tableVisual.TablePosForNewCreature(Camera.main.ScreenToWorldPoint(
+            PlayerArea selectedPArea = playerOwner.SelectedPArea();
+            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(Camera.main.ScreenToWorldPoint(
                 new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.position.z - Camera.main.transform.position.z)).x);
             // Debug.Log("Table Pos for new Creature: " + tablePos.ToString());
             // play this card
-            playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos);
+
+            playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
+            
         }
         else
         {
@@ -61,7 +64,7 @@ public class DragCreatureOnTable : DraggingActions {
             whereIsCard.SetHandSortingOrder();
             whereIsCard.VisualState = tempState;
             // Move this card back to its slot position
-            HandVisual PlayerHand = playerOwner.PArea.handVisual;
+            HandVisual PlayerHand = playerOwner.MainPArea.handVisual;
             Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
             transform.DOLocalMove(oldCardPos, 1f);
         } 
@@ -69,8 +72,9 @@ public class DragCreatureOnTable : DraggingActions {
 
     protected override bool DragSuccessful()
     {
-        bool TableNotFull = (playerOwner.table.CreaturesOnTable.Count < 8);
+        bool TableNotFull = (playerOwner.table.CreaturesOnTable.Count < maxCreatureOnBoard);
+        PlayerArea selectedPArea = playerOwner.SelectedPArea();
 
-        return TableVisual.CursorOverSomeTable && TableNotFull;
+        return TableVisual.CursorOverSomeTable && TableNotFull && selectedPArea != null;
     }
 }

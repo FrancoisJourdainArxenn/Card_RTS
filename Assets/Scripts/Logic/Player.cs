@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class Player : MonoBehaviour, ICharacter
 {
@@ -11,7 +12,8 @@ public class Player : MonoBehaviour, ICharacter
     public BaseAsset baseAsset;
 
     // a script with references to all the visual game objects for this player
-    public PlayerArea PArea;
+    public PlayerArea[] PAreas;
+    public PlayerArea MainPArea = null;
     public BaseVisual baseVisual;
 
     public int mainRessourceTotal;
@@ -193,6 +195,7 @@ public class Player : MonoBehaviour, ICharacter
     {
         if (Input.GetKeyDown(KeyCode.C))
             DrawACard();
+
     }
 
     // draw a single card from the deck
@@ -200,7 +203,7 @@ public class Player : MonoBehaviour, ICharacter
     {
         if (deck.cards.Count > 0)
         {
-            if (hand.CardsInHand.Count < PArea.handVisual.slots.Children.Length)
+            if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
             {
                 // 1) logic: add card to hand
                 CardLogic newCard = new CardLogic(deck.cards[0]);
@@ -228,7 +231,7 @@ public class Player : MonoBehaviour, ICharacter
     // get card NOT from deck (a token or a coin)
     public void GetACardNotFromDeck(CardAsset cardAsset)
     {
-        if (hand.CardsInHand.Count < PArea.handVisual.slots.Children.Length)
+        if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
         {
             // 1) logic: add card to hand
             CardLogic newCard = new CardLogic(cardAsset);
@@ -286,13 +289,13 @@ public class Player : MonoBehaviour, ICharacter
 
     // METHODS TO PLAY CREATURES 
     // 1st overload - by ID
-    public void PlayACreatureFromHand(int UniqueID, int tablePos)
+    public void PlayACreatureFromHand(int UniqueID, int tablePos, PlayerArea selectedPArea)
     {
-        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos);
+        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea);
     }
 
     // 2nd overload - by logic units
-    public void PlayACreatureFromHand(CardLogic playedCard, int tablePos)
+    public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
     {
         // Debug.Log(ManaLeft);
         // Debug.Log(playedCard.CurrentManaCost);
@@ -303,7 +306,7 @@ public class Player : MonoBehaviour, ICharacter
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca);
         table.CreaturesOnTable.Insert(tablePos, newCreature);
         // 
-        new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID).AddToQueue();
+        new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         // cause battlecry Effect
         if (newCreature.effect != null)
             newCreature.effect.WhenACreatureIsPlayed();
@@ -316,8 +319,8 @@ public class Player : MonoBehaviour, ICharacter
     {
         // game over
         // block both players from taking new moves 
-        PArea.ControlsON = false;
-        otherPlayer.PArea.ControlsON = false;
+        MainPArea.ControlsON = false;
+        otherPlayer.MainPArea.ControlsON = false;
         TurnManager.Instance.StopTheTimer();
         new GameOverCommand(this).AddToQueue();
     }
@@ -371,14 +374,29 @@ public class Player : MonoBehaviour, ICharacter
         if (GetComponent<TurnMaker>() is AITurnMaker)
         {
             // turn off turn making for this character
-            PArea.AllowedToControlThisPlayer = false;
+            MainPArea.AllowedToControlThisPlayer = false;
         }
         else
         {
             // allow turn making for this character
-            PArea.AllowedToControlThisPlayer = true;
+            MainPArea.AllowedToControlThisPlayer = true;
         }
     }
-       
-        
+
+    public PlayerArea SelectedPArea()
+    {
+        PlayerArea selectedPArea = null;
+        foreach (PlayerArea area in PAreas)
+        {
+            if (area.tableVisual.CursorOverThisTable)
+            {
+                selectedPArea = area;
+                break;
+            }
+        }
+        return selectedPArea;
+    }
+
+
+
 }

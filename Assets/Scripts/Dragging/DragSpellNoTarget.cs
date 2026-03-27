@@ -57,7 +57,7 @@ public class DragSpellNoTarget: DraggingActions{
             else
                 whereIsCard.VisualState = VisualStates.TopHand;
             // Move this card back to its slot position
-            HandVisual PlayerHand = playerOwner.PArea.handVisual;
+            HandVisual PlayerHand = playerOwner.MainPArea.handVisual;
             Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
             transform.DOLocalMove(oldCardPos, 1f);
         } 

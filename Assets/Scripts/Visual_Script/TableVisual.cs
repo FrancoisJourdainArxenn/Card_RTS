@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEngine.UI;
 
 public class TableVisual : MonoBehaviour 
 {
@@ -12,6 +13,9 @@ public class TableVisual : MonoBehaviour
 
     // a referense to a game object that marks positions where we should put new Creatures
     public SameDistanceChildren slots;
+    public GameObject glow;
+    [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
+
 
     // PRIVATE FIELDS
 
@@ -34,8 +38,16 @@ public class TableVisual : MonoBehaviour
     {
         get
         {
-            TableVisual[] bothTables = GameObject.FindObjectsByType<TableVisual>(FindObjectsSortMode.None);
-            return (bothTables[0].CursorOverThisTable || bothTables[1].CursorOverThisTable);
+            TableVisual[] allTables = GameObject.FindObjectsByType<TableVisual>(FindObjectsSortMode.None);
+            foreach (TableVisual table in allTables)
+            {
+                if (table.CursorOverThisTable)
+                {                    
+                    return true;
+                }
+
+            }
+            return false;
         }
     }
 
@@ -61,19 +73,25 @@ public class TableVisual : MonoBehaviour
     void Update()
     {
         // we need to Raycast because OnMouseEnter, etc reacts to colliders on cards and cards "cover" the table
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Debug.DrawRay(ray.origin, ray.direction * 300f, Color.red);
         // create an array of RaycastHits
-        RaycastHit[] hits;
-        // raycst to mousePosition and store all the hits in the array
-        hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 30f);
-
-        bool passedThroughTableCollider = false;
-        foreach (RaycastHit h in hits)
+        RaycastHit[] hits = Physics.RaycastAll(ray, 300f, tableRaycastMask, QueryTriggerInteraction.Ignore);
+        bool isHoveringThisTable = false;
+        for (int i = 0; i < hits.Length; i++)
         {
-            // check if the collider that we hit is the collider on this GameObject
-            if (h.collider == col)
-                passedThroughTableCollider = true;
+            if (hits[i].collider == col)
+            {
+                isHoveringThisTable = true;
+                break;
+            }
         }
-        cursorOverThisTable = passedThroughTableCollider;
+        // State used by other gameplay scripts
+        cursorOverThisTable = isHoveringThisTable;
+        // Visual feedback
+        if (glow != null && glow.activeSelf != isHoveringThisTable)
+            glow.SetActive(isHoveringThisTable);
+
     }
    
     // method to create a new creature and add it to the table

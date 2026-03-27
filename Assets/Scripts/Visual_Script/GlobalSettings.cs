@@ -52,8 +52,8 @@ public class GlobalSettings : MonoBehaviour
         if (ownerPlayer == null || TurnManager.Instance == null)
             return false;
         bool NotDrawingAnyCards = !Command.CardDrawPending();
-        return ownerPlayer.PArea.AllowedToControlThisPlayer
-            && ownerPlayer.PArea.ControlsON
+        return ownerPlayer.MainPArea.AllowedToControlThisPlayer
+            && ownerPlayer.MainPArea.ControlsON
             && TurnManager.Instance.MayPlayerUseControlsInPhase(ownerPlayer)
             && NotDrawingAnyCards;
     }
@@ -74,8 +74,8 @@ public class GlobalSettings : MonoBehaviour
     {
         if (button == null || player == null)
             return;
-        bool human = player.PArea.AllowedToControlThisPlayer;
-        bool gameActive = player.PArea.ControlsON;
+        bool human = player.MainPArea.AllowedToControlThisPlayer;
+        bool gameActive = player.MainPArea.ControlsON;
         bool notYetReady = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
         button.interactable = human && gameActive && notYetReady;
     }

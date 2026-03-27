@@ -14,6 +14,6 @@ public class CreatureDieCommand : Command
 
     public override void StartCommandExecution()
     {
-        p.PArea.tableVisual.RemoveCreatureWithID(DeadCreatureID);
+        p.MainPArea.tableVisual.RemoveCreatureWithID(DeadCreatureID);
     }
 }
