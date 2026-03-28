@@ -15,6 +15,7 @@ public class Player : MonoBehaviour, ICharacter
     public PlayerArea[] PAreas;
     public PlayerArea MainPArea = null;
     public BaseVisual baseVisual;
+    public Color playerColor;
 
     public int mainRessourceTotal;
     public int mainRessourceAvailable;
@@ -93,6 +94,11 @@ public class Player : MonoBehaviour, ICharacter
     void Start()
     {
         baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
+        foreach (PlayerArea area in PAreas)
+        {
+            area.tableVisual.ownerColor = playerColor;
+            area.tableVisual.SetOwnerColor(playerColor);
+        }
     }
     //private int secondRessourceTotal;
     public int SecondRessourceTotal

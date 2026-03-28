@@ -14,6 +14,7 @@ public class TableVisual : MonoBehaviour
     // a referense to a game object that marks positions where we should put new Creatures
     public SameDistanceChildren slots;
     public GameObject glow;
+    public Color ownerColor;
     [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
 
 
@@ -68,6 +69,7 @@ public class TableVisual : MonoBehaviour
         if (slots != null)
             initialSlotsLocalPosX = slots.transform.localPosition.x;
     }
+
 
     // CURSOR/MOUSE DETECTION
     void Update()
@@ -216,4 +218,8 @@ public class TableVisual : MonoBehaviour
         }
     }
 
+    public void SetOwnerColor(Color color)
+    {
+        glow.GetComponent<Image>().color = color;
+    }
 }

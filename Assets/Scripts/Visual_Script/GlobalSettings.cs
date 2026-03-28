@@ -8,10 +8,16 @@ public class GlobalSettings : MonoBehaviour
     [Header("Players")]
     public Player TopPlayer;
     public Player LowPlayer;
+    
     [Header("Colors")]
-    public Color32 CardBodyStandardColor;
-    public Color32 CardRibbonsStandardColor;
-    public Color32 CardGlowColor;
+    public Color32 TopColor;
+    public Color32 LowColor;
+    public Color32 NeutralColor;
+
+    [Header("Neutral Base")]
+    public NeutralBaseController[] NeutralBases;
+    
+
     [Header("Numbers and Values")]
     public float CardPreviewTime = 1f;
     public float CardTransitionTime = 1f;
@@ -24,6 +30,7 @@ public class GlobalSettings : MonoBehaviour
     public GameObject CreaturePrefab;
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;
+    public GameObject NeutralBasePrefab;
     [Header("Other")]
     [Tooltip("End phase button for the low-area human player.")]
     public Button EndTurnButton;
@@ -40,6 +47,18 @@ public class GlobalSettings : MonoBehaviour
         Players.Add(AreaPosition.Top, TopPlayer);
         Players.Add(AreaPosition.Low, LowPlayer);
         Instance = this;
+
+        foreach (NeutralBaseController neutralBase in NeutralBases)
+        {
+            neutralBase.owner = AreaPosition.Neutral;
+            neutralBase.SetOwnerColor(NeutralColor);
+        }
+    }
+
+    void Start()
+    {
+        TopPlayer.playerColor = TopColor;
+        LowPlayer.playerColor = LowColor;
     }
 
     public bool CanControlThisPlayer(AreaPosition owner)

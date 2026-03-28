@@ -1615,7 +1615,7 @@ GameObject:
   - component: {fileID: 5514978023200098985}
   - component: {fileID: 6181488769944465443}
   m_Layer: 0
-  m_Name: ActionCard
+  m_Name: Card_Action
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

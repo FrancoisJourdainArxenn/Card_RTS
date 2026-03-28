@@ -2,7 +2,7 @@
 using System.Collections;
 using TMPro;
 
-public enum AreaPosition{Top, Low} // Interesting
+public enum AreaPosition{Top, Low, Neutral} // Interesting
 
 public class PlayerArea : MonoBehaviour 
 {
@@ -10,9 +10,6 @@ public class PlayerArea : MonoBehaviour
     public bool ControlsON = true;
 
     public HandVisual handVisual;
-    //public BaseVisual Portrait;
-
-    //public EndTurnButton EndTurnButton;
     public TableVisual tableVisual;
     public Transform BasePosition;
 

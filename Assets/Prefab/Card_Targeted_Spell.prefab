@@ -1126,7 +1126,7 @@ GameObject:
   - component: {fileID: 7980249276852261602}
   - component: {fileID: 8397377494050206137}
   m_Layer: 0
-  m_Name: TargetedSpellCard
+  m_Name: Card_Targeted_Spell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
