@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using TMPro;
 
 public class GlobalSettings : MonoBehaviour
 {
@@ -37,8 +38,10 @@ public class GlobalSettings : MonoBehaviour
     [Tooltip("End phase button for the top-area human player (assign in the scene).")]
     public Button EndPhaseButtonTopPlayer;
     public GameObject GameOverPanel;
+    public TMP_Text activePlayerDebugText;
 
     public Dictionary<AreaPosition, Player> Players = new Dictionary<AreaPosition, Player>();
+    public Player activePlayer;
 
     public static GlobalSettings Instance;
 
@@ -55,10 +58,13 @@ public class GlobalSettings : MonoBehaviour
         }
     }
 
+
     void Start()
     {
         TopPlayer.playerColor = TopColor;
         LowPlayer.playerColor = LowColor;
+        activePlayer = LowPlayer;
+        activePlayerDebugText.text = "Active Player: " + activePlayer.name;
     }
 
     public bool CanControlThisPlayer(AreaPosition owner)

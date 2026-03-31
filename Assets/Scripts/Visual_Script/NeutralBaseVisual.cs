@@ -7,38 +7,42 @@ using TMPro;
 
 public class NeutralBaseVisual : MonoBehaviour {
 
-    public OneBaseManager baseManager;   
+    public BaseAsset baseAsset;
     public AreaPosition owner;
-    public TMP_Text HealthText;
+    public TMP_Text BuildingCostText;
+    public TMP_Text MainRessourceIncomeText;
+    public TMP_Text SecondRessourceIncomeText;
+    public GameObject Glow;
     
     void Awake()
 	{
-		if(baseManager != null)
+		if(baseAsset != null)
 			ApplyLookFromAsset();
 	}
 	
 	public void ApplyLookFromAsset()
     {
-        HealthText.text = baseManager.HealthText.text;
-
+        BuildingCostText.text = baseAsset.mainRessourceBuildingCost.ToString();
+        MainRessourceIncomeText.text = baseAsset.mainRessourceIncome.ToString();
+        SecondRessourceIncomeText.text = baseAsset.secondRessourceIncome.ToString();
     }
 
-    public void TakeDamage(int amount, int healthAfter)
+    void OnMouseEnter()
     {
-        if (amount > 0)
-        {
-            Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
-            DamageEffect.CreateDamageEffect(transform.position, amount);
-            HealthText.text = healthAfter.ToString();
-        }
+        Player activePlayer = GlobalSettings.Instance.activePlayer;
+        bool hasEnoughRessources = activePlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && activePlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost;
+        Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
+        Glow.SetActive(true);
     }
 
-    public void Explode()
+    void OnMouseDown()
     {
-        Instantiate(GlobalSettings.Instance.ExplosionPrefab, transform.position, Quaternion.identity);
-        Sequence s = DOTween.Sequence();
-        s.PrependInterval(2f);
-        s.OnComplete(() => GlobalSettings.Instance.GameOverPanel.SetActive(true));
+        new BuildNeutralBaseCommand(GlobalSettings.Instance.activePlayer, baseAsset).AddToQueue(); //active player ne change pas à l'heure actuelle.
+    }
+
+    void OnMouseExit()
+    {
+        Glow.SetActive(false);
     }
 
 

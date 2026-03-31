@@ -1475,7 +1475,6 @@ GameObject:
   - component: {fileID: 1422888757148048028}
   - component: {fileID: 5539823569782606735}
   - component: {fileID: 2972207008102704594}
-  - component: {fileID: 8714903389357574513}
   m_Layer: 0
   m_Name: Card_Base
   m_TagString: Untagged
@@ -1565,21 +1564,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IDHolder
   UniqueID: 0
---- !u!114 &8714903389357574513
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8434494526590664003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e79825d45b81def41a20a4e24da785a0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NeutralBaseVisual
-  baseManager: {fileID: 1422888757148048028}
-  owner: 2
-  HealthText: {fileID: 7191212524514199971}
 --- !u!1 &9041235957140898969
 GameObject:
   m_ObjectHideFlags: 0

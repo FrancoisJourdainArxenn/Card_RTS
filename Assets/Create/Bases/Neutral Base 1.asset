@@ -18,3 +18,4 @@ MonoBehaviour:
   MaxHealth: 10
   mainRessourceIncome: 2
   secondRessourceIncome: 1
+  buildingCost: 5

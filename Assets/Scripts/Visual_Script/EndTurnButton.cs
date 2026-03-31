@@ -36,6 +36,6 @@ public class EndTurnButton : MonoBehaviour
     {
         if (TurnManager.Instance != null)
             TurnManager.Instance.RegisterEndPhase(participantIndex);
-            Debug.Log(participantIndex);
+            //Debug.Log(participantIndex);
     }
 }

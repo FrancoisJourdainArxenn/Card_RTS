@@ -11,6 +11,8 @@ public class BaseAsset : ScriptableObject
     public int MaxHealth;
     public int mainRessourceIncome;
     public int secondRessourceIncome;
+    public int mainRessourceBuildingCost;
+    public int secondRessourceBuildingCost;
 
 
 

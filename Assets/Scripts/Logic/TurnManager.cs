@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -20,7 +20,6 @@ public class TurnManager : MonoBehaviour
     private TurnPhases currentPhase = TurnPhases.Command;
     private int currentRound = 1;
     private bool[] phaseReady;
-    Coroutine regroupAutoAdvanceCoroutine;
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -290,7 +289,6 @@ public class TurnManager : MonoBehaviour
     IEnumerator CoAdvanceRegroupWhenCommandQueueIdle()
     {
         yield return new WaitWhile(() => Command.playingQueue || Command.CardDrawPending());
-        regroupAutoAdvanceCoroutine = null;
         if (currentPhase != TurnPhases.Regroup)
             yield break;
         EnterPhase(TurnPhases.Command);
