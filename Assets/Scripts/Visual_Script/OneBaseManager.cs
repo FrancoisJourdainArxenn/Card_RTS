@@ -32,4 +32,9 @@ public class OneBaseManager : MonoBehaviour
         SecondRessourceIncome.text = baseAsset.secondRessourceIncome.ToString();
         ArtImage.sprite = baseAsset.BaseImage;
     }
+
+    public void ResetValues(BaseAsset baseAsset)
+    {
+        ReadBaseFromAsset();
+    }
 }

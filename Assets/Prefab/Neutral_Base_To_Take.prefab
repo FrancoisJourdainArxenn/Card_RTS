@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -62.3, y: 0}
+  m_AnchoredPosition: {x: -62.000008, y: 29.000015}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &325420877399844119
@@ -60,7 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.637104, g: 0.9057561, b: 0.9716981, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -363,7 +363,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2676281193872924456}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 2.1326408, y: 2.1326408, z: 2.1326408}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -373,7 +373,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 66.9, y: 0}
+  m_AnchoredPosition: {x: 67, y: 29}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7004032474301575662
@@ -397,7 +397,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.63529414, g: 0.972549, b: 0.68761873, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -544,7 +544,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4735756484591381407}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -552,8 +552,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6, y: 80.00002}
-  m_SizeDelta: {x: -75.629974, y: 198.29999}
+  m_AnchoredPosition: {x: 6, y: 80}
+  m_SizeDelta: {x: -75.63, y: 135.93}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2749204837253266163
 CanvasRenderer:
@@ -583,7 +583,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1284,14 +1284,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8434494526590664003}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.36, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.12598898, z: 1}
+  m_LocalRotation: {x: -0, y: -0.70731574, z: -0, w: 0.7068978}
+  m_LocalPosition: {x: -5.67, y: 0.21679, z: -0.59}
+  m_LocalScale: {x: 0.7, y: 0.12598898, z: 0.7}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6149515503800733994}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90.034, z: 0}
 --- !u!65 &5539823569782606735
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1325,9 +1325,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e79825d45b81def41a20a4e24da785a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NeutralBaseVisual
-  baseAsset: {fileID: 0}
+  baseAsset: {fileID: 11400000, guid: d2f3790d159e96446affb7f979d29b76, type: 2}
   owner: 2
   BuildingCostText: {fileID: 1193763966257963243}
   MainRessourceIncomeText: {fileID: 8199164061199582514}
   SecondRessourceIncomeText: {fileID: 1249805443307532881}
   Glow: {fileID: 6814103378340522323}
+  BuildingZone: {fileID: 0}
+  BaseApparitionPosition: {fileID: 0}
+  BasePosition: {fileID: 6933989555177972918}
+  BaseCardPrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}

@@ -1566,8 +1566,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
   player: {fileID: 0}
   baseManager: {fileID: 1422888757148048028}
-  mainRessourceText: {fileID: 8199164061199582514}
-  secondRessourceText: {fileID: 1249805443307532881}
+  mainRessourceText: {fileID: 0}
+  secondRessourceText: {fileID: 0}
   MainRessourceIncomeText: {fileID: 0}
   SecondRessourceIncomeText: {fileID: 0}
   owner: 1

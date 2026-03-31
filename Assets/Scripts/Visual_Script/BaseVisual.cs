@@ -24,8 +24,8 @@ public class BaseVisual : MonoBehaviour {
     {
         HealthText.text = baseManager.HealthText.text;
         UiHealthText.text = baseManager.HealthText.text;
-        MainRessourceIncomeText.text = baseManager.MainRessourceIncome.text;
-        SecondRessourceIncomeText.text = baseManager.SecondRessourceIncome.text;
+        MainRessourceIncomeText.text = player.playerMainIncome.ToString();
+        SecondRessourceIncomeText.text = player.playerSecondIncome.ToString();
         mainRessourceText.text = player.mainRessourceAvailable.ToString();
         secondRessourceText.text = player.secondRessourceAvailable.ToString();
         //PortraitImage.sprite = factionAsset.AvatarImage;

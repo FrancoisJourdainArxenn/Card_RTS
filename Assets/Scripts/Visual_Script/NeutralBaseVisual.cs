@@ -13,11 +13,21 @@ public class NeutralBaseVisual : MonoBehaviour {
     public TMP_Text MainRessourceIncomeText;
     public TMP_Text SecondRessourceIncomeText;
     public GameObject Glow;
+    public GameObject BuildingZone;
+
+    public Transform BaseApparitionPosition;
+    public Transform BasePosition;
+    public GameObject BaseCardPrefab;
+
+    private bool canBuild = true;
+    private Player activePlayer;
     
     void Awake()
 	{
 		if(baseAsset != null)
 			ApplyLookFromAsset();
+        canBuild = true;
+
 	}
 	
 	public void ApplyLookFromAsset()
@@ -29,7 +39,7 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseEnter()
     {
-        Player activePlayer = GlobalSettings.Instance.activePlayer;
+        activePlayer = GlobalSettings.Instance.activePlayer;
         bool hasEnoughRessources = activePlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && activePlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
         Glow.SetActive(true);
@@ -37,7 +47,28 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseDown()
     {
-        new BuildNeutralBaseCommand(GlobalSettings.Instance.activePlayer, baseAsset).AddToQueue(); //active player ne change pas à l'heure actuelle.
+        activePlayer = GlobalSettings.Instance.activePlayer;
+        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Command)
+        {
+            if(canBuild && activePlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && activePlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost)
+            {
+                new BuildNeutralBaseCommand(activePlayer, baseAsset).AddToQueue(); //active player ne change pas à l'heure actuelle.
+                canBuild = false;
+                InstantiateBaseCard();
+            }
+            else
+            {
+                ShowMessageCommand showMessageCommand = new ShowMessageCommand("Insufficient Ressources", 2f);
+                Debug.Log("ShowMessageCommand: Insufficient Ressources");
+                showMessageCommand.AddToQueue();
+            }
+        }
+        else
+        {
+            ShowMessageCommand showMessageCommand = new ShowMessageCommand("You can't do that right now", 2f);
+            Debug.Log("ShowMessageCommand: Not your turn");
+            showMessageCommand.AddToQueue();
+        }
     }
 
     void OnMouseExit()
@@ -45,6 +76,43 @@ public class NeutralBaseVisual : MonoBehaviour {
         Glow.SetActive(false);
     }
 
+    public void InstantiateBaseCard()
+    {
+        GameObject baseCard = Instantiate(BaseCardPrefab, BaseApparitionPosition.position, BaseApparitionPosition.rotation);
+        baseCard.GetComponent<OneBaseManager>().baseAsset = baseAsset;
+        baseCard.GetComponent<OneBaseManager>().ResetValues(baseAsset);
+        if(activePlayer.MainPArea.owner == AreaPosition.Top)
+        {
+            baseCard.tag = "TopPlayer";
+            BuildingZone.GetComponent<Image>().color = activePlayer.playerColor;
+            activePlayer.controlledBases.Add(baseAsset);
+            activePlayer.CalculatePlayerIncome();
+            RemoveBaseCard();
+        }
+        else
+        {
+            baseCard.tag = "LowPlayer";
+            BuildingZone.GetComponent<Image>().color = activePlayer.playerColor;
+            activePlayer.controlledBases.Add(baseAsset);
+            activePlayer.CalculatePlayerIncome();
+            RemoveBaseCard();
+        }
 
+        // Animate scale (pop-in)
+        baseCard.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
+
+        // Animate movement from BaseApparitionPosition to BasePosition
+        if (BasePosition != null)
+        {
+            baseCard.transform.DOMove(BasePosition.position, 0.7f).SetEase(Ease.InOutQuad);
+            baseCard.transform.DORotateQuaternion(BasePosition.rotation, 0.7f).SetEase(Ease.InOutQuad);
+        }
+
+    }
+
+    public void RemoveBaseCard()
+    {
+        Destroy(gameObject);
+    }
 
 }

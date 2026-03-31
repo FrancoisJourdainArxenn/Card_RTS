@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class Player : MonoBehaviour, ICharacter
 {
@@ -10,6 +11,7 @@ public class Player : MonoBehaviour, ICharacter
     // a Character Asset that contains data about this Hero
     public FactionAsset factionAsset;
     public BaseAsset baseAsset;
+    public List<BaseAsset> controlledBases = new List<BaseAsset>();
 
     // a script with references to all the visual game objects for this player
     public PlayerArea[] PAreas;
@@ -21,6 +23,8 @@ public class Player : MonoBehaviour, ICharacter
     public int mainRessourceAvailable;
     public int secondRessourceTotal;
     public int secondRessourceAvailable;
+    public int playerMainIncome;
+    public int playerSecondIncome;
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -132,8 +136,6 @@ public class Player : MonoBehaviour, ICharacter
     //public event VoidWithNoArguments StartTurnEvent;
     public event VoidWithNoArguments EndTurnEvent;
 
-
-
     // ALL METHODS
     void Awake()
     {
@@ -142,10 +144,13 @@ public class Player : MonoBehaviour, ICharacter
         Players = GameObject.FindObjectsByType<Player>(FindObjectsSortMode.None);
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
+        controlledBases.Add(baseAsset);
+        CalculatePlayerIncome();
     }
 
-    public virtual void OnTurnStart()
+    public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
     {
+        
         if (baseAsset == null)
         {
             Debug.LogWarning("OnTurnStart() skipped: baseAsset is null for " + name, this);
@@ -156,13 +161,13 @@ public class Player : MonoBehaviour, ICharacter
             mainRessourceAvailable = mainRessourceTotal;
         else
         {
-            mainRessourceAvailable += baseAsset.mainRessourceIncome;
+            mainRessourceAvailable += playerMainIncome;
         }
         if (secondRessourceAvailable >= secondRessourceTotal)
             secondRessourceAvailable = secondRessourceTotal;
         else
         {
-            secondRessourceAvailable += baseAsset.secondRessourceIncome;
+            secondRessourceAvailable += playerSecondIncome;
         }
 
         
@@ -331,7 +336,6 @@ public class Player : MonoBehaviour, ICharacter
         new GameOverCommand(this).AddToQueue();
     }
 
-
     // METHOD TO SHOW GLOW HIGHLIGHTS
     public void HighlightPlayableCards(bool removeAllHighlights = false)
     {
@@ -403,6 +407,17 @@ public class Player : MonoBehaviour, ICharacter
         return selectedPArea;
     }
 
+    public void CalculatePlayerIncome()
+    {
+        playerMainIncome = 0;
+        playerSecondIncome = 0;
+        foreach (BaseAsset baseAsset in controlledBases)
+        {
+            playerMainIncome += baseAsset.mainRessourceIncome;
+            playerSecondIncome += baseAsset.secondRessourceIncome;
+        }
+        baseVisual.ApplyLookFromAsset();
+    }
 
 
 }
