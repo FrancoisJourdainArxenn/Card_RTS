@@ -18,6 +18,12 @@ public class CreatureAttackVisual : MonoBehaviour
         Debug.Log(targetUniqueID);
         manager.CanAttackNow = false;
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
+        if (target == null)
+        {
+            manager.HealthText.text = attackerHealthAfter.ToString();
+            Command.CommandExecutionComplete();
+            return;
+        }
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
@@ -37,6 +43,10 @@ public class CreatureAttackVisual : MonoBehaviour
                     target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
                     target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
                 }
+                /*else if (target.GetComponent<OneBaseManager>() != null)
+                {
+                    target.GetComponent<OneBaseManager>().HealthText.text = Mathf.Max(0, targetHealthAfter).ToString();
+                }*/
                 else
                     target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
 

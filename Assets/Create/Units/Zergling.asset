@@ -18,7 +18,7 @@ MonoBehaviour:
   MainCost: 2
   SecondCost: 0
   MaxHealth: 1
-  Attack: 1
+  Attack: 10
   AttacksForOneTurn: 1
   Speed: 1
   Charge: 0

@@ -79,8 +79,14 @@ public class NeutralBaseVisual : MonoBehaviour {
     public void InstantiateBaseCard()
     {
         GameObject baseCard = Instantiate(BaseCardPrefab, BaseApparitionPosition.position, BaseApparitionPosition.rotation);
-        baseCard.GetComponent<OneBaseManager>().baseAsset = baseAsset;
-        baseCard.GetComponent<OneBaseManager>().ResetValues(baseAsset);
+        
+        OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
+        baseManager.baseAsset = baseAsset;
+        baseManager.ResetValues(baseAsset);
+        baseManager.Spawner = this.gameObject;
+        IDHolder idHolder = baseCard.GetComponent<IDHolder>();
+        idHolder.UniqueID = IDFactory.GetUniqueID();
+
         if(activePlayer.MainPArea.owner == AreaPosition.Top)
         {
             baseCard.tag = "TopPlayer";
@@ -112,7 +118,12 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     public void RemoveBaseCard()
     {
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
+    public void ResetBuildingZone()
+    {
+        BuildingZone.GetComponent<Image>().color = GlobalSettings.Instance.NeutralColor;
+        canBuild = true;
+    }
 }

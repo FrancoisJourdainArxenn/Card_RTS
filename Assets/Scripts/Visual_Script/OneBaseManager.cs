@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class OneBaseManager : MonoBehaviour
 {
     public BaseAsset baseAsset;
+    public int CurrentHealth { get; private set; }
 
     [Header("Text Component References")]
 
@@ -17,6 +18,7 @@ public class OneBaseManager : MonoBehaviour
     public Image ArtImage;
     public Image FrameImage;
     public Image CardFaceGlowImage;
+    public GameObject Spawner;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
@@ -26,8 +28,8 @@ public class OneBaseManager : MonoBehaviour
 
     public void ReadBaseFromAsset()
     {
-
-        HealthText.text = baseAsset.MaxHealth.ToString();
+        CurrentHealth = baseAsset.MaxHealth;
+        HealthText.text = CurrentHealth.ToString();
         MainRessourceIncome.text = baseAsset.mainRessourceIncome.ToString();
         SecondRessourceIncome.text = baseAsset.secondRessourceIncome.ToString();
         ArtImage.sprite = baseAsset.BaseImage;
@@ -35,6 +37,46 @@ public class OneBaseManager : MonoBehaviour
 
     public void ResetValues(BaseAsset baseAsset)
     {
+        this.baseAsset = baseAsset;
         ReadBaseFromAsset();
+    }
+
+    public void TakeDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+
+        CurrentHealth = Mathf.Max(0, healthAfter);
+        DamageEffect.CreateDamageEffect(transform.position, amount);
+
+        if (CurrentHealth <= 0)
+        {
+            Player ownerPlayer = GetOwnerPlayerFromTag();
+            if (ownerPlayer != null && baseAsset != null)
+            {
+                ownerPlayer.controlledBases.Remove(baseAsset);
+                ownerPlayer.CalculatePlayerIncome();
+            }
+
+            Spawner.SetActive(true);
+            NeutralBaseVisual baseVisual = Spawner.GetComponent<NeutralBaseVisual>();
+            baseVisual.ResetBuildingZone();
+            Destroy(gameObject);
+        }
+        HealthText.text = CurrentHealth.ToString();
+    }
+
+    private Player GetOwnerPlayerFromTag()
+    {
+        if (GlobalSettings.Instance == null)
+            return null;
+
+        if (CompareTag("TopPlayer"))
+            return GlobalSettings.Instance.TopPlayer;
+
+        if (CompareTag("LowPlayer"))
+            return GlobalSettings.Instance.LowPlayer;
+
+        return null;
     }
 }

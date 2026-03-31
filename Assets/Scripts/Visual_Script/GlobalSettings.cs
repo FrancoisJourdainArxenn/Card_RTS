@@ -57,8 +57,6 @@ public class GlobalSettings : MonoBehaviour
             neutralBase.SetOwnerColor(NeutralColor);
         }
     }
-
-
     void Start()
     {
         TopPlayer.playerColor = TopColor;
@@ -67,6 +65,15 @@ public class GlobalSettings : MonoBehaviour
         activePlayerDebugText.text = "Active Player: " + activePlayer.name;
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            activePlayer = activePlayer == TopPlayer ? LowPlayer : TopPlayer;
+            activePlayerDebugText.text = "Active Player: " + activePlayer.name;
+        }
+    }
+    
     public bool CanControlThisPlayer(AreaPosition owner)
     {
         return CanControlThisPlayer(Players[owner]);
