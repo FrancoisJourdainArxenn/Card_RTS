@@ -43,10 +43,7 @@ public class CreatureAttackVisual : MonoBehaviour
                     target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
                     target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
                 }
-                /*else if (target.GetComponent<OneBaseManager>() != null)
-                {
-                    target.GetComponent<OneBaseManager>().HealthText.text = Mathf.Max(0, targetHealthAfter).ToString();
-                }*/
+
                 else
                     target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
 

@@ -138,22 +138,6 @@ public class CreatureLogic: ICharacter
         AttackCreature(target);
     }
 
-    /*public void AttackBaseWithID(int uniqueBaseID)
-    {
-        GameObject targetBaseObject = IDHolder.GetGameObjectWithID(uniqueBaseID);
-        if (targetBaseObject == null)
-            return;
-
-        OneBaseManager targetBase = targetBaseObject.GetComponent<OneBaseManager>();
-        if (targetBase == null)
-            return;
-
-        AttacksLeftThisTurn--;
-        int targetHealthAfter = targetBase.CurrentHealth - Attack;
-        new CreatureAttackCommand(uniqueBaseID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
-        targetBase.TakeDamage(Attack, targetHealthAfter);
-    }*/
-
     // STATIC For managing IDs
     public static Dictionary<int, CreatureLogic> CreaturesCreatedThisGame = new Dictionary<int, CreatureLogic>();
 
