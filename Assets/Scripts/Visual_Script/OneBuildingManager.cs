@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class OneBaseManager : MonoBehaviour
+public class OneBuildingManager : MonoBehaviour
 {
     public BaseAsset baseAsset;
     public int CurrentHealth { get; private set; }
@@ -78,5 +78,20 @@ public class OneBaseManager : MonoBehaviour
             return GlobalSettings.Instance.LowPlayer;
 
         return null;
+    }
+
+    public void RemoveBuildingWithID(int buildingID)
+    {
+        BuildingLogic.BuildingsCreatedThisGame.Remove(buildingID);
+        Player ownerPlayer = GetOwnerPlayerFromTag();
+        if (ownerPlayer != null && baseAsset != null)
+        {
+            ownerPlayer.controlledBases.Remove(baseAsset);
+            ownerPlayer.CalculatePlayerIncome();
+        }
+        Spawner.SetActive(true);
+        NeutralBaseVisual baseVisual = Spawner.GetComponent<NeutralBaseVisual>();
+        baseVisual.ResetBuildingZone();
+        Destroy(gameObject);
     }
 }

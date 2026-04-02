@@ -21,7 +21,7 @@ MonoBehaviour:
   Attack: 10
   AttacksForOneTurn: 1
   Speed: 1
-  Charge: 0
+  Charge: 1
   CreatureScriptName: 
   specialCreatureAmount: 1
   SpellScriptName: 

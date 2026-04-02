@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 [System.Serializable]
-public class CreatureLogic: ICharacter 
+public class CreatureLogic: ILivable 
 {
     // PUBLIC FIELDS
     public Player owner;
@@ -13,7 +13,7 @@ public class CreatureLogic: ICharacter
     public bool Frozen = false;
 
     // PROPERTIES
-    // property from ICharacter interface
+    // property from ILivable interface
     public int ID
     {
         get{ return UniqueCreatureID; }
@@ -138,7 +138,23 @@ public class CreatureLogic: ICharacter
         AttackCreature(target);
     }
 
+    public void AttackBuildingWithID(int uniqueBuildingID)
+    {
+        BuildingLogic target = BuildingLogic.BuildingsCreatedThisGame[uniqueBuildingID];
+        AttackBuilding(target);
+    }
+
+    public void AttackBuilding(BuildingLogic target)
+    {
+        AttacksLeftThisTurn--;
+        int targetHealthAfter = target.Health - Attack;
+        new CreatureAttackCommand(target.UniqueBuildingID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
+        target.Health -= Attack;
+
+    }
+
     // STATIC For managing IDs
     public static Dictionary<int, CreatureLogic> CreaturesCreatedThisGame = new Dictionary<int, CreatureLogic>();
+
 
 }

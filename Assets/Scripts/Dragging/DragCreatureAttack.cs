@@ -14,7 +14,7 @@ public class DragCreatureAttack : DraggingActions {
     // SpriteRenderer of triangle. We need this to disable the pointy end if the target is too close.
     private SpriteRenderer triangleSR;
     // when we stop dragging, the gameObject that we were targeting will be stored in this variable.
-    private GameObject Target;
+    private GameObject target;
     // Reference to creature manager, attached to the parent game object
     private OneCreatureManager manager;
 
@@ -90,7 +90,7 @@ public class DragCreatureAttack : DraggingActions {
 
     public override void OnEndDrag()
     {
-        Target = null;
+        target = null;
         RaycastHit[] hits;
         // TODO: raycast here anyway, store the results in
         hits = Physics.RaycastAll(origin: Camera.main.transform.position, 
@@ -105,7 +105,7 @@ public class DragCreatureAttack : DraggingActions {
                 // go face
                 IDHolder hitIdHolder = h.transform.GetComponentInParent<IDHolder>();
                 if (hitIdHolder != null)
-                    Target = hitIdHolder.gameObject;
+                    target = hitIdHolder.gameObject;
             }
             else if ((h.transform.tag == "TopCreature" && this.tag == "LowCreature") ||
                     (h.transform.tag == "LowCreature" && this.tag == "TopCreature"))
@@ -113,59 +113,12 @@ public class DragCreatureAttack : DraggingActions {
                 // hit a creature, resolve to the object that actually carries the ID
                 IDHolder hitIdHolder = h.transform.GetComponentInParent<IDHolder>();
                 if (hitIdHolder != null)
-                    Target = hitIdHolder.gameObject;
+                    target = hitIdHolder.gameObject;
             }
                
         }
 
-        bool targetValid = false;
-
-        if (Target != null)
-        {
-            IDHolder targetIdHolder = Target.GetComponent<IDHolder>();
-            if (targetIdHolder == null)
-                targetIdHolder = Target.GetComponentInParent<IDHolder>();
-
-            IDHolder attackerIdHolder = GetComponentInParent<IDHolder>();
-            if (targetIdHolder == null || attackerIdHolder == null)
-            {
-                targetValid = false;
-            }
-            else
-            {
-                int targetID = targetIdHolder.UniqueID;
-                int attackerID = attackerIdHolder.UniqueID;
-
-                if (targetID != attackerID)
-                {
-                    Debug.Log("Target ID: " + targetID);
-
-                    if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
-                    {
-                        // attack character
-                        Debug.Log("Attacking " + Target);
-                        Debug.Log("TargetID: " + targetID);
-
-                        if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(attackerID))
-                        {
-                            CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
-                            targetValid = true;
-                        }
-                    }
-                    else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetID) &&
-                             CreatureLogic.CreaturesCreatedThisGame[targetID] != null)
-                    {
-                        // if targeted creature is still alive, attack creature
-                        if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(attackerID))
-                        {
-                            targetValid = true;
-                            CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
-                            Debug.Log("Attacking " + Target);
-                        }
-                    }
-                }
-            }
-        } 
+        bool targetValid = AttackTarget();  
 
         if (!targetValid)
         {
@@ -183,6 +136,70 @@ public class DragCreatureAttack : DraggingActions {
         lr.enabled = false;
         triangleSR.enabled = false;
 
+    }
+
+    private bool AttackTarget()
+    {
+        if(target == null)
+        {
+            Debug.Log("target null");
+            return false;
+        }
+    
+        IDHolder targetIdHolder = target.GetComponent<IDHolder>();
+        if (targetIdHolder == null)
+            targetIdHolder = target.GetComponentInParent<IDHolder>();
+
+        IDHolder attackerIdHolder = GetComponentInParent<IDHolder>();
+        if (targetIdHolder == null || attackerIdHolder == null)
+        {
+            Debug.Log("ID holder de target or attacker is null");
+            return false;
+        }
+               
+        int targetID = targetIdHolder.UniqueID;
+        int attackerID = attackerIdHolder.UniqueID;
+
+        if (targetID == attackerID)
+        {
+            Debug.Log("target or attacker ID null");
+            return false;
+        }
+
+        if (!CreatureLogic.CreaturesCreatedThisGame.ContainsKey(attackerID))
+        {
+            Debug.Log("Attacker ID not found");
+            return false;
+        }
+
+        if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
+        {
+            // attack character
+            Debug.Log("Attacking " + target);
+            Debug.Log("target: " + targetID);
+            CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
+            return true;
+        }
+        
+        if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID) &&
+            BuildingLogic.BuildingsCreatedThisGame[targetID] != null)
+        {
+            CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
+            Debug.Log("Attacking building " + target);
+            return true;  
+
+        }
+        if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetID) &&
+            CreatureLogic.CreaturesCreatedThisGame[targetID] != null)
+        {
+            // if targeted creature is still alive, attack creature
+            CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
+            Debug.Log("Attacking " + target);
+            return true;
+        }            
+
+        Debug.Log("Unknown Error");
+        return false;
     }
 
     // NOT USED IN THIS SCRIPT

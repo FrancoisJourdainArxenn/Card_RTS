@@ -47,62 +47,31 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseDown()
     {
-        activePlayer = GlobalSettings.Instance.activePlayer;
-        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Command)
-        {
-            if(canBuild && activePlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && activePlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost)
-            {
-                new BuildNeutralBaseCommand(activePlayer, baseAsset).AddToQueue(); //active player ne change pas à l'heure actuelle.
-                canBuild = false;
-                InstantiateBaseCard();
-            }
-            else
-            {
-                ShowMessageCommand showMessageCommand = new ShowMessageCommand("Insufficient Ressources", 2f);
-                Debug.Log("ShowMessageCommand: Insufficient Ressources");
-                showMessageCommand.AddToQueue();
-            }
-        }
-        else
-        {
-            ShowMessageCommand showMessageCommand = new ShowMessageCommand("You can't do that right now", 2f);
-            Debug.Log("ShowMessageCommand: Not your turn");
-            showMessageCommand.AddToQueue();
-        }
+        activePlayer.CreateANewNeutralBase(baseAsset, this);
+        RemoveBaseCard();
     }
-
     void OnMouseExit()
     {
         Glow.SetActive(false);
     }
 
-    public void InstantiateBaseCard()
+    public void InstantiateBaseCard(Player player, int buildingUniqueID)
     {
         GameObject baseCard = Instantiate(BaseCardPrefab, BaseApparitionPosition.position, BaseApparitionPosition.rotation);
         
-        OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
+        OneBuildingManager baseManager = baseCard.GetComponent<OneBuildingManager>();
         baseManager.baseAsset = baseAsset;
         baseManager.ResetValues(baseAsset);
         baseManager.Spawner = this.gameObject;
-        IDHolder idHolder = baseCard.GetComponent<IDHolder>();
-        idHolder.UniqueID = IDFactory.GetUniqueID();
+        baseCard.tag = player.tag;
+        Debug.Log("Player tag :" + player.tag);
 
-        if(activePlayer.MainPArea.owner == AreaPosition.Top)
-        {
-            baseCard.tag = "TopPlayer";
-            BuildingZone.GetComponent<Image>().color = activePlayer.playerColor;
-            activePlayer.controlledBases.Add(baseAsset);
-            activePlayer.CalculatePlayerIncome();
-            RemoveBaseCard();
-        }
-        else
-        {
-            baseCard.tag = "LowPlayer";
-            BuildingZone.GetComponent<Image>().color = activePlayer.playerColor;
-            activePlayer.controlledBases.Add(baseAsset);
-            activePlayer.CalculatePlayerIncome();
-            RemoveBaseCard();
-        }
+        IDHolder idHolder = baseCard.GetComponent<IDHolder>();
+        idHolder.UniqueID = buildingUniqueID;
+        player.controlledBases.Add(baseAsset);
+        BuildingZone.GetComponent<Image>().color = player.playerColor;
+        player.CalculatePlayerIncome();
+        RemoveBaseCard();
 
         // Animate scale (pop-in)
         baseCard.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);

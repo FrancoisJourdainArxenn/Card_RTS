@@ -1329,8 +1329,8 @@ MonoBehaviour:
   - {fileID: 1309744695}
   CardPreviewTime: 0.5
   CardTransitionTime: 0.5
-  CardPreviewTimeFast: 0.2
-  CardTransitionTimeFast: 0.5
+  CardPreviewTimeFast: 0.05
+  CardTransitionTimeFast: 0.05
   NoTargetSpellCardPrefab: {fileID: 6744150721965934964, guid: b509d50d5a92e9f469238833110d9074, type: 3}
   TargetedSpellCardPrefab: {fileID: 3025979967316183455, guid: 0b427a7a275ec464cbb10da584ffe8e8, type: 3}
   CreatureCardPrefab: {fileID: 6821526227381898363, guid: a18732ceb6304d347b384e170c1e008f, type: 3}

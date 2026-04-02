@@ -8,7 +8,7 @@ using TMPro;
 public class BaseVisual : MonoBehaviour {
 
     public Player player;
-    public OneBaseManager baseManager;   
+    public OneBuildingManager baseManager;   
     public TMP_Text mainRessourceText,secondRessourceText;
     public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
     public AreaPosition owner;
@@ -29,7 +29,6 @@ public class BaseVisual : MonoBehaviour {
         mainRessourceText.text = player.mainRessourceAvailable.ToString();
         secondRessourceText.text = player.secondRessourceAvailable.ToString();
         //PortraitImage.sprite = factionAsset.AvatarImage;
-
 
     }
 

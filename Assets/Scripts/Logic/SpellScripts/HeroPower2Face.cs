@@ -4,7 +4,7 @@ using System.Collections;
 public class HeroPower2Face : SpellEffect 
 {
 
-    public override void ActivateEffect(int specialAmount = 0, ICharacter target = null, Player caster = null)
+    public override void ActivateEffect(int specialAmount = 0, ILivable target = null, Player caster = null)
     {
         if (caster == null)
             return;

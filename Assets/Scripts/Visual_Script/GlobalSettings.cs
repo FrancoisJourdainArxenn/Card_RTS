@@ -61,6 +61,8 @@ public class GlobalSettings : MonoBehaviour
     {
         TopPlayer.playerColor = TopColor;
         LowPlayer.playerColor = LowColor;
+        LowPlayer.tag = "LowPlayer";
+        TopPlayer.tag = "TopPlayer";
         activePlayer = LowPlayer;
         activePlayerDebugText.text = "Active Player: " + activePlayer.name;
     }

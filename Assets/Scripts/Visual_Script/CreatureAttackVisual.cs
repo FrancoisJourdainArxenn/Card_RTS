@@ -13,6 +13,28 @@ public class CreatureAttackVisual : MonoBehaviour
         w = GetComponent<WhereIsTheCardOrCreature>();
     }
 
+    private string GetTargetType(int targetUniqueID)
+    {
+        if (
+            targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID 
+            || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID
+        )
+        {
+            return "player";
+        }
+        else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetUniqueID) &&
+                 BuildingLogic.BuildingsCreatedThisGame[targetUniqueID] != null)
+        {
+            return "building";
+        }
+        else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetUniqueID) &&
+                 CreatureLogic.CreaturesCreatedThisGame[targetUniqueID] != null)
+        {
+            return "creature";
+        }
+        return "unknown";
+    }
+
     public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter)
     {
         Debug.Log(targetUniqueID);
@@ -20,15 +42,18 @@ public class CreatureAttackVisual : MonoBehaviour
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
+            Debug.Log("No Target");
             manager.HealthText.text = attackerHealthAfter.ToString();
             Command.CommandExecutionComplete();
             return;
         }
+        string targetType = GetTargetType(targetUniqueID);
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
         VisualStates tempState = w.VisualState;
         w.VisualState = VisualStates.Transition;
+
 
         transform.DOMove(target.transform.position, 0.5f).SetLoops(2, LoopType.Yoyo).SetEase(Ease.InCubic).OnComplete(() =>
             {
@@ -36,16 +61,34 @@ public class CreatureAttackVisual : MonoBehaviour
                     DamageEffect.CreateDamageEffect(target.transform.position, damageTakenByTarget);
                 if(damageTakenByAttacker>0)
                     DamageEffect.CreateDamageEffect(transform.position, damageTakenByAttacker);
-                
-                if (targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID)
+
+                switch (targetType)
+                {
+                    case "player":
+                        target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
+                        target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
+                        break;
+                    case "building":
+                        target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
+                        break;
+                    case "creature":
+                        target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
+                        break;
+                    case "unknown":
+                        Debug.Log("Unknown target type: " + targetUniqueID);
+                        break;
+                }
+
+                /*if (targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID)
                 {
                     // target is a player
                     target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
                     target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
                 }
 
+
                 else
-                    target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
+                    target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();*/
 
                 w.SetTableSortingOrder();
                 w.VisualState = tempState;

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public interface ICharacter: IIdentifiable
+public interface ILivable: IIdentifiable
 {	
     int Health { get;    set;}
 

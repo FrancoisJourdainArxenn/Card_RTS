@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
-public class Player : MonoBehaviour, ICharacter
+public class Player : MonoBehaviour, ILivable
 {
     // PUBLIC FIELDS
     // int ID that we get from ID factory
@@ -40,7 +40,7 @@ public class Player : MonoBehaviour, ICharacter
 
 
     // PROPERTIES 
-    // this property is a part of interface ICharacter
+    // this property is a part of interface ILivable
     public int ID
     {
         get{ return PlayerID; }
@@ -277,9 +277,9 @@ public class Player : MonoBehaviour, ICharacter
           
     }
 
-    // 2nd overload - takes CardLogic and ICharacter interface - 
+    // 2nd overload - takes CardLogic and ILivable interface - 
     // this method is called from Logic, for example by AI
-    public void PlayASpellFromHand(CardLogic playedCard, ICharacter target)
+    public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
     {
         MainRessourceAvailable -= playedCard.MainCost;
         SecondRessourceAvailable -= playedCard.SecondCost;
@@ -417,6 +417,29 @@ public class Player : MonoBehaviour, ICharacter
             playerSecondIncome += baseAsset.secondRessourceIncome;
         }
         baseVisual.ApplyLookFromAsset();
+    }
+
+    // METHODS TO CREATE A NEW BASE 
+    // 1st overload - by ID
+    public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual)
+    {
+        if(TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+        {
+            new ShowMessageCommand("You can't do that right now", 2f).AddToQueue();
+            Debug.Log("ShowMessageCommand: Not your turn");
+            return;
+        }
+
+        if(MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
+        SecondRessourceAvailable < baseAsset.secondRessourceBuildingCost)
+        {
+            new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
+            return;
+        }
+        
+        BuildingLogic newBuilding = new BuildingLogic(this, baseAsset);
+
+        new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset).AddToQueue();
     }
 
 

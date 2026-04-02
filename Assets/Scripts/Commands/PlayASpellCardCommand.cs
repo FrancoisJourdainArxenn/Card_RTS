@@ -5,7 +5,7 @@ public class PlayASpellCardCommand: Command
 {
     private CardLogic card;
     private Player p;
-    //private ICharacter target;
+    //private ILivable target;
 
     public PlayASpellCardCommand(Player p, CardLogic card)
     {
