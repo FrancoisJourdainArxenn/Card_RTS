@@ -8,6 +8,7 @@ using TMPro;
 public class NeutralBaseVisual : MonoBehaviour {
 
     public BaseAsset baseAsset;
+    public NeutralBaseController neutralBaseController;
     public AreaPosition owner;
     public TMP_Text BuildingCostText;
     public TMP_Text MainRessourceIncomeText;
@@ -47,46 +48,16 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseDown()
     {
-        activePlayer.CreateANewNeutralBase(baseAsset, this);
-        RemoveBaseCard();
+        activePlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
     }
     void OnMouseExit()
     {
         Glow.SetActive(false);
     }
 
-    public void InstantiateBaseCard(Player player, int buildingUniqueID)
-    {
-        GameObject baseCard = Instantiate(BaseCardPrefab, BaseApparitionPosition.position, BaseApparitionPosition.rotation);
-        
-        OneBuildingManager baseManager = baseCard.GetComponent<OneBuildingManager>();
-        baseManager.baseAsset = baseAsset;
-        baseManager.ResetValues(baseAsset);
-        baseManager.Spawner = this.gameObject;
-        baseCard.tag = player.tag;
-        Debug.Log("Player tag :" + player.tag);
-
-        IDHolder idHolder = baseCard.GetComponent<IDHolder>();
-        idHolder.UniqueID = buildingUniqueID;
-        player.controlledBases.Add(baseAsset);
-        BuildingZone.GetComponent<Image>().color = player.playerColor;
-        player.CalculatePlayerIncome();
-        RemoveBaseCard();
-
-        // Animate scale (pop-in)
-        baseCard.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
-
-        // Animate movement from BaseApparitionPosition to BasePosition
-        if (BasePosition != null)
-        {
-            baseCard.transform.DOMove(BasePosition.position, 0.7f).SetEase(Ease.InOutQuad);
-            baseCard.transform.DORotateQuaternion(BasePosition.rotation, 0.7f).SetEase(Ease.InOutQuad);
-        }
-
-    }
-
     public void RemoveBaseCard()
     {
+        Debug.Log("Removing base card");
         gameObject.SetActive(false);
     }
 

@@ -7,7 +7,7 @@ public class BuildingLogic: ILivable
 {
     public Player owner;
     public BaseAsset ba;
-    public OneBuildingManager buildingManager;
+    public NeutralBaseController neutralBaseController;
     //public BuildingEffect effect;
     public int UniqueBuildingID;
     public bool Frozen = false;
@@ -56,13 +56,14 @@ public class BuildingLogic: ILivable
         owner.controlledBases.Remove(ba);
         owner.CalculatePlayerIncome();
         BuildingsCreatedThisGame.Remove(UniqueBuildingID);
-
-        //new BuildingDieCommand(UniqueBuildingID, owner, buildingManager).AddToQueue();
+        
+        new BuildingDieCommand(UniqueBuildingID, neutralBaseController).AddToQueue();
     }
 
-    public BuildingLogic(Player owner, BaseAsset ba)
+    public BuildingLogic(Player owner, BaseAsset ba, NeutralBaseController neutralBaseController)
     {
         this.ba = ba;
+        this.neutralBaseController = neutralBaseController;
         baseHealth = ba.MaxHealth;
         Health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;
@@ -70,7 +71,6 @@ public class BuildingLogic: ILivable
         this.owner = owner;
         UniqueBuildingID = IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
-        //buildingManager = gameObject.GetComponent<OneBuildingManager>();
     }
 
     // STATIC For managing IDs

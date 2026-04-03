@@ -2350,6 +2350,10 @@ PrefabInstance:
       propertyPath: BuildingZone
       value: 
       objectReference: {fileID: 9062903645344472021}
+    - target: {fileID: 8714903389357574513, guid: 9666481543d3d424c9fc77179c1e3e9b, type: 3}
+      propertyPath: neutralBaseController
+      value: 
+      objectReference: {fileID: 47061821084883809}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

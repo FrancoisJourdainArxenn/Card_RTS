@@ -79,17 +79,7 @@ public class CreatureAttackVisual : MonoBehaviour
                         break;
                 }
 
-                /*if (targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID)
-                {
-                    // target is a player
-                    target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
-                    target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
-                }
-
-
-                else
-                    target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();*/
-
+                
                 w.SetTableSortingOrder();
                 w.VisualState = tempState;
 

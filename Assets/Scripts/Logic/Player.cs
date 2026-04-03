@@ -421,7 +421,7 @@ public class Player : MonoBehaviour, ILivable
 
     // METHODS TO CREATE A NEW BASE 
     // 1st overload - by ID
-    public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual)
+    public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
     {
         if(TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {
@@ -437,9 +437,8 @@ public class Player : MonoBehaviour, ILivable
             return;
         }
         
-        BuildingLogic newBuilding = new BuildingLogic(this, baseAsset);
-
-        new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset).AddToQueue();
+        BuildingLogic newBuilding = new BuildingLogic(this, baseAsset, neutralBaseController);
+        new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
     }
 
 

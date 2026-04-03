@@ -3,19 +3,23 @@ using System.Collections;
 
 public class BuildingDieCommand : Command 
 {
-    private Player p;
-    private OneBuildingManager buildingManager;
+    private NeutralBaseController neutralBaseController;
     private int buildingID;
 
-    public BuildingDieCommand(int buildingID, Player p, OneBuildingManager buildingManager)
+    public BuildingDieCommand(int buildingID, NeutralBaseController neutralBaseController)
     {
-        this.p = p;
+        this.neutralBaseController = neutralBaseController;
         this.buildingID = buildingID;
-        this.buildingManager = buildingManager;
     }
 
     public override void StartCommandExecution()
     {
-        buildingManager.RemoveBuildingWithID(buildingID);
+        if (neutralBaseController != null)
+            neutralBaseController.RemoveBuildingWithID(buildingID);
+        else
+            Debug.LogWarning("BuildingDieCommand: neutralBaseController is null for building ID " + buildingID);
+
+        new ShowMessageCommand("Building " + buildingID + " died", 2f).AddToQueue();
+        CommandExecutionComplete();
     }
 }
