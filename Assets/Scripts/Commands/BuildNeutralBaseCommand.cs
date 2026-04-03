@@ -22,14 +22,12 @@ public class BuildNeutralBaseCommand : Command
     {
         if (player == null || spawner == null)
         {
-            Debug.LogWarning("BuildNeutralBaseCommand: player ou spawner est null.");
             CommandExecutionComplete();
             return;
         }
 
         player.MainRessourceAvailable -= neutralBaseAsset.mainRessourceBuildingCost;
         player.SecondRessourceAvailable -= neutralBaseAsset.secondRessourceBuildingCost;
-        Debug.Log("Player :" + player.name + " has build a base.");
         new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable, player.secondRessourceTotal, player.SecondRessourceAvailable).AddToQueue();
         neutralBaseController.AddBase(neutralBaseAsset, buildingUniqueID, player, spawner);
         CommandExecutionComplete();

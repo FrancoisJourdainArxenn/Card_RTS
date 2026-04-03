@@ -57,7 +57,6 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     public void RemoveBaseCard()
     {
-        Debug.Log("Removing base card");
         gameObject.SetActive(false);
     }
 
