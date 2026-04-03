@@ -8,6 +8,7 @@ public class NeutralBaseController : MonoBehaviour
     public AreaPosition owner;
     public Color ownerColor;
     public GameObject background;
+    public TableVisual[] tables;
 
     private List<GameObject> buildings = new List<GameObject>();
 

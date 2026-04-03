@@ -16,12 +16,10 @@ public class TableVisual : MonoBehaviour
     public GameObject glow;
     public Color ownerColor;
     [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
+    [SerializeField] public List<GameObject> CreaturesOnTable = new List<GameObject>();
 
 
     // PRIVATE FIELDS
-
-    // list of all the creature cards on the table as GameObjects
-    private List<GameObject> CreaturesOnTable = new List<GameObject>();
 
     // initial local X position of the slots container in the scene
     private float initialSlotsLocalPosX;

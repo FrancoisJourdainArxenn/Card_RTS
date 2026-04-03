@@ -19,7 +19,6 @@ public class BuildingDieCommand : Command
         else
             Debug.LogWarning("BuildingDieCommand: neutralBaseController is null for building ID " + buildingID);
 
-        new ShowMessageCommand("Building " + buildingID + " died", 2f).AddToQueue();
         CommandExecutionComplete();
     }
 }

@@ -3702,6 +3702,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f08f871994c50de4f8c37612c6019e2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerArea
+--- !u!114 &1397097779 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5357594631097165931, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+  m_PrefabInstance: {fileID: 3412757113723070364}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e98a1864e979845a346d1e738499c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TableVisual
 --- !u!1 &1404572019
 GameObject:
   m_ObjectHideFlags: 0
@@ -4311,6 +4322,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &1474111514 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4245424230694025082, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+  m_PrefabInstance: {fileID: 3412757113723070364}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e98a1864e979845a346d1e738499c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TableVisual
 --- !u!1 &1498998919
 GameObject:
   m_ObjectHideFlags: 0
@@ -5436,9 +5458,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 57.943996, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:
@@ -5856,9 +5878,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 163626270}
     m_Modifications:
+    - target: {fileID: 47061821084883809, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: tables.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 47061821084883809, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: 'tables.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1474111514}
+    - target: {fileID: 47061821084883809, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: 'tables.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1397097779}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_Name
       value: Neutral Zone
+      objectReference: {fileID: 0}
+    - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_TagString
+      value: Untagged
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
