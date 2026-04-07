@@ -47,21 +47,6 @@ public class OneCardManager : MonoBehaviour
 
     public void ReadCardFromAsset()
     {
-        // universal actions for any Card
-        // 1) apply tint
-        if (cardAsset.Faction != null)
-        {
-            //CardBodyImage.color = cardAsset.Faction.ClassCardTint;
-            //FrameImage.color = cardAsset.Faction.ClassCardTint;
-
-        }
-        else
-        {
-            //CardBodyImage.color = GlobalSettings.Instance.CardBodyStandardColor;
-            //FrameImage.color = Color.white;
-            //CardTopRibbonImage.color = GlobalSettings.Instance.CardRibbonsStandardColor;
-            //CardLowRibbonImage.color = GlobalSettings.Instance.CardRibbonsStandardColor;
-        }
         // 2) add card name
         NameText.text = cardAsset.name;
         // 3) add mana cost
@@ -87,4 +72,5 @@ public class OneCardManager : MonoBehaviour
             PreviewManager.ReadCardFromAsset();
         }
     }
+
 }

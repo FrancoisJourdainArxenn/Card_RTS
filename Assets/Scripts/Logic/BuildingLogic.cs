@@ -10,7 +10,6 @@ public class BuildingLogic: ILivable
     public NeutralBaseController neutralBaseController;
     //public BuildingEffect effect;
     public int UniqueBuildingID;
-    public bool Frozen = false;
 
     public int ID
     {

@@ -9,11 +9,16 @@ public abstract class DraggingActions : MonoBehaviour {
 
     public abstract void OnDraggingInUpdate();
 
+
     public virtual bool CanDrag
     {
         get
         {            
-            return GlobalSettings.Instance.CanControlThisPlayer(playerOwner);
+            Player po = playerOwner;
+            bool canControl = (GlobalSettings.Instance != null && po != null) 
+                ? GlobalSettings.Instance.CanControlThisPlayer(po)
+                : false;
+            return canControl;
         }
     }
 

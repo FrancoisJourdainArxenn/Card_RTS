@@ -10,7 +10,6 @@ public class CreatureLogic: ILivable
     public CardAsset ca;
     public CreatureEffect effect;
     public int UniqueCreatureID;
-    public bool Frozen = false;
 
     // PROPERTIES
     // property from ILivable interface
@@ -18,7 +17,8 @@ public class CreatureLogic: ILivable
     {
         get{ return UniqueCreatureID; }
     }
-        
+
+    public int BaseID {get; private set;}
     // the basic health that we have in CardAsset
     private int baseHealth;
     // health with all the current buffs taken into account
@@ -51,7 +51,18 @@ public class CreatureLogic: ILivable
         {
             bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
             bool ownersTurn = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
-            return ownersTurn && (AttacksLeftThisTurn > 0) && !Frozen;
+            return ownersTurn && (AttacksLeftThisTurn > 0);
+        }
+    }
+
+    // returns true if we can move with this creature now
+    public bool CanMove
+    {
+        get
+        {
+            bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
+            bool ownersTurn = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
+            return ownersTurn && (MovementsLeftThisTurn > 0);
         }
     }
 
@@ -70,18 +81,30 @@ public class CreatureLogic: ILivable
         set;
     }
 
+    // number of movements for one turn if (movementsForOneTurn==2) => Celerity
+    private int movementsForOneTurn = 1;
+    public int MovementsLeftThisTurn
+    {
+        get;
+        set;
+    }
+
     // CONSTRUCTOR
-    public CreatureLogic(Player owner, CardAsset ca)
+    public CreatureLogic(Player owner, CardAsset ca, int baseID)
     {
         this.ca = ca;
         baseHealth = ca.MaxHealth;
         Health = ca.MaxHealth;
         baseAttack = ca.Attack;
         attacksForOneTurn = ca.AttacksForOneTurn;
+        movementsForOneTurn = ca.MoveSpeed;
         // AttacksLeftThisTurn is now equal to 0
         if (ca.Charge)
             AttacksLeftThisTurn = attacksForOneTurn;
+        if (ca.Celerity)
+            MovementsLeftThisTurn = movementsForOneTurn;
         this.owner = owner;
+        this.BaseID = baseID;
         UniqueCreatureID = IDFactory.GetUniqueID();
         if (ca.CreatureScriptName!= null && ca.CreatureScriptName!= "")
         {
@@ -95,6 +118,8 @@ public class CreatureLogic: ILivable
     public void OnTurnStart()
     {
         AttacksLeftThisTurn = attacksForOneTurn;
+        MovementsLeftThisTurn = movementsForOneTurn;
+        Debug.Log("Movements Left This Turn: " + MovementsLeftThisTurn);
     }
 
     public void Die()

@@ -103,6 +103,8 @@ public class Player : MonoBehaviour, ILivable
             area.tableVisual.ownerColor = playerColor;
             area.tableVisual.SetOwnerColor(playerColor);
         }
+
+        InitBaseIDs();
     }
     //private int secondRessourceTotal;
     public int SecondRessourceTotal
@@ -146,6 +148,14 @@ public class Player : MonoBehaviour, ILivable
         PlayerID = IDFactory.GetUniqueID();
         controlledBases.Add(baseAsset);
         CalculatePlayerIncome();
+    }
+
+    public void InitBaseIDs()
+    {
+        for(int i = 0; i < PAreas.Length; i++)
+        {
+            PAreas[i].baseID = i + PlayerID * PAreas.Length;
+        }
     }
 
     public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
@@ -314,8 +324,10 @@ public class Player : MonoBehaviour, ILivable
         SecondRessourceAvailable -= playedCard.SecondCost;
         // Debug.Log("Mana Left after played a creature: " + ManaLeft);
         // create a new creature object and add it to Table
-        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca);
+        int baseID = selectedPArea.baseID;
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
         table.CreaturesOnTable.Insert(tablePos, newCreature);
+
         // 
         new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         // cause battlecry Effect
@@ -354,12 +366,22 @@ public class Player : MonoBehaviour, ILivable
         }
 
         bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
+        bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
+
         foreach (CreatureLogic crl in table.CreaturesOnTable)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
             if (g != null)
-                g.GetComponent<OneCreatureManager>().CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !crl.Frozen && !removeAllHighlights;
+            {
+                OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
+                creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
+                creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
+                Debug.Log($"[Player] Creature {crl.UniqueCreatureID} canAttackNow={creatureManager.CanAttackNow} canMoveNow={creatureManager.CanMoveNow} movesLeft={crl.MovementsLeftThisTurn} phaseCommand={commandPhase} mayControl={TurnManager.Instance.MayPlayerUseControlsInPhase(this)}");
+                creatureManager.UpdateCreatureGlow();
+            }
+
         }
+
     }
 
     // START GAME METHODS

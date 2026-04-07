@@ -95,13 +95,14 @@ public class TableVisual : MonoBehaviour
     }
    
     // method to create a new creature and add it to the table
-    public void AddCreatureAtIndex(CardAsset ca, int UniqueID ,int index)
+    public void AddCreatureAtIndex(CardAsset ca, int UniqueID ,int index, int baseID)
     {
         // create a new creature from prefab
         GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, slots.Children[index].transform.position, Quaternion.identity) as GameObject;
 
         // apply the look from CardAsset
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
+        manager.baseID = baseID;
         manager.cardAsset = ca;
         manager.ReadCreatureFromAsset();
 

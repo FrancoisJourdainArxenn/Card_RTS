@@ -51,6 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneCreatureManager
   cardAsset: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   PreviewManager: {fileID: 8631285477209294222}
+  baseID: 0
   HealthText: {fileID: 9035922361778319404}
   AttackText: {fileID: 9055195526668642142}
   CreatureGraphicImage: {fileID: 4804881299676873094}
@@ -2019,8 +2020,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2, y: 0.9, z: 0.06}
-  m_Center: {x: 0.04, y: 0.75, z: -0.02}
+  m_Size: {x: 2.4519758, y: 1.1691432, z: 0.06}
+  m_Center: {x: 0.0040615797, y: 0.61542827, z: -0.02}
 --- !u!114 &1706379375189584474
 MonoBehaviour:
   m_ObjectHideFlags: 0

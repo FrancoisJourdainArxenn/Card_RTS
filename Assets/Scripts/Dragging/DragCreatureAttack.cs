@@ -35,14 +35,7 @@ public class DragCreatureAttack : DraggingActions {
     {
         get
         {   
-            // TEST LINE: just for testing 
-            //return true;
-
-
-            // we can drag this card if 
-            // a) we can control this our player (this is checked in base.canDrag)
-            // b) creature "CanAttackNow" - this info comes from logic part of our code into each creature`s manager script
-            return base.CanDrag && manager.CanAttackNow;
+            return base.CanDrag && (manager.CanAttackNow || manager.CanMoveNow);
         }
     }
 
@@ -90,6 +83,28 @@ public class DragCreatureAttack : DraggingActions {
 
     public override void OnEndDrag()
     {
+        TurnManager turnmanager = TurnManager.Instance;
+        
+        if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Battle) {
+            SelectTarget();
+            bool targetValid = AttackTarget();
+            if (!targetValid)
+                OnDragFailed();
+        }
+        if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Command) {
+            PlayerArea selectedPArea = playerOwner.SelectedPArea();
+            bool moveValid = Move(selectedPArea);  
+
+            if (!moveValid)
+                OnDragFailed();
+        }
+        
+        // return target and arrow to original position
+        ResetDragElements();
+    }
+
+    private void SelectTarget()
+    {
         target = null;
         RaycastHit[] hits;
         // TODO: raycast here anyway, store the results in
@@ -115,29 +130,28 @@ public class DragCreatureAttack : DraggingActions {
                 if (hitIdHolder != null)
                     target = hitIdHolder.gameObject;
             }
-               
+            
         }
-
-        bool targetValid = AttackTarget();  
-
-        if (!targetValid)
-        {
-            // not a valid target, return
-            if (tag.Contains("Low"))
-                whereIsThisCreature.VisualState = VisualStates.LowTable;
-            else
-                whereIsThisCreature.VisualState = VisualStates.TopTable;
-            whereIsThisCreature.SetTableSortingOrder();
-        }
-
-        // return target and arrow to original position
-        transform.localPosition = Vector3.zero;
-        sr.enabled = false;
-        lr.enabled = false;
-        triangleSR.enabled = false;
-
     }
 
+    private bool Move(PlayerArea targetPlayerArea)
+    {
+        if (targetPlayerArea == null)
+        {
+            Debug.Log("target player area null");
+            return false;
+        }
+    
+        if (targetPlayerArea == playerOwner.SelectedPArea())
+        {
+            Debug.Log("target player area is the same as the player area");
+            return false;
+        }
+
+        manager.Move(targetPlayerArea);
+        return true;
+    }
+    
     private bool AttackTarget()
     {
         if(target == null)
@@ -200,6 +214,27 @@ public class DragCreatureAttack : DraggingActions {
 
         Debug.Log("Unknown Error");
         return false;
+    }
+
+    private void ResetDragElements()
+    {
+        transform.localPosition = Vector3.zero;
+        sr.enabled = false;
+        lr.enabled = false;
+        triangleSR.enabled = false;
+
+    }
+
+    private void OnDragFailed()
+    {
+        {
+            // not a valid target, return
+            if (tag.Contains("Low"))
+                whereIsThisCreature.VisualState = VisualStates.LowTable;
+            else
+                whereIsThisCreature.VisualState = VisualStates.TopTable;
+            whereIsThisCreature.SetTableSortingOrder();
+        }
     }
 
     // NOT USED IN THIS SCRIPT

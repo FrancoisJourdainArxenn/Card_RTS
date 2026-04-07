@@ -8,11 +8,10 @@ public class PlayerArea : MonoBehaviour
 {
     public AreaPosition owner;
     public bool ControlsON = true;
-
     public HandVisual handVisual;
     public TableVisual tableVisual;
     public Transform BasePosition;
-
+    public int baseID;
     public bool AllowedToControlThisPlayer
     {
         get;

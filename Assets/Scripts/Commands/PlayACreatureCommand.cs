@@ -28,6 +28,6 @@ public class PlayACreatureCommand : Command
         // enable Hover Previews Back
         HoverPreview.PreviewsAllowed = true;
         // move this card to the spot 
-        selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos);
+        selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos, selectedPArea.baseID);
     }
 }

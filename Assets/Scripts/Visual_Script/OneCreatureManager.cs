@@ -7,12 +7,14 @@ public class OneCreatureManager : MonoBehaviour
 {
     public CardAsset cardAsset;
     public OneCardManager PreviewManager;
+    public int baseID;
     [Header("Text Component References")]
     public TMP_Text HealthText;
     public TMP_Text AttackText;         
     [Header("Image References")]
     public Image CreatureGraphicImage;
     public Image CreatureGlowImage;
+
 
     void Awake()
     {
@@ -31,8 +33,20 @@ public class OneCreatureManager : MonoBehaviour
         set
         {
             canAttackNow = value;
+        }
+    }
 
-            CreatureGlowImage.enabled = value;
+    private bool canMoveNow = false;
+    public bool CanMoveNow
+    {
+        get
+        {
+            return canMoveNow;
+        }
+
+        set
+        {
+            canMoveNow = value;
         }
     }
 
@@ -58,5 +72,25 @@ public class OneCreatureManager : MonoBehaviour
             DamageEffect.CreateDamageEffect(transform.position, amount);
             HealthText.text = healthAfter.ToString();
         }
+    }
+
+    public void SetBaseID(int baseID)
+    {
+        this.baseID = baseID;
+    }
+
+    public void UpdateCreatureGlow()
+    {
+        if (CanAttackNow)
+            CreatureGlowImage.color = Color.red;
+        else if (CanMoveNow)
+            CreatureGlowImage.color = Color.green;
+        CreatureGlowImage.enabled = CanAttackNow || CanMoveNow;
+    }
+
+    public void Move(PlayerArea targetPlayerArea)
+    {
+        // TODO: Implement move logic
+        Debug.Log("Moving creature to " + targetPlayerArea.name);
     }
 }

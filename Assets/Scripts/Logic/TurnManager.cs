@@ -243,7 +243,6 @@ public class TurnManager : MonoBehaviour
             return false;
         if (Command.CardDrawPending())
             return false;
-
         return currentPhase == TurnPhases.Command || currentPhase == TurnPhases.Battle;
     }
 

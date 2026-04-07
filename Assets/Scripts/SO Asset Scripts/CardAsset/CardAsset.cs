@@ -27,8 +27,9 @@ public class CardAsset : ScriptableObject
     public int MaxHealth;   // =0 => spell card
     public int Attack;
     public int AttacksForOneTurn = 1;
-    public int Speed = 1;
-    public bool Charge;
+    public int MoveSpeed = 1;
+    public bool Charge = false;
+    public bool Celerity = false;
     public string CreatureScriptName;
     public int specialCreatureAmount;
     

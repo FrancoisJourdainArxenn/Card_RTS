@@ -50,13 +50,19 @@ public class DragCreatureOnTable : DraggingActions {
         if (DragSuccessful())
         {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
-            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(Camera.main.ScreenToWorldPoint(
-                new Vector3(Input.mousePosition.x, Input.mousePosition.y, transform.position.z - Camera.main.transform.position.z)).x);
-            // Debug.Log("Table Pos for new Creature: " + tablePos.ToString());
-            // play this card
+            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(
+                Camera.main.ScreenToWorldPoint(
+                    new Vector3(
+                        Input.mousePosition.x,
+                        Input.mousePosition.y,
+                        transform.position.z - Camera.main.transform.position.z
+                    )
+                ).x
+            );
+
 
             playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
-            
+ 
         }
         else
         {
