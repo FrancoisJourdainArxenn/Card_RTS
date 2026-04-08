@@ -37,7 +37,6 @@ public class CreatureAttackVisual : MonoBehaviour
 
     public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter)
     {
-        Debug.Log(targetUniqueID);
         manager.CanAttackNow = false;
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)

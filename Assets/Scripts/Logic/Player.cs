@@ -376,7 +376,7 @@ public class Player : MonoBehaviour, ILivable
                 OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
                 creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
                 creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
-                Debug.Log($"[Player] Creature {crl.UniqueCreatureID} canAttackNow={creatureManager.CanAttackNow} canMoveNow={creatureManager.CanMoveNow} movesLeft={crl.MovementsLeftThisTurn} phaseCommand={commandPhase} mayControl={TurnManager.Instance.MayPlayerUseControlsInPhase(this)}");
+                // Debug.Log($"[Player] Creature {crl.UniqueCreatureID} canAttackNow={creatureManager.CanAttackNow} canMoveNow={creatureManager.CanMoveNow} movesLeft={crl.MovementsLeftThisTurn} phaseCommand={commandPhase} mayControl={TurnManager.Instance.MayPlayerUseControlsInPhase(this)}");
                 creatureManager.UpdateCreatureGlow();
             }
 
@@ -429,6 +429,57 @@ public class Player : MonoBehaviour, ILivable
         return selectedPArea;
     }
 
+    public PlayerArea GetPlayerAreaByID(int baseID)
+    {
+        foreach (PlayerArea area in PAreas)
+        {
+            if (area.baseID == baseID)
+                return area;
+        }
+        return null;
+    }
+
+    private NeutralBaseController GetNeutralControllerForArea(PlayerArea area)
+    {
+        if (area == null || area.tableVisual == null)
+            return null;
+        NeutralBaseController[] allControllers = GameObject.FindObjectsByType<NeutralBaseController>(FindObjectsSortMode.None);
+        foreach (NeutralBaseController c in allControllers)
+        {
+            if (c == null || c.tables == null) continue;
+            foreach (TableVisual t in c.tables)
+            {
+                if (t == area.tableVisual)
+                    return c;
+            }
+        }
+        return null;
+    }
+
+    private bool PlayerOwnsBaseInController(NeutralBaseController controller)
+    {
+        if (controller == null) return false;
+        OneBuildingManager[] allBuildings = GameObject.FindObjectsByType<OneBuildingManager>(FindObjectsSortMode.None);
+        foreach (OneBuildingManager b in allBuildings)
+        {
+            if (b == null || b.Spawner == null) continue;
+            if (b.tag != this.tag) continue; // base du joueur courant uniquement
+            NeutralBaseVisual nv = b.Spawner.GetComponent<NeutralBaseVisual>();
+            if (nv != null && nv.neutralBaseController == controller)
+                return true;
+        }
+        return false;
+    }
+
+    public bool CanPlayCreatureInArea(PlayerArea area)
+    {
+        if (area == null) return false;
+        if (area == MainPArea) return true;
+        NeutralBaseController c = GetNeutralControllerForArea(area);
+        if (c == null) return false;
+        return PlayerOwnsBaseInController(c); // tag joueur + même controller
+    }
+    
     public void CalculatePlayerIncome()
     {
         playerMainIncome = 0;
@@ -445,7 +496,7 @@ public class Player : MonoBehaviour, ILivable
     // 1st overload - by ID
     public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
     {
-        if(TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {
             new ShowMessageCommand("You can't do that right now", 2f).AddToQueue();
             return;
@@ -453,9 +504,9 @@ public class Player : MonoBehaviour, ILivable
 
         foreach (TableVisual table in neutralBaseController.tables)
         {
-            if(table.tag == this.tag)
+            if (table.tag == this.tag)
             {
-                if(table.CreaturesOnTable.Count <= 0)
+                if (table.CreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
                     return;
@@ -463,7 +514,7 @@ public class Player : MonoBehaviour, ILivable
             }
         }
 
-        if(MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
+        if (MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
         SecondRessourceAvailable < baseAsset.secondRessourceBuildingCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class DragCreatureAttack : DraggingActions {
+public class DragCreatureActions : DraggingActions {
 
     // reference to the sprite with a round "Target" graphic
     private SpriteRenderer sr;
@@ -39,8 +39,10 @@ public class DragCreatureAttack : DraggingActions {
         }
     }
 
+    private PlayerArea originArea;
     public override void OnStartDrag()
     {
+        originArea = playerOwner.SelectedPArea();
         whereIsThisCreature.VisualState = VisualStates.Dragging;
         // enable target graphic
         sr.enabled = true;
@@ -142,13 +144,34 @@ public class DragCreatureAttack : DraggingActions {
             return false;
         }
     
-        if (targetPlayerArea == playerOwner.SelectedPArea())
+        if (targetPlayerArea == originArea)
         {
             Debug.Log("target player area is the same as the player area");
             return false;
         }
 
-        manager.Move(targetPlayerArea);
+        IDHolder moverIdHolder = GetComponentInParent<IDHolder>();
+        if (moverIdHolder == null)
+        {
+            Debug.Log("pas d'ID pour le mover");
+            return false;
+        }
+
+        if (!CreatureLogic.CreaturesCreatedThisGame.ContainsKey(moverIdHolder.UniqueID))
+        {
+            Debug.Log("mover not found");
+            return false;
+        }
+        int tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(
+            Camera.main.ScreenToWorldPoint(
+                new Vector3(
+                    Input.mousePosition.x,
+                    Input.mousePosition.y,
+                    transform.position.z - Camera.main.transform.position.z
+                )
+            ).x
+        );
+        CreatureLogic.CreaturesCreatedThisGame[moverIdHolder.UniqueID].Move(targetPlayerArea.baseID, tablePos);
         return true;
     }
     
@@ -182,7 +205,7 @@ public class DragCreatureAttack : DraggingActions {
 
         if (!CreatureLogic.CreaturesCreatedThisGame.ContainsKey(attackerID))
         {
-            Debug.Log("Attacker ID not found");
+            Debug.Log("Attacker not found");
             return false;
         }
 
@@ -190,7 +213,6 @@ public class DragCreatureAttack : DraggingActions {
         {
             // attack character
             Debug.Log("Attacking " + target);
-            Debug.Log("target: " + targetID);
             CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
             return true;
         }

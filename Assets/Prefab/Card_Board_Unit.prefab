@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1670990553462151866}
   - component: {fileID: 8468115925956771946}
   - component: {fileID: 7802661973951423628}
+  - component: {fileID: 7798889525310481750}
   - component: {fileID: 4625757885066953041}
   m_Layer: 0
   m_Name: Card_Board_Unit
@@ -51,7 +52,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneCreatureManager
   cardAsset: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   PreviewManager: {fileID: 8631285477209294222}
-  baseID: 0
   HealthText: {fileID: 9035922361778319404}
   AttackText: {fileID: 9055195526668642142}
   CreatureGraphicImage: {fileID: 4804881299676873094}
@@ -68,6 +68,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd2ccaf16b93ff3479221c36981fc0c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreatureAttackVisual
+--- !u!114 &7798889525310481750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 126706081317096460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a36c21f68116ab140b7129078b6da215, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CreatureMoveVisual
 --- !u!114 &4625757885066953041
 MonoBehaviour:
   m_ObjectHideFlags: 0

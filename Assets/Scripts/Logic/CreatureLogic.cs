@@ -178,6 +178,15 @@ public class CreatureLogic: ILivable
 
     }
 
+    public void Move(int baseID, int tablePos)
+    {
+        MovementsLeftThisTurn--;
+        BaseID = baseID;
+        
+        Debug.Log("Creature moved to base : " + BaseID);
+        new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
+    }
+
     // STATIC For managing IDs
     public static Dictionary<int, CreatureLogic> CreaturesCreatedThisGame = new Dictionary<int, CreatureLogic>();
 

@@ -39,14 +39,6 @@ public class Draggable : MonoBehaviour {
 
     void OnMouseDown()
     {
-        Debug.Log($"[Draggable] OnMouseDown on '{name}' tag='{tag}' layer='{LayerMask.LayerToName(gameObject.layer)}'");
-        if (da == null)
-        {
-            Debug.LogError($"[Draggable] DraggingActions missing on SAME GameObject '{name}'.");
-            return;
-        }
-        Debug.Log($"[Draggable] Found DraggingActions={da.GetType().Name}, CanDrag={da.CanDrag}");
-
         if (da!=null && da.CanDrag)
         {
             dragging = true;

@@ -102,7 +102,7 @@ public class TableVisual : MonoBehaviour
 
         // apply the look from CardAsset
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
-        manager.baseID = baseID;
+        manager.BaseID = baseID;
         manager.cardAsset = ca;
         manager.ReadCreatureFromAsset();
 
@@ -136,6 +136,29 @@ public class TableVisual : MonoBehaviour
         Command.CommandExecutionComplete();
     }
 
+    public void MoveCreatureToIndex(GameObject creature, int UniqueID, int index, int baseID)
+    {     
+        // parent a new creature gameObject to table slots
+        creature.transform.SetParent(slots.transform);
+
+        // add a new creature to the list
+        CreaturesOnTable.Insert(index, creature);
+
+        // let this creature know about its position
+        WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
+        w.Slot = index;
+        if (owner == AreaPosition.Low)
+            w.VisualState = VisualStates.LowTable;
+        else
+            w.VisualState = VisualStates.TopTable;
+
+        ShiftSlotsGameObjectAccordingToNumberOfCreatures();
+        PlaceCreaturesOnNewSlots();
+
+        // end command execution
+        Command.CommandExecutionComplete();
+    }
+
 
     // returns an index for a new creature based on mousePosition
     // included for placing a new creature to any positon on the table
@@ -156,18 +179,15 @@ public class TableVisual : MonoBehaviour
         return 0;
     }
 
+    public void MoveCreatureAway(GameObject creature)
+    {
+        CreaturesOnTable.Remove(creature);
+        PlaceCreaturesOnNewSlots();
+    }
+    
     // Destroy a creature
     public void RemoveCreatureWithID(int IDToRemove)
     {
-        // TODO: This has to last for some time
-        // Adding delay here did not work because it shows one creature die, then another creature die. 
-        // 
-        //Sequence s = DOTween.Sequence();
-        //s.AppendInterval(1f);
-        //s.OnComplete(() =>
-        //   {
-                
-        //    });
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
         CreaturesOnTable.Remove(creatureToRemove);
         Destroy(creatureToRemove);
@@ -208,9 +228,9 @@ public class TableVisual : MonoBehaviour
             GameObject g = CreaturesOnTable[i];
             int targetSlotIndex = firstSlotIndex + i;
             targetSlotIndex = Mathf.Clamp(targetSlotIndex, 0, slotCount - 1);
-
             Vector3 targetLocalPos = slots.Children[targetSlotIndex].transform.localPosition;
-            g.transform.DOLocalMoveX(targetLocalPos.x, 0.3f);
+            Debug.Log("moving from " + g.transform.localPosition + " to " + targetLocalPos);
+            g.transform.DOLocalJump(targetLocalPos, 10, 1, 0.3f);
             // apply correct sorting order and HandSlot value for later 
             // TODO: figure out if I need to do something here:
             // g.GetComponent<WhereIsTheCardOrCreature>().SetTableSortingOrder() = CreaturesOnTable.IndexOf(g);

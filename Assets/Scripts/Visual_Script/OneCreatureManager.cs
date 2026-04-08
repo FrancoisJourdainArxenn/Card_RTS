@@ -7,7 +7,6 @@ public class OneCreatureManager : MonoBehaviour
 {
     public CardAsset cardAsset;
     public OneCardManager PreviewManager;
-    public int baseID;
     [Header("Text Component References")]
     public TMP_Text HealthText;
     public TMP_Text AttackText;         
@@ -49,7 +48,7 @@ public class OneCreatureManager : MonoBehaviour
             canMoveNow = value;
         }
     }
-
+    public int BaseID {get; set;}
     public void ReadCreatureFromAsset()
     {
         // Change the card graphic sprite
@@ -74,11 +73,6 @@ public class OneCreatureManager : MonoBehaviour
         }
     }
 
-    public void SetBaseID(int baseID)
-    {
-        this.baseID = baseID;
-    }
-
     public void UpdateCreatureGlow()
     {
         if (CanAttackNow)
@@ -88,9 +82,4 @@ public class OneCreatureManager : MonoBehaviour
         CreatureGlowImage.enabled = CanAttackNow || CanMoveNow;
     }
 
-    public void Move(PlayerArea targetPlayerArea)
-    {
-        // TODO: Implement move logic
-        Debug.Log("Moving creature to " + targetPlayerArea.name);
-    }
 }

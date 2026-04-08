@@ -66,21 +66,31 @@ public class DragCreatureOnTable : DraggingActions {
         }
         else
         {
-            // Set old sorting order 
-            whereIsCard.SetHandSortingOrder();
-            whereIsCard.VisualState = tempState;
-            // Move this card back to its slot position
-            HandVisual PlayerHand = playerOwner.MainPArea.handVisual;
-            Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
-            transform.DOLocalMove(oldCardPos, 1f);
+            DragFailed();
         } 
     }
 
     protected override bool DragSuccessful()
     {
-        bool TableNotFull = (playerOwner.table.CreaturesOnTable.Count < maxCreatureOnBoard);
         PlayerArea selectedPArea = playerOwner.SelectedPArea();
+        if (!playerOwner.CanPlayCreatureInArea(selectedPArea))
+        {
+            new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
+            return false;
+        }
+        bool TableNotFull = (playerOwner.table.CreaturesOnTable.Count < maxCreatureOnBoard);
 
         return TableVisual.CursorOverSomeTable && TableNotFull && selectedPArea != null;
+    }
+
+    private void DragFailed()
+    {
+        // Set old sorting order 
+        whereIsCard.SetHandSortingOrder();
+        whereIsCard.VisualState = tempState;
+        // Move this card back to its slot position
+        HandVisual PlayerHand = playerOwner.MainPArea.handVisual;
+        Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
+        transform.DOLocalMove(oldCardPos, 1f);
     }
 }

@@ -97,7 +97,7 @@ public class WhereIsTheCardOrCreature : MonoBehaviour {
     public void SetTableSortingOrder()
     {
         canvas.sortingOrder = 0;
-        canvas.sortingLayerName = "Creatures";
+        canvas.sortingLayerName = "Units";
     }
 
     private int HandSortingOrder(int placeInHand)
