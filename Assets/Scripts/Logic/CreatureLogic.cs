@@ -145,6 +145,22 @@ public class CreatureLogic: ILivable
         owner.otherPlayer.Health -= Attack;
     }
 
+    public bool IsMelee
+    {
+        get { return ca.melee; }
+    }
+
+    public bool Targetable
+    {
+        get
+        {
+            bool enemyHasMelee = owner.otherPlayer.table.CreaturesOnTable
+                                    .Exists(c => c.IsMelee && c.BaseID == BaseID);
+            if (enemyHasMelee)
+                return IsMelee;
+            return true;
+        }
+    }
     public void AttackCreature (CreatureLogic target)
     {
         AttacksLeftThisTurn--;

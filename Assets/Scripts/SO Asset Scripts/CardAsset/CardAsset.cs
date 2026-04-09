@@ -28,6 +28,7 @@ public class CardAsset : ScriptableObject
     public int Attack;
     public int AttacksForOneTurn = 1;
     public int MoveSpeed = 1;
+    public bool melee = false;
     public bool Charge = false;
     public bool Celerity = false;
     public string CreatureScriptName;

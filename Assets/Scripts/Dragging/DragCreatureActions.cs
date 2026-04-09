@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class DragCreatureActions : DraggingActions {
 
@@ -211,8 +212,8 @@ public class DragCreatureActions : DraggingActions {
 
         if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
         {
-            // attack character
-            Debug.Log("Attacking " + target);
+            
+            Debug.Log("Attacking face" + target);
             CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
             return true;
         }
@@ -229,9 +230,15 @@ public class DragCreatureActions : DraggingActions {
             CreatureLogic.CreaturesCreatedThisGame[targetID] != null)
         {
             // if targeted creature is still alive, attack creature
-            CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
-            Debug.Log("Attacking " + target);
-            return true;
+            CreatureLogic target = CreatureLogic.CreaturesCreatedThisGame[targetID];
+            if (target.Targetable)
+            {
+                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
+                Debug.Log("Attacking Creature " + target);
+                return true;                
+            }
+            new ShowMessageCommand("You can't target this unit", 2f).AddToQueue();
+            return false;
         }            
 
         Debug.Log("Unknown Error");

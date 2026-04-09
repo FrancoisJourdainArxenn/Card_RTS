@@ -13,6 +13,7 @@ public class OneCreatureManager : MonoBehaviour
     [Header("Image References")]
     public Image CreatureGraphicImage;
     public Image CreatureGlowImage;
+    public Image MeleeImage;
 
 
     void Awake()
@@ -56,6 +57,11 @@ public class OneCreatureManager : MonoBehaviour
 
         AttackText.text = cardAsset.Attack.ToString();
         HealthText.text = cardAsset.MaxHealth.ToString();
+
+        if(cardAsset.melee)
+        {
+            MeleeImage.enabled = true;
+        }
 
         if (PreviewManager != null)
         {

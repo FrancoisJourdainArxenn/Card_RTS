@@ -21,6 +21,7 @@ MonoBehaviour:
   Attack: 10
   AttacksForOneTurn: 1
   MoveSpeed: 2
+  melee: 1
   Charge: 1
   Celerity: 1
   CreatureScriptName: 
