@@ -19,6 +19,7 @@ public class DragCreatureActions : DraggingActions {
     // Reference to creature manager, attached to the parent game object
     private OneCreatureManager manager;
 
+
     void Awake()
     {
         // establish all the connections
@@ -49,6 +50,9 @@ public class DragCreatureActions : DraggingActions {
         sr.enabled = true;
         // enable line renderer to start drawing the line.
         lr.enabled = true;
+
+        ColorizeUnits();
+
     }
 
     public override void OnDraggingInUpdate()
@@ -183,7 +187,8 @@ public class DragCreatureActions : DraggingActions {
             Debug.Log("target null");
             return false;
         }
-    
+
+   
         IDHolder targetIdHolder = target.GetComponent<IDHolder>();
         if (targetIdHolder == null)
             targetIdHolder = target.GetComponentInParent<IDHolder>();
@@ -221,6 +226,12 @@ public class DragCreatureActions : DraggingActions {
         if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID) &&
             BuildingLogic.BuildingsCreatedThisGame[targetID] != null)
         {
+            /*BuildingLogic bl = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            if (bl.baseID != originArea.baseID)
+            {
+                new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
+                return false;
+            }*/
             CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
             Debug.Log("Attacking building " + target);
             return true;  
@@ -230,9 +241,14 @@ public class DragCreatureActions : DraggingActions {
             CreatureLogic.CreaturesCreatedThisGame[targetID] != null)
         {
             // if targeted creature is still alive, attack creature
-            CreatureLogic target = CreatureLogic.CreaturesCreatedThisGame[targetID];
-            if (target.Targetable)
+            CreatureLogic cl = CreatureLogic.CreaturesCreatedThisGame[targetID];
+            if (cl.Targetable)
             {
+                /*if (cl.BaseID != originArea.baseID)
+                {
+                    new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
+                    return false;
+                }*/
                 CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
                 Debug.Log("Attacking Creature " + target);
                 return true;                
@@ -247,6 +263,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void ResetDragElements()
     {
+        ResetColorizeUnits();
         transform.localPosition = Vector3.zero;
         sr.enabled = false;
         lr.enabled = false;
@@ -263,6 +280,28 @@ public class DragCreatureActions : DraggingActions {
             else
                 whereIsThisCreature.VisualState = VisualStates.TopTable;
             whereIsThisCreature.SetTableSortingOrder();
+        }
+    }
+
+    private void ColorizeUnits()
+    {
+        TurnManager turnmanager = TurnManager.Instance;
+        if (turnmanager.CurrentPhase != TurnManager.TurnPhases.Battle) {
+            return;
+        }
+        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesOnTable)
+        {
+            GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
+            g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(cl.Targetable);
+        }
+    }
+
+    private void ResetColorizeUnits()
+    {
+        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesOnTable)
+        {
+            GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
+            g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(true);
         }
     }
 

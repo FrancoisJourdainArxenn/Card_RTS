@@ -49,6 +49,8 @@ public class BuildingLogic: ILivable
     {
         get{ return baseSecondRessourceIncome; }
     }
+
+    public int BaseID {get; private set;}
     
     public void Die()
     {
@@ -59,6 +61,7 @@ public class BuildingLogic: ILivable
         new BuildingDieCommand(UniqueBuildingID, neutralBaseController).AddToQueue();
     }
 
+    // public BuildingLogic(Player owner, BaseAsset ba, NeutralBaseController neutralBaseController, int baseID)
     public BuildingLogic(Player owner, BaseAsset ba, NeutralBaseController neutralBaseController)
     {
         this.ba = ba;
@@ -67,6 +70,7 @@ public class BuildingLogic: ILivable
         Health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;
         baseSecondRessourceIncome = ba.secondRessourceIncome;
+        // this.BaseID = baseID;
         this.owner = owner;
         UniqueBuildingID = IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);

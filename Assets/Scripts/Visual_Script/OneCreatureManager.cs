@@ -88,4 +88,8 @@ public class OneCreatureManager : MonoBehaviour
         CreatureGlowImage.enabled = CanAttackNow || CanMoveNow;
     }
 
+    public void UpdateTargetableVisual(bool targetable)
+    {
+        CreatureGraphicImage.color = targetable ? Color.white : Color.gray;
+    }
 }

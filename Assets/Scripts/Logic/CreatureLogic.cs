@@ -89,6 +89,31 @@ public class CreatureLogic: ILivable
         set;
     }
 
+    public bool IsMelee
+    {
+        get { return ca.melee; }
+    }
+
+    public bool Targetable
+    {
+        get
+        {
+            if(IsMelee)
+                return true;
+            foreach (CreatureLogic creatureLogic in owner.table.CreaturesOnTable)
+            {
+                if (
+                    creatureLogic.IsMelee 
+                    && creatureLogic.UniqueCreatureID != UniqueCreatureID 
+                    && creatureLogic.BaseID == BaseID
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     // CONSTRUCTOR
     public CreatureLogic(Player owner, CardAsset ca, int baseID)
     {
@@ -145,22 +170,7 @@ public class CreatureLogic: ILivable
         owner.otherPlayer.Health -= Attack;
     }
 
-    public bool IsMelee
-    {
-        get { return ca.melee; }
-    }
 
-    public bool Targetable
-    {
-        get
-        {
-            bool enemyHasMelee = owner.otherPlayer.table.CreaturesOnTable
-                                    .Exists(c => c.IsMelee && c.BaseID == BaseID);
-            if (enemyHasMelee)
-                return IsMelee;
-            return true;
-        }
-    }
     public void AttackCreature (CreatureLogic target)
     {
         AttacksLeftThisTurn--;
