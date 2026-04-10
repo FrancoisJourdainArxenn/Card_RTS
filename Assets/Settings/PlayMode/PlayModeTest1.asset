@@ -12,19 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 15024, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: PlayModeTest1
   m_EditorClassIdentifier: UnityEditor.MultiplayerModule.dll::Unity.Multiplayer.PlayMode.Editor.ScenarioConfig
-  m_Description: 
+  m_Description: Player 1 is Host
   m_EnableEditors: 1
   m_MainEditorInstance:
     Name: Main Editor
-    <CorrespondingNodeId>k__BackingField: 
-    m_Nodes: []
+    <CorrespondingNodeId>k__BackingField: Main Editor|0_run
+    m_Nodes:
+    - Main Editor|0_run
+    - Main Editor|0_deploy
     m_Role: 3
     m_PlayerTag: 
     m_InitialScene: {fileID: 102900000, guid: 1fdb368995e945a40a876721bbab2770, type: 3}
   m_EditorInstances:
   - Name: Player 2
-    <CorrespondingNodeId>k__BackingField: 
-    m_Nodes: []
+    <CorrespondingNodeId>k__BackingField: Player 2|1_run
+    m_Nodes:
+    - Player 2|1_run
+    - Player 2|1_deploy
     m_Role: 1
     m_PlayerTag: 
     m_InitialScene: {fileID: 0}

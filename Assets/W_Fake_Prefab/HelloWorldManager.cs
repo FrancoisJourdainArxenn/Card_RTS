@@ -48,19 +48,36 @@ namespace HelloWorld
 
         public void SubmitNewPosition()
         {
-            if (GUILayout.Button(m_NetworkManager.IsServer ? "Move" : "Request Position Change"))
+            if (m_NetworkManager.IsServer && !m_NetworkManager.IsClient)
             {
-                if (m_NetworkManager.IsServer && !m_NetworkManager.IsClient )
+                foreach (ulong id in m_NetworkManager.ConnectedClientsIds)
                 {
-                    // foreach (ulong uid in m_NetworkManager.ConnectedClientsIds)
-                        // m_NetworkManager.SpawnManager.GetPlayerNetworkObject(uid).GetComponent<HelloWorldPlayer>().Move();
-                    Debug.Log("Server is moving the player");
+                    if (GUILayout.Button($"Move Player {id}"))
+                    {
+                        m_NetworkManager.SpawnManager.GetPlayerNetworkObject(id).GetComponent<HelloWorldPlayer>().Move();
+                        Debug.Log($"Server is moving the player {id}");
+                    }
                 }
-                else
+                // if (GUILayout.Button("Move Player 1"))
+                // {
+                //     ulong uid = m_NetworkManager.ConnectedClientsIds[0];
+                //     m_NetworkManager.SpawnManager.GetPlayerNetworkObject(uid).GetComponent<HelloWorldPlayer>().Move();
+                //     Debug.Log("Server is moving the player 1");
+                // }
+                // if (GUILayout.Button("Move Player 2"))
+                // {
+                //     ulong uid = m_NetworkManager.ConnectedClientsIds[1];
+                //     m_NetworkManager.SpawnManager.GetPlayerNetworkObject(uid).GetComponent<HelloWorldPlayer>().Move();
+                //     Debug.Log("Server is moving the player 2");
+                // }
+            }
+            else
+            {
+                if (GUILayout.Button("Request Position Change"))
                 {
-                    // var playerObject = m_NetworkManager.SpawnManager.GetLocalPlayerObject();
-                    // var player = playerObject.GetComponent<HelloWorldPlayer>();
-                    // player.Move();
+                    var playerObject = m_NetworkManager.SpawnManager.GetLocalPlayerObject();
+                    var player = playerObject.GetComponent<HelloWorldPlayer>();
+                    player.Move();
                     Debug.Log("Client is moving the player");
                 }
             }
