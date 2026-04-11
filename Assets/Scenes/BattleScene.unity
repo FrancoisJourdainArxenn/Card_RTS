@@ -1797,7 +1797,7 @@ PrefabInstance:
       objectReference: {fileID: 1451280902}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_Name
-      value: Neutral Zone (1)
+      value: Neutral Zone-Right
       objectReference: {fileID: 0}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
@@ -2752,7 +2752,7 @@ PrefabInstance:
       objectReference: {fileID: 192328233}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_Name
-      value: Neutral Zone (2)
+      value: Neutral Zone-Left
       objectReference: {fileID: 0}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
@@ -4432,7 +4432,7 @@ MonoBehaviour:
   - {fileID: 620230358}
   - {fileID: 1840644942}
   - {fileID: 1927632671}
-  distanceModifier: 1
+  distanceModifier: 1.5
 --- !u!114 &1438455306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6373,7 +6373,7 @@ PrefabInstance:
       objectReference: {fileID: 1397097779}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_Name
-      value: Neutral Zone
+      value: Neutral Zone-Center
       objectReference: {fileID: 0}
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
