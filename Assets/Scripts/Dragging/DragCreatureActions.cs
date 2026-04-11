@@ -50,7 +50,8 @@ public class DragCreatureActions : DraggingActions {
         sr.enabled = true;
         // enable line renderer to start drawing the line.
         lr.enabled = true;
-
+        
+        HighlightReachableAreas();
         ColorizeUnits();
 
     }
@@ -274,6 +275,8 @@ public class DragCreatureActions : DraggingActions {
     private void ResetDragElements()
     {
         ResetColorizeUnits();
+        ResetAreaHighlights();
+
         transform.localPosition = Vector3.zero;
         sr.enabled = false;
         lr.enabled = false;
@@ -315,6 +318,26 @@ public class DragCreatureActions : DraggingActions {
         }
     }
 
+    private void HighlightReachableAreas()
+    {
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+            return;
+
+        ZoneLogic currentZone = originArea.parentZone;
+        foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
+        {
+            if (pa == originArea) continue;
+            if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
+            if (pa.parentZone == currentZone || currentZone.IsAdjacentTo(pa.parentZone))
+                pa.tableVisual.SetHighlight(true);
+        }
+    }
+
+    private void ResetAreaHighlights()
+    {
+        foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
+            pa.tableVisual.SetHighlight(false);
+    }
     // NOT USED IN THIS SCRIPT
     protected override bool DragSuccessful()
     {

@@ -88,10 +88,14 @@ public class TableVisual : MonoBehaviour
         }
         // State used by other gameplay scripts
         cursorOverThisTable = isHoveringThisTable;
-        // Visual feedback
-        if (glow != null && glow.activeSelf != isHoveringThisTable)
-            glow.SetActive(isHoveringThisTable);
 
+    }
+
+    public void SetHighlight(bool active)
+    {
+        if (glow == null) return;
+        glow.GetComponent<Image>().color = ownerColor;
+        glow.SetActive(active);
     }
    
     // method to create a new creature and add it to the table

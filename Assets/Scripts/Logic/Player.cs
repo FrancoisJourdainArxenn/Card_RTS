@@ -474,6 +474,7 @@ public class Player : MonoBehaviour, ILivable
     public bool CanPlayCreatureInArea(PlayerArea area)
     {
         if (area == null) return false;
+        if (!System.Array.Exists(PAreas, a => a == area)) return false;
         if (area == MainPArea) return true;
         NeutralBaseController c = GetNeutralControllerForArea(area);
         if (c == null) return false;

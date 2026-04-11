@@ -35,6 +35,7 @@ public class DragCreatureOnTable : DraggingActions {
         tempState = whereIsCard.VisualState;
         whereIsCard.VisualState = VisualStates.Dragging;
         whereIsCard.BringToFront();
+        HighlightValidAreas();
 
     }
 
@@ -45,7 +46,7 @@ public class DragCreatureOnTable : DraggingActions {
 
     public override void OnEndDrag()
     {
-        
+        ResetAreaHighlights();
         // 1) Check if we are holding a card over the table
         if (DragSuccessful())
         {
@@ -93,4 +94,20 @@ public class DragCreatureOnTable : DraggingActions {
         Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
         transform.DOLocalMove(oldCardPos, 1f);
     }
+    
+    private void HighlightValidAreas()
+    {
+        foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
+        {
+            if (playerOwner.CanPlayCreatureInArea(pa))
+                pa.tableVisual.SetHighlight(true);
+        }
+    }
+
+    private void ResetAreaHighlights()
+    {
+        foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
+            pa.tableVisual.SetHighlight(false);
+    }
+
 }
