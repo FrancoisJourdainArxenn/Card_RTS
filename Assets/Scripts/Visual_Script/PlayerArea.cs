@@ -12,6 +12,9 @@ public class PlayerArea : MonoBehaviour
     public TableVisual tableVisual;
     public Transform BasePosition;
     public int baseID;
+
+    [HideInInspector]
+    public ZoneLogic parentZone;
     public bool AllowedToControlThisPlayer
     {
         get;

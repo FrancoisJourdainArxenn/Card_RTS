@@ -9,6 +9,7 @@ public class NeutralBaseController : MonoBehaviour
     public Color ownerColor;
     public GameObject background;
     public TableVisual[] tables;
+    public ZoneLogic zone;
 
     private List<GameObject> buildings = new List<GameObject>();
 

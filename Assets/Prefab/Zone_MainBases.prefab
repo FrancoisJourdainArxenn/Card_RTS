@@ -143,6 +143,8 @@ MonoBehaviour:
   handVisual: {fileID: 0}
   tableVisual: {fileID: 1023280944671842946}
   BasePosition: {fileID: 704926903746496689}
+  baseID: 0
+  parentZone: {fileID: 0}
 --- !u!114 &1023280944671842946
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,6 +164,7 @@ MonoBehaviour:
   tableRaycastMask:
     serializedVersion: 2
     m_Bits: 8
+  CreaturesOnTable: []
 --- !u!65 &811344252162243223
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -482,6 +485,8 @@ MonoBehaviour:
   handVisual: {fileID: 0}
   tableVisual: {fileID: 9115379854544158099}
   BasePosition: {fileID: 704926903746496689}
+  baseID: 0
+  parentZone: {fileID: 0}
 --- !u!114 &9115379854544158099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -501,6 +506,7 @@ MonoBehaviour:
   tableRaycastMask:
     serializedVersion: 2
     m_Bits: 8
+  CreaturesOnTable: []
 --- !u!65 &2679102618920034973
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -982,8 +988,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3380216749849222320}
+  - component: {fileID: 3490284650234272829}
   m_Layer: 0
-  m_Name: Base_Main
+  m_Name: Zone_MainBases
   m_TagString: TopPlayer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1005,6 +1012,20 @@ Transform:
   - {fileID: 4669333432307132849}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3490284650234272829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4241607089193490230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acc9e2322739d75409db79ad198001cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZoneLogic
+  adjacentZones: []
+  subZones: []
 --- !u!1 &4805995165662417236
 GameObject:
   m_ObjectHideFlags: 0

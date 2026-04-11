@@ -155,6 +155,14 @@ public class DragCreatureActions : DraggingActions {
             return false;
         }
 
+        ZoneLogic currentZone = originArea.parentZone;
+        ZoneLogic targetZone = targetPlayerArea.parentZone;
+        if (currentZone != targetZone && !currentZone.IsAdjacentTo(targetZone))
+        {
+            new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
+            return false;
+        }
+
         IDHolder moverIdHolder = GetComponentInParent<IDHolder>();
         if (moverIdHolder == null)
         {
@@ -226,12 +234,13 @@ public class DragCreatureActions : DraggingActions {
         if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID) &&
             BuildingLogic.BuildingsCreatedThisGame[targetID] != null)
         {
-            /*BuildingLogic bl = BuildingLogic.BuildingsCreatedThisGame[targetID];
-            if (bl.baseID != originArea.baseID)
+            BuildingLogic bl = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            if (bl.neutralBaseController.zone != originArea.parentZone)
             {
-                new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
+                new ShowMessageCommand("Building not in range", 1f).AddToQueue();
                 return false;
-            }*/
+            }
+
             CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
             Debug.Log("Attacking building " + target);
             return true;  
@@ -244,11 +253,12 @@ public class DragCreatureActions : DraggingActions {
             CreatureLogic cl = CreatureLogic.CreaturesCreatedThisGame[targetID];
             if (cl.Targetable)
             {
-                /*if (cl.BaseID != originArea.baseID)
+                PlayerArea targetArea = cl.owner.GetPlayerAreaByID(cl.BaseID);
+                if (targetArea.parentZone != originArea.parentZone)
                 {
                     new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
                     return false;
-                }*/
+                }
                 CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
                 Debug.Log("Attacking Creature " + target);
                 return true;                
