@@ -283,8 +283,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2501275511821048513}
-  m_LocalRotation: {x: -0, y: -0, z: -0.70218205, w: 0.71199757}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -293,11 +293,11 @@ RectTransform:
   - {fileID: 5667718065040879062}
   - {fileID: 2131859726455704883}
   m_Father: {fileID: 6149515503800733994}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -89.205}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0.031000001, y: 0.032545164}
   m_AnchorMax: {x: 0.48011875, y: 0.34920245}
-  m_AnchoredPosition: {x: 60, y: 78}
-  m_SizeDelta: {x: 186.26122, y: 67.379875}
+  m_AnchoredPosition: {x: 60, y: 64.9}
+  m_SizeDelta: {x: 186.3, y: 93.7}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6339648581160489909
 CanvasRenderer:
@@ -552,8 +552,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6, y: 80}
-  m_SizeDelta: {x: -75.63, y: 135.93}
+  m_AnchoredPosition: {x: 2.399994, y: 111.1}
+  m_SizeDelta: {x: -30.3, y: 198.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2749204837253266163
 CanvasRenderer:
@@ -583,8 +583,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 19c8efb4976316c44b816d1103b22d5e, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1326,6 +1326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NeutralBaseVisual
   baseAsset: {fileID: 11400000, guid: d2f3790d159e96446affb7f979d29b76, type: 2}
+  neutralBaseController: {fileID: 0}
   owner: 2
   BuildingCostText: {fileID: 1193763966257963243}
   MainRessourceIncomeText: {fileID: 8199164061199582514}
