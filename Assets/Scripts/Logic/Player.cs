@@ -188,7 +188,7 @@ public class Player : MonoBehaviour, ILivable
 
         if (table != null)
         {
-            foreach (CreatureLogic cl in table.CreaturesOnTable)
+            foreach (CreatureLogic cl in table.CreaturesInPlay)
                 cl.OnTurnStart();
         }
     }
@@ -326,8 +326,8 @@ public class Player : MonoBehaviour, ILivable
         // create a new creature object and add it to Table
         int baseID = selectedPArea.baseID;
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
-        table.CreaturesOnTable.Insert(tablePos, newCreature);
-
+        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
         // 
         new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         // cause battlecry Effect
@@ -368,7 +368,7 @@ public class Player : MonoBehaviour, ILivable
         bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
 
-        foreach (CreatureLogic crl in table.CreaturesOnTable)
+        foreach (CreatureLogic crl in table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
             if (g != null)
@@ -524,6 +524,7 @@ public class Player : MonoBehaviour, ILivable
         
         BuildingLogic newBuilding = new BuildingLogic(this, baseAsset, neutralBaseController);
         new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
+        FogOfWarManager.Refresh();
     }
 
 

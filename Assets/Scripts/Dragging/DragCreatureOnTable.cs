@@ -79,7 +79,7 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
             return false;
         }
-        bool TableNotFull = (playerOwner.table.CreaturesOnTable.Count < maxCreatureOnBoard);
+        bool TableNotFull = (selectedPArea.tableVisual.CreaturesOnTable.Count < maxCreatureOnBoard);
 
         return TableVisual.CursorOverSomeTable && TableNotFull && selectedPArea != null;
     }

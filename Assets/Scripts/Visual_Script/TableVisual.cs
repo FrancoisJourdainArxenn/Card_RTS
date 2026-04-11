@@ -10,7 +10,6 @@ public class TableVisual : MonoBehaviour
 
     // an enum that mark to whish caracter this table belongs. The alues are - Top or Low
     public AreaPosition owner;
-
     // a referense to a game object that marks positions where we should put new Creatures
     public SameDistanceChildren slots;
     public GameObject glow;
@@ -23,10 +22,9 @@ public class TableVisual : MonoBehaviour
 
     // initial local X position of the slots container in the scene
     private float initialSlotsLocalPosX;
-
     // are we hovering over this table`s collider with a mouse
     private bool cursorOverThisTable = false;
-
+    private bool isFogged = false;
     // A 3D collider attached to this game object
     private BoxCollider col;
 
@@ -97,7 +95,17 @@ public class TableVisual : MonoBehaviour
         glow.GetComponent<Image>().color = ownerColor;
         glow.SetActive(active);
     }
-   
+
+    public void SetFogged(bool fogged)
+    {
+        isFogged = fogged;
+        // Show or hide every creature currently on this table.
+        foreach (GameObject creature in CreaturesOnTable)
+        {
+            if (creature != null)
+                creature.SetActive(!fogged);
+        }
+    }
     // method to create a new creature and add it to the table
     public void AddCreatureAtIndex(CardAsset ca, int UniqueID ,int index, int baseID)
     {
@@ -136,6 +144,8 @@ public class TableVisual : MonoBehaviour
         ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
 
+        if (isFogged)
+            creature.SetActive(false);
         // end command execution
         Command.CommandExecutionComplete();
     }
@@ -158,11 +168,12 @@ public class TableVisual : MonoBehaviour
 
         ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
-
+        
+        if (isFogged)
+            creature.SetActive(false);
         // end command execution
         Command.CommandExecutionComplete();
     }
-
 
     // returns an index for a new creature based on mousePosition
     // included for placing a new creature to any positon on the table
@@ -240,7 +251,6 @@ public class TableVisual : MonoBehaviour
             // g.GetComponent<WhereIsTheCardOrCreature>().SetTableSortingOrder() = CreaturesOnTable.IndexOf(g);
         }
     }
-
     public void SetOwnerColor(Color color)
     {
         glow.GetComponent<Image>().color = color;

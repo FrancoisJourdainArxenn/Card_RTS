@@ -8,8 +8,9 @@ public class NeutralBaseController : MonoBehaviour
     public AreaPosition owner;
     public Color ownerColor;
     public GameObject background;
-    public TableVisual[] tables;
     public ZoneLogic zone;
+
+    public TableVisual[] tables;
 
     private List<GameObject> buildings = new List<GameObject>();
 
@@ -71,4 +72,14 @@ public class NeutralBaseController : MonoBehaviour
         else
             Object.Destroy(buildingToRemove);
     }
+
+    public void SetEnemyBuildingsFogged(Player enemy, bool fogged)
+    {
+        foreach (GameObject building in buildings)
+        {
+            if (building != null && building.CompareTag(enemy.tag))
+                building.SetActive(!fogged);
+        }
+    }
+
 }

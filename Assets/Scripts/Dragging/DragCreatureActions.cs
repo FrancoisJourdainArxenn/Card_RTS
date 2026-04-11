@@ -302,7 +302,7 @@ public class DragCreatureActions : DraggingActions {
         if (turnmanager.CurrentPhase != TurnManager.TurnPhases.Battle) {
             return;
         }
-        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesOnTable)
+        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
             g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(cl.Targetable);
@@ -311,7 +311,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void ResetColorizeUnits()
     {
-        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesOnTable)
+        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
             g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(true);
@@ -321,6 +321,9 @@ public class DragCreatureActions : DraggingActions {
     private void HighlightReachableAreas()
     {
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+            return;
+    
+        if (originArea == null || originArea.parentZone == null)
             return;
 
         ZoneLogic currentZone = originArea.parentZone;
