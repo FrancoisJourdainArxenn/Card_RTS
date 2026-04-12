@@ -44,7 +44,8 @@ public class NeutralBaseController : MonoBehaviour
         if (nBaseVisual.BasePosition != null)
         {
             baseCard.transform.DOMove(nBaseVisual.BasePosition.position, 0.7f).SetEase(Ease.InOutQuad);
-            baseCard.transform.DORotateQuaternion(nBaseVisual.BasePosition.rotation, 0.7f).SetEase(Ease.InOutQuad);
+            baseCard.transform.DORotateQuaternion(Quaternion.identity, 0.7f).SetEase(Ease.InOutQuad);
+
         }
     }
 
@@ -79,6 +80,15 @@ public class NeutralBaseController : MonoBehaviour
         {
             if (building != null && building.CompareTag(enemy.tag))
                 building.SetActive(!fogged);
+        }
+    }
+
+    public void SetPlayerBuildingsVisible(Player player)
+    {
+        foreach (GameObject building in buildings)
+        {
+            if (building != null && building.CompareTag(player.tag))
+                building.SetActive(true);
         }
     }
 

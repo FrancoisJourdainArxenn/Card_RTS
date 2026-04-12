@@ -76,9 +76,11 @@ public class FogOfWarManager : MonoBehaviour
             }
         }
 
-        // Buildings only exist in neutral zones.
         if (nbc != null)
+        {
             nbc.SetEnemyBuildingsFogged(enemy, !observerHasPresence);
+            nbc.SetPlayerBuildingsVisible(observer); // Always show observer's own captured bases
+        }
     }
     // Returns true if 'player' has at least one creature OR building in the given zone.
 
