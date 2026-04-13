@@ -78,7 +78,10 @@ public class DragCreatureActions : DraggingActions {
             Vector3 screenParent = Camera.main.WorldToScreenPoint(transform.parent.position);
             Vector2 dir = (screenPos - screenParent);
             float rot_z = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            triangleSR.transform.localRotation = Quaternion.Euler(0f, 0f, rot_z - 90f);
+            sr.transform.localRotation = Quaternion.Euler(90f, 0f, rot_z - 90f);
+            triangleSR.transform.localRotation = Quaternion.identity;
+            // triangleSR.transform.localRotation = Quaternion.Euler(0f, 0f, rot_z - 90f);
+
         }
         else
         {
@@ -226,7 +229,14 @@ public class DragCreatureActions : DraggingActions {
 
         if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
         {
-            
+            Player targetPlayer = (targetID == GlobalSettings.Instance.LowPlayer.PlayerID)
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            if (targetPlayer.MainPArea.parentZone != originArea.parentZone)
+            {
+                new ShowMessageCommand("Base not in range", 1f).AddToQueue();
+                return false;
+            }
             Debug.Log("Attacking face" + target);
             CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
             return true;
@@ -277,7 +287,8 @@ public class DragCreatureActions : DraggingActions {
         ResetColorizeUnits();
         ResetAreaHighlights();
 
-        transform.localPosition = Vector3.zero;
+        transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
+        triangle.localPosition = Vector3.zero;
         sr.enabled = false;
         lr.enabled = false;
         triangleSR.enabled = false;
