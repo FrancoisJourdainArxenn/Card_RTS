@@ -22,6 +22,7 @@
 *.unityproj
 *.sln
 *.slnx
+*.slnx/
 *.suo
 *.tmp
 *.user
