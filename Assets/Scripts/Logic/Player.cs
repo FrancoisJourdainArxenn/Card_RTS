@@ -144,6 +144,10 @@ public class Player : MonoBehaviour, ILivable
         // find all scripts of type Player and store them in Players array
         // (we should have only 2 players in the scene)
         Players = GameObject.FindObjectsByType<Player>(FindObjectsSortMode.None);
+        // Trier par position dans la hiérarchie de scène pour garantir un ordre
+        // identique sur le host ET le client (FindObjectsByType sans tri n'est pas stable).
+        System.Array.Sort(Players, (a, b) =>
+            a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
         controlledBases.Add(baseAsset);

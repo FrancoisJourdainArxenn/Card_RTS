@@ -63,7 +63,17 @@ public class GlobalSettings : MonoBehaviour
         LowPlayer.playerColor = LowColor;
         LowPlayer.tag = "LowPlayer";
         TopPlayer.tag = "TopPlayer";
-        activePlayer = LowPlayer;
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            // Host (clientId 0) → LowPlayer, Client (clientId 1) → TopPlayer
+            activePlayer = NetworkSessionData.LocalClientId == 0 ? LowPlayer : TopPlayer;
+        }
+        else
+        {
+            activePlayer = LowPlayer;
+        }
+
         activePlayerDebugText.text = "Active Player: " + activePlayer.name;
     }
 
@@ -105,14 +115,29 @@ public class GlobalSettings : MonoBehaviour
         }
     }
 
+    static readonly Color ColorReadyConfirmed = new Color(0.35f, 0.75f, 0.35f, 0.8f); // vert : adversaire a confirmé
+    static readonly Color ColorDisabledDefault = new Color(0.78f, 0.78f, 0.78f, 0.5f); // gris Unity par défaut
+
     static void SetEndPhaseButtonState(Button button, Player player)
     {
         if (button == null || player == null)
             return;
-        bool human = player.MainPArea.AllowedToControlThisPlayer;
-        bool gameActive = player.MainPArea.ControlsON;
-        bool notYetReady = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
-        button.interactable = human && gameActive && notYetReady;
+
+        bool isLocalPlayer = player.MainPArea.AllowedToControlThisPlayer;
+        bool gameActive    = player.MainPArea.ControlsON;
+        bool notYetReady   = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
+
+        // Interactable uniquement pour le joueur local qui n'a pas encore confirmé
+        button.interactable = isLocalPlayer && gameActive && notYetReady;
+
+        // Feedback couleur pour le bouton du joueur adverse
+        if (!isLocalPlayer)
+        {
+            ColorBlock colors = button.colors;
+            // Vert si l'adversaire a confirmé, gris sinon
+            colors.disabledColor = notYetReady ? ColorDisabledDefault : ColorReadyConfirmed;
+            button.colors = colors;
+        }
     }
 
 }
