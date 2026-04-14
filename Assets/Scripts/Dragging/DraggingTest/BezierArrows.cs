@@ -12,6 +12,7 @@ public class BezierArrows : MonoBehaviour
     private Transform origin;
     private List<Transform> arrowNodes = new List<Transform>();
     private List<Vector3> controlPoints = new List<Vector3>();
+    [SerializeField] public Transform originOverride;
     private readonly List<Vector2> controlPointsFactors = new List<Vector2>
     {
         new Vector2(-0.3f, 0.8f),
@@ -21,7 +22,7 @@ public class BezierArrows : MonoBehaviour
 
     void Awake()
     {
-        this.origin = this.transform;
+        this.origin = originOverride != null ? originOverride : this.transform;
 
         for (int i = 0; i < this.arrowNodeNum; ++i)
             this.arrowNodes.Add(Instantiate(this.ArrowNodePrefab, this.transform).transform);
@@ -33,6 +34,19 @@ public class BezierArrows : MonoBehaviour
 
         for (int i = 0; i < 4; ++i)
             this.controlPoints.Add(Vector3.zero);
+    
+        enabled = false;
+    }
+
+    public void Show()
+    {
+        enabled = true;
+    }
+
+    public void Hide()
+    {
+        enabled = false;
+        this.arrowNodes.ForEach(a => a.position = new Vector3(-9999f, -9999f, 0f));
     }
 
     void Update()
