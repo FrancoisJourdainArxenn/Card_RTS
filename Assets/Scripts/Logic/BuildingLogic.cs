@@ -57,7 +57,7 @@ public class BuildingLogic: ILivable
         owner.controlledBases.Remove(ba);
         owner.CalculatePlayerIncome();
         BuildingsCreatedThisGame.Remove(UniqueBuildingID);
-        
+        FogOfWarManager.Refresh();
         new BuildingDieCommand(UniqueBuildingID, neutralBaseController).AddToQueue();
     }
 
@@ -74,6 +74,7 @@ public class BuildingLogic: ILivable
         this.owner = owner;
         UniqueBuildingID = IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
+        FogOfWarManager.Refresh();
     }
 
     // STATIC For managing IDs

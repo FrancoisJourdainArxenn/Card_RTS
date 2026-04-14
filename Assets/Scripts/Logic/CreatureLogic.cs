@@ -100,7 +100,7 @@ public class CreatureLogic: ILivable
         {
             if(IsMelee)
                 return true;
-            foreach (CreatureLogic creatureLogic in owner.table.CreaturesOnTable)
+            foreach (CreatureLogic creatureLogic in owner.table.CreaturesInPlay)
             {
                 if (
                     creatureLogic.IsMelee 
@@ -149,8 +149,8 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {   
-        owner.table.CreaturesOnTable.Remove(this);
-
+        owner.table.CreaturesInPlay.Remove(this);
+        
         // cause Deathrattle Effect
         if (effect != null)
         {
@@ -158,7 +158,7 @@ public class CreatureLogic: ILivable
             effect.UnRegisterEventEffect();
             effect = null;
         }
-
+        FogOfWarManager.Refresh();
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }
 
@@ -169,7 +169,6 @@ public class CreatureLogic: ILivable
         new CreatureAttackCommand(owner.otherPlayer.PlayerID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
         owner.otherPlayer.Health -= Attack;
     }
-
 
     public void AttackCreature (CreatureLogic target)
     {
@@ -208,7 +207,7 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn--;
         BaseID = baseID;
-        
+        FogOfWarManager.Refresh();
         Debug.Log("Creature moved to base : " + BaseID);
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }

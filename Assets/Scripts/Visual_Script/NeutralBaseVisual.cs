@@ -62,7 +62,9 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     public void ResetBuildingZone()
     {
-        BuildingZone.GetComponent<Image>().color = GlobalSettings.Instance.NeutralColor;
+        // BuildingZone.GetComponent<Image>().color = GlobalSettings.Instance.NeutralColor;
+        neutralBaseController.SetTrueColor(GlobalSettings.Instance.NeutralColor);
         canBuild = true;
+
     }
 }

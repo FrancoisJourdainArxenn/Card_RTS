@@ -73,6 +73,7 @@ public class GlobalSettings : MonoBehaviour
         {
             activePlayer = activePlayer == TopPlayer ? LowPlayer : TopPlayer;
             activePlayerDebugText.text = "Active Player: " + activePlayer.name;
+            FogOfWarManager.Refresh();
         }
     }
     

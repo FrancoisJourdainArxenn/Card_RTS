@@ -1,0 +1,129 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+/// MULTIPLAYER NOTE: ObservingPlayer currently mirrors GlobalSettings.activePlayer
+/// (toggled with Space for debug). When real multiplayer arrives, replace
+/// ObservingPlayer with the local client's player from the network layer —
+/// the rest of this class does not need to change.
+/// </summary>
+public class FogOfWarManager : MonoBehaviour
+{
+    public static FogOfWarManager Instance;
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    void Start()
+    {
+        // Apply the initial fog state once all other objects have finished Awake().
+        UpdateAllZones();
+    }
+
+    // The player whose perspective we are currently showing.
+    private Player ObservingPlayer => GlobalSettings.Instance.activePlayer;
+
+    // Static shortcut so any class can call FogOfWarManager.Refresh()
+    // without needing a reference to the Instance.
+    public static void Refresh()
+    {
+        if (Instance != null)
+            Instance.UpdateAllZones();
+    }
+
+    // Recalculate fog for every neutral zone.
+    public void UpdateAllZones()
+    {
+        if (GlobalSettings.Instance == null) return;
+
+        // Cover ALL zones, not just neutral ones.
+        ZoneLogic[] allZones = FindObjectsByType<ZoneLogic>(FindObjectsSortMode.None);
+        foreach (ZoneLogic zone in allZones)
+        {
+            // A neutral zone also has a NeutralBaseController for building fog.
+            // Main base zones won't have one — that's fine, nbc will just be null.
+            NeutralBaseController nbc = zone.GetComponent<NeutralBaseController>();
+            UpdateZone(zone, nbc);
+        }
+    }
+
+    // Recalculate and apply fog for a single zone.
+    void UpdateZone(ZoneLogic zone, NeutralBaseController nbc)
+    {
+        Player observer = ObservingPlayer;
+        if (observer == null) return;
+
+        Player enemy = observer.otherPlayer;
+        AreaPosition observerAreaPos = GetAreaPosition(observer);
+        AreaPosition enemyAreaPos = GetAreaPosition(enemy);
+
+        bool observerHasPresence = HasPresenceInZone(observer, zone, nbc);
+
+        foreach (PlayerArea pa in zone.subZones)
+        {
+            if (pa.tableVisual == null) continue;
+
+            if (pa.owner == observerAreaPos)
+            {
+                // The observer always sees their own board.
+                pa.tableVisual.SetFogged(false);
+            }
+            else if (pa.owner == enemyAreaPos)
+            {
+                // Enemy board is visible only if observer has presence here.
+                pa.tableVisual.SetFogged(!observerHasPresence);
+            }
+        }
+
+        if (nbc != null)
+        {
+            nbc.SetEnemyBuildingsFogged(enemy, !observerHasPresence);
+            nbc.SetPlayerBuildingsVisible(observer); // Always show observer's own captured bases
+            nbc.ApplyColorForObserver(observer, observerHasPresence);
+
+        }
+    }
+    // Returns true if 'player' has at least one creature OR building in the given zone.
+
+    bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralBaseController nbc)
+    {
+        // Find which of this player's areas is inside this zone.
+        PlayerArea playerAreaInZone = null;
+        foreach (PlayerArea pa in player.PAreas)
+        {
+            if (pa.parentZone == zone)
+            {
+                playerAreaInZone = pa;
+                break;
+            }
+        }
+
+        if (playerAreaInZone == null) return false;
+
+        // Check creatures.
+        foreach (CreatureLogic c in player.table.CreaturesInPlay)
+        {
+            if (c.BaseID == playerAreaInZone.baseID)
+                return true;
+        }
+
+        // Check buildings (neutral zones only).
+        if (nbc != null)
+        {
+            foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
+            {
+                BuildingLogic b = kvp.Value;
+                if (b.owner == player && b.neutralBaseController == nbc)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    AreaPosition GetAreaPosition(Player player)
+    {
+        return player == GlobalSettings.Instance.LowPlayer ? AreaPosition.Low : AreaPosition.Top;
+    }
+}
