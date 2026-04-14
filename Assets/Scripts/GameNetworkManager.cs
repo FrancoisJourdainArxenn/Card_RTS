@@ -96,6 +96,38 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     // -------------------------------------------------------------------------
+    // ACTIONS DE JEU — JOUER UNE CRÉATURE
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Envoyé par un client pour jouer une créature depuis sa main.
+    /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex)
+    {
+        int creatureUniqueID = IDFactory.GetUniqueID();
+        Debug.Log($"[GameNetworkManager] PlayCreature : joueur {playerIndex}, carte {cardUniqueID}, créature {creatureUniqueID}");
+        PlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : exécute la logique + le visuel de jouer une créature
+    /// avec les mêmes identifiants sur toutes les machines.
+    /// </summary>
+    [ClientRpc]
+    void PlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] PlayCreatureClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player player = Player.Players[playerIndex];
+        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
+    // -------------------------------------------------------------------------
     // SYNCHRONISATION DES PHASES DE TOUR
     // -------------------------------------------------------------------------
 

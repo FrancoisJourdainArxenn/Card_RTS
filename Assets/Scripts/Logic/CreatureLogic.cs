@@ -115,7 +115,9 @@ public class CreatureLogic: ILivable
     }
 
     // CONSTRUCTOR
-    public CreatureLogic(Player owner, CardAsset ca, int baseID)
+    // networkID : si >= 0, utilise cet ID (fourni par le serveur) au lieu d'en générer un nouveau.
+    // En mode local, laisser networkID à -1 (valeur par défaut).
+    public CreatureLogic(Player owner, CardAsset ca, int baseID, int networkID = -1)
     {
         this.ca = ca;
         baseHealth = ca.MaxHealth;
@@ -130,7 +132,7 @@ public class CreatureLogic: ILivable
             MovementsLeftThisTurn = movementsForOneTurn;
         this.owner = owner;
         this.BaseID = baseID;
-        UniqueCreatureID = IDFactory.GetUniqueID();
+        UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         if (ca.CreatureScriptName!= null && ca.CreatureScriptName!= "")
         {
             effect = System.Activator.CreateInstance(System.Type.GetType(ca.CreatureScriptName), new System.Object[]{owner, this, ca.specialCreatureAmount}) as CreatureEffect;

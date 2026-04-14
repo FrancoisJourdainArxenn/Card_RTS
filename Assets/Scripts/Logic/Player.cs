@@ -342,10 +342,45 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
+    /// <summary>
+    /// Version réseau : exécute le jeu d'une créature avec un ID fourni par le serveur.
+    /// Appelée sur TOUS les clients via PlayCreatureClientRpc.
+    /// </summary>
+    public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
+        {
+            Debug.LogError($"[Network] Carte introuvable : cardUniqueID={cardUniqueID}");
+            return;
+        }
+        PlayerArea selectedPArea = GetPlayerAreaByID(baseID);
+        if (selectedPArea == null)
+        {
+            Debug.LogError($"[Network] PlayerArea introuvable : baseID={baseID}");
+            return;
+        }
+
+        MainRessourceAvailable -= playedCard.MainCost;
+        SecondRessourceAvailable -= playedCard.SecondCost;
+
+        // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
+        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
+
+        new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
+
+        if (newCreature.effect != null)
+            newCreature.effect.WhenACreatureIsPlayed();
+
+        hand.CardsInHand.Remove(playedCard);
+        HighlightPlayableCards();
+    }
+
     public void Die()
     {
         // game over
-        // block both players from taking new moves 
+        // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
         TurnManager.Instance.StopTheTimer();
