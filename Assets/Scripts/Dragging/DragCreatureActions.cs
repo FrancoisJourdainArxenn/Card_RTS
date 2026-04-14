@@ -6,31 +6,20 @@ public class DragCreatureActions : DraggingActions {
 
     // reference to the sprite with a round "Target" graphic
     private SpriteRenderer sr;
-    // LineRenderer that is attached to a child game object to draw the arrow
-    private LineRenderer lr;
     // reference to WhereIsTheCardOrCreature to track this object`s state in the game
     private WhereIsTheCardOrCreature whereIsThisCreature;
-    // the pointy end of the arrow, should be called "Triangle" in the Hierarchy
-    private Transform triangle;
-    // SpriteRenderer of triangle. We need this to disable the pointy end if the target is too close.
-    private SpriteRenderer triangleSR;
-    // when we stop dragging, the gameObject that we were targeting will be stored in this variable.
     private GameObject target;
     // Reference to creature manager, attached to the parent game object
     private OneCreatureManager manager;
-
-
+        [SerializeField] private BezierArrows targettingArrow;
     void Awake()
     {
         // establish all the connections
         sr = GetComponent<SpriteRenderer>();
-        lr = GetComponentInChildren<LineRenderer>();
-        lr.sortingLayerName = "AboveEverything";
-        triangle = transform.Find("Triangle");
-        triangleSR = triangle.GetComponent<SpriteRenderer>();
-
         manager = GetComponentInParent<OneCreatureManager>();
         whereIsThisCreature = GetComponentInParent<WhereIsTheCardOrCreature>();
+        targettingArrow.originOverride = transform.parent;
+
     }
 
     public override bool CanDrag
@@ -40,7 +29,6 @@ public class DragCreatureActions : DraggingActions {
             return base.CanDrag && (manager.CanAttackNow || manager.CanMoveNow);
         }
     }
-
     private PlayerArea originArea;
     public override void OnStartDrag()
     {
@@ -48,9 +36,7 @@ public class DragCreatureActions : DraggingActions {
         whereIsThisCreature.VisualState = VisualStates.Dragging;
         // enable target graphic
         sr.enabled = true;
-        // enable line renderer to start drawing the line.
-        lr.enabled = true;
-        
+        targettingArrow.Show();
         HighlightReachableAreas();
         ColorizeUnits();
 
@@ -58,37 +44,8 @@ public class DragCreatureActions : DraggingActions {
 
     public override void OnDraggingInUpdate()
     {
-        Vector3 notNormalized = transform.position - transform.parent.position;
-        Vector3 direction = notNormalized.normalized;
-        float distanceToTarget = (direction*2.3f).magnitude;
-        if (notNormalized.magnitude > distanceToTarget)
-        {
-            // draw a line between the creature and the target
-            lr.SetPositions(new Vector3[]{ transform.parent.position, transform.position - direction*2.3f });
-            lr.enabled = true;
-
-            // position the end of the arrow between near the target.
-            triangleSR.enabled = true;
-            triangleSR.transform.position = transform.position - 1.5f*direction;
-
-            // proper rotation of arrow end
-            // Compute angle in screen space, then apply it on LOCAL Z
-            // so inspector values stay in the expected 0/0/X form.
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(triangleSR.transform.position);
-            Vector3 screenParent = Camera.main.WorldToScreenPoint(transform.parent.position);
-            Vector2 dir = (screenPos - screenParent);
-            float rot_z = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            triangleSR.transform.localRotation = Quaternion.Euler(0f, 0f, rot_z - 90f);
-        }
-        else
-        {
-            // if the target is not far enough from creature, do not show the arrow
-            lr.enabled = false;
-            triangleSR.enabled = false;
-        }
-            
+        
     }
-
     public override void OnEndDrag()
     {
         TurnManager turnmanager = TurnManager.Instance;
@@ -110,7 +67,6 @@ public class DragCreatureActions : DraggingActions {
         // return target and arrow to original position
         ResetDragElements();
     }
-
     private void SelectTarget()
     {
         target = null;
@@ -226,7 +182,14 @@ public class DragCreatureActions : DraggingActions {
 
         if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
         {
-            
+            Player targetPlayer = (targetID == GlobalSettings.Instance.LowPlayer.PlayerID)
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            if (targetPlayer.MainPArea.parentZone != originArea.parentZone)
+            {
+                new ShowMessageCommand("Base not in range", 1f).AddToQueue();
+                return false;
+            }
             Debug.Log("Attacking face" + target);
             CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
             return true;
@@ -277,10 +240,10 @@ public class DragCreatureActions : DraggingActions {
         ResetColorizeUnits();
         ResetAreaHighlights();
 
-        transform.localPosition = Vector3.zero;
+        transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
         sr.enabled = false;
-        lr.enabled = false;
-        triangleSR.enabled = false;
+        targettingArrow.Hide();
+
 
     }
 

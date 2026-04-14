@@ -80,6 +80,8 @@ public class FogOfWarManager : MonoBehaviour
         {
             nbc.SetEnemyBuildingsFogged(enemy, !observerHasPresence);
             nbc.SetPlayerBuildingsVisible(observer); // Always show observer's own captured bases
+            nbc.ApplyColorForObserver(observer, observerHasPresence);
+
         }
     }
     // Returns true if 'player' has at least one creature OR building in the given zone.
