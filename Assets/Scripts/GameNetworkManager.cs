@@ -1,0 +1,156 @@
+using Unity.Netcode;
+using UnityEngine;
+
+/// <summary>
+/// Chef d'orchestre réseau dans la BattleScene.
+/// Attend que les deux clients soient prêts, puis lance la partie.
+/// Doit être placé sur un GameObject avec un composant NetworkObject dans la BattleScene.
+/// </summary>
+public class GameNetworkManager : NetworkBehaviour
+{
+    public static GameNetworkManager Instance { get; private set; }
+
+    // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
+    private int readyCount = 0;
+
+    void Awake()
+    {
+        Instance = this;
+
+        // Awake s'exécute avant tous les Start() de la scène.
+        // On définit IsNetworkSession ici pour que TurnManager.Start() le voie correctement,
+        // que ce soit sur le host ou sur le client.
+        // En mode local, IsListening == false donc IsNetworkSession reste false.
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            NetworkSessionData.IsNetworkSession = true;
+        }
+    }
+
+    /// <summary>
+    /// Appelé automatiquement par Netcode quand cet objet est spawné sur le réseau.
+    /// Chaque client récupère son LocalClientId et signale au serveur qu'il est prêt.
+    /// En mode local, cette méthode n'est jamais appelée.
+    /// </summary>
+    public override void OnNetworkSpawn()
+    {
+        // LocalClientId n'est fiable qu'après OnNetworkSpawn, pas dans Awake
+        NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
+        PlayerReadyServerRpc();
+    }
+
+    /// <summary>
+    /// Envoyé par chaque client au serveur pour signaler qu'il est prêt.
+    /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    void PlayerReadyServerRpc()
+    {
+        readyCount++;
+        Debug.Log($"[GameNetworkManager] Joueur prêt : {readyCount}/2");
+
+        if (readyCount >= 2)
+        {
+            Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
+            StartGameClientRpc();
+        }
+    }
+
+    /// <summary>
+    /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
+    /// </summary>
+    [ClientRpc]
+    void StartGameClientRpc()
+    {
+        // 1. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
+        TurnManager.Instance.OnGameStart();
+
+        // 2. Assigner les droits de contrôle selon le rôle réseau
+        //    (après OnGameStart car il réinitialise AllowedToControlThisPlayer)
+        AssignLocalPlayerControl();
+
+        // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
+        GlobalSettings.Instance.RefreshEndPhaseButtons();
+    }
+
+    /// <summary>
+    /// Détermine quel joueur la machine locale peut contrôler.
+    /// Host (clientId 0) → LowPlayer
+    /// Client (clientId 1) → TopPlayer
+    /// </summary>
+    void AssignLocalPlayerControl()
+    {
+        if (!NetworkSessionData.IsNetworkSession)
+            return;
+
+        GlobalSettings gs = GlobalSettings.Instance;
+        bool isHost = NetworkManager.Singleton.LocalClientId == 0;
+
+        Player localPlayer  = isHost ? gs.LowPlayer  : gs.TopPlayer;
+        Player remotePlayer = isHost ? gs.TopPlayer  : gs.LowPlayer;
+
+        localPlayer.MainPArea.AllowedToControlThisPlayer  = true;
+        remotePlayer.MainPArea.AllowedToControlThisPlayer = false;
+
+        Debug.Log($"[GameNetworkManager] Joueur local : {localPlayer.name} | Joueur distant : {remotePlayer.name}");
+    }
+
+    // -------------------------------------------------------------------------
+    // SYNCHRONISATION DES PHASES DE TOUR
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Diffusé par le serveur à tous les clients quand un joueur a cliqué "Fin de phase".
+    /// Met à jour l'état local phaseReady et grise le bouton correspondant.
+    /// </summary>
+    [ClientRpc]
+    public void SyncPlayerReadyClientRpc(int playerIndex)
+    {
+        TurnManager.Instance.SetPlayerReady(playerIndex);
+    }
+
+    /// <summary>
+    /// Appelé par un client pour signaler au serveur qu'il a terminé la phase.
+    /// Le paramètre forPhase permet d'ignorer les requêtes arrivées en retard
+    /// (ex : Regroup auto-register qui arrive après que le serveur est passé en Command).
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void RegisterEndPhaseServerRpc(int playerIndex, TurnManager.TurnPhases forPhase)
+    {
+        if (TurnManager.Instance.CurrentPhase != forPhase)
+        {
+            Debug.Log($"[GameNetworkManager] RegisterEndPhase ignoré : requête pour {forPhase}, phase actuelle {TurnManager.Instance.CurrentPhase}");
+            return;
+        }
+        Debug.Log($"[GameNetworkManager] RegisterEndPhase reçu pour joueur index {playerIndex} (phase {forPhase})");
+        TurnManager.Instance.RegisterEndPhase(playerIndex);
+    }
+
+    /// <summary>
+    /// Appelé par le serveur (depuis TurnManager.AdvancePhaseWhenAllReady) pour
+    /// diffuser la transition de phase à tous les clients.
+    /// </summary>
+    public void BroadcastPhaseTransition(TurnManager.TurnPhases nextPhase, bool roundEnded, int newRound)
+    {
+        PhaseTransitionClientRpc(nextPhase, roundEnded, newRound);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients (y compris le serveur/host) :
+    /// applique la fin de round si nécessaire, puis entre dans la nouvelle phase.
+    /// </summary>
+    [ClientRpc]
+    void PhaseTransitionClientRpc(TurnManager.TurnPhases nextPhase, bool roundEnded, int newRound)
+    {
+        Debug.Log($"[GameNetworkManager] Transition vers {nextPhase} (round {newRound}, finRound={roundEnded})");
+
+        if (roundEnded)
+        {
+            foreach (Player p in Player.Players)
+                p.OnTurnEnd();
+        }
+
+        TurnManager.Instance.SetCurrentRound(newRound);
+        TurnManager.Instance.EnterPhase(nextPhase);
+    }
+}

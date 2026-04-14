@@ -37,7 +37,12 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
-        OnGameStart();
+        // En mode réseau, GameNetworkManager attend que les deux clients soient
+        // prêts avant d'appeler OnGameStart(). On ne démarre pas tout seul.
+        if (!NetworkSessionData.IsNetworkSession)
+        {
+            OnGameStart();            
+        }
     }
 
     public void OnGameStart()
@@ -106,6 +111,19 @@ public class TurnManager : MonoBehaviour
     /// <summary>Registers end-of-phase for the participant at this index in <see cref="Player.Players"/>.</summary>
     public void RegisterEndPhase(int participantIndex)
     {
+        // En mode réseau, seul le serveur exécute la logique phaseReady.
+        // Un client (non-serveur) envoie un ServerRpc uniquement pour SON propre joueur.
+        // L'adversaire est enregistré automatiquement côté serveur (ex: piocher en Regroup).
+        if (NetworkSessionData.IsNetworkSession && !Unity.Netcode.NetworkManager.Singleton.IsServer)
+        {
+            Player p = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
+                ? Player.Players[participantIndex] : null;
+            if (p != null && p.MainPArea.AllowedToControlThisPlayer)
+                GameNetworkManager.Instance.RegisterEndPhaseServerRpc(participantIndex, currentPhase);
+            // Ne rien faire localement dans tous les cas (même pour son propre joueur)
+            return;
+        }
+
         EnsurePhaseReadyMatchesPlayers();
         if (phaseReady == null || participantIndex < 0 || participantIndex >= phaseReady.Length)
             return;
@@ -113,8 +131,17 @@ public class TurnManager : MonoBehaviour
             return;
 
         phaseReady[participantIndex] = true;
-        if (GlobalSettings.Instance != null)
-            GlobalSettings.Instance.RefreshEndPhaseButtons();
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            // Diffuser l'état "prêt" à tous les clients pour griser le bon bouton
+            GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex);
+        }
+        else
+        {
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
+        }
 
         if (AllParticipantsRegisteredEndPhase())
             AdvancePhaseWhenAllReady();
@@ -134,40 +161,57 @@ public class TurnManager : MonoBehaviour
         if (timer != null)
             timer.StopTimer();
 
-        /* End phase — disabled for now (restore this block and Battle => End when you need End again)
-        if (currentPhase == TurnPhases.End)
-        {
-            foreach (Player p in Player.Players)
-                p.OnTurnEnd();
-
-            currentRound++;
-            EnterPhase(TurnPhases.Regroup);
-            return;
-        }
-        */
-
-        if (currentPhase == TurnPhases.Battle)
-        {
-            foreach (Player p in Player.Players)
-                p.OnTurnEnd();
-
-            currentRound++;
-            EnterPhase(TurnPhases.Regroup);
-            return;
-        }
+        bool roundEnded = currentPhase == TurnPhases.Battle;
 
         TurnPhases next = currentPhase switch
         {
+            TurnPhases.Battle  => TurnPhases.Regroup,
             TurnPhases.Regroup => TurnPhases.Command,
             TurnPhases.Command => TurnPhases.Battle,
-            // TurnPhases.Battle => TurnPhases.End,
-            _ => TurnPhases.Command
+            _                  => TurnPhases.Command
         };
 
-        EnterPhase(next);
+        int newRound = roundEnded ? currentRound + 1 : currentRound;
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            // Le serveur diffuse la transition à tous les clients (y compris lui-même).
+            // C'est PhaseTransitionClientRpc qui appellera EnterPhase et OnTurnEnd.
+            GameNetworkManager.Instance.BroadcastPhaseTransition(next, roundEnded, newRound);
+        }
+        else
+        {
+            // Mode local : comportement existant
+            if (roundEnded)
+            {
+                foreach (Player p in Player.Players)
+                    p.OnTurnEnd();
+                currentRound++;
+            }
+            EnterPhase(next);
+        }
     }
 
-    void EnterPhase(TurnPhases phase)
+    /// <summary>Appelé par PhaseTransitionClientRpc pour mettre à jour le numéro de tour.</summary>
+    public void SetCurrentRound(int round)
+    {
+        currentRound = round;
+    }
+
+    /// <summary>
+    /// Appelé par SyncPlayerReadyClientRpc pour mettre à jour phaseReady localement
+    /// et rafraîchir l'état des boutons (grisage du bouton du joueur qui a cliqué).
+    /// </summary>
+    public void SetPlayerReady(int playerIndex)
+    {
+        EnsurePhaseReadyMatchesPlayers();
+        if (phaseReady != null && playerIndex >= 0 && playerIndex < phaseReady.Length)
+            phaseReady[playerIndex] = true;
+        if (GlobalSettings.Instance != null)
+            GlobalSettings.Instance.RefreshEndPhaseButtons();
+    }
+
+    public void EnterPhase(TurnPhases phase)
     {
         currentPhase = phase;
         EnsurePhaseReadyMatchesPlayers();
