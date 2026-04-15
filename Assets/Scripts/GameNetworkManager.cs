@@ -13,6 +13,12 @@ public class GameNetworkManager : NetworkBehaviour
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
 
+    private NetworkVariable<int> deckSeed = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
     void Awake()
     {
         Instance = this;
@@ -51,8 +57,9 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (readyCount >= 2)
         {
+            deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc();
+            StartGameClientRpc(deckSeed.Value);
         }
     }
 
@@ -60,10 +67,10 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc()
+    void StartGameClientRpc(int deckSeed)
     {
         // 1. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart();
+        TurnManager.Instance.OnGameStart(deckSeed);
 
         // 2. Assigner les droits de contrôle selon le rôle réseau
         //    (après OnGameStart car il réinitialise AllowedToControlThisPlayer)

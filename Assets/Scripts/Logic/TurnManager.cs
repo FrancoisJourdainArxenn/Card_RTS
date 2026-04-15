@@ -36,16 +36,36 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
-        // En mode réseau, GameNetworkManager attend que les deux clients soient
-        // prêts avant d'appeler OnGameStart(). On ne démarre pas tout seul.
+        //GameStart local
         if (!NetworkSessionData.IsNetworkSession)
         {
             OnGameStart();            
         }
     }
 
-    public void OnGameStart()
+    public void OnGameStart(int? seed = null)
     {
+        if (seed.HasValue)
+        {
+            for (int idx = 0; idx < Player.Players.Length; idx++)
+            {
+                Player p = Player.Players[idx];
+                p.deck.cards.ShuffleWithSeed(seed.Value + idx);
+                Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
+            }
+            Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
+            
+        }
+        else //Shuffle Local
+        {
+            for (int idx = 0; idx < Player.Players.Length; idx++)
+            {
+                Player p = Player.Players[idx];
+                p.deck.cards.Shuffle();
+            }
+            Debug.Log("TurnManager: Deck shuffled with random seed");
+        }
+
         timer.StartTimer();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();

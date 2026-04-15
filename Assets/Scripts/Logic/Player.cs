@@ -397,11 +397,14 @@ public class Player : MonoBehaviour, ILivable
         foreach (CardLogic cl in hand.CardsInHand)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
-            if (g != null)
+            OneCardManager cardManager = CheckCardManager(g);
+            if (cardManager == null)
             {
-                bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
-                g.GetComponent<OneCardManager>().CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;
+                Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
+                continue;
             }
+            bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
+            cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
         bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
@@ -410,16 +413,44 @@ public class Player : MonoBehaviour, ILivable
         foreach (CreatureLogic crl in table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
-            if (g != null)
+            OneCreatureManager creatureManager = CheckCreatureManager(g);
+            if (creatureManager == null)
             {
-                OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
-                creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-                creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
-                creatureManager.UpdateCreatureGlow();
+                Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
+                continue;
             }
-
+            creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
+            creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
+            creatureManager.UpdateCreatureGlow();
         }
+    }
 
+    public OneCreatureManager CheckCreatureManager(GameObject g)
+    {
+        if (g == null)
+        {
+            return null;
+        }
+        OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
+        if (creatureManager == null)
+        {
+            return null;
+        }
+        return creatureManager;
+    }
+
+    public OneCardManager CheckCardManager(GameObject g)
+    {
+        if (g == null)
+        {
+            return null;
+        }
+        OneCardManager cardManager = g.GetComponent<OneCardManager>();
+        if (cardManager == null)
+        {
+            return null;
+        }
+        return cardManager;
     }
 
     // START GAME METHODS

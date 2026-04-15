@@ -91,3 +91,11 @@ Etat actuel
 - Du coup des fois on a un Baneling au lieu d'un Zergling
 
 => Les boutons pass se désync, lorsque J1 passe, ça unlock ceux de J2
+
+Correctifs recommandés (ordre)
+Court terme (stabilité) : guards null dans HighlightPlayableCards pour OneCardManager et OneCreatureManager (évite de casser les RPC callbacks).
+Moyen terme (vrai fix) : stratégie d’ID unique global en multi :
+soit tout ID gameplay est server-authoritative,
+soit partition d’espace d’IDs (ex: plages réservées par type/source),
+soit synchroniser le compteur local avec les IDs reçus réseau (Count = max(Count, receivedId)).
+Si tu veux, je te propose une stratégie d’ID simple “safe multiplayer” compatible avec ton architecture actuelle (sans tout réécrire).
