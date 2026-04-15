@@ -136,8 +136,11 @@ public class GameNetworkManager : NetworkBehaviour
     /// Met à jour l'état local phaseReady et grise le bouton correspondant.
     /// </summary>
     [ClientRpc]
-    public void SyncPlayerReadyClientRpc(int playerIndex)
+    public void SyncPlayerReadyClientRpc(int playerIndex, TurnManager.TurnPhases forPhase)
     {
+        // Ignorer les syncs obsolètes (émis par une phase précédente)
+        if (TurnManager.Instance.CurrentPhase != forPhase)
+            return;
         TurnManager.Instance.SetPlayerReady(playerIndex);
     }
 

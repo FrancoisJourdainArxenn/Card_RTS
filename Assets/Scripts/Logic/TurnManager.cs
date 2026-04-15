@@ -34,7 +34,6 @@ public class TurnManager : MonoBehaviour
 
     }
 
-
     void Start()
     {
         // En mode réseau, GameNetworkManager attend que les deux clients soient
@@ -135,7 +134,7 @@ public class TurnManager : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             // Diffuser l'état "prêt" à tous les clients pour griser le bon bouton
-            GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex);
+            GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex, currentPhase);
         }
         else
         {
@@ -250,9 +249,9 @@ public class TurnManager : MonoBehaviour
 
         }
 
-        RefreshAllPlayableHighlights();
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
+        RefreshAllPlayableHighlights();
     }
 
     void UpdatePhaseText()

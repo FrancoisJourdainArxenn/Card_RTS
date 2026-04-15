@@ -415,7 +415,6 @@ public class Player : MonoBehaviour, ILivable
                 OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
                 creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
                 creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
-                // Debug.Log($"[Player] Creature {crl.UniqueCreatureID} canAttackNow={creatureManager.CanAttackNow} canMoveNow={creatureManager.CanMoveNow} movesLeft={crl.MovementsLeftThisTurn} phaseCommand={commandPhase} mayControl={TurnManager.Instance.MayPlayerUseControlsInPhase(this)}");
                 creatureManager.UpdateCreatureGlow();
             }
 
