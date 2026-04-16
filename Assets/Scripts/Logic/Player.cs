@@ -138,6 +138,7 @@ public class Player : MonoBehaviour, ILivable
     //public event VoidWithNoArguments StartTurnEvent;
     public event VoidWithNoArguments EndTurnEvent;
 
+    public int playerIndex => System.Array.IndexOf(Players, this);
     // ALL METHODS
     void Awake()
     {
@@ -186,7 +187,7 @@ public class Player : MonoBehaviour, ILivable
 
         
         // Refresh UI + playable state.
-        HighlightPlayableCards();
+        // HighlightPlayableCards();
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
 
@@ -218,20 +219,20 @@ public class Player : MonoBehaviour, ILivable
     // FOR TESTING ONLY
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
-            DrawACard();
+        /*if (Input.GetKeyDown(KeyCode.C))
+            DrawACard();*/
 
     }
 
     // draw a single card from the deck
-    public void DrawACard(bool fast = false)
+    public void DrawACard(bool fast = false, int netWorkID = -1)
     {
         if (deck.cards.Count > 0)
         {
             if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
             {
                 // 1) logic: add card to hand
-                CardLogic newCard = new CardLogic(deck.cards[0]);
+                CardLogic newCard = new CardLogic(deck.cards[0], netWorkID);
                 newCard.owner = this;
                 hand.CardsInHand.Insert(0, newCard);
                 // Debug.Log(hand.CardsInHand.Count);
@@ -342,10 +343,46 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
+    /// <summary>
+    /// Version réseau : exécute le jeu d'une créature avec un ID fourni par le serveur.
+    /// Appelée sur TOUS les clients via PlayCreatureClientRpc.
+    /// </summary>
+    public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
+        {
+            Debug.LogError($"[Network] Carte introuvable : cardUniqueID={cardUniqueID}");
+            return;
+        }
+        PlayerArea selectedPArea = GetPlayerAreaByID(baseID);
+        if (selectedPArea == null)
+        {
+            Debug.LogError($"[Network] PlayerArea introuvable : baseID={baseID}");
+            return;
+        }
+
+        MainRessourceAvailable -= playedCard.MainCost;
+        SecondRessourceAvailable -= playedCard.SecondCost;
+
+        // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
+        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
+
+        new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
+
+        if (newCreature.effect != null)
+            newCreature.effect.WhenACreatureIsPlayed();
+
+        hand.CardsInHand.Remove(playedCard);
+        TurnManager.RefreshAllPlayableHighlights();
+        // HighlightPlayableCards();
+    }
+
     public void Die()
     {
         // game over
-        // block both players from taking new moves 
+        // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
         TurnManager.Instance.StopTheTimer();
@@ -362,11 +399,14 @@ public class Player : MonoBehaviour, ILivable
         foreach (CardLogic cl in hand.CardsInHand)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
-            if (g != null)
+            OneCardManager cardManager = CheckCardManager(g);
+            if (cardManager == null)
             {
-                bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
-                g.GetComponent<OneCardManager>().CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;
+                Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
+                continue;
             }
+            bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
+            cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
         bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
@@ -375,17 +415,44 @@ public class Player : MonoBehaviour, ILivable
         foreach (CreatureLogic crl in table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
-            if (g != null)
+            OneCreatureManager creatureManager = CheckCreatureManager(g);
+            if (creatureManager == null)
             {
-                OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
-                creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-                creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
-                // Debug.Log($"[Player] Creature {crl.UniqueCreatureID} canAttackNow={creatureManager.CanAttackNow} canMoveNow={creatureManager.CanMoveNow} movesLeft={crl.MovementsLeftThisTurn} phaseCommand={commandPhase} mayControl={TurnManager.Instance.MayPlayerUseControlsInPhase(this)}");
-                creatureManager.UpdateCreatureGlow();
+                Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
+                continue;
             }
-
+            creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
+            creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
+            creatureManager.UpdateCreatureGlow();
         }
+    }
 
+    public OneCreatureManager CheckCreatureManager(GameObject g)
+    {
+        if (g == null)
+        {
+            return null;
+        }
+        OneCreatureManager creatureManager = g.GetComponent<OneCreatureManager>();
+        if (creatureManager == null)
+        {
+            return null;
+        }
+        return creatureManager;
+    }
+
+    public OneCardManager CheckCardManager(GameObject g)
+    {
+        if (g == null)
+        {
+            return null;
+        }
+        OneCardManager cardManager = g.GetComponent<OneCardManager>();
+        if (cardManager == null)
+        {
+            return null;
+        }
+        return cardManager;
     }
 
     // START GAME METHODS
@@ -406,6 +473,9 @@ public class Player : MonoBehaviour, ILivable
 
     public void TransmitInfoAboutPlayerToVisual()
     {
+        if (NetworkSessionData.IsNetworkSession) 
+            return;
+
         //PArea.Portrait.gameObject.AddComponent<IDHolder>().UniqueID = PlayerID;
         if (GetComponent<TurnMaker>() is AITurnMaker)
         {

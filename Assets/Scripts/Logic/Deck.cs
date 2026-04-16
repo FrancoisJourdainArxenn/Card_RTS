@@ -8,7 +8,12 @@ public class Deck : MonoBehaviour {
 
     void Awake()
     {
-        cards.Shuffle();
+
+    }
+
+    public void ShuffleWithSeed(int seed)
+    {
+        cards.ShuffleWithSeed(seed);
     }
 	
 }

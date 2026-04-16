@@ -21,7 +21,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     public GameObject BaseCardPrefab;
 
     private bool canBuild = true;
-    private Player activePlayer;
+    private Player localPlayer;
     
     void Awake()
 	{
@@ -40,15 +40,15 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseEnter()
     {
-        activePlayer = GlobalSettings.Instance.activePlayer;
-        bool hasEnoughRessources = activePlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && activePlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost;
+        localPlayer = GlobalSettings.Instance.localPlayer;
+        bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && localPlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
         Glow.SetActive(true);
     }
 
     void OnMouseDown()
     {
-        activePlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
+        localPlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
     }
     void OnMouseExit()
     {

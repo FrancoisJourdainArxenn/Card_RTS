@@ -13,6 +13,12 @@ public class GameNetworkManager : NetworkBehaviour
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
 
+    private NetworkVariable<int> deckSeed = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
     void Awake()
     {
         Instance = this;
@@ -51,8 +57,14 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (readyCount >= 2)
         {
+            deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            int[] cardInHandIDs = new int[TurnManager.Instance.initdraw * Player.Players.Length];
+            for (int i = 0; i < cardInHandIDs.Length; i++)
+            {
+                cardInHandIDs[i] = IDFactory.GetUniqueID();
+            }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc();
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs);
         }
     }
 
@@ -60,14 +72,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc()
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs)
     {
-        // 1. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart();
-
-        // 2. Assigner les droits de contrôle selon le rôle réseau
-        //    (après OnGameStart car il réinitialise AllowedToControlThisPlayer)
+        // 1. Assigner le local player
         AssignLocalPlayerControl();
+
+        // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();
@@ -91,8 +102,44 @@ public class GameNetworkManager : NetworkBehaviour
 
         localPlayer.MainPArea.AllowedToControlThisPlayer  = true;
         remotePlayer.MainPArea.AllowedToControlThisPlayer = false;
+        gs.localPlayer = localPlayer;
+        gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
+        localPlayer.MainPArea.handVisual = gs.localPlayerHand;
+        gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 
         Debug.Log($"[GameNetworkManager] Joueur local : {localPlayer.name} | Joueur distant : {remotePlayer.name}");
+    }
+
+    // -------------------------------------------------------------------------
+    // ACTIONS DE JEU — JOUER UNE CRÉATURE
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Envoyé par un client pour jouer une créature depuis sa main.
+    /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex)
+    {
+        int creatureUniqueID = IDFactory.GetUniqueID();
+        Debug.Log($"[GameNetworkManager] PlayCreature : joueur {playerIndex}, carte {cardUniqueID}, créature {creatureUniqueID}");
+        PlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : exécute la logique + le visuel de jouer une créature
+    /// avec les mêmes identifiants sur toutes les machines.
+    /// </summary>
+    [ClientRpc]
+    void PlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] PlayCreatureClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player player = Player.Players[playerIndex];
+        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
     }
 
     // -------------------------------------------------------------------------
@@ -104,8 +151,11 @@ public class GameNetworkManager : NetworkBehaviour
     /// Met à jour l'état local phaseReady et grise le bouton correspondant.
     /// </summary>
     [ClientRpc]
-    public void SyncPlayerReadyClientRpc(int playerIndex)
+    public void SyncPlayerReadyClientRpc(int playerIndex, TurnManager.TurnPhases forPhase)
     {
+        // Ignorer les syncs obsolètes (émis par une phase précédente)
+        if (TurnManager.Instance.CurrentPhase != forPhase)
+            return;
         TurnManager.Instance.SetPlayerReady(playerIndex);
     }
 
@@ -153,4 +203,20 @@ public class GameNetworkManager : NetworkBehaviour
         TurnManager.Instance.SetCurrentRound(newRound);
         TurnManager.Instance.EnterPhase(nextPhase);
     }
+
+    public void BroadCastDrawCard(int playerIndex)
+    {
+        int cardID = IDFactory.GetUniqueID();
+        DrawAcardClientRpc(playerIndex, cardID);
+        Debug.Log($"[GameNetworkManager] BroadCastDrawCard : joueur {playerIndex} doit piocher carte {cardID}");
+    }
+
+    [ClientRpc]
+    public void DrawAcardClientRpc(int playerIndex, int cardID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.DrawACard(false, cardID);
+        Debug.Log($"[GameNetworkManager] DrawAcardClientRpc : joueur {playerIndex} reçoit carte {cardID}");
+    } 
+
 }

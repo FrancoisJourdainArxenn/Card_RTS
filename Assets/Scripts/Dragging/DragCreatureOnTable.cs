@@ -61,14 +61,25 @@ public class DragCreatureOnTable : DraggingActions {
                 ).x
             );
 
-
-            playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
- 
+            if (NetworkSessionData.IsNetworkSession)
+            {
+                int playerIndex = System.Array.IndexOf(Player.Players, playerOwner);
+                GameNetworkManager.Instance.PlayCreatureServerRpc(
+                    GetComponent<IDHolder>().UniqueID,
+                    tablePos,
+                    selectedPArea.baseID,
+                    playerIndex
+                );
+            }
+            else
+            {
+                playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
+            }
         }
         else
         {
             DragFailed();
-        } 
+        }
     }
 
     protected override bool DragSuccessful()

@@ -34,19 +34,44 @@ public class TurnManager : MonoBehaviour
 
     }
 
-
     void Start()
     {
-        // En mode réseau, GameNetworkManager attend que les deux clients soient
-        // prêts avant d'appeler OnGameStart(). On ne démarre pas tout seul.
+        //GameStart local
         if (!NetworkSessionData.IsNetworkSession)
         {
             OnGameStart();            
         }
     }
 
-    public void OnGameStart()
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
     {
+        if (Player.Players == null || Player.Players.Length < 2)
+        {
+            Debug.LogError("TurnManager: need at least 2 Player instances.");
+            return;
+        }
+
+        if (seed.HasValue)
+        {
+            for (int idx = 0; idx < Player.Players.Length; idx++)
+            {
+                Player p = Player.Players[idx];
+                p.deck.cards.ShuffleWithSeed(seed.Value + idx);
+                Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
+            }
+            Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
+            
+        }
+        else //Shuffle Local
+        {
+            for (int idx = 0; idx < Player.Players.Length; idx++)
+            {
+                Player p = Player.Players[idx];
+                p.deck.cards.Shuffle();
+            }
+            Debug.Log("TurnManager: Deck shuffled with random seed");
+        }
+
         timer.StartTimer();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
@@ -57,26 +82,29 @@ public class TurnManager : MonoBehaviour
             p.TransmitInfoAboutPlayerToVisual();
         }
 
-        if (Player.Players == null || Player.Players.Length < 2)
-        {
-            Debug.LogError("TurnManager: need at least 2 Player instances.");
-            return;
-        }
-
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
 
-        int i = 0;
-        for (i = 0; i < initdraw; i++)
+        
+        for (int i = 0; i < initdraw; i++)
         {
-            foreach (Player p in Player.Players)
-                p.DrawACard(true);
+            for (int j = 0; j < Player.Players.Length; j++)
+            {
+                Player p = Player.Players[j];
+                int cardInHandID = cardInHandIDs == null ? -1 : cardInHandIDs[j * initdraw + i];
+                p.DrawACard(true, cardInHandID);
+            }
         }
-        if (i >= initdraw)
-        {
-            foreach (Player p in Player.Players)
-                p.OnTurnStart();
-        }
+        foreach (Player p in Player.Players)
+            p.OnTurnStart();
+        StartCoroutine(HighlightAfterDraws());
+
+    }
+
+    IEnumerator HighlightAfterDraws()
+    {
+        yield return new WaitWhile(() => Command.CardDrawPending());
+        RefreshAllPlayableHighlights();
     }
 
     public void OnRopeTimerExpired()
@@ -135,7 +163,7 @@ public class TurnManager : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             // Diffuser l'état "prêt" à tous les clients pour griser le bon bouton
-            GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex);
+            GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex, currentPhase);
         }
         else
         {
@@ -250,9 +278,9 @@ public class TurnManager : MonoBehaviour
 
         }
 
-        RefreshAllPlayableHighlights();
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
+        RefreshAllPlayableHighlights();
     }
 
     void UpdatePhaseText()
@@ -272,11 +300,18 @@ public class TurnManager : MonoBehaviour
 
     public static void RefreshAllPlayableHighlights()
     {
+        if (Command.CardDrawPending())
+            return;
         if (Player.Players == null)
             return;
-        foreach (Player p in Player.Players)
+        if (GameNetworkManager.Instance != null)
         {
-            if (p != null)
+            Player localPlayer = GlobalSettings.Instance.localPlayer;
+            localPlayer.HighlightPlayableCards();
+        }
+        else
+        {
+            foreach (Player p in Player.Players)
                 p.HighlightPlayableCards();
         }
     }
