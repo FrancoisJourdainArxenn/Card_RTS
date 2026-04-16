@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// MULTIPLAYER NOTE: ObservingPlayer currently mirrors GlobalSettings.activePlayer
+/// MULTIPLAYER NOTE: ObservingPlayer currently mirrors GlobalSettings.localPlayer
 /// (toggled with Space for debug). When real multiplayer arrives, replace
 /// ObservingPlayer with the local client's player from the network layer —
 /// the rest of this class does not need to change.
@@ -22,7 +22,7 @@ public class FogOfWarManager : MonoBehaviour
     }
 
     // The player whose perspective we are currently showing.
-    private Player ObservingPlayer => GlobalSettings.Instance.activePlayer;
+    private Player ObservingPlayer => GlobalSettings.Instance.localPlayer;
 
     // Static shortcut so any class can call FogOfWarManager.Refresh()
     // without needing a reference to the Instance.

@@ -18,6 +18,9 @@ public class DrawACardCommand : Command {
 
     public override void StartCommandExecution()
     {
-        p.MainPArea.handVisual.GivePlayerACard(cl.ca, cl.UniqueCardID, fast, fromDeck);
+        if (GlobalSettings.Instance.localPlayer == p)
+            GlobalSettings.Instance.localPlayerHand.GivePlayerACard(cl.ca, cl.UniqueCardID, fast, fromDeck);
+        else
+            Command.CommandExecutionComplete();
     }
 }

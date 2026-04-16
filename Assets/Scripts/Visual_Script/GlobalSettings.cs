@@ -9,7 +9,12 @@ public class GlobalSettings : MonoBehaviour
     [Header("Players")]
     public Player TopPlayer;
     public Player LowPlayer;
+    public Player localPlayer;
     
+    [Tooltip("End phase button for the low-area human player.")]
+    public Button EndTurnButton;
+    public HandVisual localPlayerHand;
+
     [Header("Colors")]
     public Color32 TopColor;
     public Color32 LowColor;
@@ -33,15 +38,12 @@ public class GlobalSettings : MonoBehaviour
     public GameObject ExplosionPrefab;
     public GameObject NeutralBasePrefab;
     [Header("Other")]
-    [Tooltip("End phase button for the low-area human player.")]
-    public Button EndTurnButton;
     [Tooltip("End phase button for the top-area human player (assign in the scene).")]
     public Button EndPhaseButtonTopPlayer;
     public GameObject GameOverPanel;
-    public TMP_Text activePlayerDebugText;
+    public TMP_Text localPlayerDebugText;
 
     public Dictionary<AreaPosition, Player> Players = new Dictionary<AreaPosition, Player>();
-    public Player activePlayer;
 
     public static GlobalSettings Instance;
 
@@ -64,25 +66,20 @@ public class GlobalSettings : MonoBehaviour
         LowPlayer.tag = "LowPlayer";
         TopPlayer.tag = "TopPlayer";
 
-        if (NetworkSessionData.IsNetworkSession)
+        if (NetworkSessionData.IsNetworkSession == false)
         {
-            // Host (clientId 0) → LowPlayer, Client (clientId 1) → TopPlayer
-            activePlayer = NetworkSessionData.LocalClientId == 0 ? LowPlayer : TopPlayer;
+            localPlayer = LowPlayer;
+            localPlayerDebugText.text = "Local Player: " + localPlayer.name;    
         }
-        else
-        {
-            activePlayer = LowPlayer;
-        }
-
-        activePlayerDebugText.text = "Active Player: " + activePlayer.name;
+        
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            activePlayer = activePlayer == TopPlayer ? LowPlayer : TopPlayer;
-            activePlayerDebugText.text = "Active Player: " + activePlayer.name;
+            localPlayer = localPlayer == TopPlayer ? LowPlayer : TopPlayer;
+            localPlayerDebugText.text = "Local Player: " + localPlayer.name;
             FogOfWarManager.Refresh();
         }
     }

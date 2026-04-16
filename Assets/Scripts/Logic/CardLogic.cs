@@ -46,12 +46,12 @@ public class CardLogic: IIdentifiable
     }
 
     // CONSTRUCTOR
-    public CardLogic(CardAsset ca)
+    public CardLogic(CardAsset ca, int networkID = -1)
     {
         // set the CardAsset reference
         this.ca = ca;
         // get unique int ID
-        UniqueCardID = IDFactory.GetUniqueID();
+        UniqueCardID = networkID != -1 ? networkID : IDFactory.GetUniqueID();
         //UniqueCardID = IDFactory.GetUniqueID();
         MainCost = ca.MainCost;
         SecondCost = ca.SecondCost;

@@ -1416,6 +1416,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlobalSettings
   TopPlayer: {fileID: 1779656902}
   LowPlayer: {fileID: 1369297962}
+  localPlayer: {fileID: 0}
+  EndTurnButton: {fileID: 17112408}
+  localPlayerHand: {fileID: 1438455306}
   TopColor:
     serializedVersion: 2
     rgba: 4294135039
@@ -1440,11 +1443,9 @@ MonoBehaviour:
   DamageEffectPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
   ExplosionPrefab: {fileID: 0}
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
-  EndTurnButton: {fileID: 17112408}
   EndPhaseButtonTopPlayer: {fileID: 268279290}
   GameOverPanel: {fileID: 0}
-  activePlayerDebugText: {fileID: 43101763}
-  activePlayer: {fileID: 0}
+  localPlayerDebugText: {fileID: 43101763}
 --- !u!4 &424799359
 Transform:
   m_ObjectHideFlags: 0
@@ -2229,7 +2230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandVisual
   owner: 0
-  TakeCardsOpenly: 1
+  TakeCardsOpenly: 0
   slots: {fileID: 662666358}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
@@ -4820,7 +4821,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca01c8810f15350489b7c4caa75ca5c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandVisual
-  owner: 1
+  owner: 2
   TakeCardsOpenly: 1
   slots: {fileID: 1438455305}
   DrawPreviewSpot: {fileID: 837471976}

@@ -43,8 +43,14 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null)
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
     {
+        if (Player.Players == null || Player.Players.Length < 2)
+        {
+            Debug.LogError("TurnManager: need at least 2 Player instances.");
+            return;
+        }
+
         if (seed.HasValue)
         {
             for (int idx = 0; idx < Player.Players.Length; idx++)
@@ -76,26 +82,29 @@ public class TurnManager : MonoBehaviour
             p.TransmitInfoAboutPlayerToVisual();
         }
 
-        if (Player.Players == null || Player.Players.Length < 2)
-        {
-            Debug.LogError("TurnManager: need at least 2 Player instances.");
-            return;
-        }
-
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
 
-        int i = 0;
-        for (i = 0; i < initdraw; i++)
+        
+        for (int i = 0; i < initdraw; i++)
         {
-            foreach (Player p in Player.Players)
-                p.DrawACard(true);
+            for (int j = 0; j < Player.Players.Length; j++)
+            {
+                Player p = Player.Players[j];
+                int cardInHandID = cardInHandIDs == null ? -1 : cardInHandIDs[j * initdraw + i];
+                p.DrawACard(true, cardInHandID);
+            }
         }
-        if (i >= initdraw)
-        {
-            foreach (Player p in Player.Players)
-                p.OnTurnStart();
-        }
+        foreach (Player p in Player.Players)
+            p.OnTurnStart();
+        StartCoroutine(HighlightAfterDraws());
+
+    }
+
+    IEnumerator HighlightAfterDraws()
+    {
+        yield return new WaitWhile(() => Command.CardDrawPending());
+        RefreshAllPlayableHighlights();
     }
 
     public void OnRopeTimerExpired()
@@ -291,11 +300,18 @@ public class TurnManager : MonoBehaviour
 
     public static void RefreshAllPlayableHighlights()
     {
+        if (Command.CardDrawPending())
+            return;
         if (Player.Players == null)
             return;
-        foreach (Player p in Player.Players)
+        if (GameNetworkManager.Instance != null)
         {
-            if (p != null)
+            Player localPlayer = GlobalSettings.Instance.localPlayer;
+            localPlayer.HighlightPlayableCards();
+        }
+        else
+        {
+            foreach (Player p in Player.Players)
                 p.HighlightPlayableCards();
         }
     }

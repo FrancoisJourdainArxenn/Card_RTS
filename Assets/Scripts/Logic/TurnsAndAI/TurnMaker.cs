@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Unity.Netcode;   
 
 public abstract class TurnMaker : MonoBehaviour {
 
@@ -19,7 +20,15 @@ public abstract class TurnMaker : MonoBehaviour {
     public virtual void OnRegroupPhaseStart()
     {
         p.OnTurnStart();
-        p.DrawACard();
+        if(NetworkSessionData.IsNetworkSession)
+        {
+            if(NetworkManager.Singleton.IsServer)
+                GameNetworkManager.Instance.BroadCastDrawCard(p.playerIndex);
+        }
+        else
+        {
+            p.DrawACard();
+        }
     }
 
     public virtual void OnCommandPhaseEntered() { }

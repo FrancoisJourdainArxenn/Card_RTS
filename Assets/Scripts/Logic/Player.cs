@@ -138,6 +138,7 @@ public class Player : MonoBehaviour, ILivable
     //public event VoidWithNoArguments StartTurnEvent;
     public event VoidWithNoArguments EndTurnEvent;
 
+    public int playerIndex => System.Array.IndexOf(Players, this);
     // ALL METHODS
     void Awake()
     {
@@ -186,7 +187,7 @@ public class Player : MonoBehaviour, ILivable
 
         
         // Refresh UI + playable state.
-        HighlightPlayableCards();
+        // HighlightPlayableCards();
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
 
@@ -218,20 +219,20 @@ public class Player : MonoBehaviour, ILivable
     // FOR TESTING ONLY
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
-            DrawACard();
+        /*if (Input.GetKeyDown(KeyCode.C))
+            DrawACard();*/
 
     }
 
     // draw a single card from the deck
-    public void DrawACard(bool fast = false)
+    public void DrawACard(bool fast = false, int netWorkID = -1)
     {
         if (deck.cards.Count > 0)
         {
             if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
             {
                 // 1) logic: add card to hand
-                CardLogic newCard = new CardLogic(deck.cards[0]);
+                CardLogic newCard = new CardLogic(deck.cards[0], netWorkID);
                 newCard.owner = this;
                 hand.CardsInHand.Insert(0, newCard);
                 // Debug.Log(hand.CardsInHand.Count);
@@ -374,7 +375,8 @@ public class Player : MonoBehaviour, ILivable
             newCreature.effect.WhenACreatureIsPlayed();
 
         hand.CardsInHand.Remove(playedCard);
-        HighlightPlayableCards();
+        TurnManager.RefreshAllPlayableHighlights();
+        // HighlightPlayableCards();
     }
 
     public void Die()
@@ -471,6 +473,9 @@ public class Player : MonoBehaviour, ILivable
 
     public void TransmitInfoAboutPlayerToVisual()
     {
+        if (NetworkSessionData.IsNetworkSession) 
+            return;
+
         //PArea.Portrait.gameObject.AddComponent<IDHolder>().UniqueID = PlayerID;
         if (GetComponent<TurnMaker>() is AITurnMaker)
         {

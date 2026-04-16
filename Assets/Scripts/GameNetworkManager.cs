@@ -58,8 +58,13 @@ public class GameNetworkManager : NetworkBehaviour
         if (readyCount >= 2)
         {
             deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            int[] cardInHandIDs = new int[TurnManager.Instance.initdraw * Player.Players.Length];
+            for (int i = 0; i < cardInHandIDs.Length; i++)
+            {
+                cardInHandIDs[i] = IDFactory.GetUniqueID();
+            }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs);
         }
     }
 
@@ -67,14 +72,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs)
     {
-        // 1. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed);
-
-        // 2. Assigner les droits de contrôle selon le rôle réseau
-        //    (après OnGameStart car il réinitialise AllowedToControlThisPlayer)
+        // 1. Assigner le local player
         AssignLocalPlayerControl();
+
+        // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();
@@ -98,6 +102,10 @@ public class GameNetworkManager : NetworkBehaviour
 
         localPlayer.MainPArea.AllowedToControlThisPlayer  = true;
         remotePlayer.MainPArea.AllowedToControlThisPlayer = false;
+        gs.localPlayer = localPlayer;
+        gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
+        localPlayer.MainPArea.handVisual = gs.localPlayerHand;
+        gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 
         Debug.Log($"[GameNetworkManager] Joueur local : {localPlayer.name} | Joueur distant : {remotePlayer.name}");
     }
@@ -195,4 +203,20 @@ public class GameNetworkManager : NetworkBehaviour
         TurnManager.Instance.SetCurrentRound(newRound);
         TurnManager.Instance.EnterPhase(nextPhase);
     }
+
+    public void BroadCastDrawCard(int playerIndex)
+    {
+        int cardID = IDFactory.GetUniqueID();
+        DrawAcardClientRpc(playerIndex, cardID);
+        Debug.Log($"[GameNetworkManager] BroadCastDrawCard : joueur {playerIndex} doit piocher carte {cardID}");
+    }
+
+    [ClientRpc]
+    public void DrawAcardClientRpc(int playerIndex, int cardID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.DrawACard(false, cardID);
+        Debug.Log($"[GameNetworkManager] DrawAcardClientRpc : joueur {playerIndex} reçoit carte {cardID}");
+    } 
+
 }
