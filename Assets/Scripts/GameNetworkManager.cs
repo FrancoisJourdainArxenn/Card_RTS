@@ -105,6 +105,7 @@ public class GameNetworkManager : NetworkBehaviour
         gs.localPlayer = localPlayer;
         gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
         localPlayer.MainPArea.handVisual = gs.localPlayerHand;
+        
         gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 
         Debug.Log($"[GameNetworkManager] Joueur local : {localPlayer.name} | Joueur distant : {remotePlayer.name}");

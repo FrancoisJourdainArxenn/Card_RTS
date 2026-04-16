@@ -8,11 +8,10 @@ using TMPro;
 public class BaseVisual : MonoBehaviour {
 
     public Player player;
-    public OneBuildingManager baseManager;   
-    public TMP_Text mainRessourceText,secondRessourceText;
-    public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
+    public OneBuildingManager baseManager;
+    public UiPlayerVisual uiPlayerVisual;  
     public AreaPosition owner;
-    public TMP_Text HealthText, UiHealthText;    
+    public TMP_Text HealthText;    
     
     void Awake()
 	{
@@ -23,13 +22,6 @@ public class BaseVisual : MonoBehaviour {
 	public void ApplyLookFromAsset()
     {
         HealthText.text = baseManager.HealthText.text;
-        UiHealthText.text = baseManager.HealthText.text;
-        MainRessourceIncomeText.text = player.playerMainIncome.ToString();
-        SecondRessourceIncomeText.text = player.playerSecondIncome.ToString();
-        mainRessourceText.text = player.mainRessourceAvailable.ToString();
-        secondRessourceText.text = player.secondRessourceAvailable.ToString();
-        //PortraitImage.sprite = factionAsset.AvatarImage;
-
     }
 
     public void TakeDamage(int amount, int healthAfter)
@@ -39,7 +31,7 @@ public class BaseVisual : MonoBehaviour {
             Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
             DamageEffect.CreateDamageEffect(transform.position, amount);
             HealthText.text = healthAfter.ToString();
-            UiHealthText.text = healthAfter.ToString();
+            uiPlayerVisual.UiHealthText.text = healthAfter.ToString();
         }
     }
 

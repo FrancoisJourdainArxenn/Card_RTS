@@ -1,3 +1,23 @@
+A faire de 16/04/26
+Refacto sur la UI. Nécessite de changer le fonctionnement et les appels de BaseVisual. GlobalSettings doit définir les éléments de la UI à mettre sur le canvas, dans un novueau script reprenant une partie de la logique de BaseVisual.
+Adapter les appels pour que tout ce mettes à jour. Puis faire en sorte que ça fonctionne en multijoueur. 
+
+Soucis à réfler dans CreatureAttackVisual :                         // target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Plan de refacto multijoueur
 Diagnostic
 L'architecture est en réalité bien adaptée au multijoueur grâce à la séparation logique/visuel et le pattern Command. Le problème est simple : toutes les actions se font localement sans aucun RPC. Chaque client joue sa propre partie indépendante.

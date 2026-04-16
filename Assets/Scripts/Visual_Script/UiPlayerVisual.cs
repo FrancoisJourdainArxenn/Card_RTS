@@ -5,10 +5,13 @@ using UnityEngine;
 /// Affiche le nombre de cartes restantes dans le deck du joueur (référence <see cref="Deck.cards"/>).
 /// À placer sur l’icône UI ; assigner le TextMeshPro et le joueur (ou <see cref="owner"/> comme pour HandVisual).
 /// </summary>
-public class DeckVisual : MonoBehaviour
+public class UiPlayerVisual : MonoBehaviour
 {
     [Tooltip("Texte au centre de l’icône (ex. le « X » de maquette).")]
     [SerializeField] TMP_Text countText;
+    public TMP_Text mainRessourceText,secondRessourceText;
+    public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
+    public TMP_Text UiHealthText; 
 
     [Tooltip("Si renseigné, prend la priorité sur owner.")]
     [SerializeField] Player player;
