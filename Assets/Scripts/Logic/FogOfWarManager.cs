@@ -83,6 +83,24 @@ public class FogOfWarManager : MonoBehaviour
             nbc.ApplyColorForObserver(observer, observerHasPresence);
 
         }
+
+        // --- Bases joueur (fog comme les bases neutres) ---
+        // L'observer voit toujours sa propre base
+        if (observer.MainPArea != null 
+            && observer.MainPArea.parentZone == zone 
+            && observer.baseVisual != null)
+        {
+            observer.baseVisual.gameObject.SetActive(true);
+        }
+
+        // La base ennemie suit le fog : invisible jusqu'à être vue, puis dernier état connu
+        if (enemy != null 
+            && enemy.MainPArea != null 
+            && enemy.MainPArea.parentZone == zone 
+            && enemy.baseVisual != null)
+        {
+            enemy.baseVisual.ApplyFogForObserver(observerHasPresence);
+        }
     }
     // Returns true if 'player' has at least one creature OR building in the given zone.
 

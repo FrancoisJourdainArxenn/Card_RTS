@@ -103,6 +103,7 @@ public class GameNetworkManager : NetworkBehaviour
         localPlayer.MainPArea.AllowedToControlThisPlayer  = true;
         remotePlayer.MainPArea.AllowedToControlThisPlayer = false;
         gs.localPlayer = localPlayer;
+        FogOfWarManager.Refresh();
         gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
         localPlayer.MainPArea.handVisual = gs.localPlayerHand;
         

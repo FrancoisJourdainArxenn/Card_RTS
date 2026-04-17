@@ -10,7 +10,10 @@ public class BaseVisual : MonoBehaviour {
     public Player player;
     public OneBuildingManager baseManager; 
     public AreaPosition owner;
-    public TMP_Text HealthText, MainRessourceText, SecondRessourceText;    
+    public TMP_Text HealthText, MainRessourceText, SecondRessourceText;
+    public Image fogOverlay;
+    [HideInInspector] public bool hasBeenSeen = false;
+    private bool currentlyVisible = true;
     
     void Awake()
 	{
@@ -20,6 +23,8 @@ public class BaseVisual : MonoBehaviour {
 	
 	public void ApplyLookFromAsset()
     {
+        if (!currentlyVisible)
+            return;
         HealthText.text = baseManager.HealthText.text;
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         SecondRessourceText.text = player.secondRessourceAvailable.ToString();
@@ -30,8 +35,11 @@ public class BaseVisual : MonoBehaviour {
         if (amount > 0)
         {
             Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
-            DamageEffect.CreateDamageEffect(transform.position, amount);
-            HealthText.text = healthAfter.ToString();
+            if(currentlyVisible)
+            {
+                DamageEffect.CreateDamageEffect(transform.position, amount);
+                HealthText.text = healthAfter.ToString();    
+            }            
             if (player == GlobalSettings.Instance.localPlayer)
                 GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
         }
@@ -45,6 +53,24 @@ public class BaseVisual : MonoBehaviour {
         s.OnComplete(() => GlobalSettings.Instance.GameOverPanel.SetActive(true));
     }
 
-
+    public void ApplyFogForObserver(bool hasVision)
+    {
+        currentlyVisible = hasVision;
+        if (hasVision)
+        {
+            hasBeenSeen = true;
+            gameObject.SetActive(true);
+            if (fogOverlay != null)
+                fogOverlay.gameObject.SetActive(false);
+            ApplyLookFromAsset();
+        }
+        else
+        {
+            // Invisible si jamais vu, sinon reste visible dans le dernier état connu
+            gameObject.SetActive(hasBeenSeen);
+            if (fogOverlay != null)
+                fogOverlay.gameObject.SetActive(hasBeenSeen);
+        }
+    }
 
 }

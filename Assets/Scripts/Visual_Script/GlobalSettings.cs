@@ -72,7 +72,7 @@ public class GlobalSettings : MonoBehaviour
             localPlayer = LowPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;    
         }
-        
+        FogOfWarManager.Refresh();
     }
 
     void Update()
