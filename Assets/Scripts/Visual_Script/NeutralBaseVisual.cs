@@ -1,11 +1,13 @@
 using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
-using DG.Tweening;
 using TMPro;
+using System.Collections.Generic;
 
 
+[DefaultExecutionOrder(-100)]
 public class NeutralBaseVisual : MonoBehaviour {
+
+    public static readonly Dictionary<int, NeutralBaseVisual> Registry = new();
 
     public BaseAsset baseAsset;
     public NeutralBaseController neutralBaseController;
@@ -19,17 +21,25 @@ public class NeutralBaseVisual : MonoBehaviour {
     public Transform BaseApparitionPosition;
     public Transform BasePosition;
     public GameObject BaseCardPrefab;
-
     private bool canBuild = true;
     private Player localPlayer;
-    
+
+    public int NeutralBaseId { get; private set; }
+
     void Awake()
 	{
+        NeutralBaseId = Registry.Count;
+        Registry[NeutralBaseId] = this;
+
 		if(baseAsset != null)
 			ApplyLookFromAsset();
         canBuild = true;
-
 	}
+
+    void OnDestroy()
+    {
+        Registry.Remove(NeutralBaseId);
+    }
 	
 	public void ApplyLookFromAsset()
     {
@@ -48,8 +58,11 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseDown()
     {
-        localPlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
+        canBuild = localPlayer.CheckIfCanBuild(baseAsset, neutralBaseController);
+        if (canBuild)
+            localPlayer.RequestBuildNeutralBase(NeutralBaseId);
     }
+
     void OnMouseExit()
     {
         Glow.SetActive(false);

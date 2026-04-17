@@ -106,8 +106,14 @@ public class FogOfWarManager : MonoBehaviour
 
     bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralBaseController nbc)
     {
+        if(player.MainPArea.parentZone == zone)
+        {
+            return true;
+        }
+        
         // Find which of this player's areas is inside this zone.
         PlayerArea playerAreaInZone = null;
+        
         foreach (PlayerArea pa in player.PAreas)
         {
             if (pa.parentZone == zone)

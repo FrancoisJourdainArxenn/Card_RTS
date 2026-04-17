@@ -189,7 +189,7 @@ public class Player : MonoBehaviour, ILivable
         // Refresh UI + playable state.
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
@@ -326,12 +326,8 @@ public class Player : MonoBehaviour, ILivable
     // 2nd overload - by logic units
     public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
     {
-        // Debug.Log(ManaLeft);
-        // Debug.Log(playedCard.CurrentManaCost);
         MainRessourceAvailable -= playedCard.MainCost;
         SecondRessourceAvailable -= playedCard.SecondCost;
-        // Debug.Log("Mana Left after played a creature: " + ManaLeft);
-        // create a new creature object and add it to Table
         int baseID = selectedPArea.baseID;
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
         table.CreaturesInPlay.Insert(tablePos, newCreature);
@@ -472,7 +468,7 @@ public class Player : MonoBehaviour, ILivable
         baseVisual.player = this;
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         baseVisual.ApplyLookFromAsset();
 
@@ -573,19 +569,19 @@ public class Player : MonoBehaviour, ILivable
         }
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         baseVisual.ApplyLookFromAsset();
     }
 
     // METHODS TO CREATE A NEW BASE 
     // 1st overload - by ID
-    public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
+    public bool CheckIfCanBuild( BaseAsset baseAsset, NeutralBaseController neutralBaseController)
     {
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {
             new ShowMessageCommand("You can't do that right now", 2f).AddToQueue();
-            return;
+            return false;
         }
 
         foreach (TableVisual table in neutralBaseController.tables)
@@ -595,20 +591,31 @@ public class Player : MonoBehaviour, ILivable
                 if (table.CreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
-                    return;
+                    return false;
                 }
             }
         }
-
         if (MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
         SecondRessourceAvailable < baseAsset.secondRessourceBuildingCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
-            return;
+            return false;
         }
-        
-        BuildingLogic newBuilding = new BuildingLogic(this, baseAsset, neutralBaseController);
-        new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
+        return true;    
+    }
+
+    public void RequestBuildNeutralBase(int neutralBaseId)
+    {
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.BuildNeutralBaseServerRpc(playerIndex, neutralBaseId);
+        else
+            ExecuteBuildNeutralBase(NeutralBaseVisual.Registry[neutralBaseId], IDFactory.GetUniqueID());
+    }
+
+    public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int buildingUniqueID)
+    {
+        new BuildingLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, buildingUniqueID);
+        new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
     }
 

@@ -141,8 +141,16 @@ public class DragCreatureActions : DraggingActions {
                 )
             ).x
         );
-        CreatureLogic.CreaturesCreatedThisGame[moverIdHolder.UniqueID].Move(targetPlayerArea.baseID, tablePos);
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos);
+        }
+        else
+        {
+            CreatureLogic.CreaturesCreatedThisGame[moverIdHolder.UniqueID].Move(targetPlayerArea.baseID, tablePos);
+        }
         return true;
+
     }
     
     private bool AttackTarget()
@@ -152,7 +160,6 @@ public class DragCreatureActions : DraggingActions {
             Debug.Log("target null");
             return false;
         }
-
    
         IDHolder targetIdHolder = target.GetComponent<IDHolder>();
         if (targetIdHolder == null)
@@ -191,7 +198,10 @@ public class DragCreatureActions : DraggingActions {
                 return false;
             }
             Debug.Log("Attacking face" + target);
-            CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
+            if (NetworkSessionData.IsNetworkSession)
+                GameNetworkManager.Instance.GoFaceServerRpc(attackerID);
+            else
+                CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
             return true;
         }
         
@@ -204,8 +214,10 @@ public class DragCreatureActions : DraggingActions {
                 new ShowMessageCommand("Building not in range", 1f).AddToQueue();
                 return false;
             }
-
-            CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
+            if (NetworkSessionData.IsNetworkSession)
+                GameNetworkManager.Instance.AttackBuildingServerRpc(attackerID, targetID);
+            else
+                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
             Debug.Log("Attacking building " + target);
             return true;  
 
@@ -223,7 +235,10 @@ public class DragCreatureActions : DraggingActions {
                     new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
                     return false;
                 }
-                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
+                if (NetworkSessionData.IsNetworkSession)
+                    GameNetworkManager.Instance.AttackCreatureServerRpc(attackerID, targetID);
+                else
+                    CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
                 Debug.Log("Attacking Creature " + target);
                 return true;                
             }

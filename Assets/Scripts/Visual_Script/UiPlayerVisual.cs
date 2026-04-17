@@ -50,7 +50,7 @@ public class UiPlayerVisual : MonoBehaviour
         lastShownCount = n;
         countText.text = n.ToString();
     }
-    public void UpdateUI()
+    public void RefreshUI()
     {
         ResolvePlayer();
         if (player == null) return;

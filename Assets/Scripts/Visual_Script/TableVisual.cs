@@ -169,8 +169,7 @@ public class TableVisual : MonoBehaviour
         ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
         
-        if (isFogged)
-            creature.SetActive(false);
+        creature.SetActive(!isFogged);
         // end command execution
         Command.CommandExecutionComplete();
     }
