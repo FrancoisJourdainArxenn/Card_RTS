@@ -14,6 +14,7 @@ public class GlobalSettings : MonoBehaviour
     [Tooltip("End phase button for the low-area human player.")]
     public Button EndTurnButton;
     public HandVisual localPlayerHand;
+    public UiPlayerVisual UiPlayerVisual;
 
     [Header("Colors")]
     public Color32 TopColor;
@@ -71,7 +72,7 @@ public class GlobalSettings : MonoBehaviour
             localPlayer = LowPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;    
         }
-        
+        FogOfWarManager.Refresh();
     }
 
     void Update()

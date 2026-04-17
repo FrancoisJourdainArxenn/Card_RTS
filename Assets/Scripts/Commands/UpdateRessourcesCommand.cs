@@ -23,8 +23,17 @@ public class UpdateRessourcesCommand : Command {
         
         p.mainRessourceAvailable = mainRessourceAvailable;
         p.secondRessourceAvailable = secondRessourceAvailable;
+
+        if (p == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
+        {
+            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+        }
+
         if (p.baseVisual != null)
+        {
+            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
             p.baseVisual.ApplyLookFromAsset();
+        }
         CommandExecutionComplete();
     }
 }

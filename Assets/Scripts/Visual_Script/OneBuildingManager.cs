@@ -30,8 +30,8 @@ public class OneBuildingManager : MonoBehaviour
     {
         CurrentHealth = baseAsset.MaxHealth;
         HealthText.text = CurrentHealth.ToString();
-        MainRessourceIncome.text = baseAsset.mainRessourceIncome.ToString();
-        SecondRessourceIncome.text = baseAsset.secondRessourceIncome.ToString();
+        MainRessourceIncome.text = "+ " + baseAsset.mainRessourceIncome.ToString();
+        SecondRessourceIncome.text = "+ " + baseAsset.secondRessourceIncome.ToString();
         ArtImage.sprite = baseAsset.BaseImage;
     }
 

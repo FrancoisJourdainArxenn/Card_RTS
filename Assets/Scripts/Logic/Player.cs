@@ -187,7 +187,10 @@ public class Player : MonoBehaviour, ILivable
 
         
         // Refresh UI + playable state.
-        // HighlightPlayableCards();
+        if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
+        {
+            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+        }
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
 
@@ -467,6 +470,10 @@ public class Player : MonoBehaviour, ILivable
         Health = baseAsset.MaxHealth;
 
         baseVisual.player = this;
+        if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
+        {
+            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+        }
         baseVisual.ApplyLookFromAsset();
 
     }
@@ -563,6 +570,10 @@ public class Player : MonoBehaviour, ILivable
         {
             playerMainIncome += baseAsset.mainRessourceIncome;
             playerSecondIncome += baseAsset.secondRessourceIncome;
+        }
+        if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
+        {
+            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
         }
         baseVisual.ApplyLookFromAsset();
     }
