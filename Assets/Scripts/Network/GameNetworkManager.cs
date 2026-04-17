@@ -296,29 +296,27 @@ public class GameNetworkManager : NetworkBehaviour
 
     ///Neutral Bases
     [ServerRpc(RequireOwnership = false)]
-    public void BuildNeutralBaseServerRpc(int playerIndex, string neutralBaseVisualPath)
+    public void BuildNeutralBaseServerRpc(int playerIndex, int neutralBaseId)
     {
         int buildingUniqueID = IDFactory.GetUniqueID();
-        BuildNeutralBaseClientRpc(playerIndex, neutralBaseVisualPath, buildingUniqueID);
+        BuildNeutralBaseClientRpc(playerIndex, neutralBaseId, buildingUniqueID);
     }
 
     [ClientRpc]
-    void BuildNeutralBaseClientRpc(int playerIndex, string neutralBaseVisualPath, int buildingUniqueID)
+    void BuildNeutralBaseClientRpc(int playerIndex, int neutralBaseId, int buildingUniqueID)
     {
         if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
         {
             Debug.LogError($"[GameNetworkManager] BuildNeutralBaseClientRpc : playerIndex {playerIndex} invalide");
             return;
         }
-        GameObject go = GameObject.Find(neutralBaseVisualPath);
-        if (go == null)
+        if (!NeutralBaseVisual.Registry.TryGetValue(neutralBaseId, out NeutralBaseVisual neutralBaseVisual))
         {
-            Debug.LogError($"[GameNetworkManager] BuildNeutralBaseClientRpc : NeutralBaseVisual introuvable path={neutralBaseVisualPath}");
+            Debug.LogError($"[GameNetworkManager] BuildNeutralBaseClientRpc : NeutralBaseVisual introuvable neutralBaseId={neutralBaseId}");
             return;
         }
-        NeutralBaseVisual neutralBaseVisual = go.GetComponent<NeutralBaseVisual>();
         Player player = Player.Players[playerIndex];
-        player.NetworkCreateANewNeutralBase(neutralBaseVisual.baseAsset, neutralBaseVisual, neutralBaseVisual.neutralBaseController, buildingUniqueID);
+        player.ExecuteBuildNeutralBase(neutralBaseVisual, buildingUniqueID);
     }
 
 

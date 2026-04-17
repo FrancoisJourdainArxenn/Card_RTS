@@ -1,11 +1,13 @@
 using UnityEngine;
-using System.Collections;
 using UnityEngine.UI;
-using DG.Tweening;
 using TMPro;
+using System.Collections.Generic;
 
 
+[DefaultExecutionOrder(-100)]
 public class NeutralBaseVisual : MonoBehaviour {
+
+    public static readonly Dictionary<int, NeutralBaseVisual> Registry = new();
 
     public BaseAsset baseAsset;
     public NeutralBaseController neutralBaseController;
@@ -22,18 +24,22 @@ public class NeutralBaseVisual : MonoBehaviour {
     private bool canBuild = true;
     private Player localPlayer;
 
+    public int NeutralBaseId { get; private set; }
 
-    static string ComputePath(Transform t) =>
-        t.parent == null ? t.name : ComputePath(t.parent) + "/" + t.name;
-
-    
     void Awake()
 	{
+        NeutralBaseId = Registry.Count;
+        Registry[NeutralBaseId] = this;
+
 		if(baseAsset != null)
 			ApplyLookFromAsset();
         canBuild = true;
-
 	}
+
+    void OnDestroy()
+    {
+        Registry.Remove(NeutralBaseId);
+    }
 	
 	public void ApplyLookFromAsset()
     {
@@ -54,7 +60,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     {
         canBuild = localPlayer.CheckIfCanBuild(baseAsset, neutralBaseController);
         if (canBuild)
-            localPlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
+            localPlayer.RequestBuildNeutralBase(NeutralBaseId);
     }
 
     void OnMouseExit()

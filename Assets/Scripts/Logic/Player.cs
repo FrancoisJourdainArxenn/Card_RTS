@@ -604,18 +604,18 @@ public class Player : MonoBehaviour, ILivable
         return true;    
     }
 
-    public void CreateANewNeutralBase(BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
+    public void RequestBuildNeutralBase(int neutralBaseId)
     {
         if (NetworkSessionData.IsNetworkSession)
-            GameNetworkManager.Instance.BuildNeutralBaseServerRpc(playerIndex, NeutralBaseVisual.ComputePath(neutralBaseVisual.transform));
+            GameNetworkManager.Instance.BuildNeutralBaseServerRpc(playerIndex, neutralBaseId);
         else
-            NetworkCreateANewNeutralBase(baseAsset, neutralBaseVisual, neutralBaseController, IDFactory.GetUniqueID());
+            ExecuteBuildNeutralBase(NeutralBaseVisual.Registry[neutralBaseId], IDFactory.GetUniqueID());
     }
 
-    public void NetworkCreateANewNeutralBase(BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController, int buildingUniqueID)
+    public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int buildingUniqueID)
     {
-        BuildingLogic newBuilding = new BuildingLogic(this, baseAsset, neutralBaseController);
-        new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
+        new BuildingLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, buildingUniqueID);
+        new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
     }
 
