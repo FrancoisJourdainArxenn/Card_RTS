@@ -41,7 +41,7 @@ public class BaseVisual : MonoBehaviour {
                 HealthText.text = healthAfter.ToString();    
             }            
             if (player == GlobalSettings.Instance.localPlayer)
-                GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
     }
 

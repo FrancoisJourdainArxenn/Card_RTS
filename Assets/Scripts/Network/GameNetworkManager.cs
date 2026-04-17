@@ -221,4 +221,78 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[GameNetworkManager] DrawAcardClientRpc : joueur {playerIndex} reçoit carte {cardID}");
     } 
 
+    //Moving Units
+
+    [ServerRpc(RequireOwnership = false)]
+    public void MoveCreatureServerRpc(int creatureUniqueID, int targetBaseID, int tablePos)
+    {
+        MoveCreatureClientRpc(creatureUniqueID, targetBaseID, tablePos);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : exécute le déplacement avec les mêmes paramètres.
+    /// </summary>
+    [ClientRpc]
+    void MoveCreatureClientRpc(int creatureUniqueID, int targetBaseID, int tablePos)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+        {
+            Debug.LogError($"[GameNetworkManager] MoveCreature: créature introuvable id={creatureUniqueID}");
+            return;
+        }
+        creature.Move(targetBaseID, tablePos);
+    }
+
+    //Attacking Units
+
+    [ServerRpc(RequireOwnership = false)]
+    public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
+    {
+        AttackCreatureClientRpc(attackerID, targetCreatureID);
+    }
+
+    [ClientRpc]
+    void AttackCreatureClientRpc(int attackerID, int targetCreatureID)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+        {
+            Debug.LogError($"[GameNetworkManager] AttackCreature: attaquant introuvable id={attackerID}");
+            return;
+        }
+        attacker.AttackCreatureWithID(targetCreatureID);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void AttackBuildingServerRpc(int attackerID, int targetBuildingID)
+    {
+        AttackBuildingClientRpc(attackerID, targetBuildingID);
+    }
+
+    [ClientRpc]
+    void AttackBuildingClientRpc(int attackerID, int targetBuildingID)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+        {
+            Debug.LogError($"[GameNetworkManager] AttackBuilding: attaquant introuvable id={attackerID}");
+            return;
+        }
+        attacker.AttackBuildingWithID(targetBuildingID);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void GoFaceServerRpc(int attackerID)
+    {
+        GoFaceClientRpc(attackerID);
+    }
+
+    [ClientRpc]
+    void GoFaceClientRpc(int attackerID)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+        {
+            Debug.LogError($"[GameNetworkManager] GoFace: attaquant introuvable id={attackerID}");
+            return;
+        }
+        attacker.GoFace();
+    }
 }

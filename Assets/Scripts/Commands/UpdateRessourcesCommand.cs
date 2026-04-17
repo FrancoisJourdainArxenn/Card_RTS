@@ -26,12 +26,12 @@ public class UpdateRessourcesCommand : Command {
 
         if (p == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
 
         if (p.baseVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
             p.baseVisual.ApplyLookFromAsset();
         }
         CommandExecutionComplete();

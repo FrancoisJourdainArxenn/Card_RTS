@@ -4,11 +4,9 @@ Adapter les appels pour que tout ce mettes à jour. Puis faire en sorte que ça 
 
 Soucis à réfler dans CreatureAttackVisual :                         // target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
 
-
-
-
-
-
+Soucis à checker :
+Problème de refresh d'information. Une unitée n'est pas apparaut immédiatement aux déplacements.
+Refresh des PV de la base ne se fait qu'au début de la phase.
 
 
 

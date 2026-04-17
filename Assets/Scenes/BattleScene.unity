@@ -4578,7 +4578,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_Size.z
-      value: 1.2056568
+      value: 1.4055871
       objectReference: {fileID: 0}
     - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_Center.x
@@ -4590,7 +4590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_Center.z
-      value: 0.011020569
+      value: -0.030853383
       objectReference: {fileID: 0}
     - target: {fileID: 6933989555177972918, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_LocalScale.x
@@ -5819,6 +5819,8 @@ MonoBehaviour:
   HealthText: {fileID: 1798011438}
   MainRessourceText: {fileID: 0}
   SecondRessourceText: {fileID: 0}
+  fogOverlay: {fileID: 0}
+  hasBeenSeen: 0
 --- !u!114 &1792783437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6472,6 +6474,18 @@ PrefabInstance:
       propertyPath: SecondRessourceIncomeText
       value: 
       objectReference: {fileID: 518307483}
+    - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: m_Size.z
+      value: 1.3442988
+      objectReference: {fileID: 0}
+    - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: m_Center.x
+      value: 0.0075718085
+      objectReference: {fileID: 0}
+    - target: {fileID: 5539823569782606735, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
+      propertyPath: m_Center.z
+      value: 0.015323604
+      objectReference: {fileID: 0}
     - target: {fileID: 6933989555177972918, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.7

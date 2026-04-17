@@ -189,7 +189,7 @@ public class Player : MonoBehaviour, ILivable
         // Refresh UI + playable state.
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
@@ -472,7 +472,7 @@ public class Player : MonoBehaviour, ILivable
         baseVisual.player = this;
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         baseVisual.ApplyLookFromAsset();
 
@@ -573,7 +573,7 @@ public class Player : MonoBehaviour, ILivable
         }
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
-            GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
         baseVisual.ApplyLookFromAsset();
     }

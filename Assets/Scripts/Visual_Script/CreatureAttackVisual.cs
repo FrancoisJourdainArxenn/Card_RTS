@@ -65,7 +65,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     case "player":
                         target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
-                        // target.GetComponent<BaseVisual>().UiHealthText.text = targetHealthAfter.ToString();
+                        GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
                         break;
                     case "building":
                         target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
