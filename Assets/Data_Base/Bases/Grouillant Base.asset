@@ -17,6 +17,6 @@ MonoBehaviour:
   BaseName: Essaimeuse
   MaxHealth: 30
   mainRessourceIncome: 10
-  secondRessourceIncome: 1
+  secondRessourceIncome: 3
   mainRessourceBuildingCost: 0
   secondRessourceBuildingCost: 0

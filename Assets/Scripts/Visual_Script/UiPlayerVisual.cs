@@ -1,10 +1,6 @@
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// Affiche le nombre de cartes restantes dans le deck du joueur (référence <see cref="Deck.cards"/>).
-/// À placer sur l’icône UI ; assigner le TextMeshPro et le joueur (ou <see cref="owner"/> comme pour HandVisual).
-/// </summary>
 public class UiPlayerVisual : MonoBehaviour
 {
     [Tooltip("Texte au centre de l’icône (ex. le « X » de maquette).")]
@@ -15,9 +11,6 @@ public class UiPlayerVisual : MonoBehaviour
 
     [Tooltip("Si renseigné, prend la priorité sur owner.")]
     [SerializeField] Player player;
-
-    [Tooltip("Utilisé si player n’est pas assigné ; même convention que HandVisual.")]
-    [SerializeField] AreaPosition owner = AreaPosition.Low;
 
     int lastShownCount = int.MinValue;
 
@@ -38,13 +31,10 @@ public class UiPlayerVisual : MonoBehaviour
     {
         Refresh(force: false);
     }
-
     void ResolvePlayer()
     {
-        if (player != null)
-            return;
-        if (GlobalSettings.Instance != null && GlobalSettings.Instance.Players.TryGetValue(owner, out Player p))
-            player = p;
+        if (GlobalSettings.Instance?.localPlayer != null)
+            player = GlobalSettings.Instance.localPlayer;
     }
 
     void Refresh(bool force)
@@ -60,4 +50,21 @@ public class UiPlayerVisual : MonoBehaviour
         lastShownCount = n;
         countText.text = n.ToString();
     }
+    public void UpdateUI()
+    {
+        ResolvePlayer();
+        if (player == null) return;
+
+        if (mainRessourceText != null)
+            mainRessourceText.text = player.mainRessourceAvailable.ToString();
+        if (secondRessourceText != null)
+            secondRessourceText.text = player.secondRessourceAvailable.ToString();
+        if (MainRessourceIncomeText != null)
+            MainRessourceIncomeText.text = player.playerMainIncome.ToString();
+        if (SecondRessourceIncomeText != null)
+            SecondRessourceIncomeText.text = player.playerSecondIncome.ToString();
+        if (UiHealthText != null)
+            UiHealthText.text = player.Health.ToString();
+    }
+
 }

@@ -8,10 +8,9 @@ using TMPro;
 public class BaseVisual : MonoBehaviour {
 
     public Player player;
-    public OneBuildingManager baseManager;
-    public UiPlayerVisual uiPlayerVisual;  
+    public OneBuildingManager baseManager; 
     public AreaPosition owner;
-    public TMP_Text HealthText;    
+    public TMP_Text HealthText, MainRessourceText, SecondRessourceText;    
     
     void Awake()
 	{
@@ -22,6 +21,8 @@ public class BaseVisual : MonoBehaviour {
 	public void ApplyLookFromAsset()
     {
         HealthText.text = baseManager.HealthText.text;
+        MainRessourceText.text = player.mainRessourceAvailable.ToString();
+        SecondRessourceText.text = player.secondRessourceAvailable.ToString();
     }
 
     public void TakeDamage(int amount, int healthAfter)
@@ -31,7 +32,8 @@ public class BaseVisual : MonoBehaviour {
             Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
             DamageEffect.CreateDamageEffect(transform.position, amount);
             HealthText.text = healthAfter.ToString();
-            uiPlayerVisual.UiHealthText.text = healthAfter.ToString();
+            if (player == GlobalSettings.Instance.localPlayer)
+                GlobalSettings.Instance.UiPlayerVisual.UpdateUI();
         }
     }
 
