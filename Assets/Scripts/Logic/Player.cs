@@ -326,12 +326,8 @@ public class Player : MonoBehaviour, ILivable
     // 2nd overload - by logic units
     public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
     {
-        // Debug.Log(ManaLeft);
-        // Debug.Log(playedCard.CurrentManaCost);
         MainRessourceAvailable -= playedCard.MainCost;
         SecondRessourceAvailable -= playedCard.SecondCost;
-        // Debug.Log("Mana Left after played a creature: " + ManaLeft);
-        // create a new creature object and add it to Table
         int baseID = selectedPArea.baseID;
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
         table.CreaturesInPlay.Insert(tablePos, newCreature);
@@ -580,12 +576,12 @@ public class Player : MonoBehaviour, ILivable
 
     // METHODS TO CREATE A NEW BASE 
     // 1st overload - by ID
-    public void CreateANewNeutralBase( BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
+    public bool CheckIfCanBuild( BaseAsset baseAsset, NeutralBaseController neutralBaseController)
     {
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {
             new ShowMessageCommand("You can't do that right now", 2f).AddToQueue();
-            return;
+            return false;
         }
 
         foreach (TableVisual table in neutralBaseController.tables)
@@ -595,20 +591,31 @@ public class Player : MonoBehaviour, ILivable
                 if (table.CreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
-                    return;
+                    return false;
                 }
             }
         }
-
         if (MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
         SecondRessourceAvailable < baseAsset.secondRessourceBuildingCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
-            return;
+            return false;
         }
-        
+        return true;    
+    }
+
+    public void CreateANewNeutralBase(BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController)
+    {
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.BuildNeutralBaseServerRpc(playerIndex, NeutralBaseVisual.ComputePath(neutralBaseVisual.transform));
+        else
+            NetworkCreateANewNeutralBase(baseAsset, neutralBaseVisual, neutralBaseController, IDFactory.GetUniqueID());
+    }
+
+    public void NetworkCreateANewNeutralBase(BaseAsset baseAsset, NeutralBaseVisual neutralBaseVisual, NeutralBaseController neutralBaseController, int buildingUniqueID)
+    {
         BuildingLogic newBuilding = new BuildingLogic(this, baseAsset, neutralBaseController);
-        new BuildNeutralBaseCommand(newBuilding.UniqueBuildingID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
+        new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual, baseAsset, neutralBaseController).AddToQueue();
         FogOfWarManager.Refresh();
     }
 

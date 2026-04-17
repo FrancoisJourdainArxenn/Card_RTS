@@ -19,9 +19,13 @@ public class NeutralBaseVisual : MonoBehaviour {
     public Transform BaseApparitionPosition;
     public Transform BasePosition;
     public GameObject BaseCardPrefab;
-
     private bool canBuild = true;
     private Player localPlayer;
+
+
+    static string ComputePath(Transform t) =>
+        t.parent == null ? t.name : ComputePath(t.parent) + "/" + t.name;
+
     
     void Awake()
 	{
@@ -48,8 +52,11 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseDown()
     {
-        localPlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
+        canBuild = localPlayer.CheckIfCanBuild(baseAsset, neutralBaseController);
+        if (canBuild)
+            localPlayer.CreateANewNeutralBase(baseAsset, this, neutralBaseController);
     }
+
     void OnMouseExit()
     {
         Glow.SetActive(false);

@@ -222,7 +222,6 @@ public class GameNetworkManager : NetworkBehaviour
     } 
 
     //Moving Units
-
     [ServerRpc(RequireOwnership = false)]
     public void MoveCreatureServerRpc(int creatureUniqueID, int targetBaseID, int tablePos)
     {
@@ -244,7 +243,6 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     //Attacking Units
-
     [ServerRpc(RequireOwnership = false)]
     public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
     {
@@ -295,4 +293,33 @@ public class GameNetworkManager : NetworkBehaviour
         }
         attacker.GoFace();
     }
+
+    ///Neutral Bases
+    [ServerRpc(RequireOwnership = false)]
+    public void BuildNeutralBaseServerRpc(int playerIndex, string neutralBaseVisualPath)
+    {
+        int buildingUniqueID = IDFactory.GetUniqueID();
+        BuildNeutralBaseClientRpc(playerIndex, neutralBaseVisualPath, buildingUniqueID);
+    }
+
+    [ClientRpc]
+    void BuildNeutralBaseClientRpc(int playerIndex, string neutralBaseVisualPath, int buildingUniqueID)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] BuildNeutralBaseClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        GameObject go = GameObject.Find(neutralBaseVisualPath);
+        if (go == null)
+        {
+            Debug.LogError($"[GameNetworkManager] BuildNeutralBaseClientRpc : NeutralBaseVisual introuvable path={neutralBaseVisualPath}");
+            return;
+        }
+        NeutralBaseVisual neutralBaseVisual = go.GetComponent<NeutralBaseVisual>();
+        Player player = Player.Players[playerIndex];
+        player.NetworkCreateANewNeutralBase(neutralBaseVisual.baseAsset, neutralBaseVisual, neutralBaseVisual.neutralBaseController, buildingUniqueID);
+    }
+
+
 }
