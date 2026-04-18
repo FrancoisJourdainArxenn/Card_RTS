@@ -21,6 +21,21 @@ public class CameraController : MonoBehaviour
     [FormerlySerializedAs("panSpeedZoomedIn")]
     public float panScaleWhenZoomedOut = 1f;
 
+    void Start()
+    {
+        StartCoroutine(WaitForLocalPlayer());
+    }
+
+    private System.Collections.IEnumerator WaitForLocalPlayer()
+    {
+        yield return new WaitUntil(() => 
+            GlobalSettings.Instance.localPlayer != null && 
+            GlobalSettings.Instance.localPlayer.MainPArea != null);
+
+        Vector3 basePos = GlobalSettings.Instance.localPlayer.MainPArea.transform.position;
+        transform.position = new Vector3(basePos.x, 50f, basePos.z);
+    }
+
     void Update()
     {
         Vector3 pos = transform.position;
