@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -33,6 +34,43 @@ public class GameNetworkManager : NetworkBehaviour
         }
     }
 
+    private List<PendingAction> _actionBuffer = new List<PendingAction>();
+
+    private void RegisterAction(PendingAction action)
+    {
+        _actionBuffer.Add(action);
+        Debug.Log($"[Buffer] Action enregistrée : {action.type} par joueur {action.playerIndex} (total={_actionBuffer.Count})");
+    }
+
+    // Called when all players have ended their phase
+    // Executes all actions in order: Player 0 first, then Player 1
+    public void FlushBuffer()
+    {
+        Debug.Log($"[Buffer] Flush de {_actionBuffer.Count} action(s)");
+
+        // Sort: player 0's actions come before player 1's, preserving relative order within each player
+        List<PendingAction> p0Actions = _actionBuffer.FindAll(a => a.playerIndex == 0);
+        List<PendingAction> p1Actions = _actionBuffer.FindAll(a => a.playerIndex == 1);
+
+        foreach (PendingAction action in p0Actions) ExecuteAction(action);
+        foreach (PendingAction action in p1Actions) ExecuteAction(action);
+
+        _actionBuffer.Clear();
+    }
+
+    private void ExecuteAction(PendingAction action)
+    {
+        switch (action.type)
+        {
+            case ActionType.PlayCreature:
+                PlayCreatureClientRpc(action.playerIndex, action.param1, action.param2, action.param3, action.param4);
+                break;
+            case ActionType.MoveCreature:
+                MoveCreatureClientRpc(action.param1, action.param2, action.param3);
+                break;
+        }
+    }
+
     /// <summary>
     /// Appelé automatiquement par Netcode quand cet objet est spawné sur le réseau.
     /// Chaque client récupère son LocalClientId et signale au serveur qu'il est prêt.
@@ -49,7 +87,7 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par chaque client au serveur pour signaler qu'il est prêt.
     /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     void PlayerReadyServerRpc()
     {
         readyCount++;
@@ -120,18 +158,50 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par un client pour jouer une créature depuis sa main.
     /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex)
     {
         int creatureUniqueID = IDFactory.GetUniqueID();
-        Debug.Log($"[GameNetworkManager] PlayCreature : joueur {playerIndex}, carte {cardUniqueID}, créature {creatureUniqueID}");
-        PlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+
+        bool isCelerity = CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic card) && card.ca.Celerity;
+
+        if (isCelerity)
+        {
+            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+        }
+        else
+        {
+            RegisterAction(new PendingAction
+            {
+                type = ActionType.PlayCreature,
+                playerIndex = playerIndex,
+                param1 = cardUniqueID,
+                param2 = creatureUniqueID,
+                param3 = tablePos,
+                param4 = baseID
+            });
+            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, baseID);
+        }
     }
 
     /// <summary>
     /// Reçu par TOUS les clients : exécute la logique + le visuel de jouer une créature
     /// avec les mêmes identifiants sur toutes les machines.
     /// </summary>
+    [ClientRpc]
+    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int baseID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, baseID);
+    }
+
+    [ClientRpc]
+    void ImmediatePlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
     [ClientRpc]
     void PlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
@@ -141,7 +211,7 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         Player player = Player.Players[playerIndex];
-        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
+        player.NetworkFlushPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
     }
 
     // -------------------------------------------------------------------------
@@ -166,7 +236,7 @@ public class GameNetworkManager : NetworkBehaviour
     /// Le paramètre forPhase permet d'ignorer les requêtes arrivées en retard
     /// (ex : Regroup auto-register qui arrive après que le serveur est passé en Command).
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void RegisterEndPhaseServerRpc(int playerIndex, TurnManager.TurnPhases forPhase)
     {
         if (TurnManager.Instance.CurrentPhase != forPhase)
@@ -222,7 +292,7 @@ public class GameNetworkManager : NetworkBehaviour
     } 
 
     //Moving Units
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void MoveCreatureServerRpc(int creatureUniqueID, int targetBaseID, int tablePos)
     {
         MoveCreatureClientRpc(creatureUniqueID, targetBaseID, tablePos);
@@ -243,7 +313,7 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     //Attacking Units
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
     {
         AttackCreatureClientRpc(attackerID, targetCreatureID);
@@ -260,7 +330,7 @@ public class GameNetworkManager : NetworkBehaviour
         attacker.AttackCreatureWithID(targetCreatureID);
     }
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void AttackBuildingServerRpc(int attackerID, int targetBuildingID)
     {
         AttackBuildingClientRpc(attackerID, targetBuildingID);
@@ -277,7 +347,7 @@ public class GameNetworkManager : NetworkBehaviour
         attacker.AttackBuildingWithID(targetBuildingID);
     }
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void GoFaceServerRpc(int attackerID)
     {
         GoFaceClientRpc(attackerID);
@@ -295,7 +365,7 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     ///Neutral Bases
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void BuildNeutralBaseServerRpc(int playerIndex, int neutralBaseId)
     {
         int buildingUniqueID = IDFactory.GetUniqueID();

@@ -24,11 +24,12 @@ public class NeutralBaseVisual : MonoBehaviour {
     private bool canBuild = true;
     private Player localPlayer;
 
+    [SerializeField] private int neutralBaseId;
     public int NeutralBaseId { get; private set; }
 
     void Awake()
 	{
-        NeutralBaseId = Registry.Count;
+        NeutralBaseId = neutralBaseId;
         Registry[NeutralBaseId] = this;
 
 		if(baseAsset != null)

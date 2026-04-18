@@ -12,11 +12,12 @@ public class TableVisual : MonoBehaviour
     public AreaPosition owner;
     // a referense to a game object that marks positions where we should put new Creatures
     public SameDistanceChildren slots;
+    public SameDistanceChildren pendingSlots;
     public GameObject glow;
     public Color ownerColor;
     [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
     [SerializeField] public List<GameObject> CreaturesOnTable = new List<GameObject>();
-
+    [SerializeField] public List<GameObject> PendingCreaturesOnTable = new List<GameObject>();
 
     // PRIVATE FIELDS
 
@@ -107,48 +108,24 @@ public class TableVisual : MonoBehaviour
         }
     }
     // method to create a new creature and add it to the table
-    public void AddCreatureAtIndex(CardAsset ca, int UniqueID ,int index, int baseID)
+    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int index, int baseID)
     {
-        // create a new creature from prefab
-        GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, slots.Children[index].transform.position, Quaternion.identity) as GameObject;
+        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, slots.Children[index].transform.position);
 
-        // apply the look from CardAsset
-        OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
-        manager.BaseID = baseID;
-        manager.cardAsset = ca;
-        manager.ReadCreatureFromAsset();
-
-        // add tag according to owner
-        foreach (Transform t in creature.GetComponentsInChildren<Transform>())
-            t.tag = owner.ToString()+"Creature";
-        
-        // parent a new creature gameObject to table slots
         creature.transform.SetParent(slots.transform);
-
-        // add a new creature to the list
         CreaturesOnTable.Insert(index, creature);
 
-        // let this creature know about its position
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = index;
-        if (owner == AreaPosition.Low)
-            w.VisualState = VisualStates.LowTable;
-        else
-            w.VisualState = VisualStates.TopTable;
+        w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
-        // add our unique ID to this creature
-        IDHolder id = creature.AddComponent<IDHolder>();
-        id.UniqueID = UniqueID;
-
-        // after a new creature is added update placing of all the other creatures
         ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
 
-        if (isFogged)
-            creature.SetActive(false);
-        // end command execution
+        if (isFogged) creature.SetActive(false);
         Command.CommandExecutionComplete();
     }
+
 
     public void MoveCreatureToIndex(GameObject creature, int UniqueID, int index, int baseID)
     {     
@@ -250,6 +227,34 @@ public class TableVisual : MonoBehaviour
             // g.GetComponent<WhereIsTheCardOrCreature>().SetTableSortingOrder() = CreaturesOnTable.IndexOf(g);
         }
     }
+
+    public void AddCreatureToPendingZone(CardAsset ca, int uniqueID, int baseID)
+    {
+        int startIndex = pendingSlots.Children.Length /2;
+        int index = startIndex + PendingCreaturesOnTable.Count;
+        GameObject creature = CreateCreatureGO(ca, uniqueID, baseID, pendingSlots.Children[index].transform.position);
+        creature.transform.SetParent(pendingSlots.transform);
+        PendingCreaturesOnTable.Add(creature);
+        OneCreatureManager gray = creature.GetComponent<OneCreatureManager>();
+        gray.SetGray(true);
+    }
+
+    private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position)
+    {
+        GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
+        OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
+        manager.BaseID = baseID;
+        manager.cardAsset = ca;
+        manager.ReadCreatureFromAsset();
+        foreach (Transform t in creature.GetComponentsInChildren<Transform>())
+            t.tag = owner.ToString() + "Creature";
+        IDHolder id = creature.AddComponent<IDHolder>();
+        id.UniqueID = uniqueID;
+        return creature;
+    }
+
+
+
     public void SetOwnerColor(Color color)
     {
         glow.GetComponent<Image>().color = color;

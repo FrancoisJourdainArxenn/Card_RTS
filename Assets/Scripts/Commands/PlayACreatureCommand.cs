@@ -20,14 +20,24 @@ public class PlayACreatureCommand : Command
 
     public override void StartCommandExecution()
     {
-        // remove and destroy the card in hand 
-        HandVisual PlayerHand = p.MainPArea.handVisual;
         GameObject card = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
-        PlayerHand.RemoveCard(card);
-        GameObject.Destroy(card);
-        // enable Hover Previews Back
+        if (card != null)
+        {
+            p.MainPArea.handVisual.RemoveCard(card);
+            GameObject.Destroy(card);
+        }
         HoverPreview.PreviewsAllowed = true;
-        // move this card to the spot 
-        selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos, selectedPArea.baseID);
+
+        GameObject existingCreature = IDHolder.GetGameObjectWithID(creatureID);
+        if (existingCreature != null)
+        {
+            selectedPArea.tableVisual.PendingCreaturesOnTable.Remove(existingCreature);
+            selectedPArea.tableVisual.MoveCreatureToIndex(existingCreature, creatureID, tablePos, selectedPArea.baseID);
+            existingCreature.GetComponent<OneCreatureManager>().SetGray(false);
+        }
+        else
+        {
+            selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos, selectedPArea.baseID);
+        }
     }
 }

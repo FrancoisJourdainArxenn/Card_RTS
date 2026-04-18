@@ -205,6 +205,7 @@ public class TurnManager : MonoBehaviour
         {
             // Le serveur diffuse la transition à tous les clients (y compris lui-même).
             // C'est PhaseTransitionClientRpc qui appellera EnterPhase et OnTurnEnd.
+            GameNetworkManager.Instance.FlushBuffer();
             GameNetworkManager.Instance.BroadcastPhaseTransition(next, roundEnded, newRound);
         }
         else

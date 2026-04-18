@@ -12,6 +12,7 @@ public class OneCreatureManager : MonoBehaviour
     public TMP_Text AttackText;         
     [Header("Image References")]
     public Image CreatureGraphicImage;
+    public Image CreatureFrameImage;
     public Image CreatureGlowImage;
     public Image MeleeImage;
 
@@ -91,5 +92,11 @@ public class OneCreatureManager : MonoBehaviour
     public void UpdateTargetableVisual(bool targetable)
     {
         CreatureGraphicImage.color = targetable ? Color.white : Color.gray;
+    }
+
+    public void SetGray(bool gray)
+    {
+        CreatureGraphicImage.color = gray ? Color.gray : Color.white;
+        CreatureFrameImage.color = gray ? Color.gray : Color.white;
     }
 }

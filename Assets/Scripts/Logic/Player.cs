@@ -38,7 +38,6 @@ public class Player : MonoBehaviour, ILivable
     private int bonusMainRessource = 0;
     private int bonusSecondRessource = 0;
 
-
     // PROPERTIES 
     // this property is a part of interface ILivable
     public int ID
@@ -342,10 +341,59 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
-    /// <summary>
-    /// Version réseau : exécute le jeu d'une créature avec un ID fourni par le serveur.
-    /// Appelée sur TOUS les clients via PlayCreatureClientRpc.
-    /// </summary>
+    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int baseID)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
+
+        MainRessourceAvailable -= playedCard.MainCost;
+        SecondRessourceAvailable -= playedCard.SecondCost;
+        hand.CardsInHand.Remove(playedCard);
+        TurnManager.RefreshAllPlayableHighlights();
+
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        if (cardGO != null)
+        {
+            MainPArea.handVisual.RemoveCard(cardGO);
+            GameObject.Destroy(cardGO);
+        }
+
+        // Only local player sees their own pending creatures
+        if (this != GlobalSettings.Instance.localPlayer) return;
+
+        PlayerArea targetArea = GetPlayerAreaByID(baseID);
+        if (targetArea == null) return;
+
+        if (!playedCard.ca.Celerity)
+            targetArea.tableVisual.AddCreatureToPendingZone(playedCard.ca, creatureUniqueID, baseID);
+    }
+
+    public void NetworkFlushPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
+        {
+            Debug.LogError($"[Flush] Carte introuvable : cardUniqueID={cardUniqueID}");
+            return;
+        }
+        PlayerArea selectedPArea = GetPlayerAreaByID(baseID);
+        if (selectedPArea == null)
+        {
+            Debug.LogError($"[Flush] PlayerArea introuvable : baseID={baseID}");
+            return;
+        }
+
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
+        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
+
+        new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
+
+        if (newCreature.effect != null)
+            newCreature.effect.WhenACreatureIsPlayed();
+
+        TurnManager.RefreshAllPlayableHighlights();
+
+    }
+
     public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
