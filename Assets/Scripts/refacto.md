@@ -1,3 +1,35 @@
+Ce qui fonctionne déjà
+Votre projet a toute l'infra UGS installée (Relay, JoinByCode, sessions). C'est parfait.
+
+Le problème
+Votre NetworkMenu.cs appelle directement StartHost() / StartClient() sans passer par Relay. Ça marche en local mais pas à distance — le collègue ne peut pas atteindre votre IP sans port forwarding.
+
+Les 3 étapes pour tester à distance :
+
+1. Lier votre projet à UGS (5 min, sans code)
+
+Unity Dashboard → créer un projet
+Dans Unity : Edit → Project Settings → Services → lier le Project ID
+Activer Relay dans le dashboard (gratuit jusqu'à 50 connexions)
+2. Mettre à jour le menu pour utiliser Relay
+Le menu actuel doit :
+
+À l'hébergement : allouer un Relay, générer un code de partie, l'afficher
+Au rejoindre : saisir ce code et s'y connecter
+Vous avez déjà les blocks JoinByCode et CreateSession dans le projet — soit on les câble, soit on met à jour NetworkMenu.cs directement. Vous préférez quelle approche ?
+
+3. Build standalone → envoyer au collègue
+File → Build and Run, Windows Standalone.
+
+L'étape 2 est la seule qui demande du code. Dites-moi si vous voulez qu'on y travaille.
+
+Non, pour une connexion LAN vous n'avez besoin de rien de tout ça.
+Sur un réseau local, les deux machines se voient directement — pas besoin de Relay, pas de compte UGS, pas de code de partie. Il suffit que votre collègue entre l'IP locale de votre machine (ex: 192.168.1.42) et que Unity NGO fasse un StartClient() vers cette adresse.
+La seule contrainte côté réseau : le port utilisé par NGO (par défaut 7777 en UDP) doit être ouvert sur le pare-feu Windows de la machine hôte. C'est souvent ce qui bloque.
+Donc si votre objectif est juste de tester avec un collègue au bureau ou chez vous sur le même Wi-Fi, l'étape Relay est inutile — votre NetworkMenu.cs actuel avec StartHost() / StartClient() suffit probablement déjà. Vous avez essayé ?
+
+
+
 A faire de 16/04/26
 Refacto sur la UI. Nécessite de changer le fonctionnement et les appels de BaseVisual. GlobalSettings doit définir les éléments de la UI à mettre sur le canvas, dans un novueau script reprenant une partie de la logique de BaseVisual.
 Adapter les appels pour que tout ce mettes à jour. Puis faire en sorte que ça fonctionne en multijoueur. 
@@ -7,13 +39,6 @@ Soucis à réfler dans CreatureAttackVisual :                         // target.
 Soucis à checker :
 Problème de refresh d'information. Une unitée n'est pas apparaut immédiatement aux déplacements.
 Refresh des PV de la base ne se fait qu'au début de la phase.
-
-
-
-
-
-
-
 
 
 Plan de refacto multijoueur
