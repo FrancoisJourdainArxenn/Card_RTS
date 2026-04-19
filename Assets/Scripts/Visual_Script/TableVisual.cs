@@ -18,6 +18,7 @@ public class TableVisual : MonoBehaviour
     [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
     [SerializeField] public List<GameObject> CreaturesOnTable = new List<GameObject>();
     [SerializeField] public List<GameObject> PendingCreaturesOnTable = new List<GameObject>();
+    [HideInInspector] public PlayerArea ownerArea;
 
     // PRIVATE FIELDS
 
@@ -67,6 +68,10 @@ public class TableVisual : MonoBehaviour
             initialSlotsLocalPosX = slots.transform.localPosition.x;
     }
 
+    public void RefreshSlotsPositions()
+    {
+        PlaceCreaturesOnNewSlots();
+    }
 
     // CURSOR/MOUSE DETECTION
     void Update()
@@ -113,7 +118,7 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, slots.Children[index].transform.position);
 
         creature.transform.SetParent(slots.transform);
-        CreaturesOnTable.Insert(index, creature);
+        CreaturesOnTable.Insert(Mathf.Min(index, CreaturesOnTable.Count), creature);
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = index;
@@ -123,6 +128,8 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
 
         if (isFogged) creature.SetActive(false);
+        ownerArea?.RefreshAreaStats();
+
         Command.CommandExecutionComplete();
     }
 
@@ -133,7 +140,7 @@ public class TableVisual : MonoBehaviour
         creature.transform.SetParent(slots.transform);
 
         // add a new creature to the list
-        CreaturesOnTable.Insert(index, creature);
+        CreaturesOnTable.Insert(Mathf.Min(index, CreaturesOnTable.Count), creature);
 
         // let this creature know about its position
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
@@ -147,6 +154,7 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
         
         creature.SetActive(!isFogged);
+        ownerArea?.RefreshAreaStats();
         // end command execution
         Command.CommandExecutionComplete();
     }
@@ -173,6 +181,8 @@ public class TableVisual : MonoBehaviour
     public void MoveCreatureAway(GameObject creature)
     {
         CreaturesOnTable.Remove(creature);
+        ownerArea?.RefreshAreaStats();
+
         PlaceCreaturesOnNewSlots();
     }
     
@@ -185,6 +195,8 @@ public class TableVisual : MonoBehaviour
 
         ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
+        ownerArea?.RefreshAreaStats();
+        // FogOfWarManager.Refresh();
         Command.CommandExecutionComplete();
     }
 
@@ -220,7 +232,7 @@ public class TableVisual : MonoBehaviour
             int targetSlotIndex = firstSlotIndex + i;
             targetSlotIndex = Mathf.Clamp(targetSlotIndex, 0, slotCount - 1);
             Vector3 targetLocalPos = slots.Children[targetSlotIndex].transform.localPosition;
-            Debug.Log("moving from " + g.transform.localPosition + " to " + targetLocalPos);
+            g.transform.DOKill();
             g.transform.DOLocalJump(targetLocalPos, 10, 1, 0.3f);
             // apply correct sorting order and HandSlot value for later 
             // TODO: figure out if I need to do something here:
@@ -252,8 +264,6 @@ public class TableVisual : MonoBehaviour
         id.UniqueID = uniqueID;
         return creature;
     }
-
-
 
     public void SetOwnerColor(Color color)
     {

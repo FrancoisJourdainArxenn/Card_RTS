@@ -68,11 +68,13 @@ public class FogOfWarManager : MonoBehaviour
             {
                 // The observer always sees their own board.
                 pa.tableVisual.SetFogged(false);
+                pa.SetStatsFogged(false);
             }
             else if (pa.owner == enemyAreaPos)
             {
                 // Enemy board is visible only if observer has presence here.
                 pa.tableVisual.SetFogged(!observerHasPresence);
+                pa.SetStatsFogged(!observerHasPresence);
             }
         }
 

@@ -17,8 +17,6 @@ public class CreatureMoveCommand : Command
     public override void StartCommandExecution()
     {
         GameObject movingUnit = IDHolder.GetGameObjectWithID(SelectedUnitID);
-        Debug.Log("Unit with ID" + SelectedUnitID + " Start Move Command");
-
         movingUnit.GetComponent<CreatureMoveVisual>().Move(TargetZoneID, tablePos);
     }
 }

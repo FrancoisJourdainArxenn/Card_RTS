@@ -18,12 +18,11 @@ MonoBehaviour:
   MainCost: 2
   SecondCost: 1
   MaxHealth: 4
-  Attack: 10
+  Attack: 2
   AttacksForOneTurn: 1
   MoveSpeed: 1
   melee: 0
-  Charge: 1
-  Celerity: 0
+  Celerity: 1
   CreatureScriptName: 
   specialCreatureAmount: 0
   SpellScriptName: 

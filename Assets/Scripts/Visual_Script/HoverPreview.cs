@@ -49,6 +49,13 @@ public class HoverPreview: MonoBehaviour
     {
         ThisPreviewEnabled = ActivateInAwake;
     }
+
+
+    void OnMouseDown()
+    {
+        GetComponentInParent<OneCreatureManager>()?.OnCreatureClicked();
+    }
+
             
     void OnMouseEnter()
     {

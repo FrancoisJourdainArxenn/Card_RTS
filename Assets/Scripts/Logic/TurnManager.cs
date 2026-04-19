@@ -193,11 +193,13 @@ public class TurnManager : MonoBehaviour
 
         TurnPhases next = currentPhase switch
         {
-            TurnPhases.Battle  => TurnPhases.Regroup,
-            TurnPhases.Regroup => TurnPhases.Command,
             TurnPhases.Command => TurnPhases.Battle,
+            TurnPhases.Battle  => TurnPhases.End,
+            TurnPhases.End     => TurnPhases.Regroup,
+            TurnPhases.Regroup => TurnPhases.Command,
             _                  => TurnPhases.Command
         };
+
 
         int newRound = roundEnded ? currentRound + 1 : currentRound;
 
@@ -251,30 +253,39 @@ public class TurnManager : MonoBehaviour
         if (timer != null)
         {
             timer.StopTimer();
-            timer.StartTimer();
+            bool timerPhase = phase == TurnPhases.Command || phase == TurnPhases.Battle;
+            if (timerPhase)
+                timer.StartTimer();
         }
+
 
         switch (phase)
         {
             case TurnPhases.Regroup:
-                new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
+                // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnRegroupPhaseStart();
+                StartCoroutine(AutoAdvanceFromRegroup());
                 break;
             case TurnPhases.Command:
-                new ShowMessageCommand("Command", 1.5f).AddToQueue();
+                // new ShowMessageCommand("Command", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
             case TurnPhases.Battle:
-                new ShowMessageCommand("Battle", 1.5f).AddToQueue();
+                // new ShowMessageCommand("Battle", 1.5f).AddToQueue();
+                foreach (ZoneCombatResolver r in FindObjectsByType<ZoneCombatResolver>(FindObjectsSortMode.None))
+                    r.OnBattlePhaseStart();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnBattlePhaseEntered();
                 break;
             case TurnPhases.End:
-                new ShowMessageCommand("End", 1.5f).AddToQueue();
+                // new ShowMessageCommand("End", 1.5f).AddToQueue();
+                foreach (ZoneCombatResolver r in FindObjectsByType<ZoneCombatResolver>(FindObjectsSortMode.None))
+                    r.OnBattlePhaseEnd();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnEndPhaseEntered();
+                StartCoroutine(AutoAdvanceFromEnd());
                 break;
 
         }
@@ -293,7 +304,7 @@ public class TurnManager : MonoBehaviour
             TurnPhases.Regroup => "Regroup",
             TurnPhases.Command => "Command",
             TurnPhases.Battle => "Battle",
-            // TurnPhases.End => "End",
+            TurnPhases.End => "End",
             _ => ""
         };
         phaseText.text = label;
@@ -370,6 +381,19 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => Command.playingQueue || Command.CardDrawPending());
         if (currentPhase != TurnPhases.Regroup)
             yield break;
+        EnterPhase(TurnPhases.Command);
+    }
+
+    IEnumerator AutoAdvanceFromEnd()
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        EnterPhase(TurnPhases.Regroup);
+    }
+
+    IEnumerator AutoAdvanceFromRegroup()
+    {
+        yield return new WaitWhile(() => Command.playingQueue || Command.CardDrawPending());
+        yield return new WaitForSeconds(1.5f);
         EnterPhase(TurnPhases.Command);
     }
 }
