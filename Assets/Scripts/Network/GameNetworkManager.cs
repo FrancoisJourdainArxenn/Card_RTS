@@ -293,9 +293,16 @@ public class GameNetworkManager : NetworkBehaviour
 
     //Moving Units
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void MoveCreatureServerRpc(int creatureUniqueID, int targetBaseID, int tablePos)
+    public void MoveCreatureServerRpc(int creatureUniqueID, int targetBaseID, int tablePos, int playerIndex)
     {
-        MoveCreatureClientRpc(creatureUniqueID, targetBaseID, tablePos);
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.MoveCreature,
+            playerIndex = playerIndex,
+            param1 = creatureUniqueID,
+            param2 = targetBaseID,
+            param3 = tablePos
+        });
     }
 
     /// <summary>
@@ -304,6 +311,8 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void MoveCreatureClientRpc(int creatureUniqueID, int targetBaseID, int tablePos)
     {
+        IDHolder.GetGameObjectWithID(creatureUniqueID)?.GetComponent<OneCreatureManager>()?.ClearPendingMoveArrow();
+
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
         {
             Debug.LogError($"[GameNetworkManager] MoveCreature: créature introuvable id={creatureUniqueID}");

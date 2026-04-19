@@ -151,4 +151,23 @@ public class OneCreatureManager : MonoBehaviour
         if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
+    [Header("Pending Move Arrow")]
+    [SerializeField] private LineRenderer pendingMoveArrow;
+    [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
+
+    public void ShowPendingMoveArrow(Vector3 targetWorldPos)
+    {
+        if (pendingMoveArrow == null) return;
+        pendingMoveArrow.enabled = true;
+        pendingMoveArrow.SetPosition(0, transform.position + arrowOriginOffset);
+        pendingMoveArrow.SetPosition(1, targetWorldPos);
+        pendingMoveArrow.enabled = true;
+    }
+
+    public void ClearPendingMoveArrow()
+    {
+        if (pendingMoveArrow != null)
+            pendingMoveArrow.enabled = false;
+    }
+
 }

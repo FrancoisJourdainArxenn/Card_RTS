@@ -143,7 +143,8 @@ public class DragCreatureActions : DraggingActions {
         );
         if (NetworkSessionData.IsNetworkSession)
         {
-            GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos);
+            GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
+            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
         }
         else
         {
