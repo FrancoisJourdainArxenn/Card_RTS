@@ -19,11 +19,41 @@ public class OneBuildingManager : MonoBehaviour
     public Image FrameImage;
     public Image CardFaceGlowImage;
     public GameObject Spawner;
+
+    [Header("Damage Indicators")]
+    public GameObject MarkedForDeathIndicator;
+    public GameObject WillBeDamagedIndicator;
+    public TMP_Text pendingDamageText;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
         if (baseAsset != null)
             ReadBaseFromAsset();
+    }
+
+    void OnMouseDown()
+    {
+        if (TurnManager.Instance == null || !TurnManager.Instance.IsBattlePhase) return;
+
+        IDHolder idHolder = GetComponent<IDHolder>();
+        if (idHolder == null) return;
+        int id = idHolder.UniqueID;
+
+        ZoneCombatResolver resolver;
+
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic bl))
+        {
+            resolver = bl.neutralBaseController?.zone?.GetComponent<ZoneCombatResolver>();
+        }
+        else
+        {
+            Player p = id == GlobalSettings.Instance.LowPlayer.PlayerID
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            resolver = p?.MainPArea?.parentZone?.GetComponent<ZoneCombatResolver>();
+        }
+
+        resolver?.TryRedirectDamageFromBase(id);
     }
 
     public void ReadBaseFromAsset()
@@ -78,6 +108,24 @@ public class OneBuildingManager : MonoBehaviour
             return GlobalSettings.Instance.LowPlayer;
 
         return null;
+    }
+
+    public void ShowPendingDamage(int damage, int currentHealth)
+    {
+        bool dies = damage >= currentHealth;
+        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
+        if (WillBeDamagedIndicator != null)
+        {
+            WillBeDamagedIndicator.SetActive(!dies);
+            if (!dies && pendingDamageText != null)
+                pendingDamageText.text = damage.ToString();
+        }
+    }
+
+    public void ClearPendingDamageIndicator()
+    {
+        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
+        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
     public void RemoveBuildingWithID(int buildingID)
