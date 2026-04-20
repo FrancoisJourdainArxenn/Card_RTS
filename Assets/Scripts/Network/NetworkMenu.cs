@@ -1,8 +1,8 @@
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class NetworkMenu : MonoBehaviour
 {
@@ -10,65 +10,58 @@ public class NetworkMenu : MonoBehaviour
     public Button hostButton;
     public Button clientButton;
 
-    [Header("Texte de statut")]
+    [Header("UI")]
+    public TMP_InputField ipInputField;
     public TMP_Text statusText;
+
+    private const ushort Port = 7777;
 
     void Start()
     {
-        // On s'abonne aux événements de connexion pour afficher le statut
-        NetworkManager.Singleton.OnServerStarted += OnServerStarted;
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        NetworkManager.Singleton.OnServerStarted             += OnServerStarted;
+        NetworkManager.Singleton.OnClientConnectedCallback   += OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback  += OnClientDisconnected;
     }
 
-    // Appelé quand on clique sur "Héberger"
     public void StartHost()
     {
         statusText.text = "Démarrage du serveur...";
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData("0.0.0.0", Port);
         NetworkManager.Singleton.StartHost();
     }
 
-    // Appelé quand on clique sur "Rejoindre"
     public void StartClient()
     {
-        statusText.text = "Connexion en cours...";
+        string ip = ipInputField.text.Trim();
+        statusText.text = $"Connexion vers {ip}...";
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
         NetworkManager.Singleton.StartClient();
     }
 
-    // --- Événements de connexion ---
-
-    void OnServerStarted()
-    {
+    void OnServerStarted() =>
         statusText.text = "Serveur démarré. En attente d'un joueur...";
-    }
 
     void OnClientConnected(ulong clientId)
     {
-        statusText.text = "Joueur connecté ! (ID: " + clientId + ")";
-        // Quand deux joueurs sont connectés, on cache le menu
-        // Seul le serveur peut déclencher le chargement de scène.
-        // Le client reçoit OnClientConnected uniquement pour lui-même,
-        // et ne doit pas appeler LoadScene (ServerOnly).
+        statusText.text = $"Joueur connecté ! (ID: {clientId})";
         if (NetworkManager.Singleton.IsServer && NetworkManager.Singleton.ConnectedClients.Count == 2)
         {
             NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
             NetworkSessionData.IsNetworkSession = true;
-            NetworkManager.Singleton.SceneManager.LoadScene("BattleScene", UnityEngine.SceneManagement.LoadSceneMode.Single); // Charger la scène de jeu
+            NetworkManager.Singleton.SceneManager.LoadScene("BattleScene",
+                UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
 
-    void OnClientDisconnected(ulong clientId)
-    {
+    void OnClientDisconnected(ulong clientId) =>
         statusText.text = "Déconnecté.";
-    }
 
     void OnDestroy()
     {
-        // Bonne pratique : se désabonner des événements quand l'objet est détruit
         if (NetworkManager.Singleton != null)
         {
-            NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnServerStarted            -= OnServerStarted;
+            NetworkManager.Singleton.OnClientConnectedCallback  -= OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
     }

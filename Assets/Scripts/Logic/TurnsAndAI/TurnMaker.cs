@@ -31,9 +31,15 @@ public abstract class TurnMaker : MonoBehaviour {
         }
     }
 
-    public virtual void OnCommandPhaseEntered() { }
+    public virtual void OnCommandPhaseEntered()
+    {
+        
+    }
 
-    public virtual void OnBattlePhaseEntered() { }
+    public virtual void OnBattlePhaseEntered()
+    {
+        
+    }
 
     public virtual void OnEndPhaseEntered() { }
 

@@ -106,6 +106,7 @@ public class CreatureLogic: ILivable
                     creatureLogic.IsMelee 
                     && creatureLogic.UniqueCreatureID != UniqueCreatureID 
                     && creatureLogic.BaseID == BaseID
+                    && ZoneCombatResolver.WouldSurvive(creatureLogic)
                 ) {
                     return false;
                 }
@@ -126,8 +127,8 @@ public class CreatureLogic: ILivable
         attacksForOneTurn = ca.AttacksForOneTurn;
         movementsForOneTurn = ca.MoveSpeed;
         // AttacksLeftThisTurn is now equal to 0
-        if (ca.Charge)
-            AttacksLeftThisTurn = attacksForOneTurn;
+        //if (ca.Charge)
+        //  AttacksLeftThisTurn = attacksForOneTurn;
         if (ca.Celerity)
             MovementsLeftThisTurn = movementsForOneTurn;
         this.owner = owner;
@@ -210,7 +211,6 @@ public class CreatureLogic: ILivable
         MovementsLeftThisTurn--;
         BaseID = baseID;
         FogOfWarManager.Refresh();
-        Debug.Log("Creature moved to base : " + BaseID);
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 

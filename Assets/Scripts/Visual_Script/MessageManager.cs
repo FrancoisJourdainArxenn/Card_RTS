@@ -6,14 +6,14 @@ using TMPro;
 public class MessageManager : MonoBehaviour 
 {
     public TMP_Text MessageText;
-    public GameObject MessagePanel;
+    public GameObject MessageHolder;
 
     public static MessageManager Instance;
 
     void Awake()
     {
+        MessageHolder.SetActive(false);
         Instance = this;
-        MessagePanel.SetActive(false);
     }
 
     public void ShowMessage(string Message, float Duration)
@@ -24,12 +24,12 @@ public class MessageManager : MonoBehaviour
     IEnumerator ShowMessageCoroutine(string Message, float Duration)
     {
         //Debug.Log("Showing some message. Duration: " + Duration);
+        MessageHolder.SetActive(true);
         MessageText.text = Message;
-        MessagePanel.SetActive(true);
 
         yield return new WaitForSeconds(Duration);
+        MessageHolder.SetActive(false);
 
-        MessagePanel.SetActive(false);
         Command.CommandExecutionComplete();
     }
 

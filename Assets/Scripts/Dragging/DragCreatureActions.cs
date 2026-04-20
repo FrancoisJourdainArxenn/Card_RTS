@@ -38,7 +38,7 @@ public class DragCreatureActions : DraggingActions {
         sr.enabled = true;
         targettingArrow.Show();
         HighlightReachableAreas();
-        ColorizeUnits();
+        //ColorizeUnits();
 
     }
 
@@ -50,12 +50,12 @@ public class DragCreatureActions : DraggingActions {
     {
         TurnManager turnmanager = TurnManager.Instance;
         
-        if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Battle) {
+        /*if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Battle) {
             SelectTarget();
             bool targetValid = AttackTarget();
             if (!targetValid)
                 OnDragFailed();
-        }
+        }*/
         if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Command) {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool moveValid = Move(selectedPArea);  
@@ -143,7 +143,8 @@ public class DragCreatureActions : DraggingActions {
         );
         if (NetworkSessionData.IsNetworkSession)
         {
-            GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos);
+            GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
+            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
         }
         else
         {
@@ -252,7 +253,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void ResetDragElements()
     {
-        ResetColorizeUnits();
+        // ResetColorizeUnits();
         ResetAreaHighlights();
 
         transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
@@ -274,7 +275,7 @@ public class DragCreatureActions : DraggingActions {
         }
     }
 
-    private void ColorizeUnits()
+    /*private void ColorizeUnits()
     {
         TurnManager turnmanager = TurnManager.Instance;
         if (turnmanager.CurrentPhase != TurnManager.TurnPhases.Battle) {
@@ -285,16 +286,16 @@ public class DragCreatureActions : DraggingActions {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
             g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(cl.Targetable);
         }
-    }
+    }*/
 
-    private void ResetColorizeUnits()
+    /*private void ResetColorizeUnits()
     {
         foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesInPlay)
         {
             GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
             g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(true);
         }
-    }
+    }*/
 
     private void HighlightReachableAreas()
     {

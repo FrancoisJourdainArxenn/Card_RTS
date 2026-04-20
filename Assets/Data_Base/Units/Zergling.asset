@@ -18,11 +18,11 @@ MonoBehaviour:
   MainCost: 2
   SecondCost: 0
   MaxHealth: 1
-  Attack: 10
+  Attack: 1
   AttacksForOneTurn: 1
-  MoveSpeed: 2
+  MoveSpeed: 1
   melee: 1
-  Charge: 1
+  Charge: 0
   Celerity: 1
   CreatureScriptName: 
   specialCreatureAmount: 1

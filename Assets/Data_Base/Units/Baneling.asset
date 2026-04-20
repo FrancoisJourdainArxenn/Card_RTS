@@ -17,13 +17,12 @@ MonoBehaviour:
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 1
   SecondCost: 1
-  MaxHealth: 1
-  Attack: 10
+  MaxHealth: 2
+  Attack: 1
   AttacksForOneTurn: 1
   MoveSpeed: 1
   melee: 1
-  Charge: 1
-  Celerity: 0
+  Celerity: 1
   CreatureScriptName: 
   specialCreatureAmount: 4
   SpellScriptName: 
