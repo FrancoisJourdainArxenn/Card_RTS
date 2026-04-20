@@ -24,8 +24,8 @@ public class CardAsset : ScriptableObject
     public int MainCost, SecondCost;
 
     [Header("Creature Info")]
-    public int MaxHealth;   // =0 => spell card
     public int Attack;
+    public int MaxHealth;   // =0 => spell card
     public int AttacksForOneTurn = 1;
     public int MoveSpeed = 1;
     public bool melee = false;

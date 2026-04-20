@@ -10,20 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Marine
+  m_Name: Marauder
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Description: 
-  CardImage: {fileID: 21300000, guid: c79e860526283f94d9c972fff3604f41, type: 3}
+  CardImage: {fileID: 21300000, guid: 8731a68ceb33110478e5c54f75fa0d5a, type: 3}
   MainCost: 2
-  SecondCost: 0
-  MaxHealth: 3
+  SecondCost: 1
   Attack: 2
-  AttacksForOneTurn: 2
+  MaxHealth: 3
+  AttacksForOneTurn: 1
   MoveSpeed: 1
   melee: 0
-  Charge: 1
-  Celerity: 1
+  Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0
   SpellScriptName: 
