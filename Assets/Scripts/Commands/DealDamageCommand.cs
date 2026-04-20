@@ -24,13 +24,13 @@ public class DealDamageCommand : Command {
             // target is a hero
             target.GetComponent<BaseVisual>().TakeDamage(amount,healthAfter);
         }
-        else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID))
+        else if (target != null && target.GetComponent<OneBuildingManager>() != null)
         {
             target.GetComponent<OneBuildingManager>().TakeDamage(amount, healthAfter);
         }
         else
         {
-            target.GetComponent<OneCreatureManager>().TakeDamage(amount, healthAfter);
+            target?.GetComponent<OneCreatureManager>()?.TakeDamage(amount, healthAfter);
         }
         CommandExecutionComplete();
     }

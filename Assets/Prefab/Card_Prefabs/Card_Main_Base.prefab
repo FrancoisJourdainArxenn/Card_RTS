@@ -1762,9 +1762,9 @@ MonoBehaviour:
   FrameImage: {fileID: 6335098370175170885}
   CardFaceGlowImage: {fileID: 2299680080893522801}
   Spawner: {fileID: 0}
-  MarkedForDeathIndicator: {fileID: 0}
-  WillBeDamagedIndicator: {fileID: 0}
-  pendingDamageText: {fileID: 0}
+  MarkedForDeathIndicator: {fileID: 6831454558169782916}
+  WillBeDamagedIndicator: {fileID: 4358839601193840516}
+  pendingDamageText: {fileID: 6598662252289984941}
 --- !u!65 &5539823569782606735
 BoxCollider:
   m_ObjectHideFlags: 0
