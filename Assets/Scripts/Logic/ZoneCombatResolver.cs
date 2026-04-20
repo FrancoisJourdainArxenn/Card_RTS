@@ -204,13 +204,7 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         else
         {
-            // Check this zone actually contains the defender's main base before going face
-            AreaPosition defenderPos = GetAreaPosition(defender);
-            bool hasAreaHere = false;
-            foreach (PlayerArea pa in zoneLogic.subZones)
-                if (pa.owner == defenderPos) { hasAreaHere = true; break; }
-
-            if (hasAreaHere)
+            if (zoneLogic.subZones.Contains(defender.MainPArea))
             {
                 int existing = pendingPlayerDamage.TryGetValue(defender.PlayerID, out int p) ? p : 0;
                 pendingPlayerDamage[defender.PlayerID] = existing + totalDamage;
@@ -407,6 +401,14 @@ public class ZoneCombatResolver : MonoBehaviour
         // Phase 2: assign free pool to this base
         int freePool = defenderIsTop ? p1FreePool : p2FreePool;
         if (freePool <= 0) return;
+
+        // Target must be in this zone
+        if (isBuilding)
+        {
+            BuildingLogic bl2 = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            if (bl2.neutralBaseController?.zone != zoneLogic) return;
+        }
+        else if (!zoneLogic.subZones.Contains(defender.MainPArea)) return;
 
         // Only allowed if all MELEE creatures of the defender are already lethally hit
         foreach (var c in GetCreaturesInMyZone(defender, zoneLogic))
