@@ -83,7 +83,7 @@ public class FogOfWarManager : MonoBehaviour
             nbc.SetEnemyBuildingsFogged(enemy, !observerHasPresence);
             nbc.SetPlayerBuildingsVisible(observer); // Always show observer's own captured bases
             nbc.ApplyColorForObserver(observer, observerHasPresence);
-
+            nbc.UpdateNeutralBaseVisualFog(observerHasPresence);
         }
 
         // --- Bases joueur (fog comme les bases neutres) ---

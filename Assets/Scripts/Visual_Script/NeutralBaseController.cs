@@ -13,6 +13,7 @@ public class NeutralBaseController : MonoBehaviour
     public TableVisual[] tables;
 
     private List<GameObject> buildings = new List<GameObject>();
+    private NeutralBaseVisual capturedNBaseVisual = null;
     private Color trueColor;
     private Color lastSeenColorLow;
     private Color lastSeenColorTop;
@@ -69,9 +70,9 @@ public class NeutralBaseController : MonoBehaviour
         idHolder.UniqueID = buildingUniqueID;
         player.controlledBases.Add(ba);
         // nBaseVisual.BuildingZone.GetComponent<Image>().color = player.playerColor;
-        SetTrueColor(player.playerColor);
+        capturedNBaseVisual = nBaseVisual;
+        SetTrueColor(player.playerColor); // triggers FogOfWarManager.Refresh() which will hide/show NeutralBaseVisual per observer
         player.CalculatePlayerIncome();
-        nBaseVisual.RemoveBaseCard();
 
         // Animate scale (pop-in)
         baseCard.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
@@ -104,10 +105,17 @@ public class NeutralBaseController : MonoBehaviour
                 if (nBaseVisual != null)
                     nBaseVisual.ResetBuildingZone();
             }
+            capturedNBaseVisual = null;
             Object.Destroy(buildingToRemove);
         }
         else
             Object.Destroy(buildingToRemove);
+    }
+
+    public void UpdateNeutralBaseVisualFog(bool observerHasVision)
+    {
+        if (capturedNBaseVisual != null)
+            capturedNBaseVisual.gameObject.SetActive(!observerHasVision);
     }
 
     public void SetEnemyBuildingsFogged(Player enemy, bool fogged)
