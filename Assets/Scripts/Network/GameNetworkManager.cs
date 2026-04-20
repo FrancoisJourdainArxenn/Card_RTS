@@ -14,6 +14,7 @@ public class GameNetworkManager : NetworkBehaviour
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
 
+    public int DeckSeed => deckSeed.Value;
     private NetworkVariable<int> deckSeed = new NetworkVariable<int>(
         0,
         NetworkVariableReadPermission.Everyone,
@@ -276,19 +277,25 @@ public class GameNetworkManager : NetworkBehaviour
         TurnManager.Instance.EnterPhase(nextPhase);
     }
 
+    private int _drawSeedOffset = 0;
+
+    public void InitDrawSeedOffset(int value) { _drawSeedOffset = value; }
+
     public void BroadCastDrawCard(int playerIndex)
     {
+        if (!IsServer) return;
         int cardID = IDFactory.GetUniqueID();
-        DrawAcardClientRpc(playerIndex, cardID);
-        Debug.Log($"[GameNetworkManager] BroadCastDrawCard : joueur {playerIndex} doit piocher carte {cardID}");
+        int finalSeed = DeckSeed + _drawSeedOffset++;
+        Debug.Log($"[BroadCastDrawCard] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
+        DrawAcardClientRpc(playerIndex, cardID, finalSeed);
     }
 
     [ClientRpc]
-    public void DrawAcardClientRpc(int playerIndex, int cardID)
+    public void DrawAcardClientRpc(int playerIndex, int cardID, int finalSeed)
     {
+        Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
         Player player = Player.Players[playerIndex];
-        player.DrawACard(false, cardID);
-        Debug.Log($"[GameNetworkManager] DrawAcardClientRpc : joueur {playerIndex} reçoit carte {cardID}");
+        player.DrawACard(false, cardID, finalSeed);
     } 
 
     //Moving Units

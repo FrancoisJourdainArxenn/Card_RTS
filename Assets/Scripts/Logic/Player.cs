@@ -227,19 +227,24 @@ public class Player : MonoBehaviour, ILivable
     }
 
     // draw a single card from the deck
-    public void DrawACard(bool fast = false, int netWorkID = -1)
+    public void DrawACard(bool fast = false, int netWorkID = -1, int finalSeed = 0)
     {
         if (deck.cards.Count > 0)
         {
             if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
             {
-                // 1) logic: add card to hand
-                CardLogic newCard = new CardLogic(deck.cards[0], netWorkID);
+                CardAsset cardDrawn = NetworkSessionData.IsNetworkSession
+                    ? deck.cards.SelectRandomCardFromSeed(finalSeed)
+                    : deck.cards.SelectRandomCard();
+
+                Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
+
+                CardLogic newCard = new CardLogic(cardDrawn, netWorkID);
                 newCard.owner = this;
                 hand.CardsInHand.Insert(0, newCard);
                 // Debug.Log(hand.CardsInHand.Count);
                 // 2) logic: remove the card from the deck
-                deck.cards.RemoveAt(0);
+                // deck.cards.RemoveAt(0);
                 // 2) create a command
                 new DrawACardCommand(hand.CardsInHand[0], this, fast, fromDeck: true).AddToQueue(); 
             }

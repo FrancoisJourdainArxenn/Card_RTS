@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using TMPro;
+using Unity.Netcode;
 
 /// <summary>
 /// Orchestrates simultaneous play: shared phases (Regroup, Command, Battle, End).
@@ -86,15 +87,20 @@ public class TurnManager : MonoBehaviour
         ResetPhaseReadyFlags();
 
         
+        int drawSeedOffset = 0;
+        int deckSeed = seed ?? 0;
         for (int i = 0; i < initdraw; i++)
         {
             for (int j = 0; j < Player.Players.Length; j++)
             {
                 Player p = Player.Players[j];
                 int cardInHandID = cardInHandIDs == null ? -1 : cardInHandIDs[j * initdraw + i];
-                p.DrawACard(true, cardInHandID);
+                p.DrawACard(true, cardInHandID, deckSeed + drawSeedOffset++);
             }
         }
+
+        if (NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer)
+            GameNetworkManager.Instance.InitDrawSeedOffset(drawSeedOffset);
         foreach (Player p in Player.Players)
             p.OnTurnStart();
         StartCoroutine(HighlightAfterDraws());
