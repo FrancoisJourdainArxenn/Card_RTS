@@ -32,4 +32,17 @@ public static class ShufflingExtention {
             list[n] = value;
         }
     }
+
+    public static T SelectRandomCardFromSeed<T>(this IList<T> list, int seed)
+    {
+        System.Random seededRng = new System.Random(seed);
+        int index = seededRng.Next(list.Count);
+        return list[index];
+    }
+
+    public static T SelectRandomCard<T>(this IList<T> list)
+    {
+        int index = rng.Next(list.Count);
+        return list[index];
+    }
 }

@@ -16,7 +16,7 @@ MonoBehaviour:
   BaseImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
   BaseName: Neutral Base 1
   MaxHealth: 10
-  mainRessourceIncome: 2
+  mainRessourceIncome: 1
   secondRessourceIncome: 1
   mainRessourceBuildingCost: 5
   secondRessourceBuildingCost: 0

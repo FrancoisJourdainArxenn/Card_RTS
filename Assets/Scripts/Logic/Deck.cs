@@ -16,4 +16,8 @@ public class Deck : MonoBehaviour {
         cards.ShuffleWithSeed(seed);
     }
 	
+    public void SelectRandomCardFromSeed(int seed)
+    {
+        cards.SelectRandomCardFromSeed(seed);
+    }
 }

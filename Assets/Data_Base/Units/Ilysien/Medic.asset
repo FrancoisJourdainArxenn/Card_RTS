@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Baneling
+  m_Name: Medic
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Description: 
-  CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
+  CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
   MainCost: 1
   SecondCost: 1
-  MaxHealth: 2
-  Attack: 1
+  Attack: 0
+  MaxHealth: 3
   AttacksForOneTurn: 1
   MoveSpeed: 1
   melee: 1
-  Celerity: 1
+  Celerity: 0
   CreatureScriptName: 
-  specialCreatureAmount: 4
+  specialCreatureAmount: 1
   SpellScriptName: 
   specialSpellAmount: 0
-  Targets: 0
+  Targets: 3

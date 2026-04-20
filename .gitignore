@@ -49,6 +49,7 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+Build.zip
 
 # Packed Addressables
 [Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
