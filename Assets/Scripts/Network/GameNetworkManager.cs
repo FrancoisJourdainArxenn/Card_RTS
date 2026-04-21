@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -32,6 +33,213 @@ public class GameNetworkManager : NetworkBehaviour
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             NetworkSessionData.IsNetworkSession = true;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // SYNCHRONISATION BATTLE PHASE — ATTRIBUTIONS DE DÉGÂTS
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Stocke temporairement l'attribution de dégâts soumise par un joueur.
+    /// Le serveur attend les deux soumissions avant de merger et diffuser l'état canonique.
+    /// Clé = playerIndex (0 ou 1).
+    /// </summary>
+    private struct BattleSubmission
+    {
+        public int[] CreatureIDs,     CreatureDamages;
+        public int[] BuildingIDs,     BuildingDamages;
+        public int[] TargetPlayerIDs, PlayerDamages;
+    }
+    private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
+
+    /// <summary>
+    /// Reçu par le serveur quand un joueur termine la Battle phase.
+    /// Stocke son attribution de dégâts. Quand les deux joueurs ont soumis :
+    ///   1. Merge les deux attributions (union sans conflit, chaque joueur contrôle ses propres attaques)
+    ///   2. Diffuse l'état canonique via ApplyCanonicalBattleAssignmentClientRpc
+    ///   3. Déclenche la transition de phase via ForceRegisterEndPhase
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SubmitBattleAssignmentServerRpc(
+        int playerIndex,
+        int[] creatureIDs,     int[] creatureDamages,
+        int[] buildingIDs,     int[] buildingDamages,
+        int[] targetPlayerIDs, int[] playerDamages)
+    {
+        _battleSubmissions[playerIndex] = new BattleSubmission
+        {
+            CreatureIDs     = creatureIDs,     CreatureDamages  = creatureDamages,
+            BuildingIDs     = buildingIDs,     BuildingDamages  = buildingDamages,
+            TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages
+        };
+
+        if (_battleSubmissions.Count < 2)
+            return; // On attend encore l'autre joueur
+
+        BattleSubmission submission0 = _battleSubmissions[0];
+        BattleSubmission submission1 = _battleSubmissions[1];
+
+        // Union simple : chaque joueur a soumis les dégâts qu'IL inflige (pas de conflit possible)
+        ApplyCanonicalBattleAssignmentClientRpc(
+            ConcatArrays(submission0.CreatureIDs,     submission1.CreatureIDs),
+            ConcatArrays(submission0.CreatureDamages, submission1.CreatureDamages),
+            ConcatArrays(submission0.BuildingIDs,     submission1.BuildingIDs),
+            ConcatArrays(submission0.BuildingDamages, submission1.BuildingDamages),
+            ConcatArrays(submission0.TargetPlayerIDs, submission1.TargetPlayerIDs),
+            ConcatArrays(submission0.PlayerDamages,   submission1.PlayerDamages)
+        );
+        _battleSubmissions.Clear();
+
+        // Déclenche la transition de phase maintenant que les deux joueurs ont soumis
+        TurnManager.Instance.ForceRegisterEndPhase(0);
+        TurnManager.Instance.ForceRegisterEndPhase(1);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : remplace les dictionnaires pendingDamage locaux
+    /// par l'état canonique du serveur, avant que OnBattlePhaseEnd() ne les lise.
+    /// </summary>
+    [ClientRpc]
+    void ApplyCanonicalBattleAssignmentClientRpc(
+        int[] creatureIDs,     int[] creatureDamages,
+        int[] buildingIDs,     int[] buildingDamages,
+        int[] targetPlayerIDs, int[] playerDamages)
+    {
+        ZoneCombatResolver.ApplyCanonicalAssignment(
+            creatureIDs, creatureDamages, buildingIDs, buildingDamages, targetPlayerIDs, playerDamages);
+    }
+
+    static int[] ConcatArrays(int[] firstArray, int[] secondArray)
+    {
+        int[] result = new int[firstArray.Length + secondArray.Length];
+        firstArray.CopyTo(result, 0);
+        secondArray.CopyTo(result, firstArray.Length);
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // SYNCHRONISATION GLOBALE DE L'ÉTAT DE JEU
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Collecte l'état complet de toutes les entités et le diffuse à tous les clients.
+    /// Appelé par le serveur après chaque End phase (une fois les dégâts appliqués).
+    /// Sert de filet de sécurité contre tout désync résiduel.
+    /// </summary>
+    void BroadcastFullGameState()
+    {
+        List<int> creatureIDList     = new List<int>();
+        List<int> creatureHealthList = new List<int>();
+        List<int> creatureBaseIDList = new List<int>();
+        List<int> attacksLeftList    = new List<int>();
+        List<int> movementsLeftList  = new List<int>();
+
+        foreach (KeyValuePair<int, CreatureLogic> entry in CreatureLogic.CreaturesCreatedThisGame)
+        {
+            creatureIDList.Add(entry.Key);
+            creatureHealthList.Add(entry.Value.Health);
+            creatureBaseIDList.Add(entry.Value.BaseID);
+            attacksLeftList.Add(entry.Value.AttacksLeftThisTurn);
+            movementsLeftList.Add(entry.Value.MovementsLeftThisTurn);
+        }
+
+        List<int> buildingIDList     = new List<int>();
+        List<int> buildingHealthList = new List<int>();
+
+        foreach (KeyValuePair<int, BuildingLogic> entry in BuildingLogic.BuildingsCreatedThisGame)
+        {
+            buildingIDList.Add(entry.Key);
+            buildingHealthList.Add(entry.Value.Health);
+        }
+
+        int playerCount = Player.Players.Length;
+        int[] playerHealths   = new int[playerCount];
+        int[] playerMainRes   = new int[playerCount];
+        int[] playerSecondRes = new int[playerCount];
+
+        for (int i = 0; i < playerCount; i++)
+        {
+            playerHealths[i]   = Player.Players[i].Health;
+            playerMainRes[i]   = Player.Players[i].mainRessourceAvailable;
+            playerSecondRes[i] = Player.Players[i].secondRessourceAvailable;
+        }
+
+        SyncFullGameStateClientRpc(
+            creatureIDList.ToArray(), creatureHealthList.ToArray(),
+            creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
+            buildingIDList.ToArray(), buildingHealthList.ToArray(),
+            playerHealths, playerMainRes, playerSecondRes);
+    }
+
+    /// <summary>
+    /// Reçu par les clients (pas le serveur) : corrige l'état local pour qu'il corresponde
+    /// à l'état autoritaire du serveur. Logge toute correction détectée pour faciliter
+    /// le débogage des désynchronisations résiduelles.
+    /// Ne déclenche PAS d'événements de mort — sert uniquement à corriger des valeurs.
+    /// </summary>
+    [ClientRpc]
+    void SyncFullGameStateClientRpc(
+        int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
+        int[] attacksLeft,   int[] movementsLeft,
+        int[] buildingIDs,   int[] buildingHealths,
+        int[] playerHealths, int[] playerMainRes,   int[] playerSecondRes)
+    {
+        if (IsServer) return; // Le serveur est la source de vérité
+
+        for (int i = 0; i < creatureIDs.Length; i++)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+                continue;
+
+            if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
+                creature.Health = creatureHealths[i];
+            }
+            if (creature.AttacksLeftThisTurn != attacksLeft[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
+                creature.AttacksLeftThisTurn = attacksLeft[i];
+            }
+            if (creature.MovementsLeftThisTurn != movementsLeft[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
+                creature.MovementsLeftThisTurn = movementsLeft[i];
+            }
+        }
+
+        for (int i = 0; i < buildingIDs.Length; i++)
+        {
+            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(buildingIDs[i], out BuildingLogic building))
+                continue;
+
+            if (building.Health != buildingHealths[i] && buildingHealths[i] > 0)
+            {
+                Debug.LogError($"[Desync] Bâtiment {buildingIDs[i]} : HP local={building.Health}, serveur={buildingHealths[i]}. Correction appliquée.");
+                building.Health = buildingHealths[i];
+            }
+        }
+
+        for (int i = 0; i < Player.Players.Length; i++)
+        {
+            Player player = Player.Players[i];
+
+            if (player.Health != playerHealths[i] && playerHealths[i] > 0)
+            {
+                Debug.LogError($"[Desync] Joueur {i} : HP local={player.Health}, serveur={playerHealths[i]}. Correction appliquée.");
+                player.Health = playerHealths[i];
+            }
+            if (player.mainRessourceAvailable != playerMainRes[i])
+            {
+                Debug.LogError($"[Desync] Joueur {i} : ressource principale locale={player.mainRessourceAvailable}, serveur={playerMainRes[i]}. Correction appliquée.");
+                player.mainRessourceAvailable = playerMainRes[i];
+            }
+            if (player.secondRessourceAvailable != playerSecondRes[i])
+            {
+                Debug.LogError($"[Desync] Joueur {i} : ressource secondaire locale={player.secondRessourceAvailable}, serveur={playerSecondRes[i]}. Correction appliquée.");
+                player.secondRessourceAvailable = playerSecondRes[i];
+            }
         }
     }
 
@@ -246,7 +454,9 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         Debug.Log($"[GameNetworkManager] RegisterEndPhase reçu pour joueur index {playerIndex} (phase {forPhase})");
-        TurnManager.Instance.RegisterEndPhase(playerIndex);
+        // ForceRegisterEndPhase bypasse le check AllowedToControlThisPlayer, qui n'a de sens
+        // que côté client (pour décider d'envoyer le RPC), pas côté serveur (qui traite la requête).
+        TurnManager.Instance.ForceRegisterEndPhase(playerIndex);
     }
 
     /// <summary>
@@ -275,6 +485,11 @@ public class GameNetworkManager : NetworkBehaviour
 
         TurnManager.Instance.SetCurrentRound(newRound);
         TurnManager.Instance.EnterPhase(nextPhase);
+
+        // Après la End phase, les dégâts de bataille ont été appliqués (OnBattlePhaseEnd vient d'être appelé).
+        // Le serveur diffuse l'état complet pour corriger tout désync résiduel côté client.
+        if (nextPhase == TurnManager.TurnPhases.End && IsServer)
+            BroadcastFullGameState();
     }
 
     private int _drawSeedOffset = 0;
