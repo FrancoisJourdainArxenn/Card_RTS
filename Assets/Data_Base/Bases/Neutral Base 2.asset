@@ -15,8 +15,8 @@ MonoBehaviour:
   Faction: {fileID: 0}
   BaseImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
   BaseName: 
-  MaxHealth: 10
+  MaxHealth: 8
   mainRessourceIncome: 2
-  secondRessourceIncome: 0
-  mainRessourceBuildingCost: 5
+  secondRessourceIncome: 1
+  mainRessourceBuildingCost: 7
   secondRessourceBuildingCost: 0
