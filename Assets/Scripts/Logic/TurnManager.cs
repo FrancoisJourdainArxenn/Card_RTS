@@ -145,17 +145,38 @@ public class TurnManager : MonoBehaviour
     /// <summary>Registers end-of-phase for the participant at this index in <see cref="Player.Players"/>.</summary>
     public void RegisterEndPhase(int participantIndex)
     {
-        // En mode réseau, seul le serveur exécute la logique phaseReady.
-        // Un client (non-serveur) envoie un ServerRpc uniquement pour SON propre joueur.
-        // L'adversaire est enregistré automatiquement côté serveur (ex: piocher en Regroup).
-        if (NetworkSessionData.IsNetworkSession && !Unity.Netcode.NetworkManager.Singleton.IsServer)
+        if (NetworkSessionData.IsNetworkSession)
         {
             Player p = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
                 ? Player.Players[participantIndex] : null;
-            if (p != null && p.MainPArea.AllowedToControlThisPlayer)
+            bool isMyPlayer = p != null && p.MainPArea.AllowedToControlThisPlayer;
+
+            if (!isMyPlayer)
+                return; // On ne traite jamais la phase-end d'un joueur qu'on ne contrôle pas
+
+            if (currentPhase == TurnPhases.Battle)
+            {
+                // En Battle phase, on soumet l'attribution des dégâts au serveur.
+                // Le serveur attend les deux soumissions, merge, puis déclenche la transition.
+                // Ce chemin est identique pour le host (serveur) et le client pur,
+                // car SubmitBattleAssignmentServerRpc est accessible aux deux via InvokePermission.Everyone.
+                ZoneCombatResolver.BattleAssignment assignment =
+                    ZoneCombatResolver.SerializeMyAttackAssignments(participantIndex);
+                GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
+                    participantIndex,
+                    assignment.CreatureIDs,   assignment.CreatureDamages,
+                    assignment.BuildingIDs,   assignment.BuildingDamages,
+                    assignment.TargetPlayerIDs, assignment.PlayerDamages);
+                return;
+            }
+
+            // Pour les autres phases, le client envoie un ServerRpc standard.
+            // Le host (serveur) tombe dans le bloc local ci-dessous.
+            if (!Unity.Netcode.NetworkManager.Singleton.IsServer)
+            {
                 GameNetworkManager.Instance.RegisterEndPhaseServerRpc(participantIndex, currentPhase);
-            // Ne rien faire localement dans tous les cas (même pour son propre joueur)
-            return;
+                return;
+            }
         }
 
         EnsurePhaseReadyMatchesPlayers();
@@ -176,6 +197,26 @@ public class TurnManager : MonoBehaviour
             if (GlobalSettings.Instance != null)
                 GlobalSettings.Instance.RefreshEndPhaseButtons();
         }
+
+        if (AllParticipantsRegisteredEndPhase())
+            AdvancePhaseWhenAllReady();
+    }
+
+    /// <summary>
+    /// Version serveur-only de RegisterEndPhase : marque directement un joueur comme prêt
+    /// sans passer par la logique réseau. Appelé par GameNetworkManager après que les deux
+    /// joueurs ont soumis leurs attributions de dégâts en Battle phase.
+    /// </summary>
+    public void ForceRegisterEndPhase(int participantIndex)
+    {
+        EnsurePhaseReadyMatchesPlayers();
+        if (phaseReady == null || participantIndex < 0 || participantIndex >= phaseReady.Length)
+            return;
+        if (phaseReady[participantIndex])
+            return;
+
+        phaseReady[participantIndex] = true;
+        GameNetworkManager.Instance.SyncPlayerReadyClientRpc(participantIndex, currentPhase);
 
         if (AllParticipantsRegisteredEndPhase())
             AdvancePhaseWhenAllReady();

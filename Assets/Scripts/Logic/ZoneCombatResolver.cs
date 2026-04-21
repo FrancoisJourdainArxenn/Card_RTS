@@ -489,6 +489,136 @@ public class ZoneCombatResolver : MonoBehaviour
             g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(true);
         }
     }*/
+    // -------------------------------------------------------------------------
+    // SYNCHRONISATION RÉSEAU — ATTRIBUTION DES DÉGÂTS
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Regroupe les attributions de dégâts d'un joueur sous forme de tableaux sérialisables,
+    /// prêts à être envoyés au serveur via un RPC.
+    /// Chaque joueur ne sérialise QUE les dégâts qu'il contrôle (ses propres attaques
+    /// ciblant les entités ennemies), car l'autre joueur gère son propre pool d'attaque.
+    /// </summary>
+    public struct BattleAssignment
+    {
+        public int[] CreatureIDs;
+        public int[] CreatureDamages;
+        public int[] BuildingIDs;
+        public int[] BuildingDamages;
+        public int[] TargetPlayerIDs;
+        public int[] PlayerDamages;
+    }
+
+    public static BattleAssignment SerializeMyAttackAssignments(int attackerPlayerIndex)
+    {
+        Player attacker = Player.Players[attackerPlayerIndex];
+
+        // On cherche l'ennemi : le joueur qui reçoit les attaques de 'attacker'
+        Player enemy;
+        if (attacker == GlobalSettings.Instance.LowPlayer)
+            enemy = GlobalSettings.Instance.TopPlayer;
+        else
+            enemy = GlobalSettings.Instance.LowPlayer;
+
+        List<int> creatureIDList    = new List<int>();
+        List<int> creatureDmgList   = new List<int>();
+        List<int> buildingIDList    = new List<int>();
+        List<int> buildingDmgList   = new List<int>();
+        List<int> playerIDList      = new List<int>();
+        List<int> playerDmgList     = new List<int>();
+
+        foreach (ZoneCombatResolver resolver in allResolvers)
+        {
+            foreach (KeyValuePair<int, int> entry in resolver.pendingDamage)
+            {
+                if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(entry.Key, out CreatureLogic creature)) continue;
+                if (resolver.GetOwnerPlayer(creature) != enemy) continue;
+                creatureIDList.Add(entry.Key);
+                creatureDmgList.Add(entry.Value);
+            }
+
+            foreach (KeyValuePair<int, int> entry in resolver.pendingBuildingDamage)
+            {
+                if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(entry.Key, out BuildingLogic building)) continue;
+                if (building.owner != enemy) continue;
+                buildingIDList.Add(entry.Key);
+                buildingDmgList.Add(entry.Value);
+            }
+
+            if (resolver.pendingPlayerDamage.TryGetValue(enemy.PlayerID, out int pendingPlayerDmg))
+            {
+                playerIDList.Add(enemy.PlayerID);
+                playerDmgList.Add(pendingPlayerDmg);
+            }
+        }
+
+        return new BattleAssignment
+        {
+            CreatureIDs     = creatureIDList.ToArray(),
+            CreatureDamages = creatureDmgList.ToArray(),
+            BuildingIDs     = buildingIDList.ToArray(),
+            BuildingDamages = buildingDmgList.ToArray(),
+            TargetPlayerIDs = playerIDList.ToArray(),
+            PlayerDamages   = playerDmgList.ToArray()
+        };
+    }
+
+    /// <summary>
+    /// Applique l'attribution canonique envoyée par le serveur, en remplacement
+    /// complet des dictionnaires locaux de tous les resolvers.
+    /// Doit être appelé avant OnBattlePhaseEnd() pour garantir que les dégâts
+    /// appliqués sont identiques sur tous les clients.
+    /// </summary>
+    public static void ApplyCanonicalAssignment(
+        int[] creatureIDs,     int[] creatureDamages,
+        int[] buildingIDs,     int[] buildingDamages,
+        int[] targetPlayerIDs, int[] playerDamages)
+    {
+        foreach (ZoneCombatResolver resolver in allResolvers)
+        {
+            resolver.pendingDamage.Clear();
+            resolver.pendingBuildingDamage.Clear();
+            resolver.pendingPlayerDamage.Clear();
+        }
+
+        for (int i = 0; i < creatureIDs.Length; i++)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature)) continue;
+            ZoneCombatResolver ownerResolver = FindForBase(creature.BaseID);
+            if (ownerResolver != null) ownerResolver.pendingDamage[creatureIDs[i]] = creatureDamages[i];
+        }
+
+        for (int i = 0; i < buildingIDs.Length; i++)
+        {
+            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(buildingIDs[i], out BuildingLogic building)) continue;
+            ZoneCombatResolver ownerResolver = FindResolverForBuilding(building);
+            if (ownerResolver != null) ownerResolver.pendingBuildingDamage[buildingIDs[i]] = buildingDamages[i];
+        }
+
+        for (int i = 0; i < targetPlayerIDs.Length; i++)
+        {
+            Player targetPlayer = targetPlayerIDs[i] == GlobalSettings.Instance.LowPlayer.PlayerID
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            ZoneCombatResolver ownerResolver = FindResolverForPlayer(targetPlayer);
+            if (ownerResolver != null) ownerResolver.pendingPlayerDamage[targetPlayerIDs[i]] = playerDamages[i];
+        }
+    }
+
+    static ZoneCombatResolver FindResolverForBuilding(BuildingLogic building)
+    {
+        foreach (ZoneCombatResolver resolver in allResolvers)
+            if (building.neutralBaseController?.zone == resolver.zoneLogic) return resolver;
+        return null;
+    }
+
+    static ZoneCombatResolver FindResolverForPlayer(Player player)
+    {
+        foreach (ZoneCombatResolver resolver in allResolvers)
+            if (resolver.zoneLogic.subZones.Contains(player.MainPArea)) return resolver;
+        return null;
+    }
+
     void OnDestroy()
     {
         allResolvers.Remove(this);
