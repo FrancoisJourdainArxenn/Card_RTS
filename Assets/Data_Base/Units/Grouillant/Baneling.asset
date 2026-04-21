@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Baneling
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
-  Description: 
+  Description: Melee
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 1
   SecondCost: 1
-  MaxHealth: 1
   Attack: 3
+  MaxHealth: 1
   AttacksForOneTurn: 1
   MoveSpeed: 1
   melee: 1

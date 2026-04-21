@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: Ghost
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
-  Description: 
+  Description: 'Celerity
+
+    Speed : 2'
   CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
-  MainCost: 2
-  SecondCost: 4
+  MainCost: 3
+  SecondCost: 3
   Attack: 3
-  MaxHealth: 4
+  MaxHealth: 5
   AttacksForOneTurn: 1
   MoveSpeed: 2
   melee: 0
