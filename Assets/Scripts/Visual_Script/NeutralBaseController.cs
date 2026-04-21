@@ -98,6 +98,7 @@ public class NeutralBaseController : MonoBehaviour
         OneBuildingManager mgr = buildingToRemove.GetComponent<OneBuildingManager>();
         if (mgr != null)
         {
+            capturedNBaseVisual = null;
             if (mgr.Spawner != null)
             {
                 mgr.Spawner.SetActive(true);
@@ -105,7 +106,7 @@ public class NeutralBaseController : MonoBehaviour
                 if (nBaseVisual != null)
                     nBaseVisual.ResetBuildingZone();
             }
-            capturedNBaseVisual = null;
+
             Object.Destroy(buildingToRemove);
         }
         else

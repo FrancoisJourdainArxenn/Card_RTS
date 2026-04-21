@@ -270,6 +270,13 @@ public class TurnManager : MonoBehaviour
         }
     }
 
+    bool AnyZoneHasPossibleCombat()
+    {
+        foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
+            if (r.HasPossibleCombat()) return true;
+        return false;
+    }
+
     /// <summary>Appelé par PhaseTransitionClientRpc pour mettre à jour le numéro de tour.</summary>
     public void SetCurrentRound(int round)
     {
@@ -321,14 +328,19 @@ public class TurnManager : MonoBehaviour
                 break;
             case TurnPhases.Battle:
                 // new ShowMessageCommand("Battle", 1.5f).AddToQueue();
-                foreach (ZoneCombatResolver r in FindObjectsByType<ZoneCombatResolver>(FindObjectsSortMode.None))
+                if (!AnyZoneHasPossibleCombat())
+                {
+                    StartCoroutine(AutoAdvanceFromBattle());
+                    break;
+                }
+                foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseStart();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnBattlePhaseEntered();
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
-                foreach (ZoneCombatResolver r in FindObjectsByType<ZoneCombatResolver>(FindObjectsSortMode.None))
+                foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseEnd();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnEndPhaseEntered();
@@ -429,6 +441,13 @@ public class TurnManager : MonoBehaviour
         if (currentPhase != TurnPhases.Regroup)
             yield break;
         EnterPhase(TurnPhases.Command);
+    }
+
+    IEnumerator AutoAdvanceFromBattle()
+    {
+        yield return new WaitForSeconds(1.5f);
+        if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
+            AdvancePhaseWhenAllReady();
     }
 
     IEnumerator AutoAdvanceFromEnd()
