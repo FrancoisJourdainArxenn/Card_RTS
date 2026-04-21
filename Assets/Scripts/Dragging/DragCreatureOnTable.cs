@@ -9,7 +9,7 @@ public class DragCreatureOnTable : DraggingActions {
     private IDHolder idScript;
     private VisualStates tempState;
     private OneCardManager manager;
-    public int maxCreatureOnBoard = 10;
+    public int maxCreatureOnBoard = 7;
 
     public override bool CanDrag
     {
@@ -91,7 +91,11 @@ public class DragCreatureOnTable : DraggingActions {
             return false;
         }
         bool TableNotFull = (selectedPArea.tableVisual.CreaturesOnTable.Count < maxCreatureOnBoard);
-
+        if (!TableNotFull)
+        {
+            new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();
+            return false;
+        }
         return TableVisual.CursorOverSomeTable && TableNotFull && selectedPArea != null;
     }
 

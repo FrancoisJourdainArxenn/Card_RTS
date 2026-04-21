@@ -5,6 +5,7 @@ public class ZoneCombatResolver : MonoBehaviour
 {
     private Dictionary<int, int> pendingDamage = new Dictionary<int, int>();
     private static List<ZoneCombatResolver> allResolvers = new List<ZoneCombatResolver>();
+    public static IReadOnlyList<ZoneCombatResolver> AllResolvers => allResolvers;
     private Dictionary<int, int> pendingBuildingDamage = new Dictionary<int, int>();
     private Dictionary<int, int> pendingPlayerDamage   = new Dictionary<int, int>();
 
@@ -18,6 +19,14 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         zoneLogic = GetComponent<ZoneLogic>();
         allResolvers.Add(this);
+    }
+
+    public bool HasPossibleCombat()
+    {
+        Player p1 = GlobalSettings.Instance.LowPlayer;
+        Player p2 = GlobalSettings.Instance.TopPlayer;
+        return GetCreaturesInMyZone(p1, zoneLogic).Count > 0
+            && GetCreaturesInMyZone(p2, zoneLogic).Count > 0;
     }
 
     public void OnBattlePhaseStart()
@@ -109,10 +118,12 @@ public class ZoneCombatResolver : MonoBehaviour
             target.Health -= kvp.Value;
         }
 
-        // Return survivors to their slots
-        foreach (PlayerArea pa in zoneLogic.subZones)
-            if (pa.tableVisual != null)
-                new RefreshTableSlotsCommand(pa.tableVisual).AddToQueue();
+        if (anyCombat)
+        {
+            foreach (PlayerArea pa in zoneLogic.subZones)
+                if (pa.tableVisual != null)
+                    new RefreshTableSlotsCommand(pa.tableVisual).AddToQueue();   
+        }
 
         pendingDamage.Clear();
         ClearAllIndicators();
