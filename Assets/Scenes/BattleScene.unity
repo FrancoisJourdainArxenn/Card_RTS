@@ -1126,13 +1126,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   panSpeed: 20
-  scrollSpeed: 20
-  minY: 15
-  maxY: 40
   panBorderThickness: 10
   panLimit: {x: 4, y: 7}
-  panScaleWhenZoomedIn: 0.1
-  panScaleWhenZoomedOut: 1
+  transitionDuration: 0.5
+  transitionEase: 7
 --- !u!1 &401925632
 GameObject:
   m_ObjectHideFlags: 0
@@ -1866,6 +1863,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
@@ -2800,6 +2801,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
@@ -6643,6 +6648,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
