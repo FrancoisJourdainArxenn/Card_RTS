@@ -10,6 +10,7 @@ public class CameraController : MonoBehaviour
     public float panBorderThicknessVertical = 50f;
     public float panBorderThicknessHorizontal = 250f;
     public Vector2 panLimit;
+    public Vector2 zoomedInPanLimit;
     private Vector2 panCurrentSpeed = Vector2.zero;
     private Vector2 panAcceleration = Vector2.zero;
     public float maxSpeed = 5f;
@@ -65,18 +66,18 @@ public class CameraController : MonoBehaviour
                     _snapBackCoroutine = null;
                 }
                 _zoomedPanOnGoing = true;
-                HandlePan(zoomedInDefaultPanSpeed);
+                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
             }
             else if (_zoomedPanOnGoing)
             {
                 _zoomedPanOnGoing = false;
                 _snapBackCoroutine = StartCoroutine(SnapBackAfterDelay());
-                HandlePan(zoomedInDefaultPanSpeed);
+                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
             }
             else if (_snapBackCoroutine != null)
             {
                 // drift phase: continue panning until snap triggers
-                HandlePan(zoomedInDefaultPanSpeed);
+                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
             }
             return;
         }

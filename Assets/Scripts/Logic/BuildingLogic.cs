@@ -7,7 +7,7 @@ public class BuildingLogic: ILivable
 {
     public Player owner;
     public BaseAsset ba;
-    public NeutralBaseController neutralBaseController;
+    public NeutralZoneController neutralBaseController;
     //public BuildingEffect effect;
     public int UniqueBuildingID;
 
@@ -61,7 +61,7 @@ public class BuildingLogic: ILivable
         new BuildingDieCommand(UniqueBuildingID, neutralBaseController).AddToQueue();
     }
 
-    public BuildingLogic(Player owner, BaseAsset ba, NeutralBaseController neutralBaseController, int networkID = -1)
+    public BuildingLogic(Player owner, BaseAsset ba, NeutralZoneController neutralBaseController, int networkID = -1)
     {
         this.ba = ba;
         this.neutralBaseController = neutralBaseController;

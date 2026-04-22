@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using DG.Tweening;
 
-public class NeutralBaseController : MonoBehaviour
+public class NeutralZoneController : MonoBehaviour
 {
     public AreaPosition owner;
     public Color ownerColor;
@@ -60,7 +60,7 @@ public class NeutralBaseController : MonoBehaviour
     {
         GameObject baseCard = Instantiate(nBaseVisual.BaseCardPrefab, nBaseVisual.BaseApparitionPosition.position, nBaseVisual.BaseApparitionPosition.rotation);
         buildings.Add(baseCard);
-        OneBuildingManager baseManager = baseCard.GetComponent<OneBuildingManager>();
+        OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
         baseManager.baseAsset = ba;
         baseManager.ResetValues(ba);
         baseManager.Spawner = nBaseVisual.gameObject;
@@ -94,8 +94,8 @@ public class NeutralBaseController : MonoBehaviour
 
         buildings.Remove(buildingToRemove);
 
-        // Carte de base : OneBuildingManager sur la racine (pas BaseVisual — celui-ci est pour le portrait héros).
-        OneBuildingManager mgr = buildingToRemove.GetComponent<OneBuildingManager>();
+        // Carte de base : OneBaseManager sur la racine (pas MainBaseVisual — celui-ci est pour le portrait héros).
+        OneBaseManager mgr = buildingToRemove.GetComponent<OneBaseManager>();
         if (mgr != null)
         {
             capturedNBaseVisual = null;

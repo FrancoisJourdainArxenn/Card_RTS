@@ -16,7 +16,7 @@ MonoBehaviour:
   BaseImage: {fileID: 21300000, guid: 372d1224729a0534d8055527fe8c7a30, type: 3}
   BaseName: Command Center
   MaxHealth: 30
-  mainRessourceIncome: 3
-  secondRessourceIncome: 1
+  mainRessourceIncome: 10
+  secondRessourceIncome: 5
   mainRessourceBuildingCost: 0
   secondRessourceBuildingCost: 0

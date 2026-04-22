@@ -22,7 +22,7 @@ public class GlobalSettings : MonoBehaviour
     public Color32 NeutralColor;
 
     [Header("Neutral Base")]
-    public NeutralBaseController[] NeutralBases;
+    public NeutralZoneController[] NeutralBases;
     
 
     [Header("Numbers and Values")]
@@ -54,7 +54,7 @@ public class GlobalSettings : MonoBehaviour
         Players.Add(AreaPosition.Low, LowPlayer);
         Instance = this;
 
-        foreach (NeutralBaseController neutralBase in NeutralBases)
+        foreach (NeutralZoneController neutralBase in NeutralBases)
         {
             neutralBase.owner = AreaPosition.Neutral;
             neutralBase.SetOwnerColor(NeutralColor);

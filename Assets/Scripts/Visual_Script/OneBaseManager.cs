@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class OneBuildingManager : MonoBehaviour
+public class OneBaseManager : MonoBehaviour
 {
     public BaseAsset baseAsset;
     public int CurrentHealth { get; private set; }

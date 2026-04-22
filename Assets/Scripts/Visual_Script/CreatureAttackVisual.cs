@@ -84,11 +84,11 @@ public class CreatureAttackVisual : MonoBehaviour
                     switch (targetType)
                     {
                         case "player":
-                            target.GetComponent<BaseVisual>().HealthText.text = targetHealthAfter.ToString();
+                            target.GetComponent<MainBaseVisual>().HealthText.text = targetHealthAfter.ToString();
                             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
                             break;
                         case "building":
-                            target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
+                            target.GetComponent<OneBaseManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
                         case "creature":
                             target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();

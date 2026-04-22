@@ -238,7 +238,7 @@ public class ZoneCombatResolver : MonoBehaviour
         Player local = GlobalSettings.Instance.localPlayer;
         if (id == local.PlayerID) return;
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic bl) && bl.owner == local) return;
-        IDHolder.GetGameObjectWithID(id)?.GetComponent<OneBuildingManager>()?.ShowPendingDamage(damage, health);
+        IDHolder.GetGameObjectWithID(id)?.GetComponent<OneBaseManager>()?.ShowPendingDamage(damage, health);
     }
 
 
@@ -254,7 +254,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (var bl in BuildingLogic.BuildingsCreatedThisGame.Values)
         {
             GameObject go = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
-            go?.GetComponent<OneBuildingManager>()?.ClearPendingDamageIndicator();
+            go?.GetComponent<OneBaseManager>()?.ClearPendingDamageIndicator();
         }
     }
 
@@ -402,7 +402,7 @@ public class ZoneCombatResolver : MonoBehaviour
         if (dict.TryGetValue(targetID, out int freed))
         {
             dict.Remove(targetID);
-            IDHolder.GetGameObjectWithID(targetID)?.GetComponent<OneBuildingManager>()?.ClearPendingDamageIndicator();
+            IDHolder.GetGameObjectWithID(targetID)?.GetComponent<OneBaseManager>()?.ClearPendingDamageIndicator();
             if (defenderIsTop) p1FreePool += freed;
             else               p2FreePool += freed;
             RefreshAllAreaStats();
