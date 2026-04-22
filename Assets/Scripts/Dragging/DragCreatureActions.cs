@@ -32,6 +32,14 @@ public class DragCreatureActions : DraggingActions {
     private PlayerArea originArea;
     public override void OnStartDrag()
     {
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            IDHolder idHolder = GetComponentInParent<IDHolder>();
+            if (idHolder != null)
+                GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
+        }
+        manager.ClearPendingMoveArrow();
+
         originArea = playerOwner.SelectedPArea();
         whereIsThisCreature.VisualState = VisualStates.Dragging;
         // enable target graphic

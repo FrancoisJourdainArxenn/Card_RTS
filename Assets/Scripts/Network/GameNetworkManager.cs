@@ -527,6 +527,26 @@ public class GameNetworkManager : NetworkBehaviour
         });
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void CancelMoveCreatureServerRpc(int creatureUniqueID, int playerIndex)
+    {
+        int removed = _actionBuffer.RemoveAll(a =>
+            a.type == ActionType.MoveCreature &&
+            a.param1 == creatureUniqueID &&
+            a.playerIndex == playerIndex);
+
+        if (removed > 0)
+            CancelMoveCreatureClientRpc(creatureUniqueID);
+    }
+
+    [ClientRpc]
+    void CancelMoveCreatureClientRpc(int creatureUniqueID)
+    {
+        IDHolder.GetGameObjectWithID(creatureUniqueID)
+            ?.GetComponent<OneCreatureManager>()
+            ?.ClearPendingMoveArrow();
+    }
+
     /// <summary>
     /// Reçu par TOUS les clients : exécute le déplacement avec les mêmes paramètres.
     /// </summary>

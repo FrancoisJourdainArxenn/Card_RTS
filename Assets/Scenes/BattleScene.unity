@@ -281,13 +281,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1028772378}
-  - {fileID: 572772921}
   m_Father: {fileID: 744353341}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.015104167, y: 0.17025924}
   m_AnchorMax: {x: 0.163, y: 0.23788887}
-  m_AnchoredPosition: {x: 3.9250488, y: 6.154602}
-  m_SizeDelta: {x: -4.433716, y: -2.3092346}
+  m_AnchoredPosition: {x: 3.9250488, y: 29.847046}
+  m_SizeDelta: {x: -4.4337, y: 45.0756}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &17112408
 MonoBehaviour:
@@ -365,8 +364,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: c92d0ff8f6fbf00458fddcb7b5cce857, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -395,6 +394,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bf014f8f53d3b34f8f251dad0139271, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndTurnButton
+  assignedPlayer: {fileID: 0}
 --- !u!114 &37161077 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2383561659309432525, guid: 9b83918a1cce6874e96f834cf7f9d32b, type: 3}
@@ -798,6 +798,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bf014f8f53d3b34f8f251dad0139271, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndTurnButton
+  assignedPlayer: {fileID: 1779656902}
 --- !u!114 &268279290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1125,14 +1126,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 004a588e3ae20d94c9a48a3684d199b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  panSpeed: 20
-  scrollSpeed: 20
-  minY: 15
-  maxY: 40
-  panBorderThickness: 10
+  panSpeed: 15
+  panBorderThickness: 50
   panLimit: {x: 4, y: 7}
-  panScaleWhenZoomedIn: 0.1
-  panScaleWhenZoomedOut: 1
+  maxAcceleration: 2.5
+  AccelerationUnit: 0.05
+  decelerationFactor: 0.7
+  transitionDuration: 1
+  zoomedInPanSpeed: 2
+  transitionEase: 7
+  snapBackDelay: 0.75
 --- !u!1 &401925632
 GameObject:
   m_ObjectHideFlags: 0
@@ -1753,81 +1756,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51d28d9f85fd88747a62ae2bf8c842d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NeutralBaseController
---- !u!1 &572772920
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 572772921}
-  - component: {fileID: 572772923}
-  - component: {fileID: 572772922}
-  m_Layer: 5
-  m_Name: Image
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &572772921
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 572772920}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 17112407}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.0010986328, y: -0.00012207031}
-  m_SizeDelta: {x: 0.020004272, y: 0.020000458}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &572772922
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 572772920}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 1726321855, guid: 5cff78702b37a3c4b9d7320cfd6589ff, type: 3}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 3
---- !u!222 &572772923
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 572772920}
-  m_CullTransparentMesh: 1
 --- !u!114 &587854268 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6335098370175170885, guid: 4378c7e36440a7a47a3ecdf76dacd0de, type: 3}
@@ -1866,6 +1794,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
@@ -2171,7 +2103,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandVisual
   owner: 0
-  TakeCardsOpenly: 0
+  TakeCardsOpenly: 1
   slots: {fileID: 662666358}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
@@ -2186,7 +2118,7 @@ Transform:
   m_GameObject: {fileID: 662666355}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 1.6377773, y: 3.53, z: 18.51}
+  m_LocalPosition: {x: 1.6377773, y: 2.03, z: 14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2800,6 +2732,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
@@ -3472,10 +3408,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 17112407}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.31785667, y: 0}
-  m_AnchorMax: {x: 1, y: 0.9438382}
-  m_AnchoredPosition: {x: -50.055, y: 2.2810059}
-  m_SizeDelta: {x: 77.632, y: -5.5895}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -5.555008, y: -1.2189941}
+  m_SizeDelta: {x: -11.367996, y: -12.5895}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1028772379
 MonoBehaviour:
@@ -3565,7 +3501,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 4.806244, y: 0, z: 0, w: 0}
+  m_margin: {x: 4.806244, y: 38.675354, z: 0, w: 17.032135}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -4580,7 +4516,7 @@ Transform:
   m_GameObject: {fileID: 1438455303}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 2.2055557, y: -4.09, z: 16.3}
+  m_LocalPosition: {x: 11.156895, y: -3, z: 14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6643,6 +6579,10 @@ PrefabInstance:
     - target: {fileID: 1010105305765577422, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 1433186494089366363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.000035703182
       objectReference: {fileID: 0}
     - target: {fileID: 1722078876469873859, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: handVisual
