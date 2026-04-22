@@ -1126,9 +1126,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   panSpeed: 20
-  panBorderThickness: 10
+  panBorderThickness: 200
   panLimit: {x: 4, y: 7}
+  maxAcceleration: 2.5
   transitionDuration: 0.5
+  zoomedInPanSpeed: 5
   transitionEase: 7
 --- !u!1 &401925632
 GameObject:

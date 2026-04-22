@@ -6,11 +6,12 @@ using UnityEngine.Serialization;
 public class CameraController : MonoBehaviour
 {
     public float panSpeed = 20f;
-    public float panBorderThickness = 10f;
+    public float panBorderThickness = 200f;
     public Vector2 panLimit;
     private Vector2 panAcceleration = Vector2.zero;
-    public float minAcceleration = 0f;
-    public float maxAcceleration = 1f;
+    public float maxAcceleration = 2.5f;
+    public float AccelerationUnit = 0.05f;
+    public float decelerationFactor = 0.7f;
 
     [Header("Zone lock")]
     public float transitionDuration = 0.5f;
@@ -83,54 +84,67 @@ public class CameraController : MonoBehaviour
         Vector3 pos = transform.position;
         float delta = speed * Time.deltaTime;
         Vector2 localpanAcceleration = Vector2.zero;
-        localpanAcceleration.y += Input.mousePosition.y - (Screen.height - panBorderThickness);
-        localpanAcceleration.x += Input.mousePosition.x - (Screen.width - panBorderThickness);
 
-        if (localpanAcceleration.y > 0 || localpanAcceleration.y < panBorderThickness)
-            panAcceleration.y += localpanAcceleration.y * Time.deltaTime /100;
-        else
-            panAcceleration.y -= 1f * Time.deltaTime /100;
+        if (Input.mousePosition.y >= Screen.height - panBorderThickness)
+            localpanAcceleration.y += Input.mousePosition.y - (Screen.height - panBorderThickness);
 
-        if (localpanAcceleration.x > 0 || localpanAcceleration.x < panBorderThickness)
-            panAcceleration.x += localpanAcceleration.x * Time.deltaTime /100;
+        if (Input.mousePosition.y <= panBorderThickness)
+            localpanAcceleration.y -= panBorderThickness - Input.mousePosition.y;
+
+        if (Input.mousePosition.x >= Screen.width - panBorderThickness)
+            localpanAcceleration.x += Input.mousePosition.x - (Screen.width - panBorderThickness);
+
+        if (Input.mousePosition.x <= panBorderThickness)
+            localpanAcceleration.x -= panBorderThickness - Input.mousePosition.x;
+
+        if (Input.GetKey("w"))
+            localpanAcceleration.y += panBorderThickness;
+
+        if (Input.GetKey("s"))
+            localpanAcceleration.y -= panBorderThickness;
+        
+        if (Input.GetKey("d"))
+            localpanAcceleration.x += panBorderThickness;
+
+        if (Input.GetKey("a"))
+            localpanAcceleration.x -= panBorderThickness;
+
+        
+        // Debug.Log("Local Pan Acceleration: " + localpanAcceleration);
+
+        if (localpanAcceleration.y != 0)
+            panAcceleration.y += localpanAcceleration.y * Time.deltaTime * AccelerationUnit;
         else
-            panAcceleration.x -= 1f * Time.deltaTime /100;
-        panAcceleration.x = Mathf.Clamp(panAcceleration.x, minAcceleration, maxAcceleration);
-        panAcceleration.y = Mathf.Clamp(panAcceleration.y, minAcceleration, maxAcceleration);
+        {
+            panAcceleration.y *= decelerationFactor;
+            if (panAcceleration.y < 0.01f && panAcceleration.y > -0.01f)
+                panAcceleration.y = 0f;
+        }
+
+        if (localpanAcceleration.x != 0)
+            panAcceleration.x += localpanAcceleration.x * Time.deltaTime * AccelerationUnit;
+        else
+        {
+            panAcceleration.x *= decelerationFactor;
+            if (panAcceleration.x < 0.01f && panAcceleration.x > -0.01f)
+                panAcceleration.x = 0f;
+        }
+        
+        // Debug.Log("Pan Acceleration: " + panAcceleration);
+
+        panAcceleration.x = Mathf.Clamp(panAcceleration.x, -maxAcceleration, maxAcceleration);
+        panAcceleration.y = Mathf.Clamp(panAcceleration.y, -maxAcceleration, maxAcceleration);
+
+        // Debug.Log("Clamped Pan Acceleration: " + panAcceleration);
 
         pos.z += panAcceleration.y * delta;
         pos.x += panAcceleration.x * delta;
-        /*
-        if (Input.GetKey("z") || Input.mousePosition.y >= Screen.height - panBorderThickness)
-        {
-            pos.z += panAcceleration.y * delta;
-        }
-        if (Input.GetKey("s") || Input.mousePosition.y <= panBorderThickness)
-        {
-            
-        }                 pos.z -= delta;
-        if (Input.GetKey("d") || Input.mousePosition.x >= Screen.width  - panBorderThickness) pos.x += delta;
-        if (Input.GetKey("q") || Input.mousePosition.x <= panBorderThickness)                 pos.x -= delta;
-        */
+
         if (clampLimit.HasValue)
         {
             pos.x = Mathf.Clamp(pos.x, -clampLimit.Value.x, clampLimit.Value.x);
             pos.z = Mathf.Clamp(pos.z, -clampLimit.Value.y, clampLimit.Value.y);
         }
-
-        // if (Input.GetAxis("Horizontal") == 0f && panAcceleration.x > 0f)
-        // {
-        //     panAcceleration.x -=1f;
-        // }
-        // if (Input.GetAxis("Vertical") == 0f && panAcceleration.y > 0f)
-        // {
-        //     panAcceleration.y -=1f;
-        // }
-        // panAcceleration.x += Input.GetAxis("Horizontal");
-        // panAcceleration.y += Input.GetAxis("Vertical");
-        // panAcceleration.x = Mathf.Clamp(panAcceleration.x, minAcceleration, maxAcceleration);
-        // panAcceleration.y = Mathf.Clamp(panAcceleration.y, minAcceleration, maxAcceleration);
-        // zoomedInPanSpeed = panSpeed * panAcceleration.magnitude * Time.deltaTime;*/
 
         transform.position = pos;
     }
