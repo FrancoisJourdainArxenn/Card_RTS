@@ -18,8 +18,11 @@ public class DrawACardCommand : Command {
 
     public override void StartCommandExecution()
     {
-        if (GlobalSettings.Instance.localPlayer == p)
-            GlobalSettings.Instance.localPlayerHand.GivePlayerACard(cl.ca, cl.UniqueCardID, fast, fromDeck);
+        bool isLocalPlayer = GlobalSettings.Instance.localPlayer == p;
+        bool isSolo = !NetworkSessionData.IsNetworkSession;
+
+        if (isLocalPlayer || isSolo)
+            p.MainPArea.handVisual.GivePlayerACard(p, cl.ca, cl.UniqueCardID, fast, fromDeck);
         else
             Command.CommandExecutionComplete();
     }

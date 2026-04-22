@@ -127,7 +127,7 @@ public class HandVisual : MonoBehaviour
     }
 
     // gives player a new card from a given position
-    public void GivePlayerACard(CardAsset c, int UniqueID, bool fast = false, bool fromDeck = true)
+    public void GivePlayerACard(Player p, CardAsset c, int UniqueID, bool fast = false, bool fromDeck = true)
     {
         GameObject card;
         if (fromDeck)
@@ -137,7 +137,7 @@ public class HandVisual : MonoBehaviour
 
         // Set a tag to reflect where this card is
         foreach (Transform t in card.GetComponentsInChildren<Transform>())
-            t.tag = owner.ToString()+"Card";
+            t.tag = p.MainPArea.owner.ToString()+"Card";
         // pass this card to HandVisual class
         AddCard(card);
 

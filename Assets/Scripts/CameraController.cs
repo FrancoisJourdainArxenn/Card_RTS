@@ -18,13 +18,17 @@ public class CameraController : MonoBehaviour
     [Range(0f, 50f)]
     public float zoomedInPanSpeed = 5f;
     public Ease transitionEase = Ease.InOutQuad;
+    [Range(0f, 5f)]
+    public float snapBackDelay = 1f;
 
-    enum State { Overhead, Transitioning, ZoneLocked }
+    enum State { Overhead, Transitioning, ZoomedIn }
     State _state = State.Overhead;
     Vector3 _savedOverheadPosition;
     Quaternion _savedOverheadRotation;
 
     ZoneCameraAnchor _hoveredAnchor;
+    bool _zoomedPanOnGoing;
+
 
 
     void Start() => StartCoroutine(WaitForLocalPlayer());
@@ -43,15 +47,27 @@ public class CameraController : MonoBehaviour
     {
         if (_state == State.Transitioning) return;
 
-        if (_state == State.ZoneLocked)
+        if (_state == State.ZoomedIn)
         {
             if (Input.GetAxis("Mouse ScrollWheel") < 0f)
                 TransitionTo(_savedOverheadPosition, _savedOverheadRotation,
                              () => _state = State.Overhead);
             if (TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase)
             {
-                HandlePan(zoomedInPanSpeed);
+                if (HasZoomedPanInput())
+                {
+                    _zoomedPanOnGoing = true;
+                    HandlePan(zoomedInPanSpeed);
+                }
+                else if (_zoomedPanOnGoing)
+                {
+                    _zoomedPanOnGoing = false;
+                    panAcceleration = Vector2.zero;
+                    StartCoroutine(SnapBackAfterDelay());
+                }
+
             }
+
             return;
         }
 
@@ -73,8 +89,9 @@ public class CameraController : MonoBehaviour
                 _savedOverheadRotation = transform.rotation;
                 _hoveredAnchor?.SetHighlighted(false);
                 _hoveredAnchor = null;
+                _zoomedPanOnGoing = false;
                 TransitionTo(anchor.transform.position, anchor.transform.rotation,
-                             () => _state = State.ZoneLocked);
+                             () => _state = State.ZoomedIn);
             }
         }
     }
@@ -165,4 +182,24 @@ public class CameraController : MonoBehaviour
             return ray.GetPoint(dist);
         return transform.position;
     }
+    IEnumerator SnapBackAfterDelay()
+    {
+        yield return new WaitForSeconds(snapBackDelay);
+        if (_state != State.ZoomedIn) yield break;  // user scrolled out during delay
+        var nearest = ZoneCameraAnchor.FindClosestTo(transform.position);
+        if (nearest != null)
+            TransitionTo(nearest.transform.position, nearest.transform.rotation,
+                        () => _state = State.ZoomedIn);
+    }
+
+    bool HasZoomedPanInput()
+    {
+        return Input.mousePosition.y >= Screen.height - panBorderThickness ||
+            Input.mousePosition.y <= panBorderThickness ||
+            Input.mousePosition.x >= Screen.width - panBorderThickness ||
+            Input.mousePosition.x <= panBorderThickness ||
+            Input.GetKey("w") || Input.GetKey("s") ||
+            Input.GetKey("d") || Input.GetKey("a");
+    }
+
 }

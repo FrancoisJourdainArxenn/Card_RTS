@@ -375,10 +375,9 @@ public class TurnManager : MonoBehaviour
             return;
         if (Player.Players == null)
             return;
-        if (GameNetworkManager.Instance != null)
+        if (NetworkSessionData.IsNetworkSession)
         {
-            Player localPlayer = GlobalSettings.Instance.localPlayer;
-            localPlayer.HighlightPlayableCards();
+            GlobalSettings.Instance.localPlayer.HighlightPlayableCards();
         }
         else
         {
