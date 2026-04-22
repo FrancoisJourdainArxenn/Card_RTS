@@ -22,11 +22,11 @@ public class DealDamageCommand : Command {
         if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
         {
             // target is a hero
-            target.GetComponent<BaseVisual>().TakeDamage(amount,healthAfter);
+            target.GetComponent<MainBaseVisual>().TakeDamage(amount,healthAfter);
         }
-        else if (target != null && target.GetComponent<OneBuildingManager>() != null)
+        else if (target != null && target.GetComponent<OneBaseManager>() != null)
         {
-            target.GetComponent<OneBuildingManager>().TakeDamage(amount, healthAfter);
+            target.GetComponent<OneBaseManager>().TakeDamage(amount, healthAfter);
         }
         else
         {

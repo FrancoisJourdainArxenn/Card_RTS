@@ -365,7 +365,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
+  m_SortingLayerID: -950959465
   m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!114 &7176431789129710305
@@ -1409,8 +1409,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6933989555177972918}
+  - component: {fileID: 8038809540044391928}
   - component: {fileID: 5938939194421709501}
-  - component: {fileID: 1422888757148048028}
   - component: {fileID: 5539823569782606735}
   - component: {fileID: 2972207008102704594}
   m_Layer: 0
@@ -1437,7 +1437,7 @@ Transform:
   - {fileID: 5198300090175128981}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!114 &5938939194421709501
+--- !u!114 &8038809540044391928
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1446,19 +1446,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8434494526590664003}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d68a108c9ae774941bddb8e59e6ce581, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WhereIsTheCardOrCreature
---- !u!114 &1422888757148048028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8434494526590664003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d5ac243b8dfe1541b73da4156c59f73, type: 3}
+  m_Script: {fileID: 11500000, guid: a9c96a01a1d386543bc5b238f9719f62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneBaseManager
   baseAsset: {fileID: 0}
@@ -1472,6 +1460,18 @@ MonoBehaviour:
   MarkedForDeathIndicator: {fileID: 692669297460105628}
   WillBeDamagedIndicator: {fileID: 3428470897103665319}
   pendingDamageText: {fileID: 6199249130025570485}
+--- !u!114 &5938939194421709501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d68a108c9ae774941bddb8e59e6ce581, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WhereIsTheCardOrCreature
 --- !u!65 &5539823569782606735
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1733,7 +1733,7 @@ SpriteRenderer:
   m_Size: {x: 2, y: 0.82}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &9143471146570910510
 GameObject:

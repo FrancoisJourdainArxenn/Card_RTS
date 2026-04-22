@@ -3,10 +3,10 @@ using System.Collections;
 
 public class BuildingDieCommand : Command 
 {
-    private NeutralBaseController neutralBaseController;
+    private NeutralZoneController neutralBaseController;
     private int buildingID;
 
-    public BuildingDieCommand(int buildingID, NeutralBaseController neutralBaseController)
+    public BuildingDieCommand(int buildingID, NeutralZoneController neutralBaseController)
     {
         this.neutralBaseController = neutralBaseController;
         this.buildingID = buildingID;

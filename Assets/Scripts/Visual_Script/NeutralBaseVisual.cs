@@ -10,13 +10,12 @@ public class NeutralBaseVisual : MonoBehaviour {
     public static readonly Dictionary<int, NeutralBaseVisual> Registry = new();
 
     public BaseAsset baseAsset;
-    public NeutralBaseController neutralBaseController;
+    public NeutralZoneController neutralBaseController;
     public AreaPosition owner;
     public TMP_Text BuildingCostText;
     public TMP_Text MainRessourceIncomeText;
     public TMP_Text SecondRessourceIncomeText;
     public GameObject Glow;
-    public GameObject BuildingZone;
 
     public Transform BaseApparitionPosition;
     public Transform BasePosition;
@@ -76,7 +75,6 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     public void ResetBuildingZone()
     {
-        // BuildingZone.GetComponent<Image>().color = GlobalSettings.Instance.NeutralColor;
         neutralBaseController.SetTrueColor(GlobalSettings.Instance.NeutralColor);
         canBuild = true;
 

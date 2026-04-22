@@ -5,10 +5,10 @@ using DG.Tweening;
 using TMPro;
 
 
-public class BaseVisual : MonoBehaviour {
+public class MainBaseVisual : MonoBehaviour {
 
     public Player player;
-    public OneBuildingManager baseManager; 
+    public OneBaseManager baseManager;
     public AreaPosition owner;
     public TMP_Text HealthText, MainRessourceText, SecondRessourceText;
     public Image fogOverlay;

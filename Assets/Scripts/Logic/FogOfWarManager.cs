@@ -41,15 +41,15 @@ public class FogOfWarManager : MonoBehaviour
         ZoneLogic[] allZones = FindObjectsByType<ZoneLogic>(FindObjectsSortMode.None);
         foreach (ZoneLogic zone in allZones)
         {
-            // A neutral zone also has a NeutralBaseController for building fog.
+            // A neutral zone also has a NeutralZoneController for building fog.
             // Main base zones won't have one — that's fine, nbc will just be null.
-            NeutralBaseController nbc = zone.GetComponent<NeutralBaseController>();
+            NeutralZoneController nbc = zone.GetComponent<NeutralZoneController>();
             UpdateZone(zone, nbc);
         }
     }
 
     // Recalculate and apply fog for a single zone.
-    void UpdateZone(ZoneLogic zone, NeutralBaseController nbc)
+    void UpdateZone(ZoneLogic zone, NeutralZoneController nbc)
     {
         Player observer = ObservingPlayer;
         if (observer == null) return;
@@ -106,7 +106,7 @@ public class FogOfWarManager : MonoBehaviour
     }
     // Returns true if 'player' has at least one creature OR building in the given zone.
 
-    bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralBaseController nbc)
+    bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralZoneController nbc)
     {
         if(player.MainPArea.parentZone == zone)
         {

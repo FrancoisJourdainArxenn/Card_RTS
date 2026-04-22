@@ -16,7 +16,7 @@ public class Player : MonoBehaviour, ILivable
     // a script with references to all the visual game objects for this player
     public PlayerArea[] PAreas;
     public PlayerArea MainPArea = null;
-    public BaseVisual baseVisual;
+    public MainBaseVisual baseVisual;
     public Color playerColor;
 
     public int mainRessourceTotal;
@@ -569,12 +569,12 @@ public class Player : MonoBehaviour, ILivable
         return null;
     }
 
-    private NeutralBaseController GetNeutralControllerForArea(PlayerArea area)
+    private NeutralZoneController GetNeutralControllerForArea(PlayerArea area)
     {
         if (area == null || area.tableVisual == null)
             return null;
-        NeutralBaseController[] allControllers = GameObject.FindObjectsByType<NeutralBaseController>(FindObjectsSortMode.None);
-        foreach (NeutralBaseController c in allControllers)
+        NeutralZoneController[] allControllers = GameObject.FindObjectsByType<NeutralZoneController>(FindObjectsSortMode.None);
+        foreach (NeutralZoneController c in allControllers)
         {
             if (c == null || c.tables == null) continue;
             foreach (TableVisual t in c.tables)
@@ -586,11 +586,11 @@ public class Player : MonoBehaviour, ILivable
         return null;
     }
 
-    private bool PlayerOwnsBaseInController(NeutralBaseController controller)
+    private bool PlayerOwnsBaseInController(NeutralZoneController controller)
     {
         if (controller == null) return false;
-        OneBuildingManager[] allBuildings = GameObject.FindObjectsByType<OneBuildingManager>(FindObjectsSortMode.None);
-        foreach (OneBuildingManager b in allBuildings)
+        OneBaseManager[] allBuildings = GameObject.FindObjectsByType<OneBaseManager>(FindObjectsSortMode.None);
+        foreach (OneBaseManager b in allBuildings)
         {
             if (b == null || b.Spawner == null) continue;
             if (b.tag != this.tag) continue; // base du joueur courant uniquement
@@ -606,7 +606,7 @@ public class Player : MonoBehaviour, ILivable
         if (area == null) return false;
         if (!System.Array.Exists(PAreas, a => a == area)) return false;
         if (area == MainPArea) return true;
-        NeutralBaseController c = GetNeutralControllerForArea(area);
+        NeutralZoneController c = GetNeutralControllerForArea(area);
         if (c == null) return false;
         return PlayerOwnsBaseInController(c); // tag joueur + même controller
     }
@@ -629,7 +629,7 @@ public class Player : MonoBehaviour, ILivable
 
     // METHODS TO CREATE A NEW BASE 
     // 1st overload - by ID
-    public bool CheckIfCanBuild( BaseAsset baseAsset, NeutralBaseController neutralBaseController)
+    public bool CheckIfCanBuild( BaseAsset baseAsset, NeutralZoneController neutralBaseController)
     {
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {

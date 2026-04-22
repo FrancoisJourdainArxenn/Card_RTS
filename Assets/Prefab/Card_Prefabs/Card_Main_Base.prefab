@@ -1701,8 +1701,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6933989555177972918}
+  - component: {fileID: 6599192631449750307}
   - component: {fileID: 5938939194421709501}
-  - component: {fileID: 1422888757148048028}
   - component: {fileID: 5539823569782606735}
   - component: {fileID: 2820278881990802421}
   - component: {fileID: 2972207008102704594}
@@ -1730,6 +1730,29 @@ Transform:
   - {fileID: 5198300090175128981}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6599192631449750307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9c96a01a1d386543bc5b238f9719f62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OneBaseManager
+  baseAsset: {fileID: 0}
+  MainRessourceIncome: {fileID: 8199164061199582514}
+  SecondRessourceIncome: {fileID: 1249805443307532881}
+  HealthText: {fileID: 7191212524514199971}
+  ArtImage: {fileID: 2302234012504505286}
+  FrameImage: {fileID: 6335098370175170885}
+  CardFaceGlowImage: {fileID: 2299680080893522801}
+  Spawner: {fileID: 0}
+  MarkedForDeathIndicator: {fileID: 6831454558169782916}
+  WillBeDamagedIndicator: {fileID: 4358839601193840516}
+  pendingDamageText: {fileID: 6598662252289984941}
 --- !u!114 &5938939194421709501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1742,29 +1765,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d68a108c9ae774941bddb8e59e6ce581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WhereIsTheCardOrCreature
---- !u!114 &1422888757148048028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8434494526590664003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d5ac243b8dfe1541b73da4156c59f73, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OneBaseManager
-  baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
-  MainRessourceIncome: {fileID: 8199164061199582514}
-  SecondRessourceIncome: {fileID: 1249805443307532881}
-  HealthText: {fileID: 7191212524514199971}
-  ArtImage: {fileID: 2302234012504505286}
-  FrameImage: {fileID: 6335098370175170885}
-  CardFaceGlowImage: {fileID: 2299680080893522801}
-  Spawner: {fileID: 0}
-  MarkedForDeathIndicator: {fileID: 6831454558169782916}
-  WillBeDamagedIndicator: {fileID: 4358839601193840516}
-  pendingDamageText: {fileID: 6598662252289984941}
 --- !u!65 &5539823569782606735
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1796,10 +1796,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e79fae826afd845409621ad2b4c5143c, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::BaseVisual
   player: {fileID: 0}
-  baseManager: {fileID: 1422888757148048028}
+  baseManager: {fileID: 6599192631449750307}
   owner: 1
   HealthText: {fileID: 7191212524514199971}
   MainRessourceText: {fileID: 215713205907225638}
@@ -2120,7 +2120,7 @@ SpriteRenderer:
   m_Size: {x: 2, y: 0.82}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!1 &9143471146570910510
 GameObject:
