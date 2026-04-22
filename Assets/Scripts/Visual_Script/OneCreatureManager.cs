@@ -22,11 +22,27 @@ public class OneCreatureManager : MonoBehaviour
     public GameObject WillBeDamagedIndicator;
     public TMP_Text pendingDamageText;
 
+    [Header("Pending Move Arrow")]
+    [SerializeField] private LineRenderer pendingMoveArrow;
+    [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
+    [SerializeField] private float arrowScrollSpeed = 1f;
+    private Material pendingMoveArrowMat;
+    private bool isArrowVisible = false;
+
 
     void Awake()
     {
         if (cardAsset != null)
             ReadCreatureFromAsset();
+        if (pendingMoveArrow != null)
+            pendingMoveArrowMat = pendingMoveArrow.material;
+    }
+
+    private void Update()
+    {
+        if (!isArrowVisible || pendingMoveArrowMat == null) return;
+        float offset = Time.time * arrowScrollSpeed;
+        pendingMoveArrowMat.SetTextureOffset("_MainTex", new Vector2(-offset % 1f, 0f));
     }
 
     private bool canAttackNow = false;
@@ -151,10 +167,6 @@ public class OneCreatureManager : MonoBehaviour
         if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
-    [Header("Pending Move Arrow")]
-    [SerializeField] private LineRenderer pendingMoveArrow;
-    [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
-
     public void ShowPendingMoveArrow(Vector3 targetWorldPos)
     {
         if (pendingMoveArrow == null) return;
@@ -162,12 +174,14 @@ public class OneCreatureManager : MonoBehaviour
         pendingMoveArrow.SetPosition(0, transform.position + arrowOriginOffset);
         pendingMoveArrow.SetPosition(1, targetWorldPos);
         pendingMoveArrow.enabled = true;
+        isArrowVisible = true;
     }
 
     public void ClearPendingMoveArrow()
     {
         if (pendingMoveArrow != null)
             pendingMoveArrow.enabled = false;
+        isArrowVisible = false;
     }
 
 }
