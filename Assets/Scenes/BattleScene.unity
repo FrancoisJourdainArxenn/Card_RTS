@@ -1126,16 +1126,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 004a588e3ae20d94c9a48a3684d199b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  panSpeed: 15
-  panBorderThickness: 50
+  defaultPanSpeed: 20
+  zoomedInDefaultPanSpeed: 10
+  panBorderThicknessVertical: 50
+  panBorderThicknessHorizontal: 250
   panLimit: {x: 4, y: 7}
-  maxAcceleration: 2.5
-  AccelerationUnit: 0.05
-  decelerationFactor: 0.7
-  transitionDuration: 1
-  zoomedInPanSpeed: 2
-  transitionEase: 7
-  snapBackDelay: 0.75
+  maxSpeed: 5
+  maxAcceleration: 75
+  AccelerationUnit: 0.03
+  decelerationFactor: 0.9
+  transitionDuration: 1.25
+  transitionEase: 3
+  snapBackDelay: 0.3
 --- !u!1 &401925632
 GameObject:
   m_ObjectHideFlags: 0
