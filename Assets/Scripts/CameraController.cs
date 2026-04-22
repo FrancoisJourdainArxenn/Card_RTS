@@ -28,6 +28,7 @@ public class CameraController : MonoBehaviour
 
     ZoneCameraAnchor _hoveredAnchor;
     bool _zoomedPanOnGoing;
+    Coroutine _snapBackCoroutine;
 
 
 
@@ -51,23 +52,23 @@ public class CameraController : MonoBehaviour
         {
             if (Input.GetAxis("Mouse ScrollWheel") < 0f)
                 TransitionTo(_savedOverheadPosition, _savedOverheadRotation,
-                             () => _state = State.Overhead);
-            if (TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase)
+                             () => _state = State.Overhead);            
+            if (HasZoomedPanInput())
             {
-                if (HasZoomedPanInput())
+                if (_snapBackCoroutine != null)
                 {
-                    _zoomedPanOnGoing = true;
-                    HandlePan(zoomedInPanSpeed);
+                    StopCoroutine(_snapBackCoroutine);
+                    _snapBackCoroutine = null;
                 }
-                else if (_zoomedPanOnGoing)
-                {
-                    _zoomedPanOnGoing = false;
-                    panAcceleration = Vector2.zero;
-                    StartCoroutine(SnapBackAfterDelay());
-                }
-
+                _zoomedPanOnGoing = true;
+                HandlePan(zoomedInPanSpeed);
             }
-
+            else if (_zoomedPanOnGoing)
+            {
+                _zoomedPanOnGoing = false;
+                panAcceleration = Vector2.zero;
+                _snapBackCoroutine = StartCoroutine(SnapBackAfterDelay());
+            }
             return;
         }
 
@@ -185,7 +186,8 @@ public class CameraController : MonoBehaviour
     IEnumerator SnapBackAfterDelay()
     {
         yield return new WaitForSeconds(snapBackDelay);
-        if (_state != State.ZoomedIn) yield break;  // user scrolled out during delay
+        if (_state != State.ZoomedIn) yield break;
+        if (Draggable.DraggingThis != null) yield break;  // drag in progress, abort
         var nearest = ZoneCameraAnchor.FindClosestTo(transform.position);
         if (nearest != null)
             TransitionTo(nearest.transform.position, nearest.transform.rotation,
