@@ -667,7 +667,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int buildingUniqueID)
     {
-        new BuildingLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, buildingUniqueID);
+        new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, buildingUniqueID);
         new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
     }

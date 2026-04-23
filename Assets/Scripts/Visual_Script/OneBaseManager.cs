@@ -41,7 +41,7 @@ public class OneBaseManager : MonoBehaviour
 
         ZoneCombatResolver resolver;
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic bl))
+        if (BaseLogic.BaseCreatedThisGame.TryGetValue(id, out BaseLogic bl))
         {
             resolver = bl.neutralBaseController?.zone?.GetComponent<ZoneCombatResolver>();
         }
@@ -130,7 +130,7 @@ public class OneBaseManager : MonoBehaviour
 
     public void RemoveBuildingWithID(int buildingID)
     {
-        BuildingLogic.BuildingsCreatedThisGame.Remove(buildingID);
+        BaseLogic.BaseCreatedThisGame.Remove(buildingID);
         Player ownerPlayer = GetOwnerPlayerFromTag();
         if (ownerPlayer != null && baseAsset != null)
         {

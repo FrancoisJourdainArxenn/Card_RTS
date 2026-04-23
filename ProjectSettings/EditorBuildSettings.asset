@@ -14,7 +14,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/DragTestScene.unity
     guid: 1fdb368995e945a40a876721bbab2770
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Solo_BattleScene.unity
     guid: a8cf8dffba2cf0e41887162dc98ec148
   m_configObjects:

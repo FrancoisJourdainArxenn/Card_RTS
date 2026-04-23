@@ -1,12 +1,12 @@
 using UnityEngine;
 using System.Collections;
 
-public class BuildingDieCommand : Command 
+public class BaseDieCommand : Command 
 {
     private NeutralZoneController neutralBaseController;
     private int buildingID;
 
-    public BuildingDieCommand(int buildingID, NeutralZoneController neutralBaseController)
+    public BaseDieCommand(int buildingID, NeutralZoneController neutralBaseController)
     {
         this.neutralBaseController = neutralBaseController;
         this.buildingID = buildingID;

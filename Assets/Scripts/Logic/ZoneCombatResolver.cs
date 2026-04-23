@@ -6,7 +6,7 @@ public class ZoneCombatResolver : MonoBehaviour
     private Dictionary<int, int> pendingDamage = new Dictionary<int, int>();
     private static List<ZoneCombatResolver> allResolvers = new List<ZoneCombatResolver>();
     public static IReadOnlyList<ZoneCombatResolver> AllResolvers => allResolvers;
-    private Dictionary<int, int> pendingBuildingDamage = new Dictionary<int, int>();
+    private Dictionary<int, int> pendingBaseDamage = new Dictionary<int, int>();
     private Dictionary<int, int> pendingPlayerDamage   = new Dictionary<int, int>();
 
     private ZoneLogic zoneLogic;
@@ -25,14 +25,25 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         Player p1 = GlobalSettings.Instance.LowPlayer;
         Player p2 = GlobalSettings.Instance.TopPlayer;
-        return GetCreaturesInMyZone(p1, zoneLogic).Count > 0
-            && GetCreaturesInMyZone(p2, zoneLogic).Count > 0;
+        
+        int p1CreatureCount = GetCreaturesInMyZone(p1, zoneLogic).Count;
+        int p2CreatureCount = GetCreaturesInMyZone(p2, zoneLogic).Count;
+
+        if (
+            (p1CreatureCount > 0 && p2CreatureCount > 0) ||
+            (FindDefenderBaseInZone(p1) != null && p2CreatureCount > 0) ||
+            (FindDefenderBaseInZone(p2) != null && p1CreatureCount > 0) ||
+            (zoneLogic.subZones.Contains(p1.MainPArea) && p2CreatureCount > 0) ||
+            (zoneLogic.subZones.Contains(p2.MainPArea) && p1CreatureCount > 0)
+        )
+            return true;
+        return false;
     }
 
     public void OnBattlePhaseStart()
     {
         pendingDamage.Clear();
-        pendingBuildingDamage.Clear();
+        pendingBaseDamage.Clear();
         pendingPlayerDamage.Clear();
         p1TotalATK = 0;
         p2TotalATK = 0;
@@ -52,10 +63,10 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (var c in GetCreaturesInMyZone(p1, zoneLogic))
             if (pendingDamage.TryGetValue(c.UniqueCreatureID, out int d)) p2Assigned += d;
         p2FreePool = p2TotalATK - p2Assigned;
-        // Subtract overflow already routed to buildings or player bases
-        foreach (var kvp in pendingBuildingDamage)
+        // Subtract overflow already routed to bases or player bases
+        foreach (var kvp in pendingBaseDamage)
         {
-            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(kvp.Key, out BuildingLogic bl)) continue;
+            if (!BaseLogic.BaseCreatedThisGame.TryGetValue(kvp.Key, out BaseLogic bl)) continue;
             if (bl.owner == p2) p1FreePool -= kvp.Value;
             else                p2FreePool -= kvp.Value;
         }
@@ -85,7 +96,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 moves.Add((creature.UniqueCreatureID, area.BattlePos.position));
         }
 
-        bool anyCombat = pendingDamage.Count > 0 || pendingBuildingDamage.Count > 0 || pendingPlayerDamage.Count > 0;
+        bool anyCombat = pendingDamage.Count > 0 || pendingBaseDamage.Count > 0 || pendingPlayerDamage.Count > 0;
         if (moves.Count > 0 && anyCombat)
             new ZoneClashMoveCommand(moves, 0.2f).AddToQueue();
 
@@ -100,9 +111,9 @@ public class ZoneCombatResolver : MonoBehaviour
             creature.Health -= damage;
         }
 
-        foreach (var kvp in pendingBuildingDamage)
+        foreach (var kvp in pendingBaseDamage)
         {
-            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(kvp.Key, out BuildingLogic bl)) continue;
+            if (!BaseLogic.BaseCreatedThisGame.TryGetValue(kvp.Key, out BaseLogic bl)) continue;
             int healthAfter = bl.Health - kvp.Value;
             new DealDamageCommand(kvp.Key, kvp.Value, healthAfter).AddToQueue();
             bl.Health -= kvp.Value;
@@ -172,6 +183,8 @@ public class ZoneCombatResolver : MonoBehaviour
         return result;
     }
 
+
+
     void AssignDamage(int totalDamage, List<CreatureLogic> targets, Player defender)
     {
         var melee = new List<CreatureLogic>();
@@ -205,12 +218,12 @@ public class ZoneCombatResolver : MonoBehaviour
         if (totalDamage <= 0) return;
 
         // Every creature is lethally hit (or there were none) — overflow to base
-        BuildingLogic building = FindDefenderBuildingInZone(defender);
-        if (building != null)
+        BaseLogic _base = FindDefenderBaseInZone(defender);
+        if (_base != null)
         {
-            int existing = pendingBuildingDamage.TryGetValue(building.UniqueBuildingID, out int b) ? b : 0;
-            pendingBuildingDamage[building.UniqueBuildingID] = existing + totalDamage;
-            ShowBaseIndicator(building.UniqueBuildingID, existing + totalDamage, building.Health);
+            int existing = pendingBaseDamage.TryGetValue(_base.ID, out int b) ? b : 0;
+            pendingBaseDamage[_base.ID] = existing + totalDamage;
+            ShowBaseIndicator(_base.ID, existing + totalDamage, _base.Health);
 
         }
         else
@@ -237,7 +250,7 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         Player local = GlobalSettings.Instance.localPlayer;
         if (id == local.PlayerID) return;
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic bl) && bl.owner == local) return;
+        if (BaseLogic.BaseCreatedThisGame.TryGetValue(id, out BaseLogic bl) && bl.owner == local) return;
         IDHolder.GetGameObjectWithID(id)?.GetComponent<OneBaseManager>()?.ShowPendingDamage(damage, health);
     }
 
@@ -251,9 +264,9 @@ public class ZoneCombatResolver : MonoBehaviour
             GameObject go = IDHolder.GetGameObjectWithID(c.UniqueCreatureID);
             go?.GetComponent<OneCreatureManager>()?.ClearPendingDamageIndicator();
         }
-        foreach (var bl in BuildingLogic.BuildingsCreatedThisGame.Values)
+        foreach (var bl in BaseLogic.BaseCreatedThisGame.Values)
         {
-            GameObject go = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
+            GameObject go = IDHolder.GetGameObjectWithID(bl.ID);
             go?.GetComponent<OneBaseManager>()?.ClearPendingDamageIndicator();
         }
     }
@@ -274,13 +287,13 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         return attackerSide == AreaPosition.Low ? p1FreePool : p2FreePool;
     }
-    BuildingLogic FindDefenderBuildingInZone(Player defender)
+    BaseLogic FindDefenderBaseInZone(Player defender)
     {
-        foreach (var building in BuildingLogic.BuildingsCreatedThisGame.Values)
+        foreach (var _base in BaseLogic.BaseCreatedThisGame.Values)
         {
-            if (building.owner != defender) continue;
-            if (building.neutralBaseController != null && building.neutralBaseController.zone == zoneLogic)
-                return building;
+            if (_base.owner != defender) continue;
+            if (_base.neutralBaseController != null && _base.neutralBaseController.zone == zoneLogic)
+                return _base;
         }
         return null;
     }
@@ -375,13 +388,13 @@ public class ZoneCombatResolver : MonoBehaviour
 
     public void TryRedirectDamageFromBase(int targetID)
     {
-        bool isBuilding = BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID);
+        bool isBuilding = BaseLogic.BaseCreatedThisGame.ContainsKey(targetID);
 
         Player defender;
         int currentHealth;
         if (isBuilding)
         {
-            BuildingLogic bl = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            BaseLogic bl = BaseLogic.BaseCreatedThisGame[targetID];
             defender = bl.owner;
             currentHealth = bl.Health;
         }
@@ -396,7 +409,7 @@ public class ZoneCombatResolver : MonoBehaviour
         if (GlobalSettings.Instance.localPlayer == defender) return;
 
         bool defenderIsTop = defender == GlobalSettings.Instance.TopPlayer;
-        var dict = isBuilding ? pendingBuildingDamage : pendingPlayerDamage;
+        var dict = isBuilding ? pendingBaseDamage : pendingPlayerDamage;
 
         // Phase 1: base has pending damage → free it back to pool
         if (dict.TryGetValue(targetID, out int freed))
@@ -416,7 +429,7 @@ public class ZoneCombatResolver : MonoBehaviour
         // Target must be in this zone
         if (isBuilding)
         {
-            BuildingLogic bl2 = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            BaseLogic bl2 = BaseLogic.BaseCreatedThisGame[targetID];
             if (bl2.neutralBaseController?.zone != zoneLogic) return;
         }
         else if (!zoneLogic.subZones.Contains(defender.MainPArea)) return;
@@ -548,9 +561,9 @@ public class ZoneCombatResolver : MonoBehaviour
                 creatureDmgList.Add(entry.Value);
             }
 
-            foreach (KeyValuePair<int, int> entry in resolver.pendingBuildingDamage)
+            foreach (KeyValuePair<int, int> entry in resolver.pendingBaseDamage)
             {
-                if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(entry.Key, out BuildingLogic building)) continue;
+                if (!BaseLogic.BaseCreatedThisGame.TryGetValue(entry.Key, out BaseLogic building)) continue;
                 if (building.owner != enemy) continue;
                 buildingIDList.Add(entry.Key);
                 buildingDmgList.Add(entry.Value);
@@ -588,7 +601,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (ZoneCombatResolver resolver in allResolvers)
         {
             resolver.pendingDamage.Clear();
-            resolver.pendingBuildingDamage.Clear();
+            resolver.pendingBaseDamage.Clear();
             resolver.pendingPlayerDamage.Clear();
         }
 
@@ -601,9 +614,9 @@ public class ZoneCombatResolver : MonoBehaviour
 
         for (int i = 0; i < buildingIDs.Length; i++)
         {
-            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(buildingIDs[i], out BuildingLogic building)) continue;
+            if (!BaseLogic.BaseCreatedThisGame.TryGetValue(buildingIDs[i], out BaseLogic building)) continue;
             ZoneCombatResolver ownerResolver = FindResolverForBuilding(building);
-            if (ownerResolver != null) ownerResolver.pendingBuildingDamage[buildingIDs[i]] = buildingDamages[i];
+            if (ownerResolver != null) ownerResolver.pendingBaseDamage[buildingIDs[i]] = buildingDamages[i];
         }
 
         for (int i = 0; i < targetPlayerIDs.Length; i++)
@@ -616,7 +629,7 @@ public class ZoneCombatResolver : MonoBehaviour
         }
     }
 
-    static ZoneCombatResolver FindResolverForBuilding(BuildingLogic building)
+    static ZoneCombatResolver FindResolverForBuilding(BaseLogic building)
     {
         foreach (ZoneCombatResolver resolver in allResolvers)
             if (building.neutralBaseController?.zone == resolver.zoneLogic) return resolver;

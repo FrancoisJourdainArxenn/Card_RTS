@@ -214,19 +214,19 @@ public class DragCreatureActions : DraggingActions {
             return true;
         }
         
-        if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID) &&
-            BuildingLogic.BuildingsCreatedThisGame[targetID] != null)
+        if (BaseLogic.BaseCreatedThisGame.ContainsKey(targetID) &&
+            BaseLogic.BaseCreatedThisGame[targetID] != null)
         {
-            BuildingLogic bl = BuildingLogic.BuildingsCreatedThisGame[targetID];
+            BaseLogic bl = BaseLogic.BaseCreatedThisGame[targetID];
             if (bl.neutralBaseController.zone != originArea.parentZone)
             {
                 new ShowMessageCommand("Building not in range", 1f).AddToQueue();
                 return false;
             }
             if (NetworkSessionData.IsNetworkSession)
-                GameNetworkManager.Instance.AttackBuildingServerRpc(attackerID, targetID);
+                GameNetworkManager.Instance.AttackBaseServerRpc(attackerID, targetID);
             else
-                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBuildingWithID(targetID);
+                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBaseWithID(targetID);
             Debug.Log("Attacking building " + target);
             return true;  
 
