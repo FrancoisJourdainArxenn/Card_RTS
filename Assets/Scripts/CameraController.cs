@@ -20,8 +20,8 @@ public class CameraController : MonoBehaviour
 
     [Header("Zone lock")]
     [Range(0f, 2f)]
-    public float transitionDuration = 1.25f;
-    public Ease transitionEase = Ease.OutSine;
+    public float transitionDuration = 0.7f;
+    public Ease transitionEase = Ease.InOutCubic;
     [Range(0f, 2f)]
     public float snapBackDelay = 0.3f;
 
@@ -50,39 +50,51 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (_state == State.Transitioning) return;
-
-        UpdatePanAcceleration();
-        if (_state == State.ZoomedIn)
+        switch (_state)
         {
-            if (Input.GetAxis("Mouse ScrollWheel") < 0f)
-                TransitionTo(_savedOverheadPosition, _savedOverheadRotation,
-                             () => _state = State.Overhead);            
-            if (panAcceleration.magnitude > 0)
-            {
-                if (_snapBackCoroutine != null)
-                {
-                    StopCoroutine(_snapBackCoroutine);
-                    _snapBackCoroutine = null;
-                }
-                _zoomedPanOnGoing = true;
-                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
-            }
-            else if (_zoomedPanOnGoing)
-            {
-                _zoomedPanOnGoing = false;
-                _snapBackCoroutine = StartCoroutine(SnapBackAfterDelay());
-                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
-            }
-            else if (_snapBackCoroutine != null)
-            {
-                // drift phase: continue panning until snap triggers
-                HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
-            }
-            return;
+            case State.Transitioning:
+                break;
+            case State.ZoomedIn:
+                HandleZoomedInPan();
+                break;
+            case State.Overhead:
+                HandleZoomedOutPan();
+                break;
         }
+    }
 
+    void HandleZoomedInPan()
+    {
+        if (Input.GetAxis("Mouse ScrollWheel") < 0f)
+            {
+                TransitionTo(
+                    _savedOverheadPosition,
+                    _savedOverheadRotation,
+                    () => _state = State.Overhead
+                );
+                return;
+            }
+        Vector3 direction = Vector3.zero;
+        if (Input.GetKey("w"))
+            direction.z += 1;
+        if (Input.GetKey("s"))
+            direction.z -= 1;
+        if (Input.GetKey("d"))
+            direction.x += 1;
+        if (Input.GetKey("a"))
+            direction.x -= 1;
+        if (direction == Vector3.zero)
+            return;
+                
+        MoveCameraToClosestBase(transform.position, direction);
+        // UpdatePanAcceleration();
+        // MoveCameraWithStickyBehavior();
+    }
+
+    void HandleZoomedOutPan()
+    {
         // Overhead state
+        UpdatePanAcceleration();
         HandlePan(defaultPanSpeed, panLimit);
         var hovered = ZoneCameraAnchor.FindClosestTo(GetMouseWorldPosition());
         if (hovered != _hoveredAnchor)
@@ -125,17 +137,13 @@ public class CameraController : MonoBehaviour
 
         if (Input.GetKey("w"))
             panAcceleration.y += panBorderThicknessVertical;
-
         if (Input.GetKey("s"))
             panAcceleration.y -= panBorderThicknessVertical;
-        
         if (Input.GetKey("d"))
             panAcceleration.x += panBorderThicknessHorizontal;
-
         if (Input.GetKey("a"))
             panAcceleration.x -= panBorderThicknessHorizontal;
 
-        
         // Debug.Log("Local Pan Acceleration: " + localpanAcceleration);
 
         panAcceleration.x = Mathf.Clamp(panAcceleration.x, -maxAcceleration, maxAcceleration);
@@ -152,8 +160,8 @@ public class CameraController : MonoBehaviour
         else
         {
             float newSpeed = panCurrentSpeed.y > 0 ?
-                Mathf.Max(panCurrentSpeed.y * decelerationFactor, panCurrentSpeed.y - maxAcceleration):
-                Mathf.Min(panCurrentSpeed.y * decelerationFactor, panCurrentSpeed.y + maxAcceleration); 
+                Mathf.Max(panCurrentSpeed.y * decelerationFactor, panCurrentSpeed.y - maxAcceleration / 2):
+                Mathf.Min(panCurrentSpeed.y * decelerationFactor, panCurrentSpeed.y + maxAcceleration / 2); 
             panCurrentSpeed.y = newSpeed;
             if (Mathf.Abs(panCurrentSpeed.y) < 0.001f)
                 panCurrentSpeed.y = 0f;
@@ -164,8 +172,8 @@ public class CameraController : MonoBehaviour
         else
         {
             float newSpeed = panCurrentSpeed.x > 0 ?
-                Mathf.Max(panCurrentSpeed.x * decelerationFactor, panCurrentSpeed.x - maxAcceleration):
-                Mathf.Min(panCurrentSpeed.x * decelerationFactor, panCurrentSpeed.x + maxAcceleration);
+                Mathf.Max(panCurrentSpeed.x * decelerationFactor, panCurrentSpeed.x - maxAcceleration / 2):
+                Mathf.Min(panCurrentSpeed.x * decelerationFactor, panCurrentSpeed.x + maxAcceleration / 2);
             panCurrentSpeed.x = newSpeed;
             if (Mathf.Abs(panCurrentSpeed.x) < 0.001f)
                 panCurrentSpeed.x = 0f;
@@ -212,18 +220,50 @@ public class CameraController : MonoBehaviour
         _snapBackCoroutine = null;
         if (_state != State.ZoomedIn) yield break;
         if (Draggable.DraggingThis != null) yield break;  // drag in progress, abort
-        var nearest = ZoneCameraAnchor.FindClosestTo(transform.position);
+        MoveCameraToClosestBase(transform.position);
+    }
+
+    void MoveCameraWithStickyBehavior()
+    {
+        if (panAcceleration.magnitude > 0)
+        {
+            if (_snapBackCoroutine != null)
+            {
+                StopCoroutine(_snapBackCoroutine);
+                _snapBackCoroutine = null;
+            }
+            _zoomedPanOnGoing = true;
+            HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
+        }
+        else if (_zoomedPanOnGoing)
+        {
+            _zoomedPanOnGoing = false;
+            _snapBackCoroutine = StartCoroutine(SnapBackAfterDelay());
+            HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
+        }
+        else if (_snapBackCoroutine != null)
+        {
+            // drift phase: continue panning until snap triggers
+            HandlePan(zoomedInDefaultPanSpeed, zoomedInPanLimit);
+        }   
+    }
+
+    void MoveCameraToClosestBase(Vector3 pos, Vector3? direction = null)
+    {
+        var nearest = direction.HasValue
+            ? ZoneCameraAnchor.FindClosestFollowingDirection(pos, direction.Value)
+            : ZoneCameraAnchor.FindClosestTo(pos);
         if (nearest != null)
         {
-            TransitionTo(nearest.transform.position, nearest.transform.rotation,
-                        () => _state = State.ZoomedIn);
-            panCurrentSpeed = Vector2.zero;
+            TransitionTo(
+                nearest.transform.position,
+                nearest.transform.rotation,
+                () => _state = State.ZoomedIn
+            );
+        }
+        else
+        {
+            Debug.Log("No anchor nearby");
         }
     }
-
-    bool HasZoomedPanInput()
-    {
-        return panAcceleration.x != 0 || panAcceleration.y != 0;
-    }
-
 }
