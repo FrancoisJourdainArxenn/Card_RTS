@@ -25,6 +25,9 @@ public class NeutralZoneController : MonoBehaviour
         trueColor = initial;
         lastSeenColorLow = initial;
         lastSeenColorTop = initial;
+
+        tables = GetComponentsInChildren<TableVisual>();
+
     }
 
     public void SetTrueColor(Color color)

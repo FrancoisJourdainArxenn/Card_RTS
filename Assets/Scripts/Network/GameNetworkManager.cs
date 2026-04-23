@@ -48,7 +48,7 @@ public class GameNetworkManager : NetworkBehaviour
     private struct BattleSubmission
     {
         public int[] CreatureIDs,     CreatureDamages;
-        public int[] BuildingIDs,     BuildingDamages;
+        public int[] BaseIDs,     BaseDamages;
         public int[] TargetPlayerIDs, PlayerDamages;
     }
     private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
@@ -64,13 +64,13 @@ public class GameNetworkManager : NetworkBehaviour
     public void SubmitBattleAssignmentServerRpc(
         int playerIndex,
         int[] creatureIDs,     int[] creatureDamages,
-        int[] buildingIDs,     int[] buildingDamages,
+        int[] baseIDs,     int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages)
     {
         _battleSubmissions[playerIndex] = new BattleSubmission
         {
             CreatureIDs     = creatureIDs,     CreatureDamages  = creatureDamages,
-            BuildingIDs     = buildingIDs,     BuildingDamages  = buildingDamages,
+            BaseIDs     = baseIDs,     BaseDamages  = baseDamages,
             TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages
         };
 
@@ -84,8 +84,8 @@ public class GameNetworkManager : NetworkBehaviour
         ApplyCanonicalBattleAssignmentClientRpc(
             ConcatArrays(submission0.CreatureIDs,     submission1.CreatureIDs),
             ConcatArrays(submission0.CreatureDamages, submission1.CreatureDamages),
-            ConcatArrays(submission0.BuildingIDs,     submission1.BuildingIDs),
-            ConcatArrays(submission0.BuildingDamages, submission1.BuildingDamages),
+            ConcatArrays(submission0.BaseIDs,     submission1.BaseIDs),
+            ConcatArrays(submission0.BaseDamages, submission1.BaseDamages),
             ConcatArrays(submission0.TargetPlayerIDs, submission1.TargetPlayerIDs),
             ConcatArrays(submission0.PlayerDamages,   submission1.PlayerDamages)
         );
@@ -103,11 +103,11 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void ApplyCanonicalBattleAssignmentClientRpc(
         int[] creatureIDs,     int[] creatureDamages,
-        int[] buildingIDs,     int[] buildingDamages,
+        int[] baseIDs,     int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
-            creatureIDs, creatureDamages, buildingIDs, buildingDamages, targetPlayerIDs, playerDamages);
+            creatureIDs, creatureDamages, baseIDs, baseDamages, targetPlayerIDs, playerDamages);
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)
@@ -144,13 +144,13 @@ public class GameNetworkManager : NetworkBehaviour
             movementsLeftList.Add(entry.Value.MovementsLeftThisTurn);
         }
 
-        List<int> buildingIDList     = new List<int>();
-        List<int> buildingHealthList = new List<int>();
+        List<int> baseIDList     = new List<int>();
+        List<int> baseHealthList = new List<int>();
 
-        foreach (KeyValuePair<int, BuildingLogic> entry in BuildingLogic.BuildingsCreatedThisGame)
+        foreach (KeyValuePair<int, BaseLogic> entry in BaseLogic.BaseCreatedThisGame)
         {
-            buildingIDList.Add(entry.Key);
-            buildingHealthList.Add(entry.Value.Health);
+            baseIDList.Add(entry.Key);
+            baseHealthList.Add(entry.Value.Health);
         }
 
         int playerCount = Player.Players.Length;
@@ -168,7 +168,7 @@ public class GameNetworkManager : NetworkBehaviour
         SyncFullGameStateClientRpc(
             creatureIDList.ToArray(), creatureHealthList.ToArray(),
             creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
-            buildingIDList.ToArray(), buildingHealthList.ToArray(),
+            baseIDList.ToArray(), baseHealthList.ToArray(),
             playerHealths, playerMainRes, playerSecondRes);
     }
 
@@ -182,7 +182,7 @@ public class GameNetworkManager : NetworkBehaviour
     void SyncFullGameStateClientRpc(
         int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
-        int[] buildingIDs,   int[] buildingHealths,
+        int[] baseIDs,   int[] baseHealths,
         int[] playerHealths, int[] playerMainRes,   int[] playerSecondRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
@@ -209,15 +209,15 @@ public class GameNetworkManager : NetworkBehaviour
             }
         }
 
-        for (int i = 0; i < buildingIDs.Length; i++)
+        for (int i = 0; i < baseIDs.Length; i++)
         {
-            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(buildingIDs[i], out BuildingLogic building))
+            if (!BaseLogic.BaseCreatedThisGame.TryGetValue(baseIDs[i], out BaseLogic _base))
                 continue;
 
-            if (building.Health != buildingHealths[i] && buildingHealths[i] > 0)
+            if (_base.Health != baseHealths[i] && baseHealths[i] > 0)
             {
-                Debug.LogError($"[Desync] Bâtiment {buildingIDs[i]} : HP local={building.Health}, serveur={buildingHealths[i]}. Correction appliquée.");
-                building.Health = buildingHealths[i];
+                Debug.LogError($"[Desync] Bâtiment {baseIDs[i]} : HP local={_base.Health}, serveur={baseHealths[i]}. Correction appliquée.");
+                _base.Health = baseHealths[i];
             }
         }
 
@@ -582,20 +582,20 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void AttackBuildingServerRpc(int attackerID, int targetBuildingID)
+    public void AttackBaseServerRpc(int attackerID, int targetBaseID)
     {
-        AttackBuildingClientRpc(attackerID, targetBuildingID);
+        AttackBaseClientRpc(attackerID, targetBaseID);
     }
 
     [ClientRpc]
-    void AttackBuildingClientRpc(int attackerID, int targetBuildingID)
+    void AttackBaseClientRpc(int attackerID, int targetBaseID)
     {
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
         {
-            Debug.LogError($"[GameNetworkManager] AttackBuilding: attaquant introuvable id={attackerID}");
+            Debug.LogError($"[GameNetworkManager] AttackBase: attaquant introuvable id={attackerID}");
             return;
         }
-        attacker.AttackBuildingWithID(targetBuildingID);
+        attacker.AttackBaseWithID(targetBaseID);
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -619,12 +619,12 @@ public class GameNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void BuildNeutralBaseServerRpc(int playerIndex, int neutralBaseId)
     {
-        int buildingUniqueID = IDFactory.GetUniqueID();
-        BuildNeutralBaseClientRpc(playerIndex, neutralBaseId, buildingUniqueID);
+        int baseUniqueID = IDFactory.GetUniqueID();
+        BuildNeutralBaseClientRpc(playerIndex, neutralBaseId, baseUniqueID);
     }
 
     [ClientRpc]
-    void BuildNeutralBaseClientRpc(int playerIndex, int neutralBaseId, int buildingUniqueID)
+    void BuildNeutralBaseClientRpc(int playerIndex, int neutralBaseId, int baseUniqueID)
     {
         if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
         {
@@ -637,7 +637,7 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         Player player = Player.Players[playerIndex];
-        player.ExecuteBuildNeutralBase(neutralBaseVisual, buildingUniqueID);
+        player.ExecuteBuildNeutralBase(neutralBaseVisual, baseUniqueID);
     }
 
 

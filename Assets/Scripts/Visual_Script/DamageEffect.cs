@@ -61,7 +61,7 @@ public class DamageEffect : MonoBehaviour {
         GameObject newDamageEffect = new GameObject();
         // TO DO  = GameObject.Instantiate(GlobalSettings.Instance.DamageEffectPrefab, position, Quaternion.identity) as GameObject;
         // Get DamageEffect component in this new game object
-        newDamageEffect = Instantiate(DamageEffectTest.Instance.DamagePrefab, position, Quaternion.Euler(90,0,0 )) as GameObject;
+        newDamageEffect = Instantiate(DamageEffectVisual.Instance.DamagePrefab, position, Quaternion.Euler(90,0,0 )) as GameObject;
         DamageEffect de = newDamageEffect.GetComponent<DamageEffect>();
         // Change the amount text to reflect the amount of damage dealt
         if (amount < 0)

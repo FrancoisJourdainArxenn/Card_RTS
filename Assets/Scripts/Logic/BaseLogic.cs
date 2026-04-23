@@ -1,0 +1,80 @@
+using System.Collections;
+using System.Collections.Generic;
+using System;
+
+[System.Serializable]
+public class BaseLogic: ILivable
+{
+    public Player owner;
+    public BaseAsset ba;
+    public NeutralZoneController neutralBaseController;
+    //public BuildingEffect effect;
+    private int uniqueBaseID;
+
+    public int ID
+    {
+        get{ return uniqueBaseID; }
+    }
+       
+    private int baseHealth; // the basic health that we have in BaseAsset
+    public int MaxHealth // health with all the current buffs taken into account
+    {
+        get{ return baseHealth;}
+    }
+
+    private int health; // current health of this building
+    public int Health
+    {
+        get{ return health; }
+
+        set
+        {
+            if (value > MaxHealth)
+                health = MaxHealth;
+            else if (value <= 0)
+                Die();
+            else
+                health = value;
+        }
+    }
+
+    private int baseMainRessourceIncome;
+    public int MainRessourceIncome
+    {
+        get{ return baseMainRessourceIncome; }
+    }
+    
+    private int baseSecondRessourceIncome;
+    public int SecondRessourceIncome
+    {
+        get{ return baseSecondRessourceIncome; }
+    }
+
+    public int BaseID {get; private set;}
+    
+    public void Die()
+    {
+        owner.controlledBases.Remove(ba);
+        owner.CalculatePlayerIncome();
+        BaseCreatedThisGame.Remove(ID);
+        FogOfWarManager.Refresh();
+        new BaseDieCommand(ID, neutralBaseController).AddToQueue();
+    }
+
+    public BaseLogic(Player owner, BaseAsset ba, NeutralZoneController neutralBaseController, int networkID = -1)
+    {
+        this.ba = ba;
+        this.neutralBaseController = neutralBaseController;
+        baseHealth = ba.MaxHealth;
+        Health = baseHealth;
+        baseMainRessourceIncome = ba.mainRessourceIncome;
+        baseSecondRessourceIncome = ba.secondRessourceIncome;
+        this.owner = owner;
+        uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
+        BaseCreatedThisGame.Add(ID, this);
+        FogOfWarManager.Refresh();
+    }
+
+    // STATIC For managing IDs
+    public static Dictionary<int, BaseLogic> BaseCreatedThisGame = new Dictionary<int, BaseLogic>();
+}

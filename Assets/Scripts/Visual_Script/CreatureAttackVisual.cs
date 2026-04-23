@@ -22,8 +22,8 @@ public class CreatureAttackVisual : MonoBehaviour
         {
             return "player";
         }
-        else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetUniqueID) &&
-                 BuildingLogic.BuildingsCreatedThisGame[targetUniqueID] != null)
+        else if (BaseLogic.BaseCreatedThisGame.ContainsKey(targetUniqueID) &&
+                 BaseLogic.BaseCreatedThisGame[targetUniqueID] != null)
         {
             return "building";
         }

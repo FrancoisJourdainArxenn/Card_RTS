@@ -137,9 +137,9 @@ public class FogOfWarManager : MonoBehaviour
         // Check buildings (neutral zones only).
         if (nbc != null)
         {
-            foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
+            foreach (var kvp in BaseLogic.BaseCreatedThisGame)
             {
-                BuildingLogic b = kvp.Value;
+                BaseLogic b = kvp.Value;
                 if (b.owner == player && b.neutralBaseController == nbc)
                     return true;
             }
