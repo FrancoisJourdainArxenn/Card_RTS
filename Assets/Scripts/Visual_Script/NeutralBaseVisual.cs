@@ -12,7 +12,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     public BaseAsset baseAsset;
     public NeutralZoneController neutralBaseController;
     public AreaPosition owner;
-    public TMP_Text BuildingCostText;
+    public TMP_Text BaseCostText;
     public TMP_Text MainRessourceIncomeText;
     public TMP_Text SecondRessourceIncomeText;
     public GameObject Glow;
@@ -43,7 +43,7 @@ public class NeutralBaseVisual : MonoBehaviour {
 	
 	public void ApplyLookFromAsset()
     {
-        BuildingCostText.text = baseAsset.mainRessourceBuildingCost.ToString();
+        BaseCostText.text = baseAsset.mainRessourceBaseCost.ToString();
         MainRessourceIncomeText.text = baseAsset.mainRessourceIncome.ToString();
         SecondRessourceIncomeText.text = baseAsset.secondRessourceIncome.ToString();
     }
@@ -51,7 +51,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     void OnMouseEnter()
     {
         localPlayer = GlobalSettings.Instance.localPlayer;
-        bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBuildingCost && localPlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBuildingCost;
+        bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost && localPlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBaseCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
         Glow.SetActive(true);
     }

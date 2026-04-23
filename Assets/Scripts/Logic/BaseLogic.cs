@@ -22,7 +22,7 @@ public class BaseLogic: ILivable
         get{ return baseHealth;}
     }
 
-    private int health; // current health of this building
+    private int health; // current health of this base
     public int Health
     {
         get{ return health; }
@@ -56,9 +56,9 @@ public class BaseLogic: ILivable
     {
         owner.controlledBases.Remove(ba);
         owner.CalculatePlayerIncome();
-        BaseCreatedThisGame.Remove(ID);
+        BasesCreatedThisGame.Remove(uniqueBaseID);
         FogOfWarManager.Refresh();
-        new BaseDieCommand(ID, neutralBaseController).AddToQueue();
+        new BaseDieCommand(uniqueBaseID, neutralBaseController).AddToQueue();
     }
 
     public BaseLogic(Player owner, BaseAsset ba, NeutralZoneController neutralBaseController, int networkID = -1)
@@ -71,10 +71,10 @@ public class BaseLogic: ILivable
         baseSecondRessourceIncome = ba.secondRessourceIncome;
         this.owner = owner;
         uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
-        BaseCreatedThisGame.Add(ID, this);
+        BasesCreatedThisGame.Add(uniqueBaseID, this);
         FogOfWarManager.Refresh();
     }
 
     // STATIC For managing IDs
-    public static Dictionary<int, BaseLogic> BaseCreatedThisGame = new Dictionary<int, BaseLogic>();
+    public static Dictionary<int, BaseLogic> BasesCreatedThisGame = new Dictionary<int, BaseLogic>();
 }

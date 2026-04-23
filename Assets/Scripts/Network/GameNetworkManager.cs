@@ -48,7 +48,7 @@ public class GameNetworkManager : NetworkBehaviour
     private struct BattleSubmission
     {
         public int[] CreatureIDs,     CreatureDamages;
-        public int[] BaseIDs,     BaseDamages;
+        public int[] BaseIDs,         BaseDamages;
         public int[] TargetPlayerIDs, PlayerDamages;
     }
     private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
@@ -64,7 +64,7 @@ public class GameNetworkManager : NetworkBehaviour
     public void SubmitBattleAssignmentServerRpc(
         int playerIndex,
         int[] creatureIDs,     int[] creatureDamages,
-        int[] baseIDs,     int[] baseDamages,
+        int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages)
     {
         _battleSubmissions[playerIndex] = new BattleSubmission
@@ -103,7 +103,7 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void ApplyCanonicalBattleAssignmentClientRpc(
         int[] creatureIDs,     int[] creatureDamages,
-        int[] baseIDs,     int[] baseDamages,
+        int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
@@ -147,7 +147,7 @@ public class GameNetworkManager : NetworkBehaviour
         List<int> baseIDList     = new List<int>();
         List<int> baseHealthList = new List<int>();
 
-        foreach (KeyValuePair<int, BaseLogic> entry in BaseLogic.BaseCreatedThisGame)
+        foreach (KeyValuePair<int, BaseLogic> entry in BaseLogic.BasesCreatedThisGame)
         {
             baseIDList.Add(entry.Key);
             baseHealthList.Add(entry.Value.Health);
@@ -182,7 +182,7 @@ public class GameNetworkManager : NetworkBehaviour
     void SyncFullGameStateClientRpc(
         int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
-        int[] baseIDs,   int[] baseHealths,
+        int[] baseIDs,       int[] baseHealths,
         int[] playerHealths, int[] playerMainRes,   int[] playerSecondRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
@@ -211,7 +211,7 @@ public class GameNetworkManager : NetworkBehaviour
 
         for (int i = 0; i < baseIDs.Length; i++)
         {
-            if (!BaseLogic.BaseCreatedThisGame.TryGetValue(baseIDs[i], out BaseLogic _base))
+            if (!BaseLogic.BasesCreatedThisGame.TryGetValue(baseIDs[i], out BaseLogic _base))
                 continue;
 
             if (_base.Health != baseHealths[i] && baseHealths[i] > 0)

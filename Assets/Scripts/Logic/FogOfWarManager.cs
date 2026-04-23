@@ -41,7 +41,7 @@ public class FogOfWarManager : MonoBehaviour
         ZoneLogic[] allZones = FindObjectsByType<ZoneLogic>(FindObjectsSortMode.None);
         foreach (ZoneLogic zone in allZones)
         {
-            // A neutral zone also has a NeutralZoneController for building fog.
+            // A neutral zone also has a NeutralZoneController for base fog.
             // Main base zones won't have one — that's fine, nbc will just be null.
             NeutralZoneController nbc = zone.GetComponent<NeutralZoneController>();
             UpdateZone(zone, nbc);
@@ -80,8 +80,8 @@ public class FogOfWarManager : MonoBehaviour
 
         if (nbc != null)
         {
-            nbc.SetEnemyBuildingsFogged(enemy, !observerHasPresence);
-            nbc.SetPlayerBuildingsVisible(observer); // Always show observer's own captured bases
+            nbc.SetEnemyBasesFogged(enemy, !observerHasPresence);
+            nbc.SetPlayerBasesVisible(observer); // Always show observer's own captured bases
             nbc.ApplyColorForObserver(observer, observerHasPresence);
             nbc.UpdateNeutralBaseVisualFog(observerHasPresence);
         }
@@ -104,7 +104,7 @@ public class FogOfWarManager : MonoBehaviour
             enemy.baseVisual.ApplyFogForObserver(observerHasPresence);
         }
     }
-    // Returns true if 'player' has at least one creature OR building in the given zone.
+    // Returns true if 'player' has at least one creature OR base in the given zone.
 
     bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralZoneController nbc)
     {
@@ -134,10 +134,10 @@ public class FogOfWarManager : MonoBehaviour
                 return true;
         }
 
-        // Check buildings (neutral zones only).
+        // Check bases (neutral zones only).
         if (nbc != null)
         {
-            foreach (var kvp in BaseLogic.BaseCreatedThisGame)
+            foreach (var kvp in BaseLogic.BasesCreatedThisGame)
             {
                 BaseLogic b = kvp.Value;
                 if (b.owner == player && b.neutralBaseController == nbc)
