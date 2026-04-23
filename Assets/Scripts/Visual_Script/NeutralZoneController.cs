@@ -12,7 +12,7 @@ public class NeutralZoneController : MonoBehaviour
 
     public TableVisual[] tables;
 
-    private List<GameObject> buildings = new List<GameObject>();
+    private List<GameObject> bases = new List<GameObject>();
     private NeutralBaseVisual capturedNBaseVisual = null;
     private Color trueColor;
     private Color lastSeenColorLow;
@@ -59,10 +59,10 @@ public class NeutralZoneController : MonoBehaviour
         background.GetComponent<Image>().color = ownerColor;
     }
 
-    public void AddBase(BaseAsset ba, int buildingUniqueID, Player player, NeutralBaseVisual nBaseVisual)
+    public void AddBase(BaseAsset ba, int baseUniqueID, Player player, NeutralBaseVisual nBaseVisual)
     {
         GameObject baseCard = Instantiate(nBaseVisual.BaseCardPrefab, nBaseVisual.BaseApparitionPosition.position, nBaseVisual.BaseApparitionPosition.rotation);
-        buildings.Add(baseCard);
+        bases.Add(baseCard);
         OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
         baseManager.baseAsset = ba;
         baseManager.ResetValues(ba);
@@ -70,7 +70,7 @@ public class NeutralZoneController : MonoBehaviour
         baseCard.tag = player.tag;
 
         IDHolder idHolder = baseCard.GetComponent<IDHolder>();
-        idHolder.UniqueID = buildingUniqueID;
+        idHolder.UniqueID = baseUniqueID;
         player.controlledBases.Add(ba);
         // nBaseVisual.BuildingZone.GetComponent<Image>().color = player.playerColor;
         capturedNBaseVisual = nBaseVisual;
@@ -89,16 +89,16 @@ public class NeutralZoneController : MonoBehaviour
         }
     }
 
-    public void RemoveBuildingWithID(int buildingUniqueID)
+    public void RemoveBaseWithID(int baseUniqueID)
     {
-        GameObject buildingToRemove = IDHolder.GetGameObjectWithID(buildingUniqueID);
-        if (buildingToRemove == null)
+        GameObject baseToRemove = IDHolder.GetGameObjectWithID(baseUniqueID);
+        if (baseToRemove == null)
             return;
 
-        buildings.Remove(buildingToRemove);
+        bases.Remove(baseToRemove);
 
         // Carte de base : OneBaseManager sur la racine (pas MainBaseVisual — celui-ci est pour le portrait héros).
-        OneBaseManager mgr = buildingToRemove.GetComponent<OneBaseManager>();
+        OneBaseManager mgr = baseToRemove.GetComponent<OneBaseManager>();
         if (mgr != null)
         {
             capturedNBaseVisual = null;
@@ -110,10 +110,10 @@ public class NeutralZoneController : MonoBehaviour
                     nBaseVisual.ResetBuildingZone();
             }
 
-            Object.Destroy(buildingToRemove);
+            Object.Destroy(baseToRemove);
         }
         else
-            Object.Destroy(buildingToRemove);
+            Object.Destroy(baseToRemove);
     }
 
     public void UpdateNeutralBaseVisualFog(bool observerHasVision)
@@ -122,21 +122,21 @@ public class NeutralZoneController : MonoBehaviour
             capturedNBaseVisual.gameObject.SetActive(!observerHasVision);
     }
 
-    public void SetEnemyBuildingsFogged(Player enemy, bool fogged)
+    public void SetEnemyBasesFogged(Player enemy, bool fogged)
     {
-        foreach (GameObject building in buildings)
+        foreach (GameObject _base in bases)
         {
-            if (building != null && building.CompareTag(enemy.tag))
-                building.SetActive(!fogged);
+            if (_base != null && _base.CompareTag(enemy.tag))
+                _base.SetActive(!fogged);
         }
     }
 
-    public void SetPlayerBuildingsVisible(Player player)
+    public void SetPlayerBasesVisible(Player player)
     {
-        foreach (GameObject building in buildings)
+        foreach (GameObject _base in bases)
         {
-            if (building != null && building.CompareTag(player.tag))
-                building.SetActive(true);
+            if (_base != null && _base.CompareTag(player.tag))
+                _base.SetActive(true);
         }
     }
 

@@ -2,12 +2,12 @@ public class BuildNeutralBaseCommand : Command
 {
     private Player player;
     private NeutralBaseVisual spawner;
-    private int buildingUniqueID;
+    private int baseUniqueID;
 
-    public BuildNeutralBaseCommand(int buildingUniqueID, Player player, NeutralBaseVisual spawner)
+    public BuildNeutralBaseCommand(int baseUniqueID, Player player, NeutralBaseVisual spawner)
     {
         this.player = player;
-        this.buildingUniqueID = buildingUniqueID;
+        this.baseUniqueID = baseUniqueID;
         this.spawner = spawner;
     }
 
@@ -20,10 +20,10 @@ public class BuildNeutralBaseCommand : Command
         }
 
         BaseAsset ba = spawner.baseAsset;
-        player.MainRessourceAvailable -= ba.mainRessourceBuildingCost;
-        player.SecondRessourceAvailable -= ba.secondRessourceBuildingCost;
+        player.MainRessourceAvailable -= ba.mainRessourceBaseCost;
+        player.SecondRessourceAvailable -= ba.secondRessourceBaseCost;
         new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable, player.secondRessourceTotal, player.SecondRessourceAvailable).AddToQueue();
-        spawner.neutralBaseController.AddBase(ba, buildingUniqueID, player, spawner);
+        spawner.neutralBaseController.AddBase(ba, baseUniqueID, player, spawner);
         CommandExecutionComplete();
     }
 }

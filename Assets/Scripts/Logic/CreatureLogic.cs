@@ -191,13 +191,13 @@ public class CreatureLogic: ILivable
         AttackCreature(target);
     }
 
-    public void AttackBaseWithID(int uniqueBuildingID)
+    public void AttackBaseWithID(int uniqueBaseID)
     {
-        BaseLogic target = BaseLogic.BaseCreatedThisGame[uniqueBuildingID];
-        AttackBuilding(target);
+        BaseLogic target = BaseLogic.BasesCreatedThisGame[uniqueBaseID];
+        AttackBase(target);
     }
 
-    public void AttackBuilding(BaseLogic target)
+    public void AttackBase(BaseLogic target)
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = target.Health - Attack;

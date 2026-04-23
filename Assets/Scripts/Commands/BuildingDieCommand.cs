@@ -4,20 +4,20 @@ using System.Collections;
 public class BaseDieCommand : Command 
 {
     private NeutralZoneController neutralBaseController;
-    private int buildingID;
+    private int baseID;
 
-    public BaseDieCommand(int buildingID, NeutralZoneController neutralBaseController)
+    public BaseDieCommand(int baseID, NeutralZoneController neutralBaseController)
     {
         this.neutralBaseController = neutralBaseController;
-        this.buildingID = buildingID;
+        this.baseID = baseID;
     }
 
     public override void StartCommandExecution()
     {
         if (neutralBaseController != null)
-            neutralBaseController.RemoveBuildingWithID(buildingID);
+            neutralBaseController.RemoveBaseWithID(baseID);
         else
-            Debug.LogWarning("BuildingDieCommand: neutralBaseController is null for building ID " + buildingID);
+            Debug.LogWarning("BaseDieCommand: neutralBaseController is null for base ID " + baseID);
 
         CommandExecutionComplete();
     }

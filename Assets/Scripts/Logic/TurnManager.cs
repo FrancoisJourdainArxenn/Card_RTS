@@ -165,7 +165,7 @@ public class TurnManager : MonoBehaviour
                 GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
                     participantIndex,
                     assignment.CreatureIDs,   assignment.CreatureDamages,
-                    assignment.BuildingIDs,   assignment.BuildingDamages,
+                    assignment.BaseIDs,   assignment.BaseDamages,
                     assignment.TargetPlayerIDs, assignment.PlayerDamages);
                 return;
             }

@@ -2,6 +2,14 @@ using UnityEngine;
 using System.Collections;
 using DG.Tweening;
 
+enum TargetType
+{
+    Player,
+    Base,
+    Creature,
+    Unknown
+}
+
 public class CreatureAttackVisual : MonoBehaviour 
 {
     private OneCreatureManager manager;
@@ -13,26 +21,26 @@ public class CreatureAttackVisual : MonoBehaviour
         w = GetComponent<WhereIsTheCardOrCreature>();
     }
 
-    private string GetTargetType(int targetUniqueID)
+    private TargetType GetTargetType(int targetUniqueID)
     {
         if (
             targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID 
             || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID
         )
         {
-            return "player";
+            return TargetType.Player;
         }
-        else if (BaseLogic.BaseCreatedThisGame.ContainsKey(targetUniqueID) &&
-                 BaseLogic.BaseCreatedThisGame[targetUniqueID] != null)
+        else if (BaseLogic.BasesCreatedThisGame.ContainsKey(targetUniqueID) &&
+                 BaseLogic.BasesCreatedThisGame[targetUniqueID] != null)
         {
-            return "building";
+            return TargetType.Base;
         }
         else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetUniqueID) &&
                  CreatureLogic.CreaturesCreatedThisGame[targetUniqueID] != null)
         {
-            return "creature";
+            return TargetType.Creature;
         }
-        return "unknown";
+        return TargetType.Unknown;
     }
 
     public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter)
@@ -53,7 +61,7 @@ public class CreatureAttackVisual : MonoBehaviour
             Command.CommandExecutionComplete();
             return;
         }
-        string targetType = GetTargetType(targetUniqueID);
+        TargetType targetType = GetTargetType(targetUniqueID);
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
@@ -83,17 +91,17 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     switch (targetType)
                     {
-                        case "player":
+                        case TargetType.Player:
                             target.GetComponent<MainBaseVisual>().HealthText.text = targetHealthAfter.ToString();
                             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
                             break;
-                        case "building":
+                        case TargetType.Base:
                             target.GetComponent<OneBaseManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
-                        case "creature":
+                        case TargetType.Creature:
                             target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
-                        case "unknown":
+                        case TargetType.Unknown:
                             Debug.Log("Unknown target type: " + targetUniqueID);
                             break;
                     }

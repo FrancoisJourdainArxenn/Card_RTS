@@ -589,8 +589,8 @@ public class Player : MonoBehaviour, ILivable
     private bool PlayerOwnsBaseInController(NeutralZoneController controller)
     {
         if (controller == null) return false;
-        OneBaseManager[] allBuildings = GameObject.FindObjectsByType<OneBaseManager>(FindObjectsSortMode.None);
-        foreach (OneBaseManager b in allBuildings)
+        OneBaseManager[] allBases = GameObject.FindObjectsByType<OneBaseManager>(FindObjectsSortMode.None);
+        foreach (OneBaseManager b in allBases)
         {
             if (b == null || b.Spawner == null) continue;
             if (b.tag != this.tag) continue; // base du joueur courant uniquement
@@ -648,8 +648,8 @@ public class Player : MonoBehaviour, ILivable
                 }
             }
         }
-        if (MainRessourceAvailable < baseAsset.mainRessourceBuildingCost || 
-        SecondRessourceAvailable < baseAsset.secondRessourceBuildingCost)
+        if (MainRessourceAvailable < baseAsset.mainRessourceBaseCost || 
+        SecondRessourceAvailable < baseAsset.secondRessourceBaseCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
             return false;
@@ -665,10 +665,10 @@ public class Player : MonoBehaviour, ILivable
             ExecuteBuildNeutralBase(NeutralBaseVisual.Registry[neutralBaseId], IDFactory.GetUniqueID());
     }
 
-    public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int buildingUniqueID)
+    public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int baseUniqueID)
     {
-        new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, buildingUniqueID);
-        new BuildNeutralBaseCommand(buildingUniqueID, this, neutralBaseVisual).AddToQueue();
+        new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, baseUniqueID);
+        new BuildNeutralBaseCommand(baseUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
     }
 
