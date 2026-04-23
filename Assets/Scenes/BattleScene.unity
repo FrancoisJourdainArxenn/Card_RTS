@@ -1233,15 +1233,15 @@ MonoBehaviour:
   defaultPanSpeed: 20
   zoomedInDefaultPanSpeed: 10
   panBorderThicknessVertical: 50
-  panBorderThicknessHorizontal: 150
+  panBorderThicknessHorizontal: 250
   panLimit: {x: 4, y: 7}
   zoomedInPanLimit: {x: 10, y: 10}
   maxSpeed: 5
-  maxAcceleration: 50
+  maxAcceleration: 75
   AccelerationUnit: 0.03
   decelerationFactor: 0.9
-  transitionDuration: 1.25
-  transitionEase: 3
+  transitionDuration: 0.7
+  transitionEase: 10
   snapBackDelay: 0.3
 --- !u!1 &401925632
 GameObject:
