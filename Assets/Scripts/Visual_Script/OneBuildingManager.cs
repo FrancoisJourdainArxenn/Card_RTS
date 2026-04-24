@@ -1,0 +1,169 @@
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+using TMPro;
+using Unity.VisualScripting;
+
+public class OneBuildingManager : MonoBehaviour 
+{
+    public CardAsset cardAsset;
+    public OneCardManager PreviewManager;
+    [Header("Text Component References")]
+    public TMP_Text HealthText;
+    public TMP_Text AttackText;
+     
+    [Header("Image References")]
+    public Image art;
+    public Image frame;
+    public Image glow;
+    public Image MeleeImage;
+
+    public Image AttackDamageBG;
+
+    [Header("Combat Indicators")]
+    public GameObject MarkedForDeathIndicator;
+    public GameObject WillBeDamagedIndicator;
+    public TMP_Text pendingDamageText;
+
+    private bool canAttackNow = false;
+    public bool CanAttackNow
+    {
+        get
+        {
+            return canAttackNow;
+        }
+
+        set
+        {
+            canAttackNow = value;
+        }
+    }
+
+    private bool canMoveNow = false;
+    public bool CanMoveNow
+    {
+        get
+        {
+            return canMoveNow;
+        }
+
+        set
+        {
+            canMoveNow = value;
+        }
+    }
+
+    public int CurrentHealth { get; private set; }
+
+
+    void Awake()
+    {
+        if (cardAsset != null)
+            ReadBuidingFromAsset();
+    }
+
+    void OnMouseDown()
+    {
+        if (TurnManager.Instance == null || !TurnManager.Instance.IsBattlePhase) return;
+
+        IDHolder idHolder = GetComponent<IDHolder>();
+        if (idHolder == null) return;
+        int id = idHolder.UniqueID;
+
+        ZoneCombatResolver resolver;
+
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic bl))
+        {
+            resolver = bl.neutralBaseController?.zone?.GetComponent<ZoneCombatResolver>();
+        }
+        else
+        {
+            Player p = id == GlobalSettings.Instance.LowPlayer.PlayerID
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            resolver = p?.MainPArea?.parentZone?.GetComponent<ZoneCombatResolver>();
+        }
+
+        resolver?.TryRedirectDamageFromBase(id);
+    }
+
+    public int BaseID {get; set;}
+    public void ReadBuidingFromAsset()
+    {
+        // Change the card graphic sprite
+        art.sprite = cardAsset.CardImage;
+        HealthText.text = cardAsset.MaxHealth.ToString();
+        if(cardAsset.Attack > 0)
+        {
+            AttackDamageBG.enabled = true;
+            AttackText.text = cardAsset.Attack.ToString();
+
+        }
+
+        if(cardAsset.melee)
+        {
+            MeleeImage.enabled = true;
+        }
+
+        if (PreviewManager != null)
+        {
+            PreviewManager.cardAsset = cardAsset;
+            PreviewManager.ReadCardFromAsset();
+        }
+    }	
+
+    /*public void ResetValues(CardAsset buildingAsset)
+    {
+        this.cardAsset = cardAsset;
+        ReadBaseFromAsset();
+    }*/
+
+    public void TakeDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+
+        CurrentHealth = Mathf.Max(0, healthAfter);
+        DamageEffect.CreateDamageEffect(transform.position, amount);
+
+        if (CurrentHealth <= 0)
+        {
+            // ajouter qu'il faudra l'enlever de la liste de building (pas encore créer)
+            Destroy(gameObject);
+        }
+        HealthText.text = CurrentHealth.ToString();
+    }
+
+    private Player GetOwnerPlayerFromTag()
+    {
+        if (GlobalSettings.Instance == null)
+            return null;
+
+        if (CompareTag("TopPlayer"))
+            return GlobalSettings.Instance.TopPlayer;
+
+        if (CompareTag("LowPlayer"))
+            return GlobalSettings.Instance.LowPlayer;
+
+        return null;
+    }
+
+    public void ShowPendingDamage(int damage, int currentHealth)
+    {
+        bool dies = damage >= currentHealth;
+        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
+        if (WillBeDamagedIndicator != null)
+        {
+            WillBeDamagedIndicator.SetActive(!dies);
+            if (!dies && pendingDamageText != null)
+                pendingDamageText.text = damage.ToString();
+        }
+    }
+
+    public void ClearPendingDamageIndicator()
+    {
+        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
+        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
+    }
+
+}

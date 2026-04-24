@@ -1,16 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using DG.Tweening;
 using TMPro;
 
 // holds the refs to all the Text, Images on the card
-public class OneCardManager : MonoBehaviour 
+public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
 
     public CardAsset cardAsset;
     public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
+    public TMP_Text Type;
     public TMP_Text MainCostText;
     public TMP_Text SecondCostText;
     public TMP_Text DescriptionText;
@@ -23,8 +26,12 @@ public class OneCardManager : MonoBehaviour
     public Image CardFaceGlowImage;
     //public Image CardBackGlowImage;
 
+    public bool hoverZoomEnabled = false;
+    private Vector3 originalScale;
+
     void Awake()
     {
+        originalScale = transform.localScale;
         if (cardAsset != null)
             ReadCardFromAsset();
     }
@@ -71,6 +78,18 @@ public class OneCardManager : MonoBehaviour
             PreviewManager.cardAsset = cardAsset;
             PreviewManager.ReadCardFromAsset();
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if(BuildingShopVisual.IsOpen && hoverZoomEnabled)
+            transform.DOScale(originalScale * 1.1f, 0.15f);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if(BuildingShopVisual.IsOpen && hoverZoomEnabled)
+            transform.DOScale(originalScale, 0.15f);
     }
 
 }

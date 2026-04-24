@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Deck : MonoBehaviour {
 
     public List<CardAsset> cards = new List<CardAsset>();
+    public List<CardAsset> buildings = new List<CardAsset>();
 
     void Awake()
     {

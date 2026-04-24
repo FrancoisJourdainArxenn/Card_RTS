@@ -8,9 +8,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 494712117747211983, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
     - target: {fileID: 1023280944671842946, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: pendingSlots
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1352040472446173010, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 1399422710814731413, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: LowPlayer
       objectReference: {fileID: 0}
     - target: {fileID: 1560843137919074017, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
@@ -19,6 +31,14 @@ PrefabInstance:
     - target: {fileID: 1608003255995529466, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
       value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2356773896271555992, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 2555407120215970801, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
       objectReference: {fileID: 0}
     - target: {fileID: 3380216749849222320, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.x
@@ -68,6 +88,34 @@ PrefabInstance:
       propertyPath: m_Name
       value: Zone_MainBasesEnemyVariant
       objectReference: {fileID: 0}
+    - target: {fileID: 4241607089193490230, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 4296185750746049783, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 4805995165662417236, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 4833527497910680745, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: LowPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 5819276875843022197, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 5821641401576529394, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 5898923481879132074, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
     - target: {fileID: 5907470798411458118, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
       value: 2.31
@@ -76,14 +124,42 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6094624296488970357, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 6450282990274568146, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 7313403473097718105, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: LowPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 7804498181616266558, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
     - target: {fileID: 8307801932309684713, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
       value: -0.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 8823864707063966935, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: LowPlayer
+      objectReference: {fileID: 0}
+    - target: {fileID: 9010774961387503127, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
       objectReference: {fileID: 0}
     - target: {fileID: 9115379854544158099, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: pendingSlots
       value: 
       objectReference: {fileID: 3316806954750283639}
+    - target: {fileID: 9201010843746675583, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_TagString
+      value: TopPlayer
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

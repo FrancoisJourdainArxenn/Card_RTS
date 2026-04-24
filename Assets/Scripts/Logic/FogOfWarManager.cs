@@ -86,6 +86,10 @@ public class FogOfWarManager : MonoBehaviour
             nbc.UpdateNeutralBaseVisualFog(observerHasPresence);
         }
 
+        // Show/hide all build spots in the zone based on observer presence
+        foreach (BuildSpotVisual spot in zone.GetComponentsInChildren<BuildSpotVisual>(true))
+            spot.gameObject.SetActive(observerHasPresence);
+
         // --- Bases joueur (fog comme les bases neutres) ---
         // L'observer voit toujours sa propre base
         if (observer.MainPArea != null 

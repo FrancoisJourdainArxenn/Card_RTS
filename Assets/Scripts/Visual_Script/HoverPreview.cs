@@ -59,6 +59,7 @@ public class HoverPreview: MonoBehaviour
             
     void OnMouseEnter()
     {
+        if (BuildingShopVisual.IsOpen) return;
         OverCollider = true;
         if (PreviewsAllowed && ThisPreviewEnabled)
             PreviewThisObject();

@@ -15,6 +15,7 @@ public class GlobalSettings : MonoBehaviour
     public Button EndTurnButton;
     public HandVisual localPlayerHand;
     public UiPlayerVisual UiPlayerVisual;
+    public BuildingShopVisual buildingShop;
 
     [Header("Colors")]
     public Color32 TopColor;
@@ -38,6 +39,7 @@ public class GlobalSettings : MonoBehaviour
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;
     public GameObject NeutralBasePrefab;
+    public GameObject BuildingPrefab;
     [Header("Other")]
     [Tooltip("End phase button for the top-area human player (assign in the scene).")]
     public Button EndPhaseButtonTopPlayer;

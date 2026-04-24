@@ -672,5 +672,10 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
     }
 
+    public void ShowBuildings()
+    {
+        Debug.Log("Show Buildings for player " + PlayerID);
+        GlobalSettings.Instance.buildingShop.Show(deck.buildings);
+    }
 
 }

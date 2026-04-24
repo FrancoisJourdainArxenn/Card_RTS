@@ -18,6 +18,7 @@ public class NeutralZoneController : MonoBehaviour
     private Color lastSeenColorLow;
     private Color lastSeenColorTop;
 
+
     void Awake()
     {
         Image bg = background != null ? background.GetComponent<Image>() : null;
@@ -62,12 +63,15 @@ public class NeutralZoneController : MonoBehaviour
     public void AddBase(BaseAsset ba, int baseUniqueID, Player player, NeutralBaseVisual nBaseVisual)
     {
         GameObject baseCard = Instantiate(nBaseVisual.BaseCardPrefab, nBaseVisual.BaseApparitionPosition.position, nBaseVisual.BaseApparitionPosition.rotation);
+        if (nBaseVisual.baseParent != null)
+            baseCard.transform.SetParent(nBaseVisual.baseParent, true);
         bases.Add(baseCard);
         OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
         baseManager.baseAsset = ba;
         baseManager.ResetValues(ba);
         baseManager.Spawner = nBaseVisual.gameObject;
         baseCard.tag = player.tag;
+        SetBuildingSpotTag(player.tag);
 
         IDHolder idHolder = baseCard.GetComponent<IDHolder>();
         idHolder.UniqueID = baseUniqueID;
@@ -85,7 +89,6 @@ public class NeutralZoneController : MonoBehaviour
         {
             baseCard.transform.DOMove(nBaseVisual.BasePosition.position, 0.7f).SetEase(Ease.InOutQuad);
             baseCard.transform.DORotateQuaternion(Quaternion.identity, 0.7f).SetEase(Ease.InOutQuad);
-
         }
     }
 
@@ -139,5 +142,12 @@ public class NeutralZoneController : MonoBehaviour
                 _base.SetActive(true);
         }
     }
+
+    public void SetBuildingSpotTag(string playerTag)
+    {
+        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>())
+            spot.TakePlayerTag(playerTag);
+    }
+
 
 }

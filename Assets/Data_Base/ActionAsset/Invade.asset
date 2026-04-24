@@ -13,17 +13,21 @@ MonoBehaviour:
   m_Name: Invade
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 2
   Description: 
   CardImage: {fileID: 21300000, guid: 5b947c39082f7994d8799146a26ab62b, type: 3}
   MainCost: 2
   SecondCost: 1
-  MaxHealth: 0
   Attack: 0
+  MaxHealth: 0
   AttacksForOneTurn: 0
-  Speed: 0
-  Charge: 0
+  melee: 0
+  MoveSpeed: 1
+  Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 3
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
