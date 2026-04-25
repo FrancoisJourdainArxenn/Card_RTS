@@ -21,4 +21,10 @@ public class Deck : MonoBehaviour {
     {
         cards.SelectRandomCardFromSeed(seed);
     }
+    
+    public CardAsset FindBuilding(string buildingName)
+    {
+        return buildings.Find(b => b.name == buildingName);
+    }
+
 }

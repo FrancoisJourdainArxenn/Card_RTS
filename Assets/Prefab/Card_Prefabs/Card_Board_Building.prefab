@@ -57,7 +57,7 @@ MonoBehaviour:
   frame: {fileID: 3193365811603967444}
   glow: {fileID: 7368865151671539246}
   MeleeImage: {fileID: 5506920404441326065}
-  AttackDamageBG: {fileID: 6918315788198482659}
+  AttackDamageBG: {fileID: 6026808317233062867}
   MarkedForDeathIndicator: {fileID: 7879191156817823205}
   WillBeDamagedIndicator: {fileID: 7434925307814962791}
   pendingDamageText: {fileID: 7100037047781139803}
@@ -3418,7 +3418,7 @@ MonoBehaviour:
   cardAsset: {fileID: 0}
   PreviewManager: {fileID: 0}
   NameText: {fileID: 2802669036507349956}
-  Type: {fileID: 0}
+  Type: {fileID: 3269729023705682240}
   MainCostText: {fileID: 2821910883489484612}
   SecondCostText: {fileID: 7898122961277469773}
   DescriptionText: {fileID: 5591465055003247744}

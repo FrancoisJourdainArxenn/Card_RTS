@@ -7,14 +7,17 @@ public class BuildingShopVisual : MonoBehaviour
 {
     [SerializeField] private GameObject cardBuildingPrefab;
     [SerializeField] private Transform cardContainer;
+    private BuildSpotVisual _currentSpot;
+
 
     public static bool IsOpen {get; private set;}
 
-    public void Show(List<CardAsset> buildings)
+    public void Show(List<CardAsset> buildings, BuildSpotVisual spot)
     {
         Player localPlayer = GlobalSettings.Instance.localPlayer;
 
         IsOpen = true;
+        _currentSpot = spot;
         foreach (Transform child in cardContainer)
             Destroy(child.gameObject);
 
@@ -39,4 +42,11 @@ public class BuildingShopVisual : MonoBehaviour
         IsOpen = false;
         gameObject.SetActive(false);
     }
+
+    public void OnBuildingSelected(CardAsset building)
+    {
+        Hide();
+        GlobalSettings.Instance.localPlayer.RequestPlaceBuilding(building, _currentSpot);
+    }
+
 }

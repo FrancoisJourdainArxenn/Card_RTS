@@ -6,7 +6,7 @@ using DG.Tweening;
 using TMPro;
 
 // holds the refs to all the Text, Images on the card
-public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
 
     public CardAsset cardAsset;
@@ -19,6 +19,8 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public TMP_Text DescriptionText;
     public TMP_Text HealthText;
     public TMP_Text AttackText;
+    public GameObject ATK_BG;
+    
     [Header("Image References")]
     //public Image CardGraphicImage;
     public Image ArtImage;
@@ -54,9 +56,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void ReadCardFromAsset()
     {
-        // 2) add card name
         NameText.text = cardAsset.name;
-        // 3) add mana cost
         MainCostText.text = cardAsset.MainCost.ToString();
         SecondCostText.text = cardAsset.SecondCost.ToString();
         // 4) add description
@@ -66,7 +66,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         if (cardAsset.MaxHealth != 0)
         {
-            // this is a creature
             AttackText.text = cardAsset.Attack.ToString();
             HealthText.text = cardAsset.MaxHealth.ToString();
         }
@@ -91,5 +90,13 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         if(BuildingShopVisual.IsOpen && hoverZoomEnabled)
             transform.DOScale(originalScale, 0.15f);
     }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (!BuildingShopVisual.IsOpen) return;
+        if (!canBePlayedNow) return;
+        GlobalSettings.Instance.buildingShop.OnBuildingSelected(cardAsset);
+    }
+
 
 }

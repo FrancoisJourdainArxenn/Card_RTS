@@ -1,24 +1,28 @@
 using UnityEngine;
 using System.Collections;
 
-public class BaseDieCommand : Command 
+public class BuildingDieCommand : Command
 {
-    private NeutralZoneController neutralBaseController;
-    private int baseID;
+    private int deadBuildingID;
 
-    public BaseDieCommand(int baseID, NeutralZoneController neutralBaseController)
+    public BuildingDieCommand(int buildingID)
     {
-        this.neutralBaseController = neutralBaseController;
-        this.baseID = baseID;
+        this.deadBuildingID = buildingID;
     }
 
     public override void StartCommandExecution()
     {
-        if (neutralBaseController != null)
-            neutralBaseController.RemoveBaseWithID(baseID);
-        else
-            Debug.LogWarning("BaseDieCommand: neutralBaseController is null for base ID " + baseID);
+        GameObject buildingGO = IDHolder.GetGameObjectWithID(deadBuildingID);
+        if (buildingGO == null)
+        {
+            CommandExecutionComplete();
+            return;
+        }
 
+        OneBuildingManager manager = buildingGO.GetComponent<OneBuildingManager>();
+        manager?.OriginSpot?.OnBuildingDestroyed();
+        Object.Destroy(buildingGO);
         CommandExecutionComplete();
     }
 }
+

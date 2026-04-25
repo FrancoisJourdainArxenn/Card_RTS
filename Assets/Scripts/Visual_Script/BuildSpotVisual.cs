@@ -1,8 +1,22 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class BuildSpotVisual : MonoBehaviour
 {
+    public static Dictionary<int, BuildSpotVisual> Registry = new Dictionary<int, BuildSpotVisual>();    [SerializeField] private int spotID;
+    public int SpotID => spotID;
+    [SerializeField] private Transform spawner;
+    [SerializeField] private GameObject spotVisual;
+
+
+
     private ZoneLogic _zoneLogic;
+
+    void Awake()
+    {
+        spotID = IDFactory.GetUniqueID();
+        Registry[SpotID] = this;
+    }
 
     void Start()
     {
@@ -24,7 +38,8 @@ public class BuildSpotVisual : MonoBehaviour
                          && !PlayerHasUnitsInZone(localP.otherPlayer, _zoneLogic);
 
         if (ownsSpot || controlsZone)
-            localP.ShowBuildings();
+            localP.ShowBuildings(this);
+        else new ShowMessageCommand("You can't build here.", 1.5f);
     }
 
     private bool PlayerHasUnitsInZone(Player player, ZoneLogic zone)
@@ -48,4 +63,30 @@ public class BuildSpotVisual : MonoBehaviour
         }
         return false;
     }
+
+    public void SpawnBuilding(BuildingLogic buildingLogic, Player owner)
+    {
+        GameObject buildingPrefab = GlobalSettings.Instance.BuildingPrefab;
+        GameObject buildingGO = Instantiate(buildingPrefab, spawner.transform.position, Quaternion.identity);
+        buildingGO.tag = owner.tag;
+
+        IDHolder idHolder = buildingGO.GetComponent<IDHolder>();
+        if (idHolder == null) idHolder = buildingGO.AddComponent<IDHolder>();
+        idHolder.UniqueID = buildingLogic.UniqueBuildingID;
+
+        OneBuildingManager manager = buildingGO.GetComponent<OneBuildingManager>();
+        manager.cardAsset = buildingLogic.ca;
+        manager.BuildingLogic = buildingLogic;
+        manager.OriginSpot = this;
+
+        manager.ReadBuidingFromAsset();
+        spotVisual.SetActive(false);
+    }
+
+    public void OnBuildingDestroyed()
+    {
+        spotVisual.SetActive(true);
+    }
+
+
 }

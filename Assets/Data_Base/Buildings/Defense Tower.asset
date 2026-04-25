@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Armory
+  m_Name: Defense Tower
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 1
-  Description: This will do something later
-  CardImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
-  MainCost: 3
+  Description: 
+  CardImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
+  MainCost: 1
   SecondCost: 2
-  Attack: 0
-  MaxHealth: 5
-  AttacksForOneTurn: 0
+  Attack: 4
+  MaxHealth: 3
+  AttacksForOneTurn: 1
   melee: 0
-  MoveSpeed: 0
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0

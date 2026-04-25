@@ -2358,8 +2358,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   buildings:
   - {fileID: 11400000, guid: d06a15dbb18f84b4d869cda2b4a277ef, type: 2}
-  - {fileID: 11400000, guid: d06a15dbb18f84b4d869cda2b4a277ef, type: 2}
-  - {fileID: 11400000, guid: d06a15dbb18f84b4d869cda2b4a277ef, type: 2}
+  - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
+  - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
 --- !u!114 &645481813 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7416908257185595393, guid: 87955cc3aa9b36940b157da29917e177, type: 3}
@@ -2534,6 +2534,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Table
   CreaturesInPlay: []
+  BuildingsInPlay: []
 --- !u!1 &702895227
 GameObject:
   m_ObjectHideFlags: 0
@@ -5574,6 +5575,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Table
   CreaturesInPlay: []
+  BuildingsInPlay: []
 --- !u!4 &1422863211 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}

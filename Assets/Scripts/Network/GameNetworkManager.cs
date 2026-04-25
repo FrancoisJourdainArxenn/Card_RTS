@@ -640,5 +640,33 @@ public class GameNetworkManager : NetworkBehaviour
         player.ExecuteBuildNeutralBase(neutralBaseVisual, baseUniqueID);
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void PlaceBuildingServerRpc(int playerIndex, string buildingName, int spotID)
+    {
+        int buildingUniqueID = IDFactory.GetUniqueID();
+        PlaceBuildingClientRpc(playerIndex, buildingName, spotID, buildingUniqueID);
+    }
+
+    [ClientRpc]
+    void PlaceBuildingClientRpc(int playerIndex, string buildingName, int spotID, int buildingUniqueID)
+    {
+        if (!BuildSpotVisual.Registry.TryGetValue(spotID, out BuildSpotVisual spot))
+        {
+            Debug.LogError($"PlaceBuildingClientRpc: spot not found id={spotID}");
+            return;
+        }
+
+        Player player = Player.Players[playerIndex];
+        CardAsset building = player.deck.FindBuilding(buildingName);
+        if (building == null)
+        {
+            Debug.LogError($"PlaceBuildingClientRpc: building not found name={buildingName}");
+            return;
+        }
+
+        player.ExecutePlaceBuilding(building, spot, buildingUniqueID);
+    }
+
+
 
 }

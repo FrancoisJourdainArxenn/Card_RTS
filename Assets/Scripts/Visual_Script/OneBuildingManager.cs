@@ -18,7 +18,7 @@ public class OneBuildingManager : MonoBehaviour
     public Image glow;
     public Image MeleeImage;
 
-    public Image AttackDamageBG;
+    public GameObject AttackDamageBG;
 
     [Header("Combat Indicators")]
     public GameObject MarkedForDeathIndicator;
@@ -54,6 +54,9 @@ public class OneBuildingManager : MonoBehaviour
     }
 
     public int CurrentHealth { get; private set; }
+
+    public BuildingLogic BuildingLogic { get; set; }
+    public BuildSpotVisual OriginSpot { get; set; }
 
 
     void Awake()
@@ -95,7 +98,7 @@ public class OneBuildingManager : MonoBehaviour
         HealthText.text = cardAsset.MaxHealth.ToString();
         if(cardAsset.Attack > 0)
         {
-            AttackDamageBG.enabled = true;
+            AttackDamageBG.SetActive(true);
             AttackText.text = cardAsset.Attack.ToString();
 
         }
@@ -125,27 +128,8 @@ public class OneBuildingManager : MonoBehaviour
 
         CurrentHealth = Mathf.Max(0, healthAfter);
         DamageEffect.CreateDamageEffect(transform.position, amount);
-
-        if (CurrentHealth <= 0)
-        {
-            // ajouter qu'il faudra l'enlever de la liste de building (pas encore créer)
-            Destroy(gameObject);
-        }
         HealthText.text = CurrentHealth.ToString();
-    }
-
-    private Player GetOwnerPlayerFromTag()
-    {
-        if (GlobalSettings.Instance == null)
-            return null;
-
-        if (CompareTag("TopPlayer"))
-            return GlobalSettings.Instance.TopPlayer;
-
-        if (CompareTag("LowPlayer"))
-            return GlobalSettings.Instance.LowPlayer;
-
-        return null;
+        // Death is handled by BuildingLogic → BuildingDieCommand
     }
 
     public void ShowPendingDamage(int damage, int currentHealth)
