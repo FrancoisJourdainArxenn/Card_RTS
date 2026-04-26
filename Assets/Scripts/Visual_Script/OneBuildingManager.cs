@@ -100,7 +100,6 @@ public class OneBuildingManager : MonoBehaviour
         {
             AttackDamageBG.SetActive(true);
             AttackText.text = cardAsset.Attack.ToString();
-
         }
 
         if(cardAsset.melee)

@@ -1690,7 +1690,7 @@ MonoBehaviour:
   DescriptionText: {fileID: 7051935544696999227}
   HealthText: {fileID: 4881231474541119515}
   AttackText: {fileID: 495823402975447977}
-  ATK_BG: {fileID: 0}
+  ATK_BG: {fileID: 8034012723910079535}
   ArtImage: {fileID: 8320399300451737102}
   FrameImage: {fileID: 5238550442979127641}
   CardFaceGlowImage: {fileID: 5169089815149203242}

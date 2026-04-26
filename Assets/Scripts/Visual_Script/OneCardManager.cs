@@ -66,9 +66,13 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         if (cardAsset.MaxHealth != 0)
         {
-            AttackText.text = cardAsset.Attack.ToString();
             HealthText.text = cardAsset.MaxHealth.ToString();
         }
+        if(cardAsset.Attack > 0 || ATK_BG == null)
+        {
+            ATK_BG.SetActive(true);
+            AttackText.text = cardAsset.Attack.ToString();
+        } else {ATK_BG.SetActive(false);}
 
         if (PreviewManager != null)
         {
