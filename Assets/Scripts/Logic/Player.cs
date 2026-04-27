@@ -694,14 +694,19 @@ public class Player : MonoBehaviour, ILivable
     public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
     {
         if (NetworkSessionData.IsNetworkSession)
-            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, building.name, spot.SpotID);
+        {
+            MainRessourceAvailable -= building.MainCost;
+            SecondRessourceAvailable -= building.SecondCost;
+            spot.SpawnPendingBuilding(building, this);
+            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.buildings.IndexOf(building), spot.SpotID);
+        }
         else
             ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());
     }
 
-    public void ExecutePlaceBuilding(CardAsset building, BuildSpotVisual spot, int buildingUniqueID)
+    public void ExecutePlaceBuilding(CardAsset building, BuildSpotVisual spot, int buildingUniqueID, bool alreadyPaid = false)
     {
-        new PlaceBuildingCommand(building, this, spot, buildingUniqueID).AddToQueue();
+        new PlaceBuildingCommand(building, this, spot, buildingUniqueID, alreadyPaid).AddToQueue();
     }
 
 

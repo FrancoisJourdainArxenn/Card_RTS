@@ -17,10 +17,10 @@ MonoBehaviour:
   Description: Melee
   CardImage: {fileID: 21300000, guid: 56fc62b1d6abc2245a330ff34060eac4, type: 3}
   MainCost: 3
-  SecondCost: 1
-  Attack: 1
-  MaxHealth: 5
-  AttacksForOneTurn: 1
+  SecondCost: 0
+  Attack: 0
+  MaxHealth: 3
+  AttacksForOneTurn: 0
   melee: 1
   MoveSpeed: 0
   Celerity: 0

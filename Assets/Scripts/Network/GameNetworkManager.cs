@@ -284,6 +284,9 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.MoveCreature:
                 MoveCreatureClientRpc(action.param1, action.param2, action.param3);
                 break;
+            case ActionType.PlaceBuilding:
+                PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
+                break;
         }
     }
 
@@ -648,14 +651,20 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void PlaceBuildingServerRpc(int playerIndex, string buildingName, int spotID)
+    public void PlaceBuildingServerRpc(int playerIndex, int buildingIndex, int spotID)
     {
         int buildingUniqueID = IDFactory.GetUniqueID();
-        PlaceBuildingClientRpc(playerIndex, buildingName, spotID, buildingUniqueID);
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.PlaceBuilding,
+            playerIndex = playerIndex,
+            param1 = buildingIndex,
+            param2 = spotID,
+            param3 = buildingUniqueID
+        });
     }
-
     [ClientRpc]
-    void PlaceBuildingClientRpc(int playerIndex, string buildingName, int spotID, int buildingUniqueID)
+    void PlaceBuildingClientRpc(int playerIndex, int buildingIndex, int spotID, int buildingUniqueID)
     {
         if (!BuildSpotVisual.Registry.TryGetValue(spotID, out BuildSpotVisual spot))
         {
@@ -664,15 +673,17 @@ public class GameNetworkManager : NetworkBehaviour
         }
 
         Player player = Player.Players[playerIndex];
-        CardAsset building = player.deck.FindBuilding(buildingName);
+        CardAsset building = player.deck.FindBuildingByIndex(buildingIndex);
         if (building == null)
         {
-            Debug.LogError($"PlaceBuildingClientRpc: building not found name={buildingName}");
+            Debug.LogError($"PlaceBuildingClientRpc: building not found index={buildingIndex}");
             return;
         }
 
-        player.ExecutePlaceBuilding(building, spot, buildingUniqueID);
+        bool alreadyPaid = (player == GlobalSettings.Instance.localPlayer);
+        player.ExecutePlaceBuilding(building, spot, buildingUniqueID, alreadyPaid);
     }
+
 
 
 
