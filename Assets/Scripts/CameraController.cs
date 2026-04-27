@@ -131,7 +131,7 @@ public class CameraController : MonoBehaviour
         }
         else
         {
-            Debug.Log("No anchor nearby");
+            // Debug.Log("No anchor nearby");
         }
     }
 }

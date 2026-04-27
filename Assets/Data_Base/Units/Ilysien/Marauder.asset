@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Marauder
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
   Description: 
   CardImage: {fileID: 21300000, guid: 8731a68ceb33110478e5c54f75fa0d5a, type: 3}
   MainCost: 2
@@ -20,11 +21,14 @@ MonoBehaviour:
   Attack: 2
   MaxHealth: 3
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 0
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

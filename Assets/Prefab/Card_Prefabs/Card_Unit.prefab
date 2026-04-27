@@ -174,8 +174,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Card Effect
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
-  m_sharedMaterial: {fileID: -6147369630868497409, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -401,8 +401,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: X
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
-  m_sharedMaterial: {fileID: 7467016293197990090, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1236,8 +1236,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Subtypes
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
-  m_sharedMaterial: {fileID: -6147369630868497409, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1844,8 +1844,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: X
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
-  m_sharedMaterial: {fileID: 7467016293197990090, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2133,8 +2133,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: X
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
-  m_sharedMaterial: {fileID: 7467016293197990090, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3048,14 +3048,17 @@ MonoBehaviour:
   cardAsset: {fileID: 0}
   PreviewManager: {fileID: 4555704498667055971}
   NameText: {fileID: 3210977288471384358}
+  Type: {fileID: 2417086422155912971}
   MainCostText: {fileID: 6955613804869879659}
   SecondCostText: {fileID: 5164901951930280132}
   DescriptionText: {fileID: 3458456579256326795}
   HealthText: {fileID: 6086056871920347906}
   AttackText: {fileID: 7891667572944917565}
+  ATK_BG: {fileID: 8028171587880173522}
   ArtImage: {fileID: 2290784832835234906}
   FrameImage: {fileID: 1099761575890760642}
   CardFaceGlowImage: {fileID: 1476436124869973358}
+  hoverZoomEnabled: 0
 --- !u!114 &487482350644611009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3494,8 +3497,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: X
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
-  m_sharedMaterial: {fileID: 7467016293197990090, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3631,8 +3634,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Card Name
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
-  m_sharedMaterial: {fileID: -6147369630868497409, guid: 9af64fb0c09204541b81c97c10151cde, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3899,11 +3902,14 @@ MonoBehaviour:
   cardAsset: {fileID: 0}
   PreviewManager: {fileID: 0}
   NameText: {fileID: 2283547657285070993}
+  Type: {fileID: 0}
   MainCostText: {fileID: 2602100407768608063}
   SecondCostText: {fileID: 2756739522199654121}
   DescriptionText: {fileID: 7228811541225870579}
   HealthText: {fileID: 3137861254150211100}
   AttackText: {fileID: 4046867555738692652}
+  ATK_BG: {fileID: 6663603664693325490}
   ArtImage: {fileID: 2464310103378722258}
   FrameImage: {fileID: 6762293954414124551}
   CardFaceGlowImage: {fileID: 6644564362410442338}
+  hoverZoomEnabled: 0

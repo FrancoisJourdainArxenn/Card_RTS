@@ -69,6 +69,14 @@ public class PlayerArea : MonoBehaviour
             AreaHealthText.text = GetTotalHealth().ToString();
     }
 
+    Player GetOwnerPlayer()
+    {
+        if (GlobalSettings.Instance == null) return null;
+        return owner == AreaPosition.Low
+            ? GlobalSettings.Instance.LowPlayer
+            : GlobalSettings.Instance.TopPlayer;
+    }
+
     int GetTotalATK()
     {
         int total = 0;
@@ -77,6 +85,11 @@ public class PlayerArea : MonoBehaviour
             OneCreatureManager ocm = creature.GetComponent<OneCreatureManager>();
             if (ocm != null && int.TryParse(ocm.AttackText.text, out int atk)) total += atk;
         }
+        Player p = GetOwnerPlayer();
+        if (p != null && parentZone != null)
+            foreach (BuildingLogic bl in p.table.BuildingsInPlay)
+                if (bl.Attack > 0 && bl.OriginSpot?.Zone == parentZone)
+                    total += bl.Attack;
         return total;
     }
 
@@ -88,8 +101,18 @@ public class PlayerArea : MonoBehaviour
             OneCreatureManager ocm = creature.GetComponent<OneCreatureManager>();
             if (ocm != null && int.TryParse(ocm.HealthText.text, out int hp)) total += hp;
         }
+        Player p = GetOwnerPlayer();
+        if (p != null && parentZone != null)
+            foreach (BuildingLogic bl in p.table.BuildingsInPlay)
+            {
+                if (bl.OriginSpot?.Zone == parentZone && bl.Attack > 0)
+                {   
+                    total += bl.Health;
+                }
+            }
         return total;
     }
+
 
 
 }

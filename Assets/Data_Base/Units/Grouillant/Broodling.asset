@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Broodling
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 0
   Description: Celerity
   CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
   MainCost: 1
@@ -20,11 +21,14 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 1
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 0
+  MoveSpeed: 1
   Celerity: 1
   CreatureScriptName: 
   specialCreatureAmount: 1
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

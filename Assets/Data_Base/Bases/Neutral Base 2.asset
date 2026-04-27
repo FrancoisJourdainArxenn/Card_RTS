@@ -18,5 +18,5 @@ MonoBehaviour:
   MaxHealth: 8
   mainRessourceIncome: 2
   secondRessourceIncome: 1
-  mainRessourceBuildingCost: 7
-  secondRessourceBuildingCost: 0
+  mainRessourceBaseCost: 7
+  secondRessourceBaseCost: 0

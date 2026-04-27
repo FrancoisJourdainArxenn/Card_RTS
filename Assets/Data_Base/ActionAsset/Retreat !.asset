@@ -13,17 +13,21 @@ MonoBehaviour:
   m_Name: Retreat !
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 2
   Description: Up to 3 ground Units move back 1 location.
   CardImage: {fileID: 21300000, guid: 6883ad4bd8a83964da7ca58125320a1c, type: 3}
   MainCost: 0
   SecondCost: 1
-  MaxHealth: 0
   Attack: 0
+  MaxHealth: 0
   AttacksForOneTurn: 0
-  Speed: 0
-  Charge: 0
+  melee: 0
+  MoveSpeed: 1
+  Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 3

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Medic
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
   Description: Melee
   CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
   MainCost: 1
@@ -20,11 +21,14 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 2
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 1
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 1
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 3
+  ActivationsForOneTurn: 0

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Jim Raynor
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
   Description: 
   CardImage: {fileID: 21300000, guid: 4a7059cd19de40e4d95b4789019eb400, type: 3}
   MainCost: 6
@@ -20,11 +21,14 @@ MonoBehaviour:
   Attack: 5
   MaxHealth: 5
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 0
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 1
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 3
+  ActivationsForOneTurn: 0

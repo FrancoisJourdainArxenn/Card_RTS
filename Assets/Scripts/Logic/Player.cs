@@ -197,6 +197,8 @@ public class Player : MonoBehaviour, ILivable
         {
             foreach (CreatureLogic cl in table.CreaturesInPlay)
                 cl.OnTurnStart();
+            foreach (BuildingLogic bl in table.BuildingsInPlay)
+                bl.OnTurnStart();
         }
     }
 
@@ -477,6 +479,17 @@ public class Player : MonoBehaviour, ILivable
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateCreatureGlow();
         }
+
+        foreach (BuildingLogic bl in table.BuildingsInPlay)
+        {
+            GameObject g = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
+            if (g == null) continue;
+            OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
+            if (bm == null) continue;
+            bm.CanAttackNow = canAttack && (bl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
+            bm.UpdateBuildingGlow();
+        }
+
     }
 
     public OneCreatureManager CheckCreatureManager(GameObject g)
@@ -670,6 +683,25 @@ public class Player : MonoBehaviour, ILivable
         new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, baseUniqueID);
         new BuildNeutralBaseCommand(baseUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
+    }
+
+    public void ShowBuildings(BuildSpotVisual spot)
+    {
+        Debug.Log("Show Buildings for player " + PlayerID);
+        GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
+    }
+
+    public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
+    {
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, building.name, spot.SpotID);
+        else
+            ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());
+    }
+
+    public void ExecutePlaceBuilding(CardAsset building, BuildSpotVisual spot, int buildingUniqueID)
+    {
+        new PlaceBuildingCommand(building, this, spot, buildingUniqueID).AddToQueue();
     }
 
 

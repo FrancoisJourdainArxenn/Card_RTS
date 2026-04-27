@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Deck : MonoBehaviour {
 
     public List<CardAsset> cards = new List<CardAsset>();
+    public List<CardAsset> buildings = new List<CardAsset>();
 
     void Awake()
     {
@@ -20,4 +21,10 @@ public class Deck : MonoBehaviour {
     {
         cards.SelectRandomCardFromSeed(seed);
     }
+    
+    public CardAsset FindBuilding(string buildingName)
+    {
+        return buildings.Find(b => b.name == buildingName);
+    }
+
 }
