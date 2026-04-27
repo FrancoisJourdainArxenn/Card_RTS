@@ -32,7 +32,9 @@ public class BuildingLogic : ILivable
     public int Attack => baseAttack;
 
     private int attacksForOneTurn = 0;
+    private int activationForOneTurn = 0;
     public int AttacksLeftThisTurn { get; set; }
+    public int ActivationLeftThisTurn {get; set; }
 
     public bool IsMelee => ca.melee;
 
@@ -57,6 +59,7 @@ public class BuildingLogic : ILivable
         health = ca.MaxHealth;
         baseAttack = ca.Attack;
         attacksForOneTurn = ca.AttacksForOneTurn;
+        activationForOneTurn = ca.ActivationsForOneTurn;
         UniqueBuildingID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
     }
@@ -64,6 +67,7 @@ public class BuildingLogic : ILivable
     public void OnTurnStart()
     {
         AttacksLeftThisTurn = attacksForOneTurn;
+        ActivationLeftThisTurn = activationForOneTurn;
     }
 
     public void Die()

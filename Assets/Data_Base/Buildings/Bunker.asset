@@ -22,7 +22,7 @@ MonoBehaviour:
   MaxHealth: 5
   AttacksForOneTurn: 1
   melee: 1
-  MoveSpeed: 1
+  MoveSpeed: 0
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0
@@ -31,3 +31,4 @@ MonoBehaviour:
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

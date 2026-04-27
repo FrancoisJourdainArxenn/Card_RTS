@@ -13,18 +13,22 @@ MonoBehaviour:
   m_Name: Hydralisk
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 0
   Description: 
   CardImage: {fileID: 21300000, guid: 8a7f70d83619c7943a8a988accfc10a5, type: 3}
   MainCost: 3
   SecondCost: 2
-  MaxHealth: 2
   Attack: 4
+  MaxHealth: 2
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 0
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 1
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

@@ -76,6 +76,7 @@ public class TurnManager : MonoBehaviour
         timer.StartTimer();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
+        BuildingLogic.BuildingsCreatedThisGame.Clear();
 
         foreach (Player p in Player.Players)
         {
@@ -164,9 +165,10 @@ public class TurnManager : MonoBehaviour
                     ZoneCombatResolver.SerializeMyAttackAssignments(participantIndex);
                 GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
                     participantIndex,
-                    assignment.CreatureIDs,   assignment.CreatureDamages,
-                    assignment.BaseIDs,   assignment.BaseDamages,
-                    assignment.TargetPlayerIDs, assignment.PlayerDamages);
+                    assignment.CreatureIDs,     assignment.CreatureDamages,
+                    assignment.BaseIDs,         assignment.BaseDamages,
+                    assignment.TargetPlayerIDs, assignment.PlayerDamages,
+                    assignment.BuildingIDs,     assignment.BuildingDamages);
                 return;
             }
 

@@ -25,8 +25,14 @@ public class PlaceBuildingCommand : Command
         player.SecondRessourceAvailable -= building.SecondCost;
         new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable, player.secondRessourceTotal, player.SecondRessourceAvailable).AddToQueue();
         BuildingLogic buildingLogic = new BuildingLogic(player, building, spot, buildingUniqueID);
+        buildingLogic.OnTurnStart();
         player.table.BuildingsInPlay.Add(buildingLogic);
         spot.SpawnBuilding(buildingLogic, player);
+        if (spot.Zone != null)
+        foreach (PlayerArea pa in spot.Zone.subZones)
+            pa.RefreshAreaStats();
+        
+        FogOfWarManager.Refresh();
         CommandExecutionComplete();
     }
 }

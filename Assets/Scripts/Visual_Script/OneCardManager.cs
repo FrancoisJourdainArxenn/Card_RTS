@@ -68,7 +68,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         {
             HealthText.text = cardAsset.MaxHealth.ToString();
         }
-        if(cardAsset.Attack > 0 || ATK_BG == null)
+        if(cardAsset.Attack > 0 || cardAsset.Type == CardType.Unit)
         {
             ATK_BG.SetActive(true);
             AttackText.text = cardAsset.Attack.ToString();

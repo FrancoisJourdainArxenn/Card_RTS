@@ -53,5 +53,7 @@ public class CardAsset : ScriptableObject
     public string SpellScriptName;
     public int specialSpellAmount;
     public TargetingOptions Targets;
+    public int ActivationsForOneTurn = 0;
+
 
 }

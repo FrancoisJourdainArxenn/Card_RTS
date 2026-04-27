@@ -20,9 +20,16 @@ public class BuildingDieCommand : Command
         }
 
         OneBuildingManager manager = buildingGO.GetComponent<OneBuildingManager>();
+        BuildSpotVisual originSpot = manager?.OriginSpot;
         manager?.OriginSpot?.OnBuildingDestroyed();
         Object.Destroy(buildingGO);
+
+        if (originSpot?.Zone != null)
+            foreach (PlayerArea pa in originSpot.Zone.subZones)
+                pa.RefreshAreaStats();
+        FogOfWarManager.Refresh();
         CommandExecutionComplete();
     }
+
 }
 

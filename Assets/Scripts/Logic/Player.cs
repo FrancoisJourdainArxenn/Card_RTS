@@ -197,6 +197,8 @@ public class Player : MonoBehaviour, ILivable
         {
             foreach (CreatureLogic cl in table.CreaturesInPlay)
                 cl.OnTurnStart();
+            foreach (BuildingLogic bl in table.BuildingsInPlay)
+                bl.OnTurnStart();
         }
     }
 
@@ -477,6 +479,17 @@ public class Player : MonoBehaviour, ILivable
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateCreatureGlow();
         }
+
+        foreach (BuildingLogic bl in table.BuildingsInPlay)
+        {
+            GameObject g = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
+            if (g == null) continue;
+            OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
+            if (bm == null) continue;
+            bm.CanAttackNow = canAttack && (bl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
+            bm.UpdateBuildingGlow();
+        }
+
     }
 
     public OneCreatureManager CheckCreatureManager(GameObject g)

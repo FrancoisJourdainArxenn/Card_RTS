@@ -693,7 +693,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: -950959465
+  m_SortingLayerID: -1921341487
   m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!114 &6380848725905163249
@@ -3424,6 +3424,7 @@ MonoBehaviour:
   DescriptionText: {fileID: 5591465055003247744}
   HealthText: {fileID: 4598224650408439194}
   AttackText: {fileID: 7438606133420093657}
+  ATK_BG: {fileID: 6355203183577597931}
   ArtImage: {fileID: 8626628340822255021}
   FrameImage: {fileID: 7115044591137647919}
   CardFaceGlowImage: {fileID: 9073145544486608570}

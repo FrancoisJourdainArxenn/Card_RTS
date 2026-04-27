@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Zergling
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 0
   Description: Melee
   CardImage: {fileID: 21300000, guid: acca65c89799521429ba0c9a7617f829, type: 3}
   MainCost: 1
@@ -20,11 +21,14 @@ MonoBehaviour:
   Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
-  MoveSpeed: 1
   melee: 1
+  MoveSpeed: 1
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 1
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

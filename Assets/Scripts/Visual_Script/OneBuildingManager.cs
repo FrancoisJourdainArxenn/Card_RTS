@@ -65,29 +65,14 @@ public class OneBuildingManager : MonoBehaviour
             ReadBuidingFromAsset();
     }
 
-    void OnMouseDown()
+    public void OnBuildingClicked()
     {
         if (TurnManager.Instance == null || !TurnManager.Instance.IsBattlePhase) return;
+        if (BuildingLogic == null) return;
 
-        IDHolder idHolder = GetComponent<IDHolder>();
-        if (idHolder == null) return;
-        int id = idHolder.UniqueID;
-
-        ZoneCombatResolver resolver;
-
-        if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic bl))
-        {
-            resolver = bl.neutralBaseController?.zone?.GetComponent<ZoneCombatResolver>();
-        }
-        else
-        {
-            Player p = id == GlobalSettings.Instance.LowPlayer.PlayerID
-                ? GlobalSettings.Instance.LowPlayer
-                : GlobalSettings.Instance.TopPlayer;
-            resolver = p?.MainPArea?.parentZone?.GetComponent<ZoneCombatResolver>();
-        }
-
-        resolver?.TryRedirectDamageFromBase(id);
+        ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
+        if (resolver != null)
+            resolver.TryRedirectDamageFromBuilding(BuildingLogic);
     }
 
     public int BaseID {get; set;}
@@ -112,7 +97,17 @@ public class OneBuildingManager : MonoBehaviour
             PreviewManager.cardAsset = cardAsset;
             PreviewManager.ReadCardFromAsset();
         }
-    }	
+        
+    }
+
+    public void UpdateBuildingGlow()
+    {
+        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle)
+            glow.color = Color.red;
+        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Command)
+            glow.color = Color.green;
+        glow.enabled = CanAttackNow;
+    }
 
     /*public void ResetValues(CardAsset buildingAsset)
     {

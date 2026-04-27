@@ -54,6 +54,7 @@ public class HoverPreview: MonoBehaviour
     void OnMouseDown()
     {
         GetComponentInParent<OneCreatureManager>()?.OnCreatureClicked();
+        GetComponentInParent<OneBuildingManager>()?.OnBuildingClicked();
     }
 
             

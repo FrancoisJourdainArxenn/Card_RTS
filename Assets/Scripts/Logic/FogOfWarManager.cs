@@ -89,7 +89,17 @@ public class FogOfWarManager : MonoBehaviour
         // Show/hide all build spots in the zone based on observer presence
         foreach (BuildSpotVisual spot in zone.GetComponentsInChildren<BuildSpotVisual>(true))
             spot.gameObject.SetActive(observerHasPresence);
+       
+       foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
+        {
+            BuildingLogic b = kvp.Value;
+            if (b.OriginSpot == null || b.OriginSpot.Zone != zone) continue;
 
+            GameObject buildingGO = IDHolder.GetGameObjectWithID(b.UniqueBuildingID);
+            if (buildingGO == null) continue;
+
+            buildingGO.SetActive(b.owner == observer || observerHasPresence);
+        }
         // --- Bases joueur (fog comme les bases neutres) ---
         // L'observer voit toujours sa propre base
         if (observer.MainPArea != null 
@@ -147,6 +157,12 @@ public class FogOfWarManager : MonoBehaviour
                 if (b.owner == player && b.neutralBaseController == nbc)
                     return true;
             }
+        }
+
+        foreach (BuildingLogic b in player.table.BuildingsInPlay)
+        {
+            if (b.OriginSpot != null && b.OriginSpot.Zone == zone)
+                return true;
         }
 
         return false;

@@ -9,13 +9,24 @@ public class BuildSpotVisual : MonoBehaviour
     [SerializeField] private GameObject spotVisual;
 
 
-
+    public ZoneLogic Zone => _zoneLogic;
     private ZoneLogic _zoneLogic;
 
     void Awake()
     {
-        spotID = IDFactory.GetUniqueID();
+        spotID = GetHierarchyPath(transform).GetHashCode();
         Registry[SpotID] = this;
+    }
+
+    private static string GetHierarchyPath(Transform t)
+    {
+        string path = t.name;
+        while (t.parent != null)
+        {
+            t = t.parent;
+            path = t.name + "/" + path;
+        }
+        return path;
     }
 
     void Start()

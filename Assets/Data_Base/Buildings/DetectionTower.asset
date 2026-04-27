@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Baneling
+  m_Name: DetectionTower
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  Description: Melee
-  CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
+  Description: 
+  CardImage: {fileID: 21300000, guid: 6c6b0c9a05edf1045a13e21f06ddb6fd, type: 3}
   MainCost: 1
-  SecondCost: 1
-  Attack: 3
-  MaxHealth: 1
-  AttacksForOneTurn: 1
-  melee: 1
-  MoveSpeed: 1
+  SecondCost: 0
+  Attack: 0
+  MaxHealth: 0
+  AttacksForOneTurn: 0
+  melee: 0
+  MoveSpeed: 0
   Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0

@@ -50,6 +50,7 @@ public class GameNetworkManager : NetworkBehaviour
         public int[] CreatureIDs,     CreatureDamages;
         public int[] BaseIDs,         BaseDamages;
         public int[] TargetPlayerIDs, PlayerDamages;
+        public int[] BuildingIDs,     BuildingDamages;
     }
     private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
 
@@ -65,29 +66,33 @@ public class GameNetworkManager : NetworkBehaviour
         int playerIndex,
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
-        int[] targetPlayerIDs, int[] playerDamages)
+        int[] targetPlayerIDs, int[] playerDamages,
+        int[] buildingIDs,     int[] buildingDamages)
     {
         _battleSubmissions[playerIndex] = new BattleSubmission
         {
             CreatureIDs     = creatureIDs,     CreatureDamages  = creatureDamages,
-            BaseIDs     = baseIDs,     BaseDamages  = baseDamages,
-            TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages
+            BaseIDs         = baseIDs,         BaseDamages      = baseDamages,
+            TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages,
+            BuildingIDs     = buildingIDs,     BuildingDamages  = buildingDamages
         };
 
         if (_battleSubmissions.Count < 2)
             return; // On attend encore l'autre joueur
 
-        BattleSubmission submission0 = _battleSubmissions[0];
-        BattleSubmission submission1 = _battleSubmissions[1];
+        BattleSubmission s0 = _battleSubmissions[0];
+        BattleSubmission s1 = _battleSubmissions[1];
 
         // Union simple : chaque joueur a soumis les dégâts qu'IL inflige (pas de conflit possible)
         ApplyCanonicalBattleAssignmentClientRpc(
-            ConcatArrays(submission0.CreatureIDs,     submission1.CreatureIDs),
-            ConcatArrays(submission0.CreatureDamages, submission1.CreatureDamages),
-            ConcatArrays(submission0.BaseIDs,     submission1.BaseIDs),
-            ConcatArrays(submission0.BaseDamages, submission1.BaseDamages),
-            ConcatArrays(submission0.TargetPlayerIDs, submission1.TargetPlayerIDs),
-            ConcatArrays(submission0.PlayerDamages,   submission1.PlayerDamages)
+            ConcatArrays(s0.CreatureIDs,     s1.CreatureIDs),
+            ConcatArrays(s0.CreatureDamages, s1.CreatureDamages),
+            ConcatArrays(s0.BaseIDs,         s1.BaseIDs),
+            ConcatArrays(s0.BaseDamages,     s1.BaseDamages),
+            ConcatArrays(s0.TargetPlayerIDs, s1.TargetPlayerIDs),
+            ConcatArrays(s0.PlayerDamages,   s1.PlayerDamages),
+            ConcatArrays(s0.BuildingIDs,     s1.BuildingIDs),
+            ConcatArrays(s0.BuildingDamages, s1.BuildingDamages)
         );
         _battleSubmissions.Clear();
 
@@ -104,10 +109,12 @@ public class GameNetworkManager : NetworkBehaviour
     void ApplyCanonicalBattleAssignmentClientRpc(
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
-        int[] targetPlayerIDs, int[] playerDamages)
+        int[] targetPlayerIDs, int[] playerDamages,
+        int[] buildingIDs,     int[] buildingDamages)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
-            creatureIDs, creatureDamages, baseIDs, baseDamages, targetPlayerIDs, playerDamages);
+            creatureIDs, creatureDamages, baseIDs, baseDamages,
+            targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)

@@ -28,6 +28,10 @@ public class DealDamageCommand : Command {
         {
             target.GetComponent<OneBaseManager>().TakeDamage(amount, healthAfter);
         }
+        else if (target != null && target.GetComponent<OneBuildingManager>() != null)
+        {
+            target.GetComponent<OneBuildingManager>().TakeDamage(amount, healthAfter);
+        }
         else
         {
             target?.GetComponent<OneCreatureManager>()?.TakeDamage(amount, healthAfter);

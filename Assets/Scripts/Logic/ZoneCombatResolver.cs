@@ -8,6 +8,7 @@ public class ZoneCombatResolver : MonoBehaviour
     public static IReadOnlyList<ZoneCombatResolver> AllResolvers => allResolvers;
     private Dictionary<int, int> pendingBaseDamage = new Dictionary<int, int>();
     private Dictionary<int, int> pendingPlayerDamage   = new Dictionary<int, int>();
+    private Dictionary<int, int> pendingBuildingDamage = new Dictionary<int, int>();
 
     private ZoneLogic zoneLogic;
     private int p1TotalATK;
@@ -25,7 +26,8 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         Player p1 = GlobalSettings.Instance.LowPlayer;
         Player p2 = GlobalSettings.Instance.TopPlayer;
-        
+        bool p1HasBuildingAtk = GetBuildingsInMyZone(p1, zoneLogic).Count > 0;
+        bool p2HasBuildingAtk = GetBuildingsInMyZone(p2, zoneLogic).Count > 0;       
         int p1CreatureCount = GetCreaturesInMyZone(p1, zoneLogic).Count;
         int p2CreatureCount = GetCreaturesInMyZone(p2, zoneLogic).Count;
 
@@ -34,7 +36,13 @@ public class ZoneCombatResolver : MonoBehaviour
             (FindDefenderBaseInZone(p1) != null && p2CreatureCount > 0) ||
             (FindDefenderBaseInZone(p2) != null && p1CreatureCount > 0) ||
             (zoneLogic.subZones.Contains(p1.MainPArea) && p2CreatureCount > 0) ||
-            (zoneLogic.subZones.Contains(p2.MainPArea) && p1CreatureCount > 0)
+            (zoneLogic.subZones.Contains(p2.MainPArea) && p1CreatureCount > 0) ||
+            (p1HasBuildingAtk && p2CreatureCount > 0) ||
+            (p2HasBuildingAtk && p1CreatureCount > 0) ||
+            (p1HasBuildingAtk && FindDefenderBaseInZone(p2) != null) ||
+            (p2HasBuildingAtk && FindDefenderBaseInZone(p1) != null) ||
+            (p1HasBuildingAtk && zoneLogic.subZones.Contains(p2.MainPArea)) ||
+            (p2HasBuildingAtk && zoneLogic.subZones.Contains(p1.MainPArea))
         )
             return true;
         return false;
@@ -57,12 +65,17 @@ public class ZoneCombatResolver : MonoBehaviour
         int p1Assigned = 0;
         foreach (var c in GetCreaturesInMyZone(p2, zoneLogic))
             if (pendingDamage.TryGetValue(c.UniqueCreatureID, out int d)) p1Assigned += d;
+        foreach (var b in GetAllBuildingsInMyZone(p2, zoneLogic))
+            if (pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int d)) p1Assigned += d;
         p1FreePool = p1TotalATK - p1Assigned;
 
         int p2Assigned = 0;
         foreach (var c in GetCreaturesInMyZone(p1, zoneLogic))
             if (pendingDamage.TryGetValue(c.UniqueCreatureID, out int d)) p2Assigned += d;
+        foreach (var b in GetAllBuildingsInMyZone(p1, zoneLogic))
+            if (pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int d)) p2Assigned += d;
         p2FreePool = p2TotalATK - p2Assigned;
+
         // Subtract overflow already routed to player bases
         foreach (var kvp in pendingBaseDamage)
         {
@@ -95,8 +108,7 @@ public class ZoneCombatResolver : MonoBehaviour
             if (area?.BattlePos != null)
                 moves.Add((creature.UniqueCreatureID, area.BattlePos.position));
         }
-
-        bool anyCombat = pendingDamage.Count > 0 || pendingBaseDamage.Count > 0 || pendingPlayerDamage.Count > 0;
+        bool anyCombat = pendingDamage.Count > 0 || pendingBaseDamage.Count > 0 || pendingPlayerDamage.Count > 0 || pendingBuildingDamage.Count > 0;
         if (moves.Count > 0 && anyCombat)
             new ZoneClashMoveCommand(moves, 0.2f).AddToQueue();
 
@@ -110,7 +122,6 @@ public class ZoneCombatResolver : MonoBehaviour
             new DealDamageCommand(kvp.Key, damage, healthAfter).AddToQueue();
             creature.Health -= damage;
         }
-
         foreach (var kvp in pendingBaseDamage)
         {
             if (!BaseLogic.BasesCreatedThisGame.TryGetValue(kvp.Key, out BaseLogic bl)) continue;
@@ -118,7 +129,6 @@ public class ZoneCombatResolver : MonoBehaviour
             new DealDamageCommand(kvp.Key, kvp.Value, healthAfter).AddToQueue();
             bl.Health -= kvp.Value;
         }
-
         foreach (var kvp in pendingPlayerDamage)
         {
             Player target = kvp.Key == GlobalSettings.Instance.LowPlayer.PlayerID
@@ -128,7 +138,13 @@ public class ZoneCombatResolver : MonoBehaviour
             new DealDamageCommand(target.PlayerID, kvp.Value, healthAfter).AddToQueue();
             target.Health -= kvp.Value;
         }
-
+        foreach (var kvp in pendingBuildingDamage)
+        {
+            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(kvp.Key, out BuildingLogic bl)) continue;
+            int healthAfter = bl.Health - kvp.Value;
+            new DealDamageCommand(kvp.Key, kvp.Value, healthAfter).AddToQueue();
+            bl.Health -= kvp.Value;
+        }
         if (anyCombat)
         {
             foreach (PlayerArea pa in zoneLogic.subZones)
@@ -156,16 +172,21 @@ public class ZoneCombatResolver : MonoBehaviour
         List<CreatureLogic> p1Creatures = GetCreaturesInMyZone(p1, zone);
         List<CreatureLogic> p2Creatures = GetCreaturesInMyZone(p2, zone);
 
-        if (p1Creatures.Count == 0 && p2Creatures.Count == 0) return;
+        bool p1HasAtk = p1Creatures.Count > 0 || GetBuildingsInMyZone(p1, zone).Count > 0;
+        bool p2HasAtk = p2Creatures.Count > 0 || GetBuildingsInMyZone(p2, zone).Count > 0;
+        if (!p1HasAtk && !p2HasAtk) return;
 
         p1TotalATK = 0;
         foreach (var c in p1Creatures) p1TotalATK += c.Attack;
+        foreach (var b in GetBuildingsInMyZone(p1, zone)) p1TotalATK += b.Attack;
 
         p2TotalATK = 0;
         foreach (var c in p2Creatures) p2TotalATK += c.Attack;
+        foreach (var b in GetBuildingsInMyZone(p2, zone)) p2TotalATK += b.Attack;
 
-        AssignDamage(p1TotalATK, p2Creatures, p2);
-        AssignDamage(p2TotalATK, p1Creatures, p1);
+
+        AssignDamage(p1TotalATK, p2Creatures, GetAllBuildingsInMyZone(p2, zone), p2);
+        AssignDamage(p2TotalATK, p1Creatures, GetAllBuildingsInMyZone(p1, zone), p1);
     }
 
     List<CreatureLogic> GetCreaturesInMyZone(Player player, ZoneLogic zone)
@@ -183,16 +204,36 @@ public class ZoneCombatResolver : MonoBehaviour
         return result;
     }
 
-
-
-    void AssignDamage(int totalDamage, List<CreatureLogic> targets, Player defender)
+    List<BuildingLogic> GetAllBuildingsInMyZone(Player player, ZoneLogic zone)
     {
-        var melee = new List<CreatureLogic>();
-        var nonMelee = new List<CreatureLogic>();
-        foreach (var t in targets)
-            (t.IsMelee ? melee : nonMelee).Add(t);
+        var result = new List<BuildingLogic>();
+        foreach (BuildingLogic bl in player.table.BuildingsInPlay)
+            if (bl.OriginSpot?.Zone == zone)
+                result.Add(bl);
+        return result;
+    }
 
-        foreach (var target in melee)
+    List<BuildingLogic> GetBuildingsInMyZone(Player player, ZoneLogic zone)
+    {
+        var result = new List<BuildingLogic>();
+        foreach (BuildingLogic bl in player.table.BuildingsInPlay)
+            if (bl.Attack > 0 && bl.OriginSpot != null && bl.OriginSpot.Zone == zone)
+                result.Add(bl);
+        return result;
+    }
+
+    void AssignDamage(int totalDamage, List<CreatureLogic> creatureTargets, List<BuildingLogic> buildingTargets, Player defender)
+    {
+        var meleeCreatures = new List<CreatureLogic>();
+        var nonMeleeCreatures = new List<CreatureLogic>();
+        foreach (var c in creatureTargets) (c.IsMelee ? meleeCreatures : nonMeleeCreatures).Add(c);
+
+        var meleeBuildings = new List<BuildingLogic>();
+        var nonMeleeBuildings = new List<BuildingLogic>();
+        foreach (var b in buildingTargets) (b.IsMelee ? meleeBuildings : nonMeleeBuildings).Add(b);
+
+        // Phase 1 : front line melee (créatures + bâtiments)
+        foreach (var target in meleeCreatures)
         {
             if (totalDamage <= 0) break;
             int dmg = Mathf.Min(totalDamage, target.Health);
@@ -200,44 +241,58 @@ public class ZoneCombatResolver : MonoBehaviour
             totalDamage -= dmg;
             ShowIndicator(target, dmg);
         }
+        foreach (var target in meleeBuildings)
+        {
+            if (totalDamage <= 0) break;
+            int dmg = Mathf.Min(totalDamage, target.Health);
+            pendingBuildingDamage[target.UniqueBuildingID] = dmg;
+            totalDamage -= dmg;
+            ShowBuildingIndicator(target, dmg);
+        }
 
-        bool allMeleeDead = melee.TrueForAll(m =>
+        bool allMeleeCreaturesDead = meleeCreatures.TrueForAll(m =>
             pendingDamage.TryGetValue(m.UniqueCreatureID, out int d) && d >= m.Health);
+        bool allMeleeBuildingsDead = meleeBuildings.TrueForAll(b =>
+            pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int d) && d >= b.Health);
 
-        if (!allMeleeDead) return;
+        if (!allMeleeCreaturesDead || !allMeleeBuildingsDead) return;
 
-        foreach (var target in nonMelee)
+        // Phase 2 : non-melee
+        foreach (var target in nonMeleeCreatures)
         {
             if (totalDamage <= 0) break;
             int dmg = Mathf.Min(totalDamage, target.Health);
             pendingDamage[target.UniqueCreatureID] = dmg;
             totalDamage -= dmg;
             ShowIndicator(target, dmg);
+        }
+        foreach (var target in nonMeleeBuildings)
+        {
+            if (totalDamage <= 0) break;
+            int dmg = Mathf.Min(totalDamage, target.Health);
+            pendingBuildingDamage[target.UniqueBuildingID] = dmg;
+            totalDamage -= dmg;
+            ShowBuildingIndicator(target, dmg);
         }
 
         if (totalDamage <= 0) return;
 
-        // Every creature is lethally hit (or there were none) — overflow to base
+        // Overflow vers base/joueur
         BaseLogic _base = FindDefenderBaseInZone(defender);
         if (_base != null)
         {
-            int existing = pendingBaseDamage.TryGetValue(_base.ID, out int b) ? b : 0;
+            int existing = pendingBaseDamage.TryGetValue(_base.ID, out int b2) ? b2 : 0;
             pendingBaseDamage[_base.ID] = existing + totalDamage;
             ShowBaseIndicator(_base.ID, existing + totalDamage, _base.Health);
-
         }
-        else
+        else if (zoneLogic.subZones.Contains(defender.MainPArea))
         {
-            if (zoneLogic.subZones.Contains(defender.MainPArea))
-            {
-                int existing = pendingPlayerDamage.TryGetValue(defender.PlayerID, out int p) ? p : 0;
-                pendingPlayerDamage[defender.PlayerID] = existing + totalDamage;
-                ShowBaseIndicator(defender.PlayerID, existing + totalDamage, defender.Health);
-
-            }
+            int existing = pendingPlayerDamage.TryGetValue(defender.PlayerID, out int p) ? p : 0;
+            pendingPlayerDamage[defender.PlayerID] = existing + totalDamage;
+            ShowBaseIndicator(defender.PlayerID, existing + totalDamage, defender.Health);
         }
-
     }
+
 
     void ShowIndicator(CreatureLogic creature, int damage)
     {
@@ -254,7 +309,11 @@ public class ZoneCombatResolver : MonoBehaviour
         IDHolder.GetGameObjectWithID(id)?.GetComponent<OneBaseManager>()?.ShowPendingDamage(damage, health);
     }
 
-
+    void ShowBuildingIndicator(BuildingLogic building, int damage)
+    {
+        GameObject go = IDHolder.GetGameObjectWithID(building.UniqueBuildingID);
+        go?.GetComponent<OneBuildingManager>()?.ShowPendingDamage(damage, building.Health);
+    }
     void ClearAllIndicators()
     {
         p1FreePool = 0;
@@ -269,6 +328,12 @@ public class ZoneCombatResolver : MonoBehaviour
             GameObject go = IDHolder.GetGameObjectWithID(bl.ID);
             go?.GetComponent<OneBaseManager>()?.ClearPendingDamageIndicator();
         }
+        foreach (var bl in BuildingLogic.BuildingsCreatedThisGame.Values)
+        {
+            GameObject go = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
+            go?.GetComponent<OneBuildingManager>()?.ClearPendingDamageIndicator();
+        }
+        pendingBuildingDamage.Clear();
     }
 
     AreaPosition GetAreaPosition(Player player)
@@ -531,6 +596,8 @@ public class ZoneCombatResolver : MonoBehaviour
         public int[] BaseDamages;
         public int[] TargetPlayerIDs;
         public int[] PlayerDamages;
+        public int[] BuildingIDs;
+        public int[] BuildingDamages;
     }
 
     public static BattleAssignment SerializeMyAttackAssignments(int attackerPlayerIndex)
@@ -550,6 +617,8 @@ public class ZoneCombatResolver : MonoBehaviour
         List<int> baseDmgList       = new List<int>();
         List<int> playerIDList      = new List<int>();
         List<int> playerDmgList     = new List<int>();
+        List<int> buildingIDList  = new List<int>();
+        List<int> buildingDmgList = new List<int>();
 
         foreach (ZoneCombatResolver resolver in allResolvers)
         {
@@ -569,6 +638,14 @@ public class ZoneCombatResolver : MonoBehaviour
                 baseDmgList.Add(entry.Value);
             }
 
+            foreach (KeyValuePair<int, int> entry in resolver.pendingBuildingDamage)
+            {
+                if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(entry.Key, out BuildingLogic bl)) continue;
+                if (bl.owner != enemy) continue;
+                buildingIDList.Add(entry.Key);
+                buildingDmgList.Add(entry.Value);
+            }
+
             if (resolver.pendingPlayerDamage.TryGetValue(enemy.PlayerID, out int pendingPlayerDmg))
             {
                 playerIDList.Add(enemy.PlayerID);
@@ -583,7 +660,9 @@ public class ZoneCombatResolver : MonoBehaviour
             BaseIDs     = baseIDList.ToArray(),
             BaseDamages = baseDmgList.ToArray(),
             TargetPlayerIDs = playerIDList.ToArray(),
-            PlayerDamages   = playerDmgList.ToArray()
+            PlayerDamages   = playerDmgList.ToArray(),
+            BuildingIDs     = buildingIDList.ToArray(),
+            BuildingDamages = buildingDmgList.ToArray()
         };
     }
 
@@ -596,13 +675,15 @@ public class ZoneCombatResolver : MonoBehaviour
     public static void ApplyCanonicalAssignment(
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
-        int[] targetPlayerIDs, int[] playerDamages)
+        int[] targetPlayerIDs, int[] playerDamages,
+        int[] buildingIDs,     int[] buildingDamages)
     {
         foreach (ZoneCombatResolver resolver in allResolvers)
         {
             resolver.pendingDamage.Clear();
             resolver.pendingBaseDamage.Clear();
             resolver.pendingPlayerDamage.Clear();
+            resolver.pendingBuildingDamage.Clear();
         }
 
         for (int i = 0; i < creatureIDs.Length; i++)
@@ -627,6 +708,13 @@ public class ZoneCombatResolver : MonoBehaviour
             ZoneCombatResolver ownerResolver = FindResolverForPlayer(targetPlayer);
             if (ownerResolver != null) ownerResolver.pendingPlayerDamage[targetPlayerIDs[i]] = playerDamages[i];
         }
+
+        for (int i = 0; i < buildingIDs.Length; i++)
+        {
+            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(buildingIDs[i], out BuildingLogic bl)) continue;
+            ZoneCombatResolver ownerResolver = FindResolverForBuilding(bl);
+            if (ownerResolver != null) ownerResolver.pendingBuildingDamage[buildingIDs[i]] = buildingDamages[i];
+        }
     }
 
     static ZoneCombatResolver FindResolverForBase(BaseLogic _base)
@@ -641,6 +729,70 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (ZoneCombatResolver resolver in allResolvers)
             if (resolver.zoneLogic.subZones.Contains(player.MainPArea)) return resolver;
         return null;
+    }
+
+    public static ZoneCombatResolver FindForBuilding(BuildingLogic bl)
+    {
+        foreach (ZoneCombatResolver resolver in allResolvers)
+            if (bl.OriginSpot?.Zone == resolver.zoneLogic) return resolver;
+        return null;
+    }
+
+    static ZoneCombatResolver FindResolverForBuilding(BuildingLogic bl) => FindForBuilding(bl);
+
+    public void TryRedirectDamageFromBuilding(BuildingLogic building)
+    {
+        int id = building.UniqueBuildingID;
+        Player defender = building.owner;
+        if (defender == null) return;
+        if (GlobalSettings.Instance.localPlayer == defender) return;
+        if (building.OriginSpot == null || building.OriginSpot.Zone != zoneLogic) return;
+
+        bool defenderIsTop = defender == GlobalSettings.Instance.TopPlayer;
+
+        // Phase 1 : le bâtiment a des dégâts pending → les libérer dans le pool
+        if (pendingBuildingDamage.TryGetValue(id, out int freed))
+        {
+            pendingBuildingDamage.Remove(id);
+            GameObject go = IDHolder.GetGameObjectWithID(id);
+            if (go != null && go.TryGetComponent(out OneBuildingManager obm))
+                obm.ClearPendingDamageIndicator();
+            if (defenderIsTop) p1FreePool += freed;
+            else               p2FreePool += freed;
+            RefreshAllAreaStats();
+            return;
+        }
+
+        // Phase 2 : assigner du pool libre vers ce bâtiment
+        int freePool = defenderIsTop ? p1FreePool : p2FreePool;
+        if (freePool <= 0) return;
+
+        // Contrainte melee : cible non-melee seulement si tous les corps-à-corps ennemis sont déjà lethalement touchés
+        if (!building.IsMelee)
+        {
+            foreach (var c in GetCreaturesInMyZone(defender, zoneLogic))
+            {
+                if (!c.IsMelee) continue;
+                bool fatal = pendingDamage.TryGetValue(c.UniqueCreatureID, out int d) && d >= c.Health;
+                if (!fatal) return;
+            }
+            foreach (var b in GetAllBuildingsInMyZone(defender, zoneLogic))
+            {
+                if (!b.IsMelee) continue;
+                bool fatal = pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int d) && d >= b.Health;
+                if (!fatal) return;
+            }
+        }
+
+        int existing = pendingBuildingDamage.TryGetValue(id, out int ex) ? ex : 0;
+        int assign = Mathf.Min(freePool, building.Health - existing);
+        if (assign <= 0) return;
+
+        pendingBuildingDamage[id] = existing + assign;
+        ShowBuildingIndicator(building, existing + assign);
+        if (defenderIsTop) p1FreePool -= assign;
+        else               p2FreePool -= assign;
+        RefreshAllAreaStats();
     }
 
     void OnDestroy()
