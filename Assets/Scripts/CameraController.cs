@@ -15,6 +15,10 @@ public class CameraController : MonoBehaviour
 
     enum State { Overhead, Transitioning, ZoomedIn }
     State _state = State.Overhead;
+
+    public bool IsZoomedIn => _state == State.ZoomedIn;
+    public Vector3 WorldPosition => transform.position;
+    public ZoneCameraAnchor CurrentAnchor { get; private set; }
     Vector3 _savedOverheadPosition;
     Quaternion _savedOverheadRotation;
 
@@ -54,7 +58,7 @@ public class CameraController : MonoBehaviour
             TransitionTo(
                 _savedOverheadPosition,
                 _savedOverheadRotation,
-                () => _state = State.Overhead
+                () => { _state = State.Overhead; CurrentAnchor = null; }
             );
             return;
         }
@@ -93,8 +97,7 @@ public class CameraController : MonoBehaviour
                 _savedOverheadRotation = transform.rotation;
                 _hoveredAnchor?.SetHighlighted(false);
                 _hoveredAnchor = null;
-                TransitionTo(anchor.transform.position, anchor.transform.rotation,
-                             () => _state = State.ZoomedIn);
+                MoveCameraToAnchor(anchor);
             }
         }
     }
@@ -121,17 +124,20 @@ public class CameraController : MonoBehaviour
         var nearest = direction.HasValue
             ? ZoneCameraAnchor.FindClosestFollowingDirection(pos, direction.Value)
             : ZoneCameraAnchor.FindClosestTo(pos);
-        if (nearest != null)
-        {
-            TransitionTo(
-                nearest.transform.position,
-                nearest.transform.rotation,
-                () => _state = State.ZoomedIn
-            );
-        }
-        else
+        if (nearest == null)
         {
             Debug.Log("No anchor nearby");
+            return;
         }
+        MoveCameraToAnchor(nearest);
+    }
+
+    public void MoveCameraToAnchor(ZoneCameraAnchor anchor)
+    {
+        TransitionTo(
+            anchor.transform.position,
+            anchor.transform.rotation,
+            () => { _state = State.ZoomedIn; CurrentAnchor = anchor; }
+        );
     }
 }
