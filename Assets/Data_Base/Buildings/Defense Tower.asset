@@ -16,9 +16,9 @@ MonoBehaviour:
   Type: 1
   Description: 
   CardImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
-  MainCost: 1
+  MainCost: 2
   SecondCost: 2
-  Attack: 4
+  Attack: 2
   MaxHealth: 3
   AttacksForOneTurn: 1
   melee: 0

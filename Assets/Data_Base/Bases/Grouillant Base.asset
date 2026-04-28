@@ -15,8 +15,8 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   BaseImage: {fileID: 21300000, guid: c381dce6a1b85d440972205c460adfa4, type: 3}
   BaseName: Essaimeuse
-  MaxHealth: 30
+  MaxHealth: 12
   mainRessourceIncome: 3
   secondRessourceIncome: 1
-  mainRessourceBuildingCost: 0
-  secondRessourceBuildingCost: 0
+  mainRessourceBaseCost: 0
+  secondRessourceBaseCost: 0

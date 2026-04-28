@@ -149,5 +149,12 @@ public class NeutralZoneController : MonoBehaviour
             spot.TakePlayerTag(playerTag);
     }
 
+    public void ResetBuildingSpotTag()
+    {
+        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>())
+            spot.ResetTag();
+    }
+
+
 
 }

@@ -17,6 +17,7 @@ public class OneBuildingManager : MonoBehaviour
     public Image frame;
     public Image glow;
     public Image MeleeImage;
+    public GameObject PendingIcon;
 
     public GameObject AttackDamageBG;
 
@@ -142,6 +143,12 @@ public class OneBuildingManager : MonoBehaviour
     {
         if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
         if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
+    }
+
+    public void SetPending(bool isPending)
+    {
+        art.color = isPending ? new Color(0.4f, 0.4f, 0.4f, 1f) : Color.white;
+        if (PendingIcon != null) PendingIcon.SetActive(isPending);
     }
 
 }

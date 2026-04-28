@@ -419,6 +419,15 @@ public class ZoneCombatResolver : MonoBehaviour
             bool fatal = pendingDamage.TryGetValue(t.UniqueCreatureID, out int d) && d >= t.Health;
             if (!fatal) { aliveNonFatalMeleeExists = true; break; }
         }
+        if (!aliveNonFatalMeleeExists)
+        {
+            foreach (var b in GetAllBuildingsInMyZone(owner, zoneLogic))
+            {
+                if (!b.IsMelee) continue;
+                bool fatal = pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int d) && d >= b.Health;
+                if (!fatal) { aliveNonFatalMeleeExists = true; break; }
+            }
+        }
         if (aliveNonFatalMeleeExists && !clicked.IsMelee) return;
 
         int existing = pendingDamage.TryGetValue(id, out int existingDmg) ? existingDmg : 0;

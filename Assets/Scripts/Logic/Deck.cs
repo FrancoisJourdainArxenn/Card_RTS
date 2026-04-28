@@ -22,9 +22,10 @@ public class Deck : MonoBehaviour {
         cards.SelectRandomCardFromSeed(seed);
     }
     
-    public CardAsset FindBuilding(string buildingName)
+    public CardAsset FindBuildingByIndex(int index)
     {
-        return buildings.Find(b => b.name == buildingName);
+        if (index < 0 || index >= buildings.Count) return null;
+        return buildings[index];
     }
 
 }
