@@ -2278,13 +2278,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
-  - {fileID: 11400000, guid: f01c93db45d9f87428921f110cec8624, type: 2}
-  - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
-  - {fileID: 11400000, guid: 1c962ece523e3c1479439a5a12255cca, type: 2}
-  - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}
-  - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -2352,13 +2346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
-  - {fileID: 11400000, guid: f94ed962b11bdfe4a9ccad30280ecc42, type: 2}
-  - {fileID: 11400000, guid: d552483608f97dc44ba9f387905dc708, type: 2}
   - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
-  - {fileID: 11400000, guid: 44fdfb085f63d904d80fb87a514e61ce, type: 2}
-  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -2503,7 +2491,7 @@ GameObject:
   - component: {fileID: 675442734}
   - component: {fileID: 675442735}
   m_Layer: 0
-  m_Name: Table
+  m_Name: CardPlayed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2536,8 +2524,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81586930256b5a74cbc57181da5853d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Table
-  CreaturesInPlay: []
-  BuildingsInPlay: []
+  Creatures: []
+  Buildings: []
 --- !u!1 &702895227
 GameObject:
   m_ObjectHideFlags: 0
@@ -5260,7 +5248,7 @@ MonoBehaviour:
   PlayerID: 0
   factionAsset: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
-  controlledBases: []
+  controlledBaseAssets: []
   PAreas:
   - {fileID: 1030438312}
   - {fileID: 2038557330}
@@ -5278,7 +5266,7 @@ MonoBehaviour:
   playerSecondIncome: 0
   deck: {fileID: 636250721}
   hand: {fileID: 540669342}
-  table: {fileID: 675442735}
+  playedCards: {fileID: 675442735}
 --- !u!114 &1369297963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5545,7 +5533,7 @@ GameObject:
   - component: {fileID: 1411569195}
   - component: {fileID: 1411569196}
   m_Layer: 0
-  m_Name: Table
+  m_Name: CardPlayed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5578,8 +5566,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81586930256b5a74cbc57181da5853d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Table
-  CreaturesInPlay: []
-  BuildingsInPlay: []
+  Creatures: []
+  Buildings: []
 --- !u!4 &1422863211 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
@@ -6886,7 +6874,7 @@ MonoBehaviour:
   PlayerID: 0
   factionAsset: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   baseAsset: {fileID: 11400000, guid: 3e7cd87c75453004482d30f04ea8ab4f, type: 2}
-  controlledBases: []
+  controlledBaseAssets: []
   PAreas:
   - {fileID: 1439204027}
   - {fileID: 1056137676}
@@ -6904,7 +6892,7 @@ MonoBehaviour:
   playerSecondIncome: 0
   deck: {fileID: 625286360}
   hand: {fileID: 1791882151}
-  table: {fileID: 1411569196}
+  playedCards: {fileID: 1411569196}
 --- !u!114 &1786636551 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4245424230694025082, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
