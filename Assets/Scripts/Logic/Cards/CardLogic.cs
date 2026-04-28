@@ -13,7 +13,7 @@ public class CardLogic: IIdentifiable
     // a reference to the card asset that stores all the info about this card
     public CardAsset ca;
     // a script of type spell effect that will be attached to this card when it`s created
-    public SpellEffect effect;
+
 
 
     // STATIC (for managing IDs)
@@ -55,12 +55,8 @@ public class CardLogic: IIdentifiable
         //UniqueCardID = IDFactory.GetUniqueID();
         MainCost = ca.MainCost;
         SecondCost = ca.SecondCost;
-        // create an instance of SpellEffect with a name from our CardAsset
-        // and attach it to 
-        if (ca.SpellScriptName!= null && ca.SpellScriptName!= "")
-        {
-            effect = System.Activator.CreateInstance(System.Type.GetType(ca.SpellScriptName)) as SpellEffect;
-        }
+        // if (ca.Effects != null && ca.Effects.Count > 0)
+        //     EffectProcessor.RegisterCreatureEffects(this, ca);
         // add this card to a dictionary with its ID as a key
         CardsCreatedThisGame.Add(UniqueCardID, this);
     }

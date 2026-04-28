@@ -34,3 +34,4 @@ MonoBehaviour:
   specialSpellAmount: 0
   Targets: 0
   ActivationsForOneTurn: 0
+  Effects: []

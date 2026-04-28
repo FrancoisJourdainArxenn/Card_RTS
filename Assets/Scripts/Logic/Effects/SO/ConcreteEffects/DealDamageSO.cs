@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Effects/DealDamage")]
+[CreateAssetMenu(menuName = "Effects/DealDamageSO")]
 public class DealDamageSO : EffectSO
 {
     public override void Execute(EffectContext context, TargetObjectType targetType, List<TargetModifier> targetModifiers, TargetLocation targetLocation, EffectParameters p)

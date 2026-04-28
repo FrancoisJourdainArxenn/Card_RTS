@@ -1,13 +1,13 @@
 public enum TriggerType
 {
     // Passive - player dependant
-    Passive,
-    OnActivation,
+    // Passive,
+    // OnActivation,
     // Card Lifecycle
     OnPlay,
-    OnAmbush,
-    OnAttack,
-    OnTakeDamage,
+    // OnAmbush,
+    // OnAttack,
+    // OnTakeDamage,
     OnDeath,
     // Phases
     OnRegroup,

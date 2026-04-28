@@ -8,7 +8,6 @@ public class CreatureLogic: ILivable
     // PUBLIC FIELDS
     public Player owner;
     public CardAsset ca;
-    public CreatureEffect effect;
     public int UniqueCreatureID;
 
     // PROPERTIES
@@ -134,11 +133,8 @@ public class CreatureLogic: ILivable
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
-        if (ca.CreatureScriptName!= null && ca.CreatureScriptName!= "")
-        {
-            effect = System.Activator.CreateInstance(System.Type.GetType(ca.CreatureScriptName), new System.Object[]{owner, this, ca.specialCreatureAmount}) as CreatureEffect;
-            effect.RegisterEventEffect();
-        }
+        if (ca.Effects != null && ca.Effects.Count > 0)
+            EffectProcessor.RegisterCreatureEffects(this, ca);
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
     }
 
@@ -150,17 +146,20 @@ public class CreatureLogic: ILivable
         Debug.Log("Movements Left This Turn: " + MovementsLeftThisTurn);
     }
 
+    public void ApplyBuff(int attackDelta, int healthDelta)
+    {
+        baseAttack += attackDelta;
+        baseHealth += healthDelta;
+        if (healthDelta > 0) health += healthDelta;
+    }
+
     public void Die()
     {   
         owner.playedCards.Creatures.Remove(this);
         
         // cause Deathrattle Effect
-        if (effect != null)
-        {
-            effect.WhenACreatureDies();
-            effect.UnRegisterEventEffect();
-            effect = null;
-        }
+        EffectProcessor.NotifyCreatureDied(this, owner);
+        
         FogOfWarManager.Refresh();
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }

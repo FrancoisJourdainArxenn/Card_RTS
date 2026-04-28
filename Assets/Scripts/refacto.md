@@ -4,31 +4,6 @@
 
 Le système actuel utilise des chaînes de caractères et de la réflexion (`System.Activator.CreateInstance(Type.GetType("NomDeLaClasse"))`) pour instancier les effets. Cela pose plusieurs problèmes :
 - **Un seul effet par carte** (un seul `SpellScriptName` / `CreatureScriptName`)
-
-PlanClaudeEffectSystem.md
-28 Ko
-CharlesW — 14:07
-ready pour tunnelvision quand tu veux 🫡
-il est pas mal le plan de Claude
-Je pense juste qu'on peut faire un poil mieux que ça
-EffectParameters      ← les nombres (Amount, SecondAmount, etc.)
-avec par exemple Targets qui serait un tableau (entre 0 et N targets)
-François — 14:27
-Sorry
-j'ai mangé tard
-mais je suis dispo
-Tu as manqué un appel de 
-François
- qui a duré quelques secondes. — 14:29
-CharlesW
- a commencé un appel. — 14:37
-﻿
-# Plan : Système d'effets de cartes
-
-## Contexte
-
-Le système actuel utilise des chaînes de caractères et de la réflexion (`System.Activator.CreateInstance(Type.GetType("NomDeLaClasse"))`) pour instancier les effets. Cela pose plusieurs problèmes :
-- **Un seul effet par carte** (un seul `SpellScriptName` / `CreatureScriptName`)
 - **Un seul paramètre numérique** (`specialAmount`)
 - **Un nouveau fichier C# pour chaque carte** même si les effets se ressemblent
 - **Pas de sécurité** : une faute de frappe dans la chaîne ne génère aucune erreur à la compilation
@@ -91,7 +66,8 @@ Assets/Scripts/Logic/
 │   │   ├── DrawCardsSO.cs
 │   │   ├── GiveResourcesSO.cs
 │   │   ├── GiveBuffSO.cs
-│   │   └── SummonTokenSO.cs
+│   │   ├── SummonTokenSO.cs
+│   │   └── StaticAuraSO.cs
 │   └── ConcreteConditions/         ← les filtres optionnels
 │       ├── HasNOrMoreCreaturesCondition.cs
 │       └── MinTurnCondition.cs
@@ -131,6 +107,7 @@ public enum TriggerType
     OnEnemyCreatureDies,       // Une créature ennemie meurt
     OnAnyCreaturePlayed,       // N'importe quelle créature est jouée
     OnFriendlyCreaturePlayed,  // Une créature alliée est jouée
+    Aura,                      // Effet continu : actif tant que la créature source est en vie
 }
 ```
 
@@ -305,6 +282,19 @@ public static class EffectProcessor
     private static Dictionary<TriggerType, List<RegisteredEffect>> _listeners
         = new Dictionary<TriggerType, List<RegisteredEffect>>();
 
+    // Auras actives en jeu — chacune mémorise qui elle a buffé
+    private static List<AuraInstance> _activeAuras = new List<AuraInstance>();
+
+    private class AuraInstance
+    {
+        public int SourceCreatureID;        // ID de la créature source de l'aura
+        public StaticAuraSO Effect;         // l'effet à appliquer/annuler
+        public TargetingType Targeting;     // qui est ciblé
+        public EffectParameters Parameters; // les valeurs du buff
+        public Player Owner;
+        public List<int> BuffedIDs = new List<int>(); // IDs des créatures actuellement buffées
+    }
+
     private struct RegisteredEffect
     {
         public CardEffectData Data;
@@ -313,7 +303,11 @@ public static class EffectProcessor
     }
 
     // Appelé dans TurnManager.OnGameStart()
-    public static void Reset() => _listeners.Clear();
+    public static void Reset()
+    {
+        _listeners.Clear();
+        _activeAuras.Clear();
+    }
 
     // Appelé dans le constructeur de CreatureLogic — enregistre les triggers non-OnPlay
     public static void RegisterCreatureEffects(CreatureLogic creature, CardAsset ca)
@@ -322,11 +316,46 @@ public static class EffectProcessor
         foreach (var data in ca.Effects)
         {
             if (data.Trigger == TriggerType.OnPlay) continue;
-            AddListener(data, creature.UniqueCreatureID, () => new EffectContext
+
+            if (data.Trigger == TriggerType.Aura && data.Effect is StaticAuraSO auraSO)
             {
-                Caster = creature.owner,
-                SourceCreature = creature
-            });
+                // Créer l'instance d'aura et l'appliquer immédiatement aux cibles actuelles
+                var aura = new AuraInstance
+                {
+                    SourceCreatureID = creature.UniqueCreatureID,
+                    Effect           = auraSO,
+                    Targeting        = data.Targeting,
+                    Parameters       = data.Parameters,
+                    Owner            = creature.owner
+                };
+                ApplyAuraToCurrentTargets(aura, creature);
+                _activeAuras.Add(aura);
+            }
+            else
+            {
+                AddListener(data, creature.UniqueCreatureID, () => new EffectContext
+                {
+                    Caster = creature.owner,
+                    SourceCreature = creature
+                });
+            }
+        }
+    }
+
+    // Appelé depuis Player.PlayACreatureFromHand — met à jour les auras existantes
+    public static void NotifyCreaturePlayed(CreatureLogic played)
+    {
+        foreach (AuraInstance aura in _activeAuras)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(aura.SourceCreatureID, out var source)) continue;
+            EffectContext ctx = new EffectContext { Caster = aura.Owner, SourceCreature = source };
+            var targets = ctx.ResolveTargets(aura.Targeting);
+            // Si la nouvelle créature fait partie des cibles et n'est pas déjà buffée
+            if (targets.Contains(played) && !aura.BuffedIDs.Contains(played.UniqueCreatureID))
+            {
+                aura.Effect.Apply(played, aura.Parameters);
+                aura.BuffedIDs.Add(played.UniqueCreatureID);
+            }
         }
     }
 
@@ -353,6 +382,16 @@ public static class EffectProcessor
                 TryExecute(data, new EffectContext { Caster = dyingOwner, SourceCreature = died });
             }
         }
+        // Retire les auras dont cette créature était la source
+        var aurasByDead = _activeAuras.FindAll(a => a.SourceCreatureID == died.UniqueCreatureID);
+        foreach (AuraInstance aura in aurasByDead)
+            RemoveAura(aura);
+        _activeAuras.RemoveAll(a => a.SourceCreatureID == died.UniqueCreatureID);
+
+        // Retire cette créature des listes de buff des auras actives (elle est morte, inutile d'annuler)
+        foreach (AuraInstance aura in _activeAuras)
+            aura.BuffedIDs.Remove(died.UniqueCreatureID);
+
         // Notifie les autres créatures qui écoutent OnAnyCreatureDies etc.
         var eventCtx = new EffectContext { EventSubject = died };
         NotifyFiltered(TriggerType.OnAnyCreatureDies, eventCtx, _ => true);
@@ -408,6 +447,31 @@ public static class EffectProcessor
         if (data.Effect == null) return;
         if (data.Condition != null && !data.Condition.Evaluate(ctx)) return;
         data.Effect.Execute(ctx, data.Targeting, data.Parameters);
+    }
+
+    // Applique une aura à toutes ses cibles actuelles (appelé à l'entrée en jeu de la source)
+    private static void ApplyAuraToCurrentTargets(AuraInstance aura, CreatureLogic source)
+    {
+        EffectContext ctx = new EffectContext { Caster = aura.Owner, SourceCreature = source };
+        foreach (ILivable t in ctx.ResolveTargets(aura.Targeting))
+        {
+            if (t is CreatureLogic creature && !aura.BuffedIDs.Contains(creature.UniqueCreatureID))
+            {
+                aura.Effect.Apply(creature, aura.Parameters);
+                aura.BuffedIDs.Add(creature.UniqueCreatureID);
+            }
+        }
+    }
+
+    // Annule tous les buffs d'une aura (appelé quand la source meurt)
+    private static void RemoveAura(AuraInstance aura)
+    {
+        foreach (int id in aura.BuffedIDs)
+        {
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
+                aura.Effect.Remove(creature, aura.Parameters);
+        }
+        aura.BuffedIDs.Clear();
     }
 }
 ```
@@ -488,6 +552,46 @@ public class GiveBuffSO : EffectSO
                 creature.ApplyBuff(p.Amount, p.SecondAmount);
     }
 }
+```
+
+### `StaticAuraSO.cs`
+
+Une aura statique applique un buff à ses cibles **tant que la créature source est en vie**. Quand la source meurt, le buff est annulé sur toutes les créatures qu'elle buffait.
+
+Contrairement aux autres `EffectSO`, `StaticAuraSO` ne passe pas par `Execute()`. Elle est gérée directement par `EffectProcessor` via des `AuraInstance`.
+
+```csharp
+[CreateAssetMenu(menuName = "Effects/StaticAura")]
+public class StaticAuraSO : EffectSO
+{
+    // Pas utilisé directement — l'EffectProcessor gère les auras via AuraInstance
+    public override void Execute(EffectContext ctx, TargetingType targeting, EffectParameters p) { }
+
+    // Applique le buff à une créature
+    public void Apply(CreatureLogic target, EffectParameters p)
+    {
+        target.ApplyBuff(p.Amount, p.SecondAmount);
+    }
+
+    // Annule le buff sur une créature (valeurs inverses)
+    public void Remove(CreatureLogic target, EffectParameters p)
+    {
+        target.ApplyBuff(-p.Amount, -p.SecondAmount);
+    }
+}
+```
+
+**Dans l'Inspector** — exemple "+1/+1 à toutes les créatures alliées dans ma zone" :
+```
+Effects (size: 1)
+  [0]
+    Effect:     <glisser StaticAura.asset ici>
+    Trigger:    Aura
+    Targeting:  AllFriendlyCreaturesInZone
+    Parameters:
+      Amount:        1    ← bonus d'attaque
+      SecondAmount:  1    ← bonus de vie
+      UseSecondAmount: ✓
 ```
 
 ### `SummonTokenSO.cs`
@@ -580,13 +684,15 @@ EffectProcessor.NotifyCreatureDied(this, owner);
 ### `Player.PlayACreatureFromHand()` (ligne 333)
 Après `if (newCreature.effect != null) newCreature.effect.WhenACreatureIsPlayed();` (ligne 344) :
 ```csharp
-// Nouveau système
+// Nouveau système — battlecry
 EffectProcessor.FireOnPlay(playedCard.ca, new EffectContext
 {
     Caster = this,
-    ExplicitTarget = null, // pour une créature sans cible explicite
+    ExplicitTarget = null,
     SourceCreature = newCreature
 });
+// Nouveau système — met à jour les auras existantes avec la nouvelle créature
+EffectProcessor.NotifyCreaturePlayed(newCreature);
 ```
 **Idem** dans `NetworkFlushPlayCreature()` (ligne 397) et `NetworkPlayCreatureFromHand()` (ligne 428).
 
@@ -716,6 +822,109 @@ Puis supprimer les deux dossiers `SpellScripts/` et `CreatureScripts/` s'ils son
 
 ---
 
+## Intégration réseau
+
+### Principe général
+
+Le système d'effets **ne nécessite pas de synchronisation réseau propre**. Le principe est simple : si les deux clients reçoivent la même action via `ClientRpc` et exécutent le même code, `EffectProcessor` se déclenchera de façon identique des deux côtés.
+
+```
+Client A (caster)                Server                Client B
+     |                              |                       |
+     |-- PlaySpellServerRpc() ----->|                       |
+     |                    PlaySpellClientRpc() ------------>|
+     |<--- PlaySpellClientRpc() ----|                       |
+     |                              |                       |
+NetworkPlaySpellFromHand()      (même méthode)      NetworkPlaySpellFromHand()
+EffectProcessor.FireOnPlay()                        EffectProcessor.FireOnPlay()
+     ↓                                                      ↓
+Effets exécutés identiquement sur les deux clients
+```
+
+### Effets déjà synchronisés automatiquement
+
+| Trigger | Raison |
+|---------|--------|
+| `OnDeath` | `CreatureLogic.Die()` appelé quand la vie tombe à 0 — identique sur les deux clients |
+| `OnTurnStart` | `Player.OnTurnStart()` déclenché par `PhaseTransitionClientRpc` — identique |
+| `OnTurnEnd` | Idem via le même mécanisme |
+| `OnAnyCreatureDies` | Déclenché dans `NotifyCreatureDied()` — déjà synchro |
+| Battlecry (créatures) | `NetworkFlushPlayCreature()` est un `ClientRpc` — s'exécute sur les deux clients |
+| Aura (register) | Déclenché dans le constructeur de `CreatureLogic`, appelé depuis `NetworkFlushPlayCreature()` |
+
+### La seule vraie lacune : les sorts (bug existant)
+
+Actuellement, `PlayASpellFromHand()` s'exécute **localement uniquement** — le joueur adverse ne voit pas l'effet. Ce n'est pas une nouveauté du plan, c'est un bug déjà présent.
+
+La correction s'intègre naturellement au plan :
+
+**Nouveau flux pour les sorts :**
+```
+Drag & Drop → Player.LocalPlaySpellFromHand(cardUniqueID, targetID)
+                 └── GameNetworkManager.Instance.PlaySpellServerRpc(cardUniqueID, targetID, playerIndex)
+                           └── Server: PlaySpellClientRpc(playerIndex, cardUniqueID, targetID)
+                                        └── All clients: player.NetworkPlaySpellFromHand(cardUniqueID, targetID)
+                                                           └── EffectProcessor.FireOnPlay(ca, ctx)
+```
+
+**Méthode à ajouter dans `Player.cs` :**
+```csharp
+public void NetworkPlaySpellFromHand(int cardUniqueID, int targetUniqueID)
+{
+    CardLogic playedCard = hand.GetCardByUniqueID(cardUniqueID);
+
+    // Déduire les ressources (déjà fait pendant NetworkPending, mais nécessaire ici pour les sorts)
+    MainRessourceAvailable -= playedCard.MainCost;
+    SecondRessourceAvailable -= playedCard.SecondCost;
+
+    // Reconstruire la cible depuis l'ID (créature ou bâtiment)
+    ILivable explicitTarget = null;
+    if (targetUniqueID > 0)
+    {
+        CreatureLogic.CreaturesCreatedThisGame.TryGetValue(targetUniqueID, out CreatureLogic creature);
+        explicitTarget = creature;
+        // TODO : ajouter BuildingLogic.BuildingsCreatedThisGame si ciblage bâtiment
+    }
+
+    // Ancien système (pendant la migration)
+    if (playedCard.effect != null)
+        playedCard.effect.ActivateEffect(playedCard.ca.specialSpellAmount, explicitTarget, this);
+
+    // Nouveau système
+    EffectProcessor.FireOnPlay(playedCard.ca, new EffectContext
+    {
+        Caster = this,
+        ExplicitTarget = explicitTarget
+    });
+
+    new PlayASpellCardCommand(this, playedCard).AddToQueue();
+    hand.CardsInHand.Remove(playedCard);
+}
+```
+
+> **Pourquoi transmettre `targetUniqueID` et non la cible directement ?**
+> Parce que le client B ne peut pas recevoir une référence d'objet du client A. Chaque client retrouve localement la cible depuis l'ID (qui est identique sur tous les clients grâce au serveur).
+
+### Battlecry avec cible explicite (créatures)
+
+Si une créature a un battlecry de type `TargetCreature` (ex: "Inflige 2 dégâts à une créature ciblée"), il faut aussi transmettre le `targetUniqueID`. Actuellement `PlayCreatureServerRpc` n'a pas ce paramètre.
+
+**Ajout nécessaire dans `GameNetworkManager.cs` :**
+```csharp
+// Ajouter targetUniqueID = 0 comme paramètre optionnel
+public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex, int targetUniqueID = 0)
+```
+Puis passer `targetUniqueID` jusqu'à `NetworkFlushPlayCreature()` pour construire l'`EffectContext`.
+
+### Ce qui n'a PAS besoin de modification réseau
+
+- `EffectProcessor` lui-même — aucun RPC dedans
+- `EffectSO.Execute()` — ne touche que l'état local (qui est déjà synchro)
+- `AuraInstance` — gérée localement, reconstruite identiquement sur les deux clients
+- La full state broadcast en fin de phase reste le filet de sécurité contre toute désynchro résiduelle
+
+---
+
 ## Vérification
 
 Après implémentation, tester :
@@ -724,5 +933,3 @@ Après implémentation, tester :
 3. **Tester un trigger réactif** : créer une carte avec `DealDamageSO` (OnDeath, Opponent, Amount=1) — quand la créature meurt, le joueur adverse perd 1 point de vie
 4. **Tester OnTurnStart** : créer une carte avec `GiveResourcesSO` (OnTurnStart, Self, Amount=1) — le joueur gagne 1 ressource par tour tant que la créature est en jeu
 5. **Tester en multijoueur** — vérifier que les effets se déclenchent des deux côtés de façon identique
-PlanClaudeEffectSystem.md
-28 Ko

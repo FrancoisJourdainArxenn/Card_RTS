@@ -31,6 +31,8 @@ public static class EffectProcessor
         }
     }
 
+    //Ajouté la logique pour les buildings et les spells
+
     // Appelé dans PlayACreatureFromHand / PlayASpellFromHand
     public static void ETB(CardAsset ca, EffectContext context)
     {

@@ -171,6 +171,7 @@ public class Player : MonoBehaviour, ILivable
 
     public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
     {
+        EffectProcessor.NotifyRegroup(this);
         
         if (baseAsset == null)
         {
@@ -211,6 +212,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void OnTurnEnd()
     {
+        EffectProcessor.NotifyBattleEnd(this);
         if(EndTurnEvent != null)
             EndTurnEvent.Invoke();
         GetComponent<TurnMaker>().StopAllCoroutines();
@@ -314,16 +316,14 @@ public class Player : MonoBehaviour, ILivable
     {
         MainRessourceAvailable -= playedCard.MainCost;
         SecondRessourceAvailable -= playedCard.SecondCost;
-        // cause effect instantly:
-        if (playedCard.effect != null)
-            playedCard.effect.ActivateEffect(playedCard.ca.specialSpellAmount, target, this);
-        else
+
+        EffectProcessor.ETB(playedCard.ca, new EffectContext
         {
-            Debug.LogWarning("No effect found on card " + playedCard.ca.name);
-        }
-        // no matter what happens, move this card to PlayACardSpot
+            Caster = this,
+            Target = target
+        });
+
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
-        // remove this card from hand
         hand.CardsInHand.Remove(playedCard);
         // Recompute playable state after the card is removed.
         HighlightPlayableCards();
@@ -348,12 +348,18 @@ public class Player : MonoBehaviour, ILivable
         // 
         new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         // cause battlecry Effect
-        if (newCreature.effect != null)
-            newCreature.effect.WhenACreatureIsPlayed();
+        EffectProcessor.ETB(playedCard.ca, new EffectContext
+        {
+            Caster = this,
+            Target = null,
+            SourceCreature = newCreature
+        });
         // remove this card from hand
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
     }
+
+
 
     public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int baseID)
     {
@@ -400,9 +406,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
-
-        if (newCreature.effect != null)
-            newCreature.effect.WhenACreatureIsPlayed();
+        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, SourceCreature = newCreature });
 
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -432,8 +436,8 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        if (newCreature.effect != null)
-            newCreature.effect.WhenACreatureIsPlayed();
+        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, SourceCreature = newCreature });
+
 
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();

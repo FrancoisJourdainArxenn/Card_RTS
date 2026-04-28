@@ -46,6 +46,7 @@ public class TurnManager : MonoBehaviour
 
     public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
     {
+        EffectProcessor.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             Debug.LogError("TurnManager: need at least 2 Player instances.");
