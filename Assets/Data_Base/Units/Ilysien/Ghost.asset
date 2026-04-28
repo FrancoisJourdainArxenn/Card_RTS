@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Ghost
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
   Description: 'Celerity
 
     Speed : 2'
@@ -22,11 +23,14 @@ MonoBehaviour:
   Attack: 3
   MaxHealth: 5
   AttacksForOneTurn: 1
-  MoveSpeed: 2
   melee: 0
+  MoveSpeed: 2
   Celerity: 1
   CreatureScriptName: 
   specialCreatureAmount: 0
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 0
   Targets: 0
+  ActivationsForOneTurn: 0

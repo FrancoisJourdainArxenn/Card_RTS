@@ -11,7 +11,7 @@ public class DragCreatureActions : DraggingActions {
     private GameObject target;
     // Reference to creature manager, attached to the parent game object
     private OneCreatureManager manager;
-        [SerializeField] private BezierArrows targettingArrow;
+    [SerializeField] private BezierArrows targettingArrow;
     void Awake()
     {
         // establish all the connections
@@ -26,7 +26,7 @@ public class DragCreatureActions : DraggingActions {
     {
         get
         {   
-            return base.CanDrag && (manager.CanAttackNow || manager.CanMoveNow);
+            return manager != null && base.CanDrag && manager.CanMoveNow;
         }
     }
     private PlayerArea originArea;

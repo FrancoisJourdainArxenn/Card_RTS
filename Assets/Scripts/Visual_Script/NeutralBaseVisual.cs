@@ -16,12 +16,14 @@ public class NeutralBaseVisual : MonoBehaviour {
     public TMP_Text MainRessourceIncomeText;
     public TMP_Text SecondRessourceIncomeText;
     public GameObject Glow;
+    public Transform baseParent;
 
     public Transform BaseApparitionPosition;
     public Transform BasePosition;
     public GameObject BaseCardPrefab;
     private bool canBuild = true;
     private Player localPlayer;
+
 
     [SerializeField] private int neutralBaseId;
     public int NeutralBaseId { get; private set; }
@@ -50,6 +52,7 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseEnter()
     {
+        if (BuildingShopVisual.IsOpen) return;
         localPlayer = GlobalSettings.Instance.localPlayer;
         bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost && localPlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBaseCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
@@ -76,7 +79,8 @@ public class NeutralBaseVisual : MonoBehaviour {
     public void ResetBuildingZone()
     {
         neutralBaseController.SetTrueColor(GlobalSettings.Instance.NeutralColor);
+        neutralBaseController.ResetBuildingSpotTag();
         canBuild = true;
-
     }
+
 }

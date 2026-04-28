@@ -4,6 +4,7 @@ public enum ActionType
 {
     PlayCreature,
     MoveCreature,
+    PlaceBuilding,
     // We'll add Attack types later
 }
 

@@ -126,7 +126,7 @@ public class CameraController : MonoBehaviour
             : ZoneCameraAnchor.FindClosestTo(pos);
         if (nearest == null)
         {
-            Debug.Log("No anchor nearby");
+            // Debug.Log("No anchor nearby");
             return;
         }
         MoveCameraToAnchor(nearest);

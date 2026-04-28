@@ -54,11 +54,13 @@ public class HoverPreview: MonoBehaviour
     void OnMouseDown()
     {
         GetComponentInParent<OneCreatureManager>()?.OnCreatureClicked();
+        GetComponentInParent<OneBuildingManager>()?.OnBuildingClicked();
     }
 
             
     void OnMouseEnter()
     {
+        if (BuildingShopVisual.IsOpen) return;
         OverCollider = true;
         if (PreviewsAllowed && ThisPreviewEnabled)
             PreviewThisObject();

@@ -120,6 +120,8 @@ public class ZoneCameraAnchor : MonoBehaviour
 
     public void SetHighlighted(bool on)
     {
+        if (BuildingShopVisual.IsOpen)
+            return;
         if (_highlightRoot != null) _highlightRoot.SetActive(on);
     }
 

@@ -97,6 +97,8 @@ public class TableVisual : MonoBehaviour
 
     public void SetHighlight(bool active)
     {
+        if (BuildingShopVisual.IsOpen) active = false;
+
         if (glow == null) return;
         glow.GetComponent<Image>().color = ownerColor;
         glow.SetActive(active);

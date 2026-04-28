@@ -7,6 +7,7 @@ enum TargetType
     Player,
     Base,
     Creature,
+    Building,
     Unknown
 }
 
@@ -39,6 +40,11 @@ public class CreatureAttackVisual : MonoBehaviour
                  CreatureLogic.CreaturesCreatedThisGame[targetUniqueID] != null)
         {
             return TargetType.Creature;
+        }
+        else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetUniqueID) &&
+                 BuildingLogic.BuildingsCreatedThisGame[targetUniqueID] != null)
+        {
+            return TargetType.Building;
         }
         return TargetType.Unknown;
     }
@@ -100,6 +106,9 @@ public class CreatureAttackVisual : MonoBehaviour
                             break;
                         case TargetType.Creature:
                             target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
+                            break;
+                        case TargetType.Building:
+                            target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
                         case TargetType.Unknown:
                             Debug.Log("Unknown target type: " + targetUniqueID);

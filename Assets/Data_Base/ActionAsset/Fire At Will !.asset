@@ -13,17 +13,21 @@ MonoBehaviour:
   m_Name: Fire At Will !
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 2
   Description: Deal 1 damage to Enemy Characters in base.
   CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
   MainCost: 2
   SecondCost: 0
-  MaxHealth: 0
   Attack: 0
+  MaxHealth: 0
   AttacksForOneTurn: 0
-  Speed: 0
-  Charge: 0
+  melee: 0
+  MoveSpeed: 1
+  Celerity: 0
   CreatureScriptName: 
   specialCreatureAmount: 0
+  BuildingScriptName: 
+  specialBuildingAmount: 0
   SpellScriptName: 
   specialSpellAmount: 1
   Targets: 2
