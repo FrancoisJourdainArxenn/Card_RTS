@@ -142,7 +142,7 @@ public class FogOfWarManager : MonoBehaviour
         if (playerAreaInZone == null) return false;
 
         // Check creatures.
-        foreach (CreatureLogic c in player.table.CreaturesInPlay)
+        foreach (CreatureLogic c in player.playedCards.Creatures)
         {
             if (c.BaseID == playerAreaInZone.baseID)
                 return true;
@@ -159,7 +159,7 @@ public class FogOfWarManager : MonoBehaviour
             }
         }
 
-        foreach (BuildingLogic b in player.table.BuildingsInPlay)
+        foreach (BuildingLogic b in player.playedCards.Buildings)
         {
             if (b.OriginSpot != null && b.OriginSpot.Zone == zone)
                 return true;

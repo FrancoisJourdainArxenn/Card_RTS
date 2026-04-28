@@ -32,7 +32,7 @@ public class PlaceBuildingCommand : Command
 
         BuildingLogic buildingLogic = new BuildingLogic(player, building, spot, buildingUniqueID);
         buildingLogic.OnTurnStart();
-        player.table.BuildingsInPlay.Add(buildingLogic);
+        player.playedCards.Buildings.Add(buildingLogic);
         spot.SpawnBuilding(buildingLogic, player);
         if (spot.Zone != null)
             foreach (PlayerArea pa in spot.Zone.subZones)

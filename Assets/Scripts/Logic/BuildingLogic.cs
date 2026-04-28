@@ -7,6 +7,7 @@ public class BuildingLogic : ILivable
     public CardAsset ca;
     public int UniqueBuildingID;
     public BuildSpotVisual OriginSpot { get; set; }
+    public int OriginZoneID { get; private set; }
 
     public int ID => UniqueBuildingID;
 
@@ -55,6 +56,7 @@ public class BuildingLogic : ILivable
         this.ca = ca;
         this.owner = owner;
         this.OriginSpot = originSpot;
+        this.OriginZoneID = originSpot.Zone.ZoneID;
         baseHealth = ca.MaxHealth;
         health = ca.MaxHealth;
         baseAttack = ca.Attack;
@@ -72,7 +74,7 @@ public class BuildingLogic : ILivable
 
     public void Die()
     {
-        owner.table.BuildingsInPlay.Remove(this);
+        owner.playedCards.Buildings.Remove(this);
         new BuildingDieCommand(UniqueBuildingID).AddToQueue();
     }
 

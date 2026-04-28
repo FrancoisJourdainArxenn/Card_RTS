@@ -75,7 +75,7 @@ public class NeutralZoneController : MonoBehaviour
 
         IDHolder idHolder = baseCard.GetComponent<IDHolder>();
         idHolder.UniqueID = baseUniqueID;
-        player.controlledBases.Add(ba);
+        player.controlledBaseAssets.Add(ba);
         // nBaseVisual.BuildingZone.GetComponent<Image>().color = player.playerColor;
         capturedNBaseVisual = nBaseVisual;
         SetTrueColor(player.playerColor); // triggers FogOfWarManager.Refresh() which will hide/show NeutralBaseVisual per observer

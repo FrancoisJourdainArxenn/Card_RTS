@@ -88,7 +88,7 @@ public class BuildSpotVisual : MonoBehaviour
 
         if (playerAreaInZone == null) return false;
 
-        foreach (CreatureLogic c in player.table.CreaturesInPlay)
+        foreach (CreatureLogic c in player.playedCards.Creatures)
         {
             if (c.BaseID == playerAreaInZone.baseID)
                 return true;

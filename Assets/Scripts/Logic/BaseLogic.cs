@@ -54,7 +54,7 @@ public class BaseLogic: ILivable
     
     public void Die()
     {
-        owner.controlledBases.Remove(ba);
+        owner.controlledBaseAssets.Remove(ba);
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
         FogOfWarManager.Refresh();

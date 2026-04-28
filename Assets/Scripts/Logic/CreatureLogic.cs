@@ -100,7 +100,7 @@ public class CreatureLogic: ILivable
         {
             if(IsMelee)
                 return true;
-            foreach (CreatureLogic creatureLogic in owner.table.CreaturesInPlay)
+            foreach (CreatureLogic creatureLogic in owner.playedCards.Creatures)
             {
                 if (
                     creatureLogic.IsMelee 
@@ -152,7 +152,7 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {   
-        owner.table.CreaturesInPlay.Remove(this);
+        owner.playedCards.Creatures.Remove(this);
         
         // cause Deathrattle Effect
         if (effect != null)

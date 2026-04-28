@@ -7,7 +7,7 @@ public class DamageAllOpponentCreatures : SpellEffect {
     {
         if (caster == null)
             return;
-        CreatureLogic[] CreaturesToDamage = caster.otherPlayer.table.CreaturesInPlay.ToArray();
+        CreatureLogic[] CreaturesToDamage = caster.otherPlayer.playedCards.Creatures.ToArray();
         foreach (CreatureLogic cl in CreaturesToDamage)
         {
             new DealDamageCommand(cl.ID, specialAmount, healthAfter: cl.Health - specialAmount).AddToQueue();

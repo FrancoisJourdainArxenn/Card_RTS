@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using System.Linq;
 
 public class Player : MonoBehaviour, ILivable
 {
@@ -11,8 +12,9 @@ public class Player : MonoBehaviour, ILivable
     // a Character Asset that contains data about this Hero
     public FactionAsset factionAsset;
     public BaseAsset baseAsset;
-    public List<BaseAsset> controlledBases = new List<BaseAsset>();
+    public List<BaseAsset> controlledBaseAssets = new List<BaseAsset>();
 
+    public List<BaseLogic> controlledBases => BaseLogic.BasesCreatedThisGame.Values.Where(b => b.owner == this).ToList();
     // a script with references to all the visual game objects for this player
     public PlayerArea[] PAreas;
     public PlayerArea MainPArea = null;
@@ -29,7 +31,7 @@ public class Player : MonoBehaviour, ILivable
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
     public Hand hand;
-    public Table table;
+    public PlayedCards playedCards;
 
     // a static array that will store both players, should always have 2 players
     public static Player[] Players;
@@ -93,6 +95,11 @@ public class Player : MonoBehaviour, ILivable
             TurnManager.RefreshAllPlayableHighlights();
         }
     }
+
+    public List<CreatureLogic> Creatures
+    {
+        get { return playedCards.Creatures; }
+    }
     
     void Start()
     {
@@ -150,7 +157,7 @@ public class Player : MonoBehaviour, ILivable
             a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
-        controlledBases.Add(baseAsset);
+        controlledBaseAssets.Add(baseAsset);
         CalculatePlayerIncome();
     }
 
@@ -193,11 +200,11 @@ public class Player : MonoBehaviour, ILivable
         if (baseVisual != null)
             baseVisual.ApplyLookFromAsset();
 
-        if (table != null)
+        if (playedCards != null)
         {
-            foreach (CreatureLogic cl in table.CreaturesInPlay)
+            foreach (CreatureLogic cl in playedCards.Creatures)
                 cl.OnTurnStart();
-            foreach (BuildingLogic bl in table.BuildingsInPlay)
+            foreach (BuildingLogic bl in playedCards.Buildings)
                 bl.OnTurnStart();
         }
     }
@@ -336,7 +343,7 @@ public class Player : MonoBehaviour, ILivable
         SecondRessourceAvailable -= playedCard.SecondCost;
         int baseID = selectedPArea.baseID;
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
-        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
         // 
         new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
@@ -389,7 +396,7 @@ public class Player : MonoBehaviour, ILivable
         }
 
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -420,7 +427,7 @@ public class Player : MonoBehaviour, ILivable
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        table.CreaturesInPlay.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -466,7 +473,7 @@ public class Player : MonoBehaviour, ILivable
         bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
 
-        foreach (CreatureLogic crl in table.CreaturesInPlay)
+        foreach (CreatureLogic crl in playedCards.Creatures)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
             OneCreatureManager creatureManager = CheckCreatureManager(g);
@@ -480,7 +487,7 @@ public class Player : MonoBehaviour, ILivable
             creatureManager.UpdateCreatureGlow();
         }
 
-        foreach (BuildingLogic bl in table.BuildingsInPlay)
+        foreach (BuildingLogic bl in playedCards.Buildings)
         {
             GameObject g = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
             if (g == null) continue;
@@ -628,7 +635,7 @@ public class Player : MonoBehaviour, ILivable
     {
         playerMainIncome = 0;
         playerSecondIncome = 0;
-        foreach (BaseAsset baseAsset in controlledBases)
+        foreach (BaseAsset baseAsset in controlledBaseAssets)
         {
             playerMainIncome += baseAsset.mainRessourceIncome;
             playerSecondIncome += baseAsset.secondRessourceIncome;

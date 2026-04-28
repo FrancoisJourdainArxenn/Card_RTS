@@ -55,5 +55,6 @@ public class CardAsset : ScriptableObject
     public TargetingOptions Targets;
     public int ActivationsForOneTurn = 0;
 
-
+    [Header("Effects")]
+    public List<CardEffectData> Effects = new List<CardEffectData>();
 }

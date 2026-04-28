@@ -196,7 +196,7 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             if (pa.owner == GetAreaPosition(player))
             {
-                foreach (CreatureLogic c in player.table.CreaturesInPlay)
+                foreach (CreatureLogic c in player.playedCards.Creatures)
                     if (c.BaseID == pa.baseID)
                         result.Add(c);
             }
@@ -207,7 +207,7 @@ public class ZoneCombatResolver : MonoBehaviour
     List<BuildingLogic> GetAllBuildingsInMyZone(Player player, ZoneLogic zone)
     {
         var result = new List<BuildingLogic>();
-        foreach (BuildingLogic bl in player.table.BuildingsInPlay)
+        foreach (BuildingLogic bl in player.playedCards.Buildings)
             if (bl.OriginSpot?.Zone == zone)
                 result.Add(bl);
         return result;
@@ -216,7 +216,7 @@ public class ZoneCombatResolver : MonoBehaviour
     List<BuildingLogic> GetBuildingsInMyZone(Player player, ZoneLogic zone)
     {
         var result = new List<BuildingLogic>();
-        foreach (BuildingLogic bl in player.table.BuildingsInPlay)
+        foreach (BuildingLogic bl in player.playedCards.Buildings)
             if (bl.Attack > 0 && bl.OriginSpot != null && bl.OriginSpot.Zone == zone)
                 result.Add(bl);
         return result;
@@ -296,7 +296,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     void ShowIndicator(CreatureLogic creature, int damage)
     {
-        if (GlobalSettings.Instance.localPlayer.table.CreaturesInPlay.Contains(creature)) return;
+        if (GlobalSettings.Instance.localPlayer.playedCards.Creatures.Contains(creature)) return;
         GameObject go = IDHolder.GetGameObjectWithID(creature.UniqueCreatureID);
         go?.GetComponent<OneCreatureManager>()?.ShowPendingDamage(damage, creature.Health);
     }
