@@ -11,6 +11,7 @@ public class FogMapOverlay : MonoBehaviour
     [SerializeField] int textureHeight = 256;
     [SerializeField] float revealDuration = 0.6f;
     [SerializeField] float coverDuration  = 0.35f;
+    [SerializeField] [Range(5, 80)] int gradientWidth = 30;
     private Vector2 mapWorldMin;
     private Vector2 mapWorldSize;
     private Texture2D fogTex;
@@ -32,6 +33,7 @@ public class FogMapOverlay : MonoBehaviour
 
         fogTex = new Texture2D(textureWidth, textureHeight, TextureFormat.RFloat, false);
         fogTex.filterMode = FilterMode.Bilinear;
+        fogTex.wrapMode   = TextureWrapMode.Clamp;
         UploadTexture();
 
         mat = GetComponent<MeshRenderer>().material;
@@ -45,8 +47,8 @@ public class FogMapOverlay : MonoBehaviour
     {
         StopZoneAnim(zone.ZoneID);
         RectInt bounds = GetZonePixelBounds(zone);
-        float value = fogged ? 0f : 1f;
-        PaintRegionFlat(bounds, value);
+        if (fogged) PaintRegionFlat(bounds, 0f);
+        else        PaintRegionGradient(bounds);
         UploadTexture();
     }
 
@@ -164,6 +166,23 @@ public class FogMapOverlay : MonoBehaviour
     private IEnumerator AnimateZone(int zoneID, RectInt bounds, float[] distances,
                                     bool covering, float duration)
     {
+        // Cible de chaque pixel : dégradé si révélation, 0 si couverture
+        float[] targetValues = covering ? null : ComputeGradientValues(bounds);
+
+        // Pour la couverture, on mémorise l'état de départ (qui peut être un dégradé)
+        float[] startValues = null;
+        if (covering)
+        {
+            startValues = new float[bounds.width * bounds.height];
+            for (int y = 0; y < bounds.height; y++)
+            for (int x = 0; x < bounds.width;  x++)
+            {
+                int texIdx = (bounds.y + y) * textureWidth + (bounds.x + x);
+                if (texIdx >= 0 && texIdx < fogData.Length)
+                    startValues[y * bounds.width + x] = fogData[texIdx];
+            }
+        }
+
         float elapsed = 0f;
         while (elapsed < duration)
         {
@@ -173,14 +192,16 @@ public class FogMapOverlay : MonoBehaviour
             for (int y = 0; y < bounds.height; y++)
             for (int x = 0; x < bounds.width;  x++)
             {
-                float dist  = distances[y * bounds.width + x];
-                // Un pixel est révélé quand timer > dist (avec bord doux)
-                float value = Mathf.Clamp01((timer - dist) / 0.08f + 0.5f);
-                if (covering) value = 1f - value;
+                float dist     = distances[y * bounds.width + x];
+                float progress = Mathf.Clamp01((timer - dist) / 0.08f + 0.5f);
+                int   localIdx = y * bounds.width + x;
+                int   texIdx   = (bounds.y + y) * textureWidth + (bounds.x + x);
+                if (texIdx < 0 || texIdx >= fogData.Length) continue;
 
-                int texIdx = (bounds.y + y) * textureWidth + (bounds.x + x);
-                if (texIdx >= 0 && texIdx < fogData.Length)
-                    fogData[texIdx] = value;
+                if (covering)
+                    fogData[texIdx] = startValues[localIdx] * (1f - progress);
+                else
+                    fogData[texIdx] = progress * targetValues[localIdx];
             }
 
             UploadTexture();
@@ -188,7 +209,8 @@ public class FogMapOverlay : MonoBehaviour
         }
 
         // État final propre
-        PaintRegionFlat(bounds, covering ? 0f : 1f);
+        if (covering) PaintRegionFlat(bounds, 0f);
+        else          PaintRegionGradient(bounds);
         UploadTexture();
         activeAnims.Remove(zoneID);
     }
@@ -202,6 +224,41 @@ public class FogMapOverlay : MonoBehaviour
             if (idx >= 0 && idx < fogData.Length)
                 fogData[idx] = value;
         }
+    }
+
+    // Peint un dégradé depuis 0 sur les bords jusqu'à 1 au centre de la région
+    private void PaintRegionGradient(RectInt bounds)
+    {
+        for (int y = bounds.y; y < bounds.y + bounds.height; y++)
+        for (int x = bounds.x; x < bounds.x + bounds.width;  x++)
+        {
+            int idx = y * textureWidth + x;
+            if (idx < 0 || idx >= fogData.Length) continue;
+
+            int lx = x - bounds.x;
+            int ly = y - bounds.y;
+            int distFromEdge = Mathf.Min(
+                Mathf.Min(lx, bounds.width  - 1 - lx),
+                Mathf.Min(ly, bounds.height - 1 - ly)
+            );
+            fogData[idx] = Mathf.Clamp01((float)distFromEdge / gradientWidth);
+        }
+    }
+
+    // Pré-calcule les valeurs cibles du dégradé pour chaque pixel de la région
+    private float[] ComputeGradientValues(RectInt bounds)
+    {
+        float[] values = new float[bounds.width * bounds.height];
+        for (int y = 0; y < bounds.height; y++)
+        for (int x = 0; x < bounds.width;  x++)
+        {
+            int distFromEdge = Mathf.Min(
+                Mathf.Min(x, bounds.width  - 1 - x),
+                Mathf.Min(y, bounds.height - 1 - y)
+            );
+            values[y * bounds.width + x] = Mathf.Clamp01((float)distFromEdge / gradientWidth);
+        }
+        return values;
     }
 
     private void UploadTexture()

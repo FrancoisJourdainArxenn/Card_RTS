@@ -87,8 +87,8 @@ Shader "Custom/FogMapOverlay"
                             + SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, uv2).r * 0.4;
 
                 // Organic edge: noise shifts the fog/reveal boundary
-                float edge = smoothstep(0.45 - noise * _NoiseStrength * 0.4,
-                                        0.55 + noise * _NoiseStrength * 0.2,
+                float edge = smoothstep(0.05 - noise * _NoiseStrength * 0.4,
+                                        0.95 + noise * _NoiseStrength * 0.2,
                                         revealed);
 
                 // Fog color and alpha modulated by smoke (only visible in fogged areas)
