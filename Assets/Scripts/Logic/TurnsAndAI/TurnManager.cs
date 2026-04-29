@@ -349,7 +349,6 @@ public class TurnManager : MonoBehaviour
                     p.GetComponent<TurnMaker>().OnEndPhaseEntered();
                 StartCoroutine(AutoAdvanceFromEnd());
                 break;
-
         }
 
         if (GlobalSettings.Instance != null)

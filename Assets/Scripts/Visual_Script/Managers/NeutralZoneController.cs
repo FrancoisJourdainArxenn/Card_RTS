@@ -8,7 +8,7 @@ public class NeutralZoneController : MonoBehaviour
     public AreaPosition owner;
     public Color ownerColor;
     public GameObject background;
-    public ZoneLogic zone;
+    public ZoneView zone;
 
     public TableVisual[] tables;
 

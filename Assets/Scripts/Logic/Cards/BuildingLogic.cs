@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 [System.Serializable]
 public class BuildingLogic : ILivable
@@ -56,7 +56,7 @@ public class BuildingLogic : ILivable
         this.ca = ca;
         this.owner = owner;
         this.OriginSpot = originSpot;
-        this.OriginZoneID = originSpot.Zone.ZoneID;
+        this.OriginZoneID = originSpot.Zone.Logic.ID;
         baseHealth = ca.MaxHealth;
         health = ca.MaxHealth;
         baseAttack = ca.Attack;

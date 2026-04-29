@@ -255,7 +255,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1887390295257745736}
   - component: {fileID: 47061821084883809}
-  - component: {fileID: 8608399507828274092}
+  - component: {fileID: 7705798497335144078}
   - component: {fileID: 2031335740250792394}
   m_Layer: 0
   m_Name: Zone_Neutral
@@ -299,9 +299,9 @@ MonoBehaviour:
   owner: 2
   ownerColor: {r: 0, g: 0, b: 0, a: 0}
   background: {fileID: 9062903645344472021}
-  zone: {fileID: 8608399507828274092}
+  zone: {fileID: 0}
   tables: []
---- !u!114 &8608399507828274092
+--- !u!114 &7705798497335144078
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -310,14 +310,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1010105305765577422}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: acc9e2322739d75409db79ad198001cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 4db468991de345b4e944a029fa9aa7d0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ZoneLogic
-  adjacentZones:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::ZoneView
+  adjacentZones: []
   subZones: []
 --- !u!114 &2031335740250792394
 MonoBehaviour:

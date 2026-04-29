@@ -120,8 +120,8 @@ public class DragCreatureActions : DraggingActions {
             return false;
         }
 
-        ZoneLogic currentZone = originArea.parentZone;
-        ZoneLogic targetZone = targetPlayerArea.parentZone;
+        ZoneView currentZone = originArea.parentZone;
+        ZoneView targetZone = targetPlayerArea.parentZone;
         if (currentZone != targetZone && !currentZone.IsAdjacentTo(targetZone))
         {
             new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
@@ -313,7 +313,7 @@ public class DragCreatureActions : DraggingActions {
         if (originArea == null || originArea.parentZone == null)
             return;
 
-        ZoneLogic currentZone = originArea.parentZone;
+        ZoneView currentZone = originArea.parentZone;
         foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
         {
             if (pa == originArea) continue;

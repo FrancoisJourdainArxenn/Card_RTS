@@ -1,42 +1,21 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
-public class ZoneLogic : MonoBehaviour
+[System.Serializable]
+public class ZoneLogic : IIdentifiable
 {
-    [Header("Adjacent Zones")]
-    public List<ZoneLogic> adjacentZones;
+    public int ID { get; }
+    public List<ZoneLogic> AdjacentZones { get; private set; } = new List<ZoneLogic>();
+    private readonly Func<List<int>> _getSubZoneIDs;
+    public List<int> SubZoneIDs => _getSubZoneIDs();
 
-    [HideInInspector]
-    public List<PlayerArea> subZones = new List<PlayerArea>();
-
-    public int ZoneID { get; private set; }
-    public List<int> subZoneIDs => subZones.Select(sz => sz.baseID).ToList();
-
-    void Awake()
+    public ZoneLogic(int id, Func<List<int>> getSubZoneIDs)
     {
-        ZoneID = GetHierarchyPath(transform).GetHashCode();
-
-        foreach (PlayerArea pa in GetComponentsInChildren<PlayerArea>())
-        {
-            subZones.Add(pa);
-            pa.parentZone = this;
-        }
+        ID = id;
+        _getSubZoneIDs = getSubZoneIDs;
     }
 
-    public bool IsAdjacentTo(ZoneLogic other)
-    {
-        return adjacentZones.Contains(other);
-    }
+    internal void SetAdjacentZones(List<ZoneLogic> zones) => AdjacentZones = zones;
 
-    private static string GetHierarchyPath(Transform t)
-    {
-        string path = t.name;
-        while (t.parent != null)
-        {
-            t = t.parent;
-            path = t.name + "/" + path;
-        }
-        return path;
-    }
+    public bool IsAdjacentTo(ZoneLogic other) => AdjacentZones.Contains(other);
 }
