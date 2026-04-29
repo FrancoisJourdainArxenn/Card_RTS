@@ -2,21 +2,11 @@ using System.Collections.Generic;
 
 public struct TargetInfo
 {
-    public TargetObjectType targetType;
+    public EffectObjectType targetType;
     public List<TargetModifier> eligibleTargetModifiers;
     public List<ZoneTargetModifier> eligibleZoneModifiers;
 }
 
-
-public enum TargetObjectType
-{
-    None,
-    Creature,
-    Building,
-    Base,
-    Zone,
-    Player,
-}
 
 public enum TargetModifier
 {

@@ -2,10 +2,10 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ZoneView : MonoBehaviour
+public class ZoneVisual : MonoBehaviour
 {
     [Header("Adjacent Zones")]
-    public List<ZoneView> adjacentZones;
+    public List<ZoneVisual> adjacentZones;
 
     [HideInInspector]
     public List<PlayerArea> subZones = new List<PlayerArea>();
@@ -29,7 +29,7 @@ public class ZoneView : MonoBehaviour
         Logic.SetAdjacentZones(adjacentZones.ConvertAll(z => z.Logic));
     }
 
-    public bool IsAdjacentTo(ZoneView other) => Logic.IsAdjacentTo(other.Logic);
+    public bool IsAdjacentTo(ZoneVisual other) => Logic.IsAdjacentTo(other.Logic);
 
     private static string GetHierarchyPath(Transform t)
     {

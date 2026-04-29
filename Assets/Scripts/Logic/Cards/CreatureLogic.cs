@@ -88,6 +88,8 @@ public class CreatureLogic: ILivable
         set;
     }
 
+    public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
+
     public bool IsMelee
     {
         get { return ca.melee; }

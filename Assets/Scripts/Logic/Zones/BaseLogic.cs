@@ -11,10 +11,8 @@ public class BaseLogic: ILivable
     //public BuildingEffect effect;
     private int uniqueBaseID;
 
-    public int ID
-    {
-        get{ return uniqueBaseID; }
-    }
+    public int ID => uniqueBaseID;
+    public ZoneLogic Zone => neutralBaseController.zone.Logic;
        
     private int baseHealth; // the basic health that we have in BaseAsset
     public int MaxHealth // health with all the current buffs taken into account

@@ -40,12 +40,14 @@ public class Player : MonoBehaviour, ILivable
     private int bonusMainRessource = 0;
     private int bonusSecondRessource = 0;
 
-    // PROPERTIES 
+    // PROPERTIES
     // this property is a part of interface ILivable
     public int ID
     {
         get{ return PlayerID; }
     }
+
+    public ZoneLogic Zone => null;
 
     // opponent player
     public Player otherPlayer

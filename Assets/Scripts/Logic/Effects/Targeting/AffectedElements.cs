@@ -2,11 +2,12 @@ using System.Collections.Generic;
 
 public struct AffectedElement
 {
-    TargetObjectType affectedElementType;
-    AffectedElementZone affectedElementZone;
+    public EffectObjectType affectedElementType;
+    public List<AffectedElementModifier> affectedElementModifiers;
+    public AffectedElementZone affectedElementZone;
 }
-    
-public enum AffectedElementType
+
+public enum AffectedElementModifier
 {
     Target,
     Source,

@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 public struct EffectInfo
 {
-    List<TargetInfo> effectTargets;
-    List<AffectedElement> affectedElements;
-    EffectRepartition repartition;
+    public List<TargetInfo> effectTargets;
+    public List<AffectedElement> affectedElements;
+    public EffectRepartition repartition;
 }
 
 public enum EffectRepartition
@@ -12,4 +12,14 @@ public enum EffectRepartition
     Uniform,
     Random,
     Selection,
+}
+
+public enum EffectObjectType
+{
+    None,
+    Creature,
+    Building,
+    Base,
+    Zone,
+    Player,
 }

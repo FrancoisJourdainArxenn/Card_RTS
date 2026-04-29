@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class EffectContext
 {
@@ -29,13 +31,15 @@ public class EffectContext
 
         switch (targetInfo.targetType)
         {
-            case TargetObjectType.Player:
+            case EffectObjectType.None:
+                break;
+            case EffectObjectType.Player:
                 if (isAllowed(TargetModifier.Self))
                     targets.Add(Caster);
                 if (isAllowed(TargetModifier.Enemy))
                     targets.Add(Opponent);
                 break;
-            case TargetObjectType.Creature:
+            case EffectObjectType.Creature:
                 if (isAllowed(TargetModifier.Self) && SourceCreature != null)
                     targets.Add(SourceCreature);
                 if (isAllowed(TargetModifier.Friendly))
@@ -43,7 +47,7 @@ public class EffectContext
                 if (isAllowed(TargetModifier.Enemy))
                     targets.AddRange(Opponent.Creatures);
                 break;
-            case TargetObjectType.Building:
+            case EffectObjectType.Building:
                 if (isAllowed(TargetModifier.Self) && SourceBuilding != null)
                     targets.Add(SourceBuilding);
                 if (isAllowed(TargetModifier.Friendly))
@@ -51,7 +55,7 @@ public class EffectContext
                 if (isAllowed(TargetModifier.Enemy))
                     targets.AddRange(Opponent.playedCards.Buildings);
                 break;
-            case TargetObjectType.Base:
+            case EffectObjectType.Base:
                 if (isAllowed(TargetModifier.Self) && SourceBase != null)
                     targets.Add(SourceBase);
                 if (isAllowed(TargetModifier.Friendly))
@@ -59,7 +63,7 @@ public class EffectContext
                 if (isAllowed(TargetModifier.Enemy))
                     targets.AddRange(Opponent.controlledBases);
                 break;
-            case TargetObjectType.Zone:
+            case EffectObjectType.Zone:
                 if (isAllowed(TargetModifier.Self) && TargetedZone != null)
                     targets.Add(TargetedZone);
                 if (isAllowed(TargetModifier.Friendly))
@@ -72,94 +76,98 @@ public class EffectContext
     }
     
     
-    public List<ILivable> GetAffectedElements(
-        // List<ILivable> targets,
-        TargetObjectType targetType,
-        List<TargetModifier> modifierTargetType,
-        TargetLocation targetLocation
+    public List<ILivable> GetSingleTargetAffectedElements(
+        ILivable target,
+        List<AffectedElement> affectedElements
     ) {
-        List<ILivable> resolvedTargets = new List<ILivable>();
-
-        switch (targetType)
+        List<ILivable> elements = new List<ILivable>();
+        
+        
+        foreach (AffectedElement affectedElement in affectedElements)
         {
-            case TargetObjectType.Player:
-                if (modifierTargetType.Contains(TargetModifier.Self))
-                    resolvedTargets.Add(Caster);
-                else if (modifierTargetType.Contains(TargetModifier.Enemy))
-                    resolvedTargets.Add(Opponent);
-                else if (modifierTargetType.Contains(TargetModifier.All))
-                {
-                    resolvedTargets.Add(Caster);
-                    resolvedTargets.Add(Opponent);
-                }
-                break;
-            
-            case TargetObjectType.Creature:
-                List<CreatureLogic> potentialTargets = new List<CreatureLogic>();
-                if (modifierTargetType.Contains(TargetModifier.Self) && SourceCreature != null)
-                    potentialTargets.Add(SourceCreature);
-                else if (modifierTargetType.Contains(TargetModifier.All))
-                {
-                    potentialTargets.AddRange(Caster.Creatures);
-                    potentialTargets.AddRange(Opponent.Creatures);
-                }
-                else if (modifierTargetType.Contains(TargetModifier.Friendly))
-                    potentialTargets.AddRange(Caster.Creatures);
-                else if (modifierTargetType.Contains(TargetModifier.Enemy))
-                    potentialTargets.AddRange(Opponent.Creatures);
+            bool isAllowed (AffectedElementModifier modifier)
+            {
+                if (affectedElement.affectedElementModifiers.Contains(AffectedElementModifier.All))
+                    return true;
+                if (affectedElement.affectedElementModifiers.Contains(modifier))
+                    return true;
+                return false;
+            }
+
+            switch (affectedElement.affectedElementType)
+            {
+                case EffectObjectType.None:
+                    Debug.Log("Nothing is affected");
+                    break;
+
+                case EffectObjectType.Creature:
+                    if (isAllowed(AffectedElementModifier.Target) && target != null)
+                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Source) && SourceCreature != null)
+                        elements.Add(SourceCreature);
+
+                    // TODO handle specific cases of friendly, enemy, melee, ranged, etc...
+                    break;
                 
+                case EffectObjectType.Building:
+                    if (isAllowed(AffectedElementModifier.Target) && target != null)
+                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Source) && SourceBuilding != null)
+                        elements.Add(SourceBuilding);
+                    break;
 
-                if (modifierTargetType.Contains(TargetModifier.Melee))
-                    potentialTargets = potentialTargets.FindAll(c => c.IsMelee);
-                else if (modifierTargetType.Contains(TargetModifier.Ranged))
-                    potentialTargets = potentialTargets.FindAll(c => !c.IsMelee);
+                case EffectObjectType.Base:
+                    if (isAllowed(AffectedElementModifier.Target) && target != null)
+                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Source) && SourceBase != null)
+                        elements.Add(SourceBase);
+                    break;
 
-                if (targetLocation == TargetLocation.SelectedZone && TargetedZone != null)
-                    potentialTargets = potentialTargets.FindAll(c => TargetedZone.SubZoneIDs.Contains(c.BaseID));
-                resolvedTargets.AddRange(potentialTargets);
-                break;
+                case EffectObjectType.Zone:
+                    if (isAllowed(AffectedElementModifier.Target) && target != null)
+                        elements.Add(target);
+                    break;
 
-            case TargetObjectType.Building:
-                List<BuildingLogic> potentialBuildingTargets = new List<BuildingLogic>();
-                if (modifierTargetType.Contains(TargetModifier.Self) && SourceBuilding != null)
-                    potentialBuildingTargets.Add(SourceBuilding);
-                else if (modifierTargetType.Contains(TargetModifier.All))
-                {
-                    potentialBuildingTargets.AddRange(Caster.playedCards.Buildings);
-                    potentialBuildingTargets.AddRange(Opponent.playedCards.Buildings);
-                }
-                else if (modifierTargetType.Contains(TargetModifier.Friendly))
-                    potentialBuildingTargets.AddRange(Caster.playedCards.Buildings);
-                else if (modifierTargetType.Contains(TargetModifier.Enemy))
-                    potentialBuildingTargets.AddRange(Opponent.playedCards.Buildings);
-
-                if (modifierTargetType.Contains(TargetModifier.Melee))
-                    potentialBuildingTargets = potentialBuildingTargets.FindAll(b => b.IsMelee);
-
-                if (targetLocation == TargetLocation.SelectedZone && TargetedZone != null)
-                    potentialBuildingTargets = potentialBuildingTargets.FindAll(b => b.OriginZoneID == TargetedZone.ID);
-
-                resolvedTargets.AddRange(potentialBuildingTargets);
-                break;
-
-            case TargetObjectType.Base:
-                List<BaseLogic> potentialBaseTargets = new List<BaseLogic>();
-                if (modifierTargetType.Contains(TargetModifier.Self) && SourceBase != null)
-                    potentialBaseTargets.Add(SourceBase);
-                else if (modifierTargetType.Contains(TargetModifier.All))
-                {
-                    potentialBaseTargets.AddRange(Caster.controlledBases);
-                    potentialBaseTargets.AddRange(Opponent.controlledBases);
-                }
-                else if (modifierTargetType.Contains(TargetModifier.Friendly))
-                    potentialBaseTargets.AddRange(Caster.controlledBases);
-                else if (modifierTargetType.Contains(TargetModifier.Enemy))
-                    potentialBaseTargets.AddRange(Opponent.controlledBases);
-                
-                resolvedTargets.AddRange(potentialBaseTargets);
-                break;
-
+                case EffectObjectType.Player:
+                    if (isAllowed(AffectedElementModifier.Source))
+                        elements.Add(Caster);
+                    
+                    // TODO add owner to ILivable
+                    if (isAllowed(AffectedElementModifier.Friendly))
+                        elements.Add(Caster);
+                    if (isAllowed(AffectedElementModifier.Enemy))
+                        elements.Add(Opponent);
+                    break;
+            }
         }
-        return resolvedTargets;
+        return FilterAffectedElements(target, elements, affectedElements);
+    }
+
+    public List<ILivable> FilterAffectedElements(
+        ILivable target,
+        List<ILivable> unfilteredList,
+        List<AffectedElement> affectedElements
+    )
+    {
+        List<ILivable> filteredList = new(unfilteredList);
+        foreach (AffectedElement affectedElement in affectedElements)
+        {
+            switch (affectedElement.affectedElementZone)
+            {
+                case AffectedElementZone.NoRestriction:
+                    break;
+
+                case AffectedElementZone.SameZoneAsSource:
+                    ZoneLogic sourceZone = SourceCreature?.Zone ?? SourceBuilding?.Zone ?? SourceBase?.Zone;
+                    filteredList = filteredList.Where(el => el.Zone == sourceZone).ToList();
+                    break;
+
+                case AffectedElementZone.SameZoneAsTarget:
+                    filteredList = filteredList.Where(el => el.Zone == target.Zone).ToList();
+                    break;
+            }
+        }
+
+        return filteredList;
     }
 }

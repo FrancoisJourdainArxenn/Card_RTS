@@ -10,6 +10,7 @@ public class BuildingLogic : ILivable
     public int OriginZoneID { get; private set; }
 
     public int ID => UniqueBuildingID;
+    public ZoneLogic Zone => OriginSpot.Zone.Logic;
 
     private int baseHealth;
     public int MaxHealth => baseHealth;

@@ -2,8 +2,9 @@
 using System.Collections;
 
 public interface ILivable: IIdentifiable
-{	
-    int Health { get;    set;}
+{
+    int Health { get; set; }
+    ZoneLogic Zone { get; }
 
     void Die();
 }

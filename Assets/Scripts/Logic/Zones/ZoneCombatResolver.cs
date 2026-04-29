@@ -10,7 +10,7 @@ public class ZoneCombatResolver : MonoBehaviour
     private Dictionary<int, int> pendingPlayerDamage   = new Dictionary<int, int>();
     private Dictionary<int, int> pendingBuildingDamage = new Dictionary<int, int>();
 
-    private ZoneView zoneView;
+    private ZoneVisual zoneView;
     private int p1TotalATK;
     private int p2TotalATK;
     private int p1FreePool;
@@ -18,7 +18,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     void Awake()
     {
-        zoneView = GetComponent<ZoneView>();
+        zoneView = GetComponent<ZoneVisual>();
         allResolvers.Add(this);
     }
 
@@ -164,7 +164,7 @@ public class ZoneCombatResolver : MonoBehaviour
         return null;
     }
 
-    void ResolveZone(ZoneView zone)
+    void ResolveZone(ZoneVisual zone)
     {
         Player p1 = GlobalSettings.Instance.LowPlayer;
         Player p2 = GlobalSettings.Instance.TopPlayer;
@@ -189,7 +189,7 @@ public class ZoneCombatResolver : MonoBehaviour
         AssignDamage(p2TotalATK, p1Creatures, GetAllBuildingsInMyZone(p1, zone), p1);
     }
 
-    List<CreatureLogic> GetCreaturesInMyZone(Player player, ZoneView zone)
+    List<CreatureLogic> GetCreaturesInMyZone(Player player, ZoneVisual zone)
     {
         var result = new List<CreatureLogic>();
         foreach (PlayerArea pa in zone.subZones)
@@ -204,7 +204,7 @@ public class ZoneCombatResolver : MonoBehaviour
         return result;
     }
 
-    List<BuildingLogic> GetAllBuildingsInMyZone(Player player, ZoneView zone)
+    List<BuildingLogic> GetAllBuildingsInMyZone(Player player, ZoneVisual zone)
     {
         var result = new List<BuildingLogic>();
         foreach (BuildingLogic bl in player.playedCards.Buildings)
@@ -213,7 +213,7 @@ public class ZoneCombatResolver : MonoBehaviour
         return result;
     }
 
-    List<BuildingLogic> GetBuildingsInMyZone(Player player, ZoneView zone)
+    List<BuildingLogic> GetBuildingsInMyZone(Player player, ZoneVisual zone)
     {
         var result = new List<BuildingLogic>();
         foreach (BuildingLogic bl in player.playedCards.Buildings)
