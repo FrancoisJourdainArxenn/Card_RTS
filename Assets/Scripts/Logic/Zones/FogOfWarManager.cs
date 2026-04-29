@@ -9,6 +9,8 @@ using System.Collections.Generic;
 public class FogOfWarManager : MonoBehaviour
 {
     public static FogOfWarManager Instance;
+    private Dictionary<int, bool> zoneFogCache = new Dictionary<int, bool>();
+
 
     void Awake()
     {
@@ -59,7 +61,26 @@ public class FogOfWarManager : MonoBehaviour
         AreaPosition enemyAreaPos = GetAreaPosition(enemy);
 
         bool observerHasPresence = HasPresenceInZone(observer, zone, nbc);
+        bool wasFogged = zoneFogCache.TryGetValue(zone.ZoneID, out bool cached) ? cached : true;
+        bool isFogged  = !observerHasPresence;
+        bool stateChanged = wasFogged != isFogged;
+        zoneFogCache[zone.ZoneID] = isFogged;
 
+        FogMapOverlay overlay = FogMapOverlay.Instance;
+        if (overlay != null)
+        {
+            if (stateChanged)
+            {
+                Vector3 originPos = GetOriginPosForZone(zone, observer);
+                if (isFogged) overlay.CoverZoneAnimated(zone, originPos);
+                else          overlay.RevealZoneAnimated(zone, originPos);
+            }
+            else
+            {
+                overlay.SetZoneFoggedInstant(zone, isFogged);
+            }
+        }
+        
         foreach (PlayerArea pa in zone.subZones)
         {
             if (pa.tableVisual == null) continue;
@@ -172,4 +193,17 @@ public class FogOfWarManager : MonoBehaviour
     {
         return player == GlobalSettings.Instance.LowPlayer ? AreaPosition.Low : AreaPosition.Top;
     }
+
+    private Vector3 GetOriginPosForZone(ZoneLogic zone, Player player)
+    {
+        foreach (PlayerArea pa in zone.subZones)
+        {
+            if (pa.owner == GetAreaPosition(player))
+                return pa.BasePosition != null
+                    ? pa.BasePosition.position
+                    : pa.transform.position;
+        }
+        return zone.transform.position;
+    }
+
 }

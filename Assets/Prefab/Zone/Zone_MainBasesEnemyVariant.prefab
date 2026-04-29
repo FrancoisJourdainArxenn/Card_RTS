@@ -32,6 +32,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 1.5
       objectReference: {fileID: 0}
+    - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_Size.z
+      value: 6.7219152
+      objectReference: {fileID: 0}
+    - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_Center.z
+      value: 2.355431
+      objectReference: {fileID: 0}
     - target: {fileID: 2356773896271555992, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_TagString
       value: TopPlayer
