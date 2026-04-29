@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using DG.Tweening;
 
-enum TargetType
+enum AttackTargetType
 {
     Player,
     Base,
@@ -22,31 +22,31 @@ public class CreatureAttackVisual : MonoBehaviour
         w = GetComponent<WhereIsTheCardOrCreature>();
     }
 
-    private TargetType GetTargetType(int targetUniqueID)
+    private AttackTargetType GetTargetType(int targetUniqueID)
     {
         if (
             targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID 
             || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID
         )
         {
-            return TargetType.Player;
+            return AttackTargetType.Player;
         }
         else if (BaseLogic.BasesCreatedThisGame.ContainsKey(targetUniqueID) &&
                  BaseLogic.BasesCreatedThisGame[targetUniqueID] != null)
         {
-            return TargetType.Base;
+            return AttackTargetType.Base;
         }
         else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetUniqueID) &&
                  CreatureLogic.CreaturesCreatedThisGame[targetUniqueID] != null)
         {
-            return TargetType.Creature;
+            return AttackTargetType.Creature;
         }
         else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetUniqueID) &&
                  BuildingLogic.BuildingsCreatedThisGame[targetUniqueID] != null)
         {
-            return TargetType.Building;
+            return AttackTargetType.Building;
         }
-        return TargetType.Unknown;
+        return AttackTargetType.Unknown;
     }
 
     public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter)
@@ -67,7 +67,7 @@ public class CreatureAttackVisual : MonoBehaviour
             Command.CommandExecutionComplete();
             return;
         }
-        TargetType targetType = GetTargetType(targetUniqueID);
+        AttackTargetType targetType = GetTargetType(targetUniqueID);
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
@@ -79,7 +79,7 @@ public class CreatureAttackVisual : MonoBehaviour
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InCubic)
             .SetLink(gameObject)
-            .OnComplete(() =>
+            .OnComplete((TweenCallback)(() =>
             {
                 // L'attaquant ou la cible peut avoir été détruit pendant l'animation
                 if (this == null)
@@ -97,20 +97,20 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     switch (targetType)
                     {
-                        case TargetType.Player:
+                        case AttackTargetType.Player:
                             target.GetComponent<MainBaseVisual>().HealthText.text = targetHealthAfter.ToString();
                             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
                             break;
-                        case TargetType.Base:
+                        case AttackTargetType.Base:
                             target.GetComponent<OneBaseManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
-                        case TargetType.Creature:
+                        case AttackTargetType.Creature:
                             target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
-                        case TargetType.Building:
+                        case AttackTargetType.Building:
                             target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
                             break;
-                        case TargetType.Unknown:
+                        case AttackTargetType.Unknown:
                             Debug.Log("Unknown target type: " + targetUniqueID);
                             break;
                     }
@@ -124,7 +124,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 s.AppendInterval(1f);
                 s.SetLink(gameObject);
                 s.OnComplete(Command.CommandExecutionComplete);
-            });
+            }));
     }
         
 }

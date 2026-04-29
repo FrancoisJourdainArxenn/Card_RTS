@@ -84,7 +84,7 @@ public class OneBaseManager : MonoBehaviour
             Player ownerPlayer = GetOwnerPlayerFromTag();
             if (ownerPlayer != null && baseAsset != null)
             {
-                ownerPlayer.controlledBases.Remove(baseAsset);
+                ownerPlayer.controlledBaseAssets.Remove(baseAsset);
                 ownerPlayer.CalculatePlayerIncome();
             }
 
@@ -134,7 +134,7 @@ public class OneBaseManager : MonoBehaviour
         Player ownerPlayer = GetOwnerPlayerFromTag();
         if (ownerPlayer != null && baseAsset != null)
         {
-            ownerPlayer.controlledBases.Remove(baseAsset);
+            ownerPlayer.controlledBaseAssets.Remove(baseAsset);
             ownerPlayer.CalculatePlayerIncome();
         }
         Spawner.SetActive(true);

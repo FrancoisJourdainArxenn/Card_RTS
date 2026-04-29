@@ -151,7 +151,7 @@ public class OneCreatureManager : MonoBehaviour
         if (!found) return;
 
         Player localPlayer = GlobalSettings.Instance.localPlayer;
-        bool isOwn = localPlayer.table.CreaturesInPlay.Contains(creature);
+        bool isOwn = localPlayer.playedCards.Creatures.Contains(creature);
         Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
         if (isOwn) return;
 

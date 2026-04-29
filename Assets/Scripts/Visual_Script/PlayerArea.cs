@@ -87,7 +87,7 @@ public class PlayerArea : MonoBehaviour
         }
         Player p = GetOwnerPlayer();
         if (p != null && parentZone != null)
-            foreach (BuildingLogic bl in p.table.BuildingsInPlay)
+            foreach (BuildingLogic bl in p.playedCards.Buildings)
                 if (bl.Attack > 0 && bl.OriginSpot?.Zone == parentZone)
                     total += bl.Attack;
         return total;
@@ -103,7 +103,7 @@ public class PlayerArea : MonoBehaviour
         }
         Player p = GetOwnerPlayer();
         if (p != null && parentZone != null)
-            foreach (BuildingLogic bl in p.table.BuildingsInPlay)
+            foreach (BuildingLogic bl in p.playedCards.Buildings)
             {
                 if (bl.OriginSpot?.Zone == parentZone && bl.Attack > 0)
                 {   

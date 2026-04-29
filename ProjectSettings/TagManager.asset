@@ -53,6 +53,9 @@ TagManager:
   - name: Units
     uniqueID: 477187261
     locked: 0
+  - name: FogOverlay
+    uniqueID: 3896059543
+    locked: 0
   - name: Cards
     uniqueID: 3344007831
     locked: 0

@@ -41,19 +41,8 @@ public class CardAsset : ScriptableObject
     public int MoveSpeed = 1;
     public bool Celerity = false;
     
-    [Header("CreatureInfo")]
-    public string CreatureScriptName;
-    public int specialCreatureAmount;
-
-    [Header("BuildingInfo")]
-    public string BuildingScriptName;
-    public int specialBuildingAmount;
-
-    [Header("SpellInfo")]
-    public string SpellScriptName;
-    public int specialSpellAmount;
+    [Header("Effects")]
     public TargetingOptions Targets;
     public int ActivationsForOneTurn = 0;
-
-
+    public List<CardEffectData> Effects = new List<CardEffectData>();
 }
