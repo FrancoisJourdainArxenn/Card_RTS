@@ -10,6 +10,5 @@ public class CardEffectData
     public TargetLocation TargetLocation; // pour les effets qui nécessitent une sélection de zone ou de joueur
     public EffectParameters Parameters;
     public ConditionSO Condition;
-
     public bool RequiresZoneInput => TargetLocation == TargetLocation.SelectedZone;
 }

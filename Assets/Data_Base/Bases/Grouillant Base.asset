@@ -16,7 +16,7 @@ MonoBehaviour:
   BaseImage: {fileID: 21300000, guid: c381dce6a1b85d440972205c460adfa4, type: 3}
   BaseName: Essaimeuse
   MaxHealth: 12
-  mainRessourceIncome: 30
-  secondRessourceIncome: 30
+  mainRessourceIncome: 3
+  secondRessourceIncome: 1
   mainRessourceBaseCost: 0
   secondRessourceBaseCost: 0

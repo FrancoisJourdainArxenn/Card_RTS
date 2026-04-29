@@ -25,4 +25,6 @@ public enum TargetLocation
     Hand,
     Battlefield,
     SelectedZone,
+    Units,
 }
+
