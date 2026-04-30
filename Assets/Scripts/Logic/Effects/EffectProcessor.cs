@@ -149,6 +149,6 @@ public static class EffectProcessor
     {
         if (data.Effect == null) return;
         if (data.Condition != null && !data.Condition.Evaluate(context)) return;
-        data.Effect.Execute(context, data.TargetType, data.TargetModifiers, data.TargetLocation, data.Parameters);
+        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters);
     }
 }

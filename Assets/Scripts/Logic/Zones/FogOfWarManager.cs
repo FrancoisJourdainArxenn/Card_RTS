@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 /// MULTIPLAYER NOTE: ObservingPlayer currently mirrors GlobalSettings.localPlayer
@@ -40,8 +40,8 @@ public class FogOfWarManager : MonoBehaviour
         if (GlobalSettings.Instance == null) return;
 
         // Cover ALL zones, not just neutral ones.
-        ZoneLogic[] allZones = FindObjectsByType<ZoneLogic>(FindObjectsSortMode.None);
-        foreach (ZoneLogic zone in allZones)
+        ZoneVisual[] allZones = FindObjectsByType<ZoneVisual>(FindObjectsSortMode.None);
+        foreach (ZoneVisual zone in allZones)
         {
             // A neutral zone also has a NeutralZoneController for base fog.
             // Main base zones won't have one — that's fine, nbc will just be null.
@@ -51,7 +51,7 @@ public class FogOfWarManager : MonoBehaviour
     }
 
     // Recalculate and apply fog for a single zone.
-    void UpdateZone(ZoneLogic zone, NeutralZoneController nbc)
+    void UpdateZone(ZoneVisual zone, NeutralZoneController nbc)
     {
         Player observer = ObservingPlayer;
         if (observer == null) return;
@@ -141,7 +141,7 @@ public class FogOfWarManager : MonoBehaviour
     }
     // Returns true if 'player' has at least one creature OR base in the given zone.
 
-    bool HasPresenceInZone(Player player, ZoneLogic zone, NeutralZoneController nbc)
+    bool HasPresenceInZone(Player player, ZoneVisual zone, NeutralZoneController nbc)
     {
         if(player.MainPArea.parentZone == zone)
         {

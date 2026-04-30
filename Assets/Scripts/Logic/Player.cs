@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
@@ -40,12 +40,14 @@ public class Player : MonoBehaviour, ILivable
     private int bonusMainRessource = 0;
     private int bonusSecondRessource = 0;
 
-    // PROPERTIES 
+    // PROPERTIES
     // this property is a part of interface ILivable
     public int ID
     {
         get{ return PlayerID; }
     }
+
+    public ZoneLogic Zone => null;
 
     // opponent player
     public Player otherPlayer
@@ -99,6 +101,24 @@ public class Player : MonoBehaviour, ILivable
     public List<CreatureLogic> Creatures
     {
         get { return playedCards.Creatures; }
+    }
+
+    public List<ZoneLogic> VisibleZones
+    {
+        get
+        {
+            var zones = new HashSet<ZoneLogic>();
+            foreach (PlayerArea pa in PAreas)
+            {
+                if (pa == MainPArea
+                    || playedCards.Creatures.Exists(c => c.BaseID == pa.baseID)
+                    || playedCards.Buildings.Exists(b => b.OriginSpot.Zone == pa.parentZone))
+                    zones.Add(pa.parentZone.Logic);
+            }
+            foreach (BaseLogic bl in controlledBases)
+                zones.Add(bl.neutralBaseController.zone.Logic);
+            return zones.ToList();
+        }
     }
     
     void Start()
@@ -171,8 +191,6 @@ public class Player : MonoBehaviour, ILivable
 
     public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
     {
-        EffectProcessor.NotifyRegroup(this);
-        
         if (baseAsset == null)
         {
             Debug.LogWarning("OnTurnStart() skipped: baseAsset is null for " + name, this);
@@ -212,7 +230,6 @@ public class Player : MonoBehaviour, ILivable
 
     public void OnTurnEnd()
     {
-        EffectProcessor.NotifyBattleEnd(this);
         if(EndTurnEvent != null)
             EndTurnEvent.Invoke();
         GetComponent<TurnMaker>().StopAllCoroutines();

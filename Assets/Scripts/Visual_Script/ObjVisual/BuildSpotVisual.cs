@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class BuildSpotVisual : MonoBehaviour
@@ -12,8 +12,8 @@ public class BuildSpotVisual : MonoBehaviour
 
 
 
-    public ZoneLogic Zone => _zoneLogic;
-    private ZoneLogic _zoneLogic;
+    public ZoneVisual Zone => _ZoneView;
+    private ZoneVisual _ZoneView;
 
     void Awake()
     {
@@ -34,8 +34,8 @@ public class BuildSpotVisual : MonoBehaviour
 
     void Start()
     {
-        _zoneLogic = GetComponentInParent<ZoneLogic>();
-        this.tag = _zoneLogic.tag;
+        _ZoneView = GetComponentInParent<ZoneVisual>();
+        this.tag = _ZoneView.tag;
         originalTag = this.tag;
     }
 
@@ -60,8 +60,8 @@ public class BuildSpotVisual : MonoBehaviour
         Player localP = GlobalSettings.Instance.localPlayer;
 
         bool ownsSpot = localP.tag == tag;
-        bool controlsZone = PlayerHasUnitsInZone(localP, _zoneLogic)
-                         && !PlayerHasUnitsInZone(localP.otherPlayer, _zoneLogic);
+        bool controlsZone = PlayerHasUnitsInZone(localP, _ZoneView)
+                         && !PlayerHasUnitsInZone(localP.otherPlayer, _ZoneView);
 
         if(tag == localP.otherPlayer.tag)
         {
@@ -74,7 +74,7 @@ public class BuildSpotVisual : MonoBehaviour
 
     }
 
-    private bool PlayerHasUnitsInZone(Player player, ZoneLogic zone)
+    private bool PlayerHasUnitsInZone(Player player, ZoneVisual zone)
     {
         PlayerArea playerAreaInZone = null;
         foreach (PlayerArea pa in player.PAreas)
