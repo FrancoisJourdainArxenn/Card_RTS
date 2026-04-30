@@ -46,6 +46,7 @@ public class Player : MonoBehaviour, ILivable
     {
         get{ return PlayerID; }
     }
+    public string DisplayName => name;
 
     public ZoneLogic Zone => null;
 

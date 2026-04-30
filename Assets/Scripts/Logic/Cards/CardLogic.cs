@@ -13,8 +13,7 @@ public class CardLogic: IIdentifiable
     // a reference to the card asset that stores all the info about this card
     public CardAsset ca;
     // a script of type spell effect that will be attached to this card when it`s created
-
-
+    public string DisplayName => ca.name;
 
     // STATIC (for managing IDs)
     public static Dictionary<int, CardLogic> CardsCreatedThisGame = new Dictionary<int, CardLogic>();

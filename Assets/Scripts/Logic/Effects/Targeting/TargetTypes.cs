@@ -6,6 +6,7 @@ public struct TargetInfo
     public EffectObjectType targetType;
     public List<TargetModifier> eligibleTargetModifiers;
     public List<ZoneTargetModifier> eligibleZoneModifiers;
+    public bool requiresPlayerSelection;
 }
 
 
@@ -29,12 +30,3 @@ public enum ZoneTargetModifier
     // AdjacentZoneToSource,
     // VisibleZone,
 }
-
-public enum TargetLocation
-{
-    Hand,
-    Battlefield,
-    SelectedZone,
-    Units,
-}
-

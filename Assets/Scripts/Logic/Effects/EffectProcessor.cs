@@ -31,7 +31,21 @@ public static class EffectProcessor
         }
     }
 
-    //Ajouté la logique pour les buildings et les spells
+    // Appelé dans le constructeur de BuildingLogic — enregistre les triggers non-OnPlay
+    public static void RegisterBuildingEffects(BuildingLogic building, CardAsset ca)
+    {
+        if (ca.Effects == null) return;
+
+        foreach (var data in ca.Effects)
+        {
+            if (data.Trigger == TriggerType.OnPlay) continue;
+            AddListener(data, building.UniqueBuildingID, () => new EffectContext
+            {
+                Caster = building.owner,
+                SourceBuilding = building
+            });
+        }
+    }
 
     // Appelé dans PlayACreatureFromHand / PlayASpellFromHand
     public static void ETB(CardAsset ca, EffectContext context)

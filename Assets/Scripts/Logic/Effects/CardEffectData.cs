@@ -9,12 +9,13 @@ public class CardEffectData
     public ConditionSO Condition;
     public EffectInfo Effectinfo;
     public EffectParameters Parameters;
-        public bool RequiresZoneInput {
+    public bool RequiresPlayerInput
+    {
         get
         {
             foreach (TargetInfo targetInfo in Effectinfo.effectTargets)
             {
-                if (targetInfo.targetType == EffectObjectType.Zone)
+                if (targetInfo.requiresPlayerSelection)
                     return true;
             }
             return false;
