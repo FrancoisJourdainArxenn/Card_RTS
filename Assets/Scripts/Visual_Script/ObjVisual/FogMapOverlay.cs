@@ -43,38 +43,38 @@ public class FogMapOverlay : MonoBehaviour
 
     // ─── API publique ────────────────────────────────────────────────────────
 
-    public void SetZoneFoggedInstant(ZoneLogic zone, bool fogged)
+    public void SetZoneFoggedInstant(ZoneVisual zone, bool fogged)
     {
-        StopZoneAnim(zone.ZoneID);
+        StopZoneAnim(zone.Logic.ID);
         RectInt bounds = GetZonePixelBounds(zone);
         if (fogged) PaintRegionFlat(bounds, 0f);
         else        PaintRegionGradient(bounds);
         UploadTexture();
     }
 
-    public void RevealZoneAnimated(ZoneLogic zone, Vector3 originWorldPos)
+    public void RevealZoneAnimated(ZoneVisual zone, Vector3 originWorldPos)
     {
-        StopZoneAnim(zone.ZoneID);
+        StopZoneAnim(zone.Logic.ID);
         RectInt  bounds    = GetZonePixelBounds(zone);
         float[]  distances = ComputeDistances(bounds, originWorldPos);
-        Coroutine c = StartCoroutine(AnimateZone(zone.ZoneID, bounds, distances, false, revealDuration));
-        activeAnims[zone.ZoneID] = c;
+        Coroutine c = StartCoroutine(AnimateZone(zone.Logic.ID, bounds, distances, false, revealDuration));
+        activeAnims[zone.Logic.ID] = c;
     }
 
-    public void CoverZoneAnimated(ZoneLogic zone, Vector3 originWorldPos)
+    public void CoverZoneAnimated(ZoneVisual zone, Vector3 originWorldPos)
     {
-        StopZoneAnim(zone.ZoneID);
+        StopZoneAnim(zone.Logic.ID);
         RectInt  bounds    = GetZonePixelBounds(zone);
         float[]  distances = ComputeDistances(bounds, originWorldPos);
-        Coroutine c = StartCoroutine(AnimateZone(zone.ZoneID, bounds, distances, true, coverDuration));
-        activeAnims[zone.ZoneID] = c;
+        Coroutine c = StartCoroutine(AnimateZone(zone.Logic.ID, bounds, distances, true, coverDuration));
+        activeAnims[zone.Logic.ID] = c;
     }
 
     // ─── Internals ───────────────────────────────────────────────────────────
 
     private void ComputeMapBounds()
     {
-        ZoneLogic[] allZones = FindObjectsByType<ZoneLogic>(FindObjectsSortMode.None);
+        ZoneVisual[] allZones = FindObjectsByType<ZoneVisual>(FindObjectsSortMode.None);
         if (allZones.Length == 0) return;
 
         Bounds total = GetZoneBounds(allZones[0]);
@@ -102,7 +102,7 @@ public class FogMapOverlay : MonoBehaviour
 
 
     // Calcule les bounds pixel d'une zone à partir de son Collider ou Renderer
-    private RectInt GetZonePixelBounds(ZoneLogic zone)
+    private RectInt GetZonePixelBounds(ZoneVisual zone)
     {
         Bounds b = GetZoneBounds(zone);
         Debug.Log($"Zone {zone.name} bounds: {b.min} → {b.max}");  // ← debug
@@ -118,7 +118,7 @@ public class FogMapOverlay : MonoBehaviour
         return new RectInt(xMin, yMin, xMax - xMin + 1, yMax - yMin + 1);
     }
 
-    private static Bounds GetZoneBounds(ZoneLogic zone)
+    private static Bounds GetZoneBounds(ZoneVisual zone)
     {
         // Collider direct sur la zone
         Collider col = zone.GetComponent<Collider>();
