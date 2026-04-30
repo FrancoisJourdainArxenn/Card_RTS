@@ -61,10 +61,10 @@ public class FogOfWarManager : MonoBehaviour
         AreaPosition enemyAreaPos = GetAreaPosition(enemy);
 
         bool observerHasPresence = HasPresenceInZone(observer, zone, nbc);
-        bool wasFogged = zoneFogCache.TryGetValue(zone.ZoneID, out bool cached) ? cached : true;
+        bool wasFogged = zoneFogCache.TryGetValue(zone.Logic.ID, out bool cached) ? cached : true;
         bool isFogged  = !observerHasPresence;
         bool stateChanged = wasFogged != isFogged;
-        zoneFogCache[zone.ZoneID] = isFogged;
+        zoneFogCache[zone.Logic.ID] = isFogged;
 
         FogMapOverlay overlay = FogMapOverlay.Instance;
         if (overlay != null)
@@ -194,7 +194,7 @@ public class FogOfWarManager : MonoBehaviour
         return player == GlobalSettings.Instance.LowPlayer ? AreaPosition.Low : AreaPosition.Top;
     }
 
-    private Vector3 GetOriginPosForZone(ZoneLogic zone, Player player)
+    private Vector3 GetOriginPosForZone(ZoneVisual zone, Player player)
     {
         foreach (PlayerArea pa in zone.subZones)
         {
