@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-[System.Serializable]
 public class ZoneLogic : IIdentifiable
 {
     public int ID { get; }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+[System.Serializable]
 public struct EffectInfo
 {
     public List<TargetInfo> effectTargets;
@@ -10,8 +11,8 @@ public struct EffectInfo
 public enum EffectRepartition
 {
     Uniform,
-    Random,
-    Selection,
+    // Random,
+    // Selection,
 }
 
 public enum EffectObjectType

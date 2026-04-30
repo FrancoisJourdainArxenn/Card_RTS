@@ -24,22 +24,24 @@ MonoBehaviour:
   melee: 1
   MoveSpeed: 1
   Celerity: 0
-  CreatureScriptName: 
-  specialCreatureAmount: 0
-  BuildingScriptName: 
-  specialBuildingAmount: 0
-  SpellScriptName: 
-  specialSpellAmount: 0
   Targets: 0
   ActivationsForOneTurn: 0
   Effects:
-  - Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
+  - EffectName: Explosion acide
+    Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
     Trigger: 1
-    TargetType: 0
-    TargetModifiers: 02000000
-    TargetLocation: 2
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        eligibleTargetModifiers: 
+        eligibleZoneModifiers: 
+      affectedElements:
+      - affectedElementType: 1
+        affectedElementModifiers: 03000000
+        affectedElementZone: 1
+      repartition: 0
     Parameters:
       Amount: 1
       TokenToSummon: {fileID: 0}
       Placement: 0
-    Condition: {fileID: 0}

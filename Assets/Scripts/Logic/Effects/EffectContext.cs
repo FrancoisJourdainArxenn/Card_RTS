@@ -94,6 +94,7 @@ public class EffectContext
                 return false;
             }
 
+            Debug.Log($"Processing affected element of type {affectedElement.affectedElementType} with modifiers: {string.Join(", ", affectedElement.affectedElementModifiers)}");
             switch (affectedElement.affectedElementType)
             {
                 case EffectObjectType.None:
@@ -105,7 +106,11 @@ public class EffectContext
                         elements.Add(target);
                     if (isAllowed(AffectedElementModifier.Source) && SourceCreature != null)
                         elements.Add(SourceCreature);
-
+                    if (isAllowed(AffectedElementModifier.Friendly))
+                        elements.AddRange(Owner.Creatures);
+                    if (isAllowed(AffectedElementModifier.Enemy))
+                        elements.AddRange(Opponent.Creatures);
+                    Debug.Log($"Creatures affected: {elements.Count}");
                     // TODO handle specific cases of friendly, enemy, melee, ranged, etc...
                     break;
                 
@@ -114,6 +119,10 @@ public class EffectContext
                         elements.Add(target);
                     if (isAllowed(AffectedElementModifier.Source) && SourceBuilding != null)
                         elements.Add(SourceBuilding);
+                    // if (isAllowed(AffectedElementModifier.Friendly))
+                    //     elements.AddRange(Caster.Buildings);
+                    // if (isAllowed(AffectedElementModifier.Enemy))
+                    //     elements.AddRange(Opponent.Buildings);
                     break;
 
                 case EffectObjectType.Base:
@@ -130,11 +139,11 @@ public class EffectContext
 
                 case EffectObjectType.Player:
                     if (isAllowed(AffectedElementModifier.Source))
-                        elements.Add(Caster);
+                        elements.Add(Owner);
                     
                     // TODO add owner to ILivable
                     if (isAllowed(AffectedElementModifier.Friendly))
-                        elements.Add(Caster);
+                        elements.Add(Owner);
                     if (isAllowed(AffectedElementModifier.Enemy))
                         elements.Add(Opponent);
                     break;

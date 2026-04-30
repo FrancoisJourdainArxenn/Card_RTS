@@ -3,13 +3,12 @@ using UnityEngine;
 
 public abstract class EffectSO : ScriptableObject
 {
+    public string Description = "";
     public abstract void Execute(
+        string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectObjectType targetType,
-        List<TargetModifier> targetModifiers,
-        TargetLocation targetLocation,
         EffectParameters parameters
     );
-    public virtual string GetDescription(EffectParameters p) => "";
+    public virtual string GetDescription(EffectParameters parameters) => Description;
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+[System.Serializable]
 public struct TargetInfo
 {
     public EffectObjectType targetType;
@@ -14,8 +15,8 @@ public enum TargetModifier
     Friendly,
     Enemy,
     All,
-    Melee,
-    Ranged,
+    // Melee,
+    // Ranged,
     // Damaged,
     // Undamaged,
     // Visible,
@@ -25,8 +26,8 @@ public enum TargetModifier
 public enum ZoneTargetModifier
 {
     SameZoneAsSource,
-    AdjacentZoneToSource,
-    VisibleZone,
+    // AdjacentZoneToSource,
+    // VisibleZone,
 }
 
 public enum TargetLocation
