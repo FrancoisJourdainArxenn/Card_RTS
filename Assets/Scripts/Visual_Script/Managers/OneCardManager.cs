@@ -10,7 +10,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 {
 
     public CardAsset cardAsset;
-    public OneCardManager PreviewManager;
+    // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
     public TMP_Text Type;
@@ -22,18 +22,18 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public GameObject ATK_BG;
     
     [Header("Image References")]
-    //public Image CardGraphicImage;
     public Image ArtImage;
     public Image FrameImage;
     public Image CardFaceGlowImage;
-    //public Image CardBackGlowImage;
 
     public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
 
+
     void Awake()
     {
         originalScale = transform.localScale;
+
         if (cardAsset != null)
             ReadCardFromAsset();
     }
@@ -70,30 +70,26 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
         if(cardAsset.Attack > 0 || cardAsset.Type == CardType.Unit)
         {
-            ATK_BG.SetActive(true);
+            if (ATK_BG != null) ATK_BG.SetActive(true);
             AttackText.text = cardAsset.Attack.ToString();
-        } else {ATK_BG.SetActive(false);}
+        } else { if (ATK_BG != null) ATK_BG.SetActive(false); }
 
-        if (PreviewManager != null)
-        {
-            // this is a card and not a preview
-            // Preview GameObject will have OneCardManager as well, but PreviewManager should be null there
-            PreviewManager.cardAsset = cardAsset;
-            PreviewManager.ReadCardFromAsset();
-        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if(BuildingShopVisual.IsOpen && hoverZoomEnabled)
+        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
             transform.DOScale(originalScale * 1.1f, 0.15f);
+
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if(BuildingShopVisual.IsOpen && hoverZoomEnabled)
+        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
             transform.DOScale(originalScale, 0.15f);
+
     }
+
 
     public void OnPointerClick(PointerEventData eventData)
     {
