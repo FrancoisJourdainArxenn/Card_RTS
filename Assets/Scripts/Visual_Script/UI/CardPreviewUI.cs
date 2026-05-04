@@ -57,7 +57,7 @@ public class CardPreviewUI : MonoBehaviour
     {
         if (asset.MaxHealth > 0)
             return GlobalSettings.Instance.CreatureCardPrefab;
-        if (asset.Targets == TargetingOptions.NoTarget)
+        if (asset.Effects[0].RequiresPlayerInput)
             return GlobalSettings.Instance.NoTargetSpellCardPrefab;
         return GlobalSettings.Instance.TargetedSpellCardPrefab;
     }
