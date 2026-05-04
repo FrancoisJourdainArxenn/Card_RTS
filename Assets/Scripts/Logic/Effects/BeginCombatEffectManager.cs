@@ -352,7 +352,7 @@ public static class BeginCombatEffectManager
                 && effectIndex >= 0 && effectIndex < sourceCreature.ca.Effects.Count;
             if (!indexIsValid) return null;
 
-            context = new EffectContext { Caster = sourceCreature.owner, SourceCreature = sourceCreature };
+            context = new EffectContext { Caster = sourceCreature.owner, Source = sourceCreature };
             return sourceCreature.ca.Effects[effectIndex];
         }
 
@@ -362,7 +362,7 @@ public static class BeginCombatEffectManager
                 && effectIndex >= 0 && effectIndex < sourceBuilding.ca.Effects.Count;
             if (!indexIsValid) return null;
 
-            context = new EffectContext { Caster = sourceBuilding.owner, SourceBuilding = sourceBuilding };
+            context = new EffectContext { Caster = sourceBuilding.owner, Source = sourceBuilding };
             return sourceBuilding.ca.Effects[effectIndex];
         }
 

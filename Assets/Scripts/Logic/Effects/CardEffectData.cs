@@ -13,7 +13,7 @@ public class CardEffectData
     {
         get
         {
-            foreach (TargetInfo targetInfo in Effectinfo.effectTargets)
+            foreach (EffectTargetInfo targetInfo in Effectinfo.effectTargets)
             {
                 if (targetInfo.requiresPlayerSelection)
                     return true;

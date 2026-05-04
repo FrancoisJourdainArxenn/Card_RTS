@@ -95,7 +95,10 @@ public class CreatureLogic: ILivable
     {
         get { return ca.melee; }
     }
-
+    public bool IsRanged
+    {
+        get { return !ca.melee; }
+    }
     public bool Targetable
     {
         get

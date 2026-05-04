@@ -106,14 +106,14 @@ public class HandVisual : MonoBehaviour
         else
         {
             // this is a spell: checking for targeted or non-targeted spell
-            if (c.Targets == TargetingOptions.NoTarget)
+            if (c.Effects[0].RequiresPlayerInput == false)
                 card = GameObject.Instantiate(GlobalSettings.Instance.NoTargetSpellCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
             else
             {
                 card = GameObject.Instantiate(GlobalSettings.Instance.TargetedSpellCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
                 // pass targeting options to DraggingActions
                 DragSpellOnTarget dragSpell = card.GetComponentInChildren<DragSpellOnTarget>();
-                dragSpell.Targets = c.Targets;
+                // dragSpell.Targets = c.Targets;
             }
 
         }
