@@ -43,7 +43,7 @@ public class CardAsset : ScriptableObject
     
     [Header("Global Properties")]
     public int ActivationsForOneTurn = 0;
-
     [Header("Effects")]
+    public List<Keyword> Keywords = new List<Keyword>();
     public List<CardEffectData> Effects = new List<CardEffectData>();
 }
