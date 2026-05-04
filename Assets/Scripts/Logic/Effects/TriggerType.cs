@@ -12,7 +12,7 @@ public enum TriggerType
     // Phases
     OnRegroup,
     OnCommand,
-    OnBattleStart,
+    OnBeginCombat,
     OnBattleEnd,
     OnEndTurn,
     // Other objects dying

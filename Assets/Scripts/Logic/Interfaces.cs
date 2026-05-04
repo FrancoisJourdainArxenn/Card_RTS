@@ -12,4 +12,5 @@ public interface ILivable: IIdentifiable
 public interface IIdentifiable
 {
     int ID { get; }
+    string DisplayName { get; }
 }

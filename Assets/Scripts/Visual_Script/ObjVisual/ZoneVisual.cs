@@ -15,7 +15,7 @@ public class ZoneVisual : MonoBehaviour
     void Awake()
     {
         int id = GetHierarchyPath(transform).GetHashCode();
-        Logic = new ZoneLogic(id, () => subZones.Select(sz => sz.baseID).ToList());
+        Logic = new ZoneLogic(id, name, () => subZones.Select(sz => sz.baseID).ToList());
 
         foreach (PlayerArea pa in GetComponentsInChildren<PlayerArea>())
         {

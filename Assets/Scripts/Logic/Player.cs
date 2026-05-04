@@ -46,6 +46,7 @@ public class Player : MonoBehaviour, ILivable
     {
         get{ return PlayerID; }
     }
+    public string DisplayName => name;
 
     public ZoneLogic Zone => null;
 
@@ -98,11 +99,8 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
-    public List<CreatureLogic> Creatures
-    {
-        get { return playedCards.Creatures; }
-    }
-
+    public List<CreatureLogic> Creatures => playedCards.Creatures;
+    public List<BuildingLogic> Buildings => playedCards.Buildings;
     public List<ZoneLogic> VisibleZones
     {
         get

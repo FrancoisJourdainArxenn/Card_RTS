@@ -10,42 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Baneling
+  m_Name: Ghost Test
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  Description: Melee
-  CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
-  MainCost: 1
-  SecondCost: 1
-  Attack: 3
-  MaxHealth: 1
+  Description: 'Celerity
+
+    Speed : 2'
+  CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
+  MainCost: 0
+  SecondCost: 0
+  Attack: 1
+  MaxHealth: 3
   AttacksForOneTurn: 1
-  melee: 1
-  MoveSpeed: 1
-  Celerity: 0
+  melee: 0
+  MoveSpeed: 2
+  Celerity: 1
   Targets: 0
   ActivationsForOneTurn: 0
   Effects:
-  - EffectName: Explosion acide
+  - EffectName: Snipe
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
-    Trigger: 1
+    Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 0
-        eligibleTargetModifiers: 
-        eligibleZoneModifiers: 
-        requiresPlayerSelection: 0
+      - targetType: 1
+        eligibleTargetModifiers: 02000000
+        eligibleZoneModifiers: 00000000
+        requiresPlayerSelection: 1
       affectedElements:
       - affectedElementType: 1
-        affectedElementModifiers: 03000000
-        affectedElementZone: 1
-      - affectedElementType: 2
-        affectedElementModifiers: 03000000
-        affectedElementZone: 1
+        affectedElementModifiers: 00000000
+        affectedElementZone: 0
       repartition: 0
     Parameters:
-      Amount: 1
+      Amount: 2
       TokenToSummon: {fileID: 0}
       Placement: 0

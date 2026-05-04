@@ -6,7 +6,7 @@ public class EffectContext
 {
     public Player Caster;
     public ILivable Target;
-    public ZoneLogic TargetedZone; // non-null uniquement si RequiresZoneInput
+    public ZoneLogic TargetedZone;
     public CreatureLogic SourceCreature; // la créature qui est à l'origine de l'effet
     public BuildingLogic SourceBuilding; // le bâtiment qui est à l'origine de l'effet
     public BaseLogic SourceBase; // la base qui est à l'origine de l'effet
@@ -14,8 +14,25 @@ public class EffectContext
     public BuildingLogic EventSubjectBuilding; // le bâtiment qui vient de mourrir ou d'être jouée
     public TurnManager.TurnPhases CurrentPhase; // la phase actuelle du tour
 
+    public IIdentifiable SelectedTarget; // set by BeginCombatEffectManager when player picks a target
+
     public Player Owner    => Caster;
     public Player Opponent => Caster?.otherPlayer;
+
+    /// <summary>
+    /// Returns targets for effect execution.
+    /// If the player made a selection, returns [SelectedTarget]; otherwise returns all eligible targets.
+    /// GetEligibleTargets is kept separate for displaying the selection panel.
+    /// </summary>
+    public List<IIdentifiable> GetExecutionTargets(TargetInfo targetInfo)
+    {
+        if (targetInfo.requiresPlayerSelection)
+        {
+            if (SelectedTarget != null) return new List<IIdentifiable> { SelectedTarget };
+            return new List<IIdentifiable>();
+        }
+        return GetEligibleTargets(targetInfo);
+    }
 
     public List<IIdentifiable> GetEligibleTargets(TargetInfo targetInfo)
     {
@@ -72,77 +89,77 @@ public class EffectContext
                     targets.AddRange(Opponent.VisibleZones);
                 break;
         }
+
+        List<ZoneTargetModifier> zoneModifiers = targetInfo.eligibleZoneModifiers;
+        if (zoneModifiers != null && zoneModifiers.Contains(ZoneTargetModifier.SameZoneAsSource))
+        {
+            ZoneLogic sourceZone = SourceCreature?.Zone ?? SourceBuilding?.Zone;
+            if (sourceZone != null)
+                targets = targets.Where(t => t is ILivable livable && livable.Zone == sourceZone).ToList();
+        }
+
         return targets;
     }
     
     
     public List<ILivable> GetSingleTargetAffectedElements(
-        ILivable target,
+        IIdentifiable target,
         List<AffectedElement> affectedElements
     ) {
         List<ILivable> elements = new List<ILivable>();
-        
-        
+
         foreach (AffectedElement affectedElement in affectedElements)
         {
-            bool isAllowed (AffectedElementModifier modifier)
+            bool isAllowed(AffectedElementModifier modifier)
             {
                 if (affectedElement.affectedElementModifiers.Contains(AffectedElementModifier.All))
                     return true;
-                if (affectedElement.affectedElementModifiers.Contains(modifier))
-                    return true;
-                return false;
+                return affectedElement.affectedElementModifiers.Contains(modifier);
             }
 
-            Debug.Log($"Processing affected element of type {affectedElement.affectedElementType} with modifiers: {string.Join(", ", affectedElement.affectedElementModifiers)}");
             switch (affectedElement.affectedElementType)
             {
                 case EffectObjectType.None:
-                    Debug.Log("Nothing is affected");
                     break;
 
                 case EffectObjectType.Creature:
-                    if (isAllowed(AffectedElementModifier.Target) && target != null)
-                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableCreature)
+                        elements.Add(livableCreature);
                     if (isAllowed(AffectedElementModifier.Source) && SourceCreature != null)
                         elements.Add(SourceCreature);
                     if (isAllowed(AffectedElementModifier.Friendly))
                         elements.AddRange(Owner.Creatures);
                     if (isAllowed(AffectedElementModifier.Enemy))
                         elements.AddRange(Opponent.Creatures);
-                    Debug.Log($"Creatures affected: {elements.Count}");
-                    // TODO handle specific cases of friendly, enemy, melee, ranged, etc...
+                    // TODO handle Melee, Ranged sub-filters
                     break;
-                
+
                 case EffectObjectType.Building:
-                    if (isAllowed(AffectedElementModifier.Target) && target != null)
-                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableBuilding)
+                        elements.Add(livableBuilding);
                     if (isAllowed(AffectedElementModifier.Source) && SourceBuilding != null)
                         elements.Add(SourceBuilding);
-                    // if (isAllowed(AffectedElementModifier.Friendly))
-                    //     elements.AddRange(Caster.Buildings);
-                    // if (isAllowed(AffectedElementModifier.Enemy))
-                    //     elements.AddRange(Opponent.Buildings);
+                    if (isAllowed(AffectedElementModifier.Friendly))
+                        elements.AddRange(Owner.Buildings);
+                    if (isAllowed(AffectedElementModifier.Enemy))
+                        elements.AddRange(Opponent.Buildings);
+                    // TODO Friendly/Enemy buildings need owner tracking
                     break;
 
                 case EffectObjectType.Base:
-                    if (isAllowed(AffectedElementModifier.Target) && target != null)
-                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableBase)
+                        elements.Add(livableBase);
                     if (isAllowed(AffectedElementModifier.Source) && SourceBase != null)
                         elements.Add(SourceBase);
                     break;
 
                 case EffectObjectType.Zone:
-                    if (isAllowed(AffectedElementModifier.Target) && target != null)
-                        elements.Add(target);
+                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableZone)
+                        elements.Add(livableZone);
                     break;
 
                 case EffectObjectType.Player:
-                    if (isAllowed(AffectedElementModifier.Source))
-                        elements.Add(Owner);
-                    
-                    // TODO add owner to ILivable
-                    if (isAllowed(AffectedElementModifier.Friendly))
+                    if (isAllowed(AffectedElementModifier.Source) || isAllowed(AffectedElementModifier.Friendly))
                         elements.Add(Owner);
                     if (isAllowed(AffectedElementModifier.Enemy))
                         elements.Add(Opponent);
@@ -153,7 +170,7 @@ public class EffectContext
     }
 
     public List<ILivable> FilterAffectedElements(
-        ILivable target,
+        IIdentifiable target,
         List<ILivable> unfilteredList,
         List<AffectedElement> affectedElements
     )
@@ -172,11 +189,19 @@ public class EffectContext
                     break;
 
                 case AffectedElementZone.SameZoneAsTarget:
-                    filteredList = filteredList.Where(el => el.Zone == target.Zone).ToList();
+                    ZoneLogic targetZone = GetZoneOf(target);
+                    filteredList = filteredList.Where(el => el.Zone == targetZone).ToList();
                     break;
             }
         }
 
         return filteredList;
     }
+
+    private ZoneLogic GetZoneOf(IIdentifiable target) => target switch
+    {
+        ZoneLogic zone   => zone,
+        ILivable livable => livable.Zone,
+        _                => null
+    };
 }

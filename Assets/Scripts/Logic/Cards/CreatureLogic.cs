@@ -16,6 +16,7 @@ public class CreatureLogic: ILivable
     {
         get{ return UniqueCreatureID; }
     }
+    public string DisplayName => ca.name;
 
     public int BaseID {get; private set;}
     // the basic health that we have in CardAsset

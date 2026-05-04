@@ -12,6 +12,7 @@ public class BaseLogic: ILivable
     private int uniqueBaseID;
 
     public int ID => uniqueBaseID;
+    public string DisplayName => ba.name;
     public ZoneLogic Zone => neutralBaseController.zone.Logic;
        
     private int baseHealth; // the basic health that we have in BaseAsset
