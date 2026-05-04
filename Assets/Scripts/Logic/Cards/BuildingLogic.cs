@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 [System.Serializable]
 public class BuildingLogic : ILivable
@@ -10,6 +10,8 @@ public class BuildingLogic : ILivable
     public int OriginZoneID { get; private set; }
 
     public int ID => UniqueBuildingID;
+    public string DisplayName => ca.name;
+    public ZoneLogic Zone => OriginSpot.Zone.Logic;
 
     private int baseHealth;
     public int MaxHealth => baseHealth;
@@ -56,7 +58,7 @@ public class BuildingLogic : ILivable
         this.ca = ca;
         this.owner = owner;
         this.OriginSpot = originSpot;
-        this.OriginZoneID = originSpot.Zone.ZoneID;
+        this.OriginZoneID = originSpot.Zone.Logic.ID;
         baseHealth = ca.MaxHealth;
         health = ca.MaxHealth;
         baseAttack = ca.Attack;
@@ -64,6 +66,8 @@ public class BuildingLogic : ILivable
         activationForOneTurn = ca.ActivationsForOneTurn;
         UniqueBuildingID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
+        if (ca.Effects != null && ca.Effects.Count > 0)
+            EffectProcessor.RegisterBuildingEffects(this, ca);
     }
 
     public void OnTurnStart()
@@ -75,6 +79,7 @@ public class BuildingLogic : ILivable
     public void Die()
     {
         owner.playedCards.Buildings.Remove(this);
+        EffectProcessor.NotifyBuildingDied(this, owner);
         new BuildingDieCommand(UniqueBuildingID).AddToQueue();
     }
 

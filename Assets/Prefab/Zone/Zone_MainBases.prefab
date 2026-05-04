@@ -1741,7 +1741,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3380216749849222320}
-  - component: {fileID: 3490284650234272829}
+  - component: {fileID: 7451992386908271607}
   - component: {fileID: 1434784639420779512}
   - component: {fileID: 2059347606693674415}
   m_Layer: 0
@@ -1772,7 +1772,7 @@ Transform:
   - {fileID: 5907470798411458118}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3490284650234272829
+--- !u!114 &7451992386908271607
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1781,9 +1781,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4241607089193490230}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: acc9e2322739d75409db79ad198001cd, type: 3}
+  m_Script: {fileID: 11500000, guid: 4db468991de345b4e944a029fa9aa7d0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ZoneLogic
+  m_EditorClassIdentifier: Assembly-CSharp::ZoneView
   adjacentZones: []
   subZones: []
 --- !u!114 &1434784639420779512

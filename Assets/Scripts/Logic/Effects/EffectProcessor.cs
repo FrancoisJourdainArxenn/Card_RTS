@@ -31,7 +31,21 @@ public static class EffectProcessor
         }
     }
 
-    //Ajouté la logique pour les buildings et les spells
+    // Appelé dans le constructeur de BuildingLogic — enregistre les triggers non-OnPlay
+    public static void RegisterBuildingEffects(BuildingLogic building, CardAsset ca)
+    {
+        if (ca.Effects == null) return;
+
+        foreach (var data in ca.Effects)
+        {
+            if (data.Trigger == TriggerType.OnPlay) continue;
+            AddListener(data, building.UniqueBuildingID, () => new EffectContext
+            {
+                Caster = building.owner,
+                SourceBuilding = building
+            });
+        }
+    }
 
     // Appelé dans PlayACreatureFromHand / PlayASpellFromHand
     public static void ETB(CardAsset ca, EffectContext context)
@@ -98,11 +112,52 @@ public static class EffectProcessor
             new EffectContext { Caster = owner },
             re => re.ContextFactory().Caster == owner);
 
-    // Appelé dans Player.OnBattleStart()
-    public static void NotifyBattleStart(Player owner)
-        => NotifyFiltered(TriggerType.OnBattleStart,
+    // Appelé dans TurnMaker.OnBeginCombatPhaseEntered()
+    public static void NotifyBeginCombat(Player owner)
+        => NotifyFiltered(TriggerType.OnBeginCombat,
             new EffectContext { Caster = owner },
             re => re.ContextFactory().Caster == owner);
+
+    // Collecte TOUS les effets OnBeginCombat d'un joueur (auto-fire et sélection joueur).
+    // Utilisé par BeginCombatEffectManager pour la résolution simultanée.
+    public static List<PendingEffectSelection> CollectAllBeginCombatEffects(Player owner)
+    {
+        List<PendingEffectSelection> result = new List<PendingEffectSelection>();
+        if (!_listeners.TryGetValue(TriggerType.OnBeginCombat, out List<RegisteredEffect> effectList))
+            return result;
+
+        foreach (RegisteredEffect registeredEffect in effectList)
+        {
+            EffectContext context = registeredEffect.ContextFactory();
+            if (context.Caster != owner) continue;
+
+            // Pour les effets avec sélection joueur : pré-calculer les targets éligibles (pour l'UI)
+            List<IIdentifiable> eligibleTargets = new List<IIdentifiable>();
+            if (registeredEffect.Data.RequiresPlayerInput)
+            {
+                foreach (TargetInfo targetInfo in registeredEffect.Data.Effectinfo.effectTargets)
+                {
+                    if (!targetInfo.requiresPlayerSelection) continue;
+                    eligibleTargets.AddRange(context.GetEligibleTargets(targetInfo));
+                    break; // une seule TargetInfo par effet pour l'instant
+                }
+            }
+
+            result.Add(new PendingEffectSelection
+            {
+                Data             = registeredEffect.Data,
+                Context          = context,
+                EligibleTargets  = eligibleTargets,
+                SourceEntityID   = registeredEffect.OwnerID,
+                EffectIndexInCard = FindEffectIndex(registeredEffect.OwnerID, registeredEffect.Data)
+            });
+        }
+        return result;
+    }
+
+    // Appelé par BeginCombatEffectManager après que la cible a été résolue dans le contexte
+    public static void ExecutePendingEffect(CardEffectData data, EffectContext context)
+        => TryExecute(data, context);
 
     // Appelé dans Player.OnBattleEnd()
     public static void NotifyBattleEnd(Player owner)
@@ -124,6 +179,16 @@ public static class EffectProcessor
     }
 
     // ---- Méthodes privées ----
+
+    private static int FindEffectIndex(int ownerID, CardEffectData data)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(ownerID, out CreatureLogic creature))
+            return creature.ca.Effects != null ? creature.ca.Effects.IndexOf(data) : -1;
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(ownerID, out BuildingLogic building))
+            return building.ca.Effects != null ? building.ca.Effects.IndexOf(data) : -1;
+        return -1;
+    }
+
     private static void AddListener(CardEffectData data, int ownerID, System.Func<EffectContext> contextFactory)
     {
         if (!_listeners.ContainsKey(data.Trigger))
@@ -149,6 +214,6 @@ public static class EffectProcessor
     {
         if (data.Effect == null) return;
         if (data.Condition != null && !data.Condition.Evaluate(context)) return;
-        data.Effect.Execute(context, data.TargetType, data.TargetModifiers, data.TargetLocation, data.Parameters);
+        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters);
     }
 }

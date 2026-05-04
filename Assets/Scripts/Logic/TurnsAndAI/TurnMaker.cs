@@ -11,15 +11,17 @@ public abstract class TurnMaker : MonoBehaviour {
         p = GetComponent<Player>();
     }
 
+    /* Not used so far */
     public virtual void OnTurnStart()
     {
-        p.OnTurnStart();
+        // p.OnTurnStart();
     }
 
     /// <summary>Round upkeep: resources and one draw for this player (both players in Regroup).</summary>
     public virtual void OnRegroupPhaseStart()
     {
         p.OnTurnStart();
+        EffectProcessor.NotifyRegroup(p);
         if(NetworkSessionData.IsNetworkSession)
         {
             if(NetworkManager.Singleton.IsServer)
@@ -33,14 +35,24 @@ public abstract class TurnMaker : MonoBehaviour {
 
     public virtual void OnCommandPhaseEntered()
     {
-        
+        EffectProcessor.NotifyCommand(p);
     }
 
-    public virtual void OnBattlePhaseEntered()
+    public virtual void OnBeginCombatPhaseEntered()
     {
-        
+        // In network mode, only the local player runs the targeting session.
+        // In local mode, both players run it sequentially (auto-selects for testing).
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            BeginCombatEffectManager.StartSession(p);
     }
 
-    public virtual void OnEndPhaseEntered() { }
+    public virtual void OnEndPhaseEntered()
+    {
+        EffectProcessor.NotifyBattleEnd(p);
+        EffectProcessor.NotifyEndTurn(p);
+    }
 
 }
