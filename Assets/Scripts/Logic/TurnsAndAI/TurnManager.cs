@@ -13,7 +13,7 @@ public class TurnManager : MonoBehaviour
 
     public static TurnManager Instance;
 
-    public enum TurnPhases { Regroup, Command, Battle, End }
+    public enum TurnPhases { Regroup, Command, BeginCombat, Battle, End }
 
     public TMP_Text phaseText;
 
@@ -53,16 +53,23 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        foreach (Player p in Player.Players)
+        {
+            p.LoadCharacterInfoFromAsset();
+            p.TransmitInfoAboutPlayerToVisual();
+        }
+
         if (seed.HasValue)
         {
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
                 p.deck.cards.ShuffleWithSeed(seed.Value + idx);
-                Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
+                if (p.deck.cards.Count >= 2)
+                    Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
             }
             Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
-            
+
         }
         else //Shuffle Local
         {
@@ -78,12 +85,6 @@ public class TurnManager : MonoBehaviour
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
-
-        foreach (Player p in Player.Players)
-        {
-            p.LoadCharacterInfoFromAsset();
-            p.TransmitInfoAboutPlayerToVisual();
-        }
 
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
@@ -147,6 +148,24 @@ public class TurnManager : MonoBehaviour
     /// <summary>Registers end-of-phase for the participant at this index in <see cref="Player.Players"/>.</summary>
     public void RegisterEndPhase(int participantIndex)
     {
+        // BeginCombat : End Phase = confirmation des sélections de targets.
+        // Fonctionne en local et en réseau — AutoAdvanceFromBeginCombat prend le relais.
+        if (currentPhase == TurnPhases.BeginCombat)
+        {
+            Player player = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
+                ? Player.Players[participantIndex] : null;
+
+            if (NetworkSessionData.IsNetworkSession)
+            {
+                bool isMyPlayer = player != null && player.MainPArea.AllowedToControlThisPlayer;
+                if (!isMyPlayer) return;
+            }
+
+            if (player != null)
+                BeginCombatEffectManager.ConfirmAndSubmit(player);
+            return;
+        }
+
         if (NetworkSessionData.IsNetworkSession)
         {
             Player p = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
@@ -243,11 +262,12 @@ public class TurnManager : MonoBehaviour
 
         TurnPhases next = currentPhase switch
         {
-            TurnPhases.Command => TurnPhases.Battle,
-            TurnPhases.Battle  => TurnPhases.End,
-            TurnPhases.End     => TurnPhases.Regroup,
-            TurnPhases.Regroup => TurnPhases.Command,
-            _                  => TurnPhases.Command
+            TurnPhases.Command     => TurnPhases.BeginCombat,
+            TurnPhases.BeginCombat => TurnPhases.Battle,
+            TurnPhases.Battle      => TurnPhases.End,
+            TurnPhases.End         => TurnPhases.Regroup,
+            TurnPhases.Regroup     => TurnPhases.Command,
+            _                      => TurnPhases.Command
         };
 
 
@@ -329,6 +349,12 @@ public class TurnManager : MonoBehaviour
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
+            case TurnPhases.BeginCombat:
+                BeginCombatEffectManager.ResetForNewPhase();
+                foreach (Player p in Player.Players)
+                    p.GetComponent<TurnMaker>().OnBeginCombatPhaseEntered();
+                StartCoroutine(AutoAdvanceFromBeginCombat());
+                break;
             case TurnPhases.Battle:
                 // new ShowMessageCommand("Battle", 1.5f).AddToQueue();
                 if (!AnyZoneHasPossibleCombat())
@@ -338,8 +364,6 @@ public class TurnManager : MonoBehaviour
                 }
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseStart();
-                foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnBattlePhaseEntered();
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -354,6 +378,7 @@ public class TurnManager : MonoBehaviour
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
         RefreshAllPlayableHighlights();
+        BeginCombatEffectManager.BeginLocalSelectionSession();
     }
 
     void UpdatePhaseText()
@@ -362,10 +387,11 @@ public class TurnManager : MonoBehaviour
             return;
         string label = currentPhase switch
         {
-            TurnPhases.Regroup => "Regroup",
-            TurnPhases.Command => "Command",
-            TurnPhases.Battle => "Battle",
-            TurnPhases.End => "End",
+            TurnPhases.Regroup     => "Regroup",
+            TurnPhases.Command     => "Command",
+            TurnPhases.BeginCombat => "Begin Combat",
+            TurnPhases.Battle      => "Battle",
+            TurnPhases.End         => "End",
             _ => ""
         };
         phaseText.text = label;
@@ -442,6 +468,13 @@ public class TurnManager : MonoBehaviour
         if (currentPhase != TurnPhases.Regroup)
             yield break;
         EnterPhase(TurnPhases.Command);
+    }
+
+    IEnumerator AutoAdvanceFromBeginCombat()
+    {
+        yield return new WaitWhile(() => !BeginCombatEffectManager.IsComplete || Command.playingQueue);
+        if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
+            AdvancePhaseWhenAllReady();
     }
 
     IEnumerator AutoAdvanceFromBattle()

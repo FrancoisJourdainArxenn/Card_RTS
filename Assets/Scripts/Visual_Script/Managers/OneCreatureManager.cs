@@ -112,9 +112,17 @@ public class OneCreatureManager : MonoBehaviour
         CreatureGlowImage.enabled = CanAttackNow || CanMoveNow;
     }
 
-    public void UpdateTargetableVisual(bool targetable)
+    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
     {
         CreatureGraphicImage.color = targetable ? Color.white : Color.gray;
+        CreatureGlowImage.color = targeted ? Color.green : Color.yellow;
+        CreatureGlowImage.enabled = targetable;
+    }
+
+    public void ClearTargetableVisual()
+    {
+        CreatureGlowImage.enabled = false;
+        CreatureGraphicImage.color = Color.white;
     }
 
     public void SetGray(bool gray)
@@ -139,25 +147,36 @@ public class OneCreatureManager : MonoBehaviour
 
     public void OnCreatureClicked()
     {
+        TurnManager.TurnPhases phase = TurnManager.Instance.CurrentPhase;
+
+        if (phase == TurnManager.TurnPhases.BeginCombat)
+        {
+            IDHolder idHolder = GetComponent<IDHolder>();
+            if (idHolder == null) return;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature)) return;
+            BeginCombatEffectManager.OnEntityClicked(creature);
+            return;
+        }
+
         Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
         if (!TurnManager.Instance.IsBattlePhase) return;
 
-        IDHolder idHolder = GetComponent<IDHolder>();
-        Debug.Log($"[Click] IDHolder={idHolder?.UniqueID}");
-        if (idHolder == null) return;
+        IDHolder battleIdHolder = GetComponent<IDHolder>();
+        Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
+        if (battleIdHolder == null) return;
 
-        bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature);
+        bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(battleIdHolder.UniqueID, out CreatureLogic battleCreature);
         Debug.Log($"[Click] CreatureFound={found}");
         if (!found) return;
 
         Player localPlayer = GlobalSettings.Instance.localPlayer;
-        bool isOwn = localPlayer.playedCards.Creatures.Contains(creature);
+        bool isOwn = localPlayer.playedCards.Creatures.Contains(battleCreature);
         Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
         if (isOwn) return;
 
         ZoneCombatResolver resolver = ZoneCombatResolver.FindForBase(BaseID);
         Debug.Log($"[Click] Resolver={resolver}");
-        resolver?.TryRedirectDamageFrom(creature);
+        resolver?.TryRedirectDamageFrom(battleCreature);
     }
 
 

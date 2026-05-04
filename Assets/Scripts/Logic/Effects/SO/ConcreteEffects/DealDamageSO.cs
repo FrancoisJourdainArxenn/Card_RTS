@@ -14,7 +14,7 @@ public class DealDamageSO : EffectSO
     {
         List<IIdentifiable> eligibleTargets = new();
         foreach (TargetInfo targetInfo in effectInfo.effectTargets)
-            eligibleTargets.AddRange(context.GetEligibleTargets(targetInfo));
+            eligibleTargets.AddRange(context.GetExecutionTargets(targetInfo));
 
         List<ILivable> affectedElements = new();
 
@@ -40,7 +40,10 @@ public class DealDamageSO : EffectSO
         Log($"{EffectName}: {parameters.Amount} damage to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => $"{t.DisplayName}#{t.ID}"))}");
 
         foreach (ILivable target in affectedElements)
+        {
             new DealDamageCommand(target.ID, parameters.Amount, target.Health - parameters.Amount).AddToQueue();
+            target.Health -= parameters.Amount;
+        }
     }
 
     public override string GetDescription(EffectParameters parameters) => $"Inflige {parameters.Amount} dégâts";

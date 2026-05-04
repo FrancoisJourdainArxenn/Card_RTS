@@ -14,8 +14,25 @@ public class EffectContext
     public BuildingLogic EventSubjectBuilding; // le bâtiment qui vient de mourrir ou d'être jouée
     public TurnManager.TurnPhases CurrentPhase; // la phase actuelle du tour
 
+    public IIdentifiable SelectedTarget; // set by BeginCombatEffectManager when player picks a target
+
     public Player Owner    => Caster;
     public Player Opponent => Caster?.otherPlayer;
+
+    /// <summary>
+    /// Returns targets for effect execution.
+    /// If the player made a selection, returns [SelectedTarget]; otherwise returns all eligible targets.
+    /// GetEligibleTargets is kept separate for displaying the selection panel.
+    /// </summary>
+    public List<IIdentifiable> GetExecutionTargets(TargetInfo targetInfo)
+    {
+        if (targetInfo.requiresPlayerSelection)
+        {
+            if (SelectedTarget != null) return new List<IIdentifiable> { SelectedTarget };
+            return new List<IIdentifiable>();
+        }
+        return GetEligibleTargets(targetInfo);
+    }
 
     public List<IIdentifiable> GetEligibleTargets(TargetInfo targetInfo)
     {
@@ -72,6 +89,15 @@ public class EffectContext
                     targets.AddRange(Opponent.VisibleZones);
                 break;
         }
+
+        List<ZoneTargetModifier> zoneModifiers = targetInfo.eligibleZoneModifiers;
+        if (zoneModifiers != null && zoneModifiers.Contains(ZoneTargetModifier.SameZoneAsSource))
+        {
+            ZoneLogic sourceZone = SourceCreature?.Zone ?? SourceBuilding?.Zone;
+            if (sourceZone != null)
+                targets = targets.Where(t => t is ILivable livable && livable.Zone == sourceZone).ToList();
+        }
+
         return targets;
     }
     
@@ -113,6 +139,10 @@ public class EffectContext
                         elements.Add(livableBuilding);
                     if (isAllowed(AffectedElementModifier.Source) && SourceBuilding != null)
                         elements.Add(SourceBuilding);
+                    if (isAllowed(AffectedElementModifier.Friendly))
+                        elements.AddRange(Owner.Buildings);
+                    if (isAllowed(AffectedElementModifier.Enemy))
+                        elements.AddRange(Opponent.Buildings);
                     // TODO Friendly/Enemy buildings need owner tracking
                     break;
 

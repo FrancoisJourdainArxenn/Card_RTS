@@ -105,7 +105,7 @@ public class FogMapOverlay : MonoBehaviour
     private RectInt GetZonePixelBounds(ZoneVisual zone)
     {
         Bounds b = GetZoneBounds(zone);
-        Debug.Log($"Zone {zone.name} bounds: {b.min} → {b.max}");  // ← debug
+        // Debug.Log($"Zone {zone.name} bounds: {b.min} → {b.max}");  // ← debug
         Vector2Int pMin = WorldToPixel(b.min);
         Vector2Int pMax = WorldToPixel(b.max);
         // Assure l'ordre correct (min < max)
@@ -113,7 +113,7 @@ public class FogMapOverlay : MonoBehaviour
         int yMin = Mathf.Min(pMin.y, pMax.y);
         int xMax = Mathf.Max(pMin.x, pMax.x);
         int yMax = Mathf.Max(pMin.y, pMax.y);
-        Debug.Log($"Zone {zone.name} pixel bounds: xMin={xMin} yMin={yMin} xMax={xMax} yMax={yMax}");
+        // Debug.Log($"Zone {zone.name} pixel bounds: xMin={xMin} yMin={yMin} xMax={xMax} yMax={yMax}");
 
         return new RectInt(xMin, yMin, xMax - xMin + 1, yMax - yMin + 1);
     }

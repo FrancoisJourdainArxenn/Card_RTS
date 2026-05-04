@@ -126,6 +126,67 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     // -------------------------------------------------------------------------
+    // SYNCHRONISATION BEGINCOMBAT — EFFETS CIBLÉS
+    // -------------------------------------------------------------------------
+
+    private struct EffectTargetSubmission
+    {
+        public int[] SourceEntityIDs;
+        public int[] EffectIndexes;
+        public int[] SelectedTargetIDs;
+    }
+    private Dictionary<int, EffectTargetSubmission> _effectSubmissions = new Dictionary<int, EffectTargetSubmission>();
+
+    /// <summary>
+    /// Envoyé par chaque joueur quand il confirme ses sélections de targets (End Phase en BeginCombat).
+    /// Le serveur attend les deux soumissions, merge, puis broadcast la résolution canonique.
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SubmitEffectTargetsServerRpc(
+        int playerIndex,
+        int[] sourceEntityIDs,
+        int[] effectIndexes,
+        int[] selectedTargetIDs)
+    {
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat)
+        {
+            Debug.Log("[GameNetworkManager] SubmitEffectTargets ignoré : pas en phase BeginCombat");
+            return;
+        }
+
+        _effectSubmissions[playerIndex] = new EffectTargetSubmission
+        {
+            SourceEntityIDs   = sourceEntityIDs,
+            EffectIndexes     = effectIndexes,
+            SelectedTargetIDs = selectedTargetIDs
+        };
+
+        if (_effectSubmissions.Count < Player.Players.Length)
+            return; // On attend encore l'autre joueur
+
+        EffectTargetSubmission submission0 = _effectSubmissions[0];
+        EffectTargetSubmission submission1 = _effectSubmissions[1];
+        _effectSubmissions.Clear();
+
+        ApplyCanonicalEffectResolutionClientRpc(
+            ConcatArrays(submission0.SourceEntityIDs,   submission1.SourceEntityIDs),
+            ConcatArrays(submission0.EffectIndexes,     submission1.EffectIndexes),
+            ConcatArrays(submission0.SelectedTargetIDs, submission1.SelectedTargetIDs));
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : exécute les effets BeginCombat avec les targets choisies par chaque joueur.
+    /// </summary>
+    [ClientRpc]
+    void ApplyCanonicalEffectResolutionClientRpc(
+        int[] sourceEntityIDs,
+        int[] effectIndexes,
+        int[] selectedTargetIDs)
+    {
+        BeginCombatEffectManager.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs);
+    }
+
+    // -------------------------------------------------------------------------
     // SYNCHRONISATION GLOBALE DE L'ÉTAT DE JEU
     // -------------------------------------------------------------------------
 

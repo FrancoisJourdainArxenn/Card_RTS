@@ -38,9 +38,15 @@ public abstract class TurnMaker : MonoBehaviour {
         EffectProcessor.NotifyCommand(p);
     }
 
-    public virtual void OnBattlePhaseEntered()
+    public virtual void OnBeginCombatPhaseEntered()
     {
-        EffectProcessor.NotifyBattleStart(p);
+        // In network mode, only the local player runs the targeting session.
+        // In local mode, both players run it sequentially (auto-selects for testing).
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            BeginCombatEffectManager.StartSession(p);
     }
 
     public virtual void OnEndPhaseEntered()

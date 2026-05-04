@@ -2403,7 +2403,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
+  - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -2471,11 +2471,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
-  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
-  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
-  - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
+  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -7601,9 +7597,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 97.44998, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:
