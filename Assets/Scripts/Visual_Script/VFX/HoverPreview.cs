@@ -1,29 +1,16 @@
 ﻿using UnityEngine;
-using System.Collections;
-using DG.Tweening;
 
-public class HoverPreview: MonoBehaviour
+public class HoverPreview : MonoBehaviour
 {
-    // PUBLIC FIELDS
-    public GameObject TurnThisOffWhenPreviewing;  // if this is null, will not turn off anything 
-    public Vector3 TargetPosition;
-    public float TargetScale;
-    public GameObject previewGameObject;
-    public bool ActivateInAwake = false;
-
-    // PRIVATE FIELDS
     private static HoverPreview currentlyViewing = null;
 
-    // PROPERTIES WITH UNDERLYING PRIVATE FIELDS
     private static bool _PreviewsAllowed = true;
     public static bool PreviewsAllowed
     {
-        get { return _PreviewsAllowed;}
-
-        set 
-        { 
-            //Debug.Log("Hover Previews Allowed is now: " + value);
-            _PreviewsAllowed= value;
+        get { return _PreviewsAllowed; }
+        set
+        {
+            _PreviewsAllowed = value;
             if (!_PreviewsAllowed)
                 StopAllPreviews();
         }
@@ -32,24 +19,16 @@ public class HoverPreview: MonoBehaviour
     private bool _thisPreviewEnabled = false;
     public bool ThisPreviewEnabled
     {
-        get { return _thisPreviewEnabled;}
-
-        set 
-        { 
+        get { return _thisPreviewEnabled; }
+        set
+        {
             _thisPreviewEnabled = value;
             if (!_thisPreviewEnabled)
-                StopThisPreview();
+                StopAllPreviews();
         }
     }
 
-    public bool OverCollider { get; set;}
- 
-    // MONOBEHVIOUR METHODS
-    void Awake()
-    {
-        ThisPreviewEnabled = ActivateInAwake;
-    }
-
+    public bool OverCollider { get; set; }
 
     void OnMouseDown()
     {
@@ -57,82 +36,62 @@ public class HoverPreview: MonoBehaviour
         GetComponentInParent<OneBuildingManager>()?.OnBuildingClicked();
     }
 
-            
     void OnMouseEnter()
     {
+
         if (BuildingShopVisual.IsOpen) return;
         OverCollider = true;
         if (PreviewsAllowed && ThisPreviewEnabled)
+        {
             PreviewThisObject();
+            TriggerTooltip();
+        }
     }
-        
+
     void OnMouseExit()
     {
         OverCollider = false;
-
         if (!PreviewingSomeCard())
             StopAllPreviews();
     }
 
-    // OTHER METHODS
+    void TriggerTooltip()
+    {
+        CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset
+                       ?? GetComponentInParent<OneBuildingManager>()?.cardAsset;
+
+
+    }
+
     void PreviewThisObject()
     {
-        // 1) clone this card 
-        // first disable the previous preview if there is one already
         StopAllPreviews();
-        // 2) save this HoverPreview as curent
         currentlyViewing = this;
-        // 3) enable Preview game object
-        previewGameObject.SetActive(true);
-        // 4) disable if we have what to disable
-        if (TurnThisOffWhenPreviewing!=null)
-            TurnThisOffWhenPreviewing.SetActive(false); 
-        // 5) tween to target position
-        previewGameObject.transform.localPosition = Vector3.zero;
-        previewGameObject.transform.localScale = Vector3.one;
 
-        previewGameObject.transform.DOLocalMove(TargetPosition, 1f).SetEase(Ease.OutQuint);
-        previewGameObject.transform.DOScale(TargetScale, 1f).SetEase(Ease.OutQuint);
+        CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset
+                       ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
+                       ?? GetComponentInParent<OneCardManager>()?.cardAsset;
+
+        if (asset != null)
+            CardPreviewUI.Instance?.Show(asset);
     }
 
-    void StopThisPreview()
-    {
-        previewGameObject.SetActive(false);
-        previewGameObject.transform.localScale = Vector3.one;
-        previewGameObject.transform.localPosition = Vector3.zero;
-        if (TurnThisOffWhenPreviewing!=null)
-            TurnThisOffWhenPreviewing.SetActive(true); 
-    }
-
-    // STATIC METHODS
     private static void StopAllPreviews()
     {
-        if (currentlyViewing != null)
-        {
-            currentlyViewing.previewGameObject.SetActive(false);
-            currentlyViewing.previewGameObject.transform.localScale = Vector3.one;
-            currentlyViewing.previewGameObject.transform.localPosition = Vector3.zero;
-            if (currentlyViewing.TurnThisOffWhenPreviewing!=null)
-                currentlyViewing.TurnThisOffWhenPreviewing.SetActive(true); 
-        }
-         
+        CardPreviewUI.Instance?.Hide();
+        currentlyViewing = null;
     }
 
     private static bool PreviewingSomeCard()
     {
-        if (!PreviewsAllowed)
-            return false;
+        if (!PreviewsAllowed) return false;
 
         HoverPreview[] allHoverBlowups = GameObject.FindObjectsByType<HoverPreview>(FindObjectsSortMode.None);
-
         foreach (HoverPreview hb in allHoverBlowups)
         {
             if (hb.OverCollider && hb.ThisPreviewEnabled)
                 return true;
         }
-
         return false;
     }
-
-   
 }

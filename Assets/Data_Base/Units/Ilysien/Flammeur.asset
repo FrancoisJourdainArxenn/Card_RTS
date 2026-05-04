@@ -24,7 +24,11 @@ MonoBehaviour:
   melee: 1
   MoveSpeed: 1
   Celerity: 0
-  Targets: 0
+  Keywords:
+  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
+  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
+  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
+  Targets: 3
   ActivationsForOneTurn: 0
   Effects:
   - EffectName: Bruler

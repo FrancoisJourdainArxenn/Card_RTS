@@ -42,6 +42,7 @@ public class CardAsset : ScriptableObject
     public bool Celerity = false;
     
     [Header("Effects")]
+    public List<Keyword> Keywords = new List<Keyword>();
     public TargetingOptions Targets;
     public int ActivationsForOneTurn = 0;
     public List<CardEffectData> Effects = new List<CardEffectData>();
