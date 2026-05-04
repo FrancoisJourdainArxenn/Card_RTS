@@ -26,7 +26,6 @@ MonoBehaviour:
   melee: 0
   MoveSpeed: 2
   Celerity: 1
-  Targets: 0
   ActivationsForOneTurn: 0
   Effects:
   - EffectName: Snipe
@@ -36,8 +35,10 @@ MonoBehaviour:
     Effectinfo:
       effectTargets:
       - targetType: 1
-        eligibleTargetModifiers: 02000000
-        eligibleZoneModifiers: 00000000
+        targetDetails:
+        - team: 3
+          statusFilter: 1
+          zoneFilter: 1
         requiresPlayerSelection: 1
       affectedElements:
       - affectedElementType: 1

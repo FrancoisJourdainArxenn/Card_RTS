@@ -41,8 +41,9 @@ public class CardAsset : ScriptableObject
     public int MoveSpeed = 1;
     public bool Celerity = false;
     
-    [Header("Effects")]
-    public TargetingOptions Targets;
+    [Header("Global Properties")]
     public int ActivationsForOneTurn = 0;
+
+    [Header("Effects")]
     public List<CardEffectData> Effects = new List<CardEffectData>();
 }

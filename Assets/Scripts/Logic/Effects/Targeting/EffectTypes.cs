@@ -3,7 +3,7 @@ using System.Collections.Generic;
 [System.Serializable]
 public struct EffectInfo
 {
-    public List<TargetInfo> effectTargets;
+    public List<EffectTargetInfo> effectTargets;
     public List<AffectedElement> affectedElements;
     public EffectRepartition repartition;
 }

@@ -26,7 +26,7 @@ public static class EffectProcessor
             AddListener(data, creature.UniqueCreatureID, () => new EffectContext
             {
                 Caster = creature.owner,
-                SourceCreature = creature
+                Source = creature
             });
         }
     }
@@ -42,7 +42,7 @@ public static class EffectProcessor
             AddListener(data, building.UniqueBuildingID, () => new EffectContext
             {
                 Caster = building.owner,
-                SourceBuilding = building
+                Source = building
             });
         }
     }
@@ -67,7 +67,7 @@ public static class EffectProcessor
             foreach (var data in died.ca.Effects)
             {
                 if (data.Trigger != TriggerType.OnDeath) continue;
-                TryExecute(data, new EffectContext { Caster = dyingOwner, SourceCreature = died });
+                TryExecute(data, new EffectContext { Caster = dyingOwner, Source = died });
             }
         }
         // Notifie les autres créatures qui écoutent OnAnyCreatureDies etc.
@@ -88,7 +88,7 @@ public static class EffectProcessor
             foreach (var data in died.ca.Effects)
             {
                 if (data.Trigger != TriggerType.OnDeath) continue;
-                TryExecute(data, new EffectContext { Caster = dyingOwner, SourceBuilding = died });
+                TryExecute(data, new EffectContext { Caster = dyingOwner, Source = died });
             }
         }
         // Notifie les autres créatures qui écoutent OnAnyCreatureDies etc.
@@ -135,7 +135,7 @@ public static class EffectProcessor
             List<IIdentifiable> eligibleTargets = new List<IIdentifiable>();
             if (registeredEffect.Data.RequiresPlayerInput)
             {
-                foreach (TargetInfo targetInfo in registeredEffect.Data.Effectinfo.effectTargets)
+                foreach (EffectTargetInfo targetInfo in registeredEffect.Data.Effectinfo.effectTargets)
                 {
                     if (!targetInfo.requiresPlayerSelection) continue;
                     eligibleTargets.AddRange(context.GetEligibleTargets(targetInfo));

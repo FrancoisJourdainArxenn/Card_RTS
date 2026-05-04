@@ -367,7 +367,7 @@ public class Player : MonoBehaviour, ILivable
         {
             Caster = this,
             Target = null,
-            SourceCreature = newCreature
+            Source = newCreature
         });
         // remove this card from hand
         hand.CardsInHand.Remove(playedCard);
@@ -421,7 +421,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
-        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, SourceCreature = newCreature });
+        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
 
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -451,7 +451,7 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, SourceCreature = newCreature });
+        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
 
 
         hand.CardsInHand.Remove(playedCard);
