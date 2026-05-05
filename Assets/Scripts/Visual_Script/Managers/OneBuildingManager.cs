@@ -4,57 +4,10 @@ using UnityEngine.UI;
 using TMPro;
 using Unity.VisualScripting;
 
-public class OneBuildingManager : MonoBehaviour 
+public class OneBuildingManager : OneLivableManager 
 {
-    public CardAsset cardAsset;
-    public OneCardManager PreviewManager;
-    [Header("Text Component References")]
-    public TMP_Text HealthText;
-    public TMP_Text AttackText;
-     
-    [Header("Image References")]
-    public Image art;
-    public Image frame;
-    public Image glow;
-    public Image MeleeImage;
     public GameObject PendingIcon;
-
     public GameObject AttackDamageBG;
-
-    [Header("Combat Indicators")]
-    public GameObject MarkedForDeathIndicator;
-    public GameObject WillBeDamagedIndicator;
-    public TMP_Text pendingDamageText;
-
-    private bool canAttackNow = false;
-    public bool CanAttackNow
-    {
-        get
-        {
-            return canAttackNow;
-        }
-
-        set
-        {
-            canAttackNow = value;
-        }
-    }
-
-    private bool canMoveNow = false;
-    public bool CanMoveNow
-    {
-        get
-        {
-            return canMoveNow;
-        }
-
-        set
-        {
-            canMoveNow = value;
-        }
-    }
-
-    public int CurrentHealth { get; private set; }
 
     public BuildingLogic BuildingLogic { get; set; }
     public BuildSpotVisual OriginSpot { get; set; }
@@ -68,15 +21,29 @@ public class OneBuildingManager : MonoBehaviour
 
     public void OnBuildingClicked()
     {
-        if (TurnManager.Instance == null || !TurnManager.Instance.IsBattlePhase) return;
+        if (TurnManager.Instance == null) return;
         if (BuildingLogic == null) return;
 
-        ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
-        if (resolver != null)
-            resolver.TryRedirectDamageFromBuilding(BuildingLogic);
+        switch (TurnManager.Instance.CurrentPhase)
+        {
+            case TurnManager.TurnPhases.BeginCombat:
+                IDHolder idHolder = GetComponent<IDHolder>();
+                if (idHolder == null) return;
+                if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building)) return;
+                BeginCombatEffectManager.OnEntityClicked(building);
+                break;
+            
+            case TurnManager.TurnPhases.Battle:
+                ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
+                if (resolver != null)
+                    resolver.TryRedirectDamageFromBuilding(BuildingLogic);
+                break;
+            
+            default:
+                break;
+        }
     }
 
-    public int BaseID {get; set;}
     public void ReadBuidingFromAsset()
     {
         // Change the card graphic sprite
@@ -101,30 +68,13 @@ public class OneBuildingManager : MonoBehaviour
         
     }
 
-    public void UpdateBuildingGlow()
+    public void UpdateGlow()
     {
         if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle)
             glow.color = Color.red;
         if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Command)
             glow.color = Color.green;
         glow.enabled = CanAttackNow;
-    }
-
-    /*public void ResetValues(CardAsset buildingAsset)
-    {
-        this.cardAsset = cardAsset;
-        ReadBaseFromAsset();
-    }*/
-
-    public void TakeDamage(int amount, int healthAfter)
-    {
-        if (amount <= 0)
-            return;
-
-        CurrentHealth = Mathf.Max(0, healthAfter);
-        DamageEffect.CreateDamageEffect(transform.position, amount);
-        HealthText.text = CurrentHealth.ToString();
-        // Death is handled by BuildingLogic → BuildingDieCommand
     }
 
     public void ShowPendingDamage(int damage, int currentHealth)

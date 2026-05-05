@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class EffectProcessor
 {
@@ -212,8 +213,16 @@ public static class EffectProcessor
 
     private static void TryExecute(CardEffectData data, EffectContext context)
     {
-        if (data.Effect == null) return;
-        if (data.Condition != null && !data.Condition.Evaluate(context)) return;
+        Debug.Log($"Trying to execute {data.EffectName}");
+        if (data.Effect == null)
+        {
+            Debug.Log($"No effect SO found");
+            return;
+        }
+        if (data.Condition != null && !data.Condition.Evaluate(context)) {
+            Debug.Log("Conditions not met");
+            return;
+        }
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters);
     }
 }

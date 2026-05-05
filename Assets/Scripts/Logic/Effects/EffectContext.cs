@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public partial class EffectContext
@@ -33,134 +31,56 @@ public partial class EffectContext
         return GetEligibleTargets(targetInfo);
     }
 
+    // Returns the entity that plays the role of "source" for a given object type.
+    // Used to resolve includesSource on both EffectTargetInfo and AffectedElement.
+    private IIdentifiable GetSourceByType(EffectObjectType type) => type switch
+    {
+        EffectObjectType.Creature => Source as CreatureLogic,
+        EffectObjectType.Building => Source as BuildingLogic,
+        EffectObjectType.Base     => Source as BaseLogic,
+        EffectObjectType.Zone     => TargetedZone,
+        EffectObjectType.Player   => Caster,
+        _                         => null
+    };
+
+    private List<IIdentifiable> ResolveByType(EffectObjectType type, List<TargetQuery> queries, ZoneLogic targetZone = null) =>
+        type switch
+        {
+            EffectObjectType.Creature => GetCreatureTargets(queries, targetZone),
+            EffectObjectType.Building => GetBuildingTargets(queries, targetZone),
+            EffectObjectType.Base     => GetBaseTargets(queries, targetZone),
+            EffectObjectType.Zone     => GetZoneTargets(queries, targetZone),
+            EffectObjectType.Player   => GetPlayerTargets(queries),
+            _                         => new List<IIdentifiable>()
+        };
+
     public List<IIdentifiable> GetEligibleTargets(EffectTargetInfo targetInfo)
     {
-        List<IIdentifiable> targets = new List<IIdentifiable>();
-
-        switch (targetInfo.targetType)
+        List<IIdentifiable> targets = new();
+        if (targetInfo.includesSource)
         {
-            case EffectObjectType.None:
-                break;
-            case EffectObjectType.Player:
-                targets.AddRange(GetPlayerTargets(targetInfo.targetDetails));
-                break;
-            case EffectObjectType.Creature:
-                targets.AddRange(GetCreatureTargets(targetInfo.targetDetails));
-                break;
-            case EffectObjectType.Building:
-                targets.AddRange(GetBuildingTargets(targetInfo.targetDetails));
-                break;
-            case EffectObjectType.Base:
-                targets.AddRange(GetBaseTargets(targetInfo.targetDetails));
-                break;
-            case EffectObjectType.Zone:
-                targets.AddRange(GetZoneTargets(targetInfo.targetDetails));
-                break;
+            IIdentifiable source = GetSourceByType(targetInfo.targetType);
+            if (source != null) targets.Add(source);
         }
-
+        targets.AddRange(ResolveByType(targetInfo.targetType, targetInfo.queries));
         return targets;
     }
 
-    public List<ILivable> GetSingleTargetAffectedElements(
-        IIdentifiable target,
-        List<AffectedElement> affectedElements
-    ) {
-        List<ILivable> elements = new List<ILivable>();
-
+    public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
+    {
+        List<IIdentifiable> elements = new();
         foreach (AffectedElement affectedElement in affectedElements)
         {
-            bool isAllowed(AffectedElementModifier modifier)
+            if (affectedElement.includesTarget && target != null)
+                elements.Add(target);
+            if (affectedElement.includesSource)
             {
-                if (affectedElement.affectedElementModifiers.Contains(AffectedElementModifier.All))
-                    return true;
-                return affectedElement.affectedElementModifiers.Contains(modifier);
+                var src = GetSourceByType(affectedElement.affectedElementType);
+                if (src != null) elements.Add(src);
             }
-
-            switch (affectedElement.affectedElementType)
-            {
-                case EffectObjectType.None:
-                    break;
-
-                case EffectObjectType.Creature:
-                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableCreature)
-                        elements.Add(livableCreature);
-                    if (isAllowed(AffectedElementModifier.Source) && Source is CreatureLogic)
-                        elements.Add(Source);
-                    if (isAllowed(AffectedElementModifier.Friendly))
-                        elements.AddRange(Owner.Creatures);
-                    if (isAllowed(AffectedElementModifier.Enemy))
-                        elements.AddRange(Opponent.Creatures);
-                    // TODO handle Melee, Ranged sub-filters
-                    break;
-
-                case EffectObjectType.Building:
-                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableBuilding)
-                        elements.Add(livableBuilding);
-                    if (isAllowed(AffectedElementModifier.Source) && Source is BuildingLogic)
-                        elements.Add(Source);
-                    if (isAllowed(AffectedElementModifier.Friendly))
-                        elements.AddRange(Owner.Buildings);
-                    if (isAllowed(AffectedElementModifier.Enemy))
-                        elements.AddRange(Opponent.Buildings);
-                    // TODO Friendly/Enemy buildings need owner tracking
-                    break;
-
-                case EffectObjectType.Base:
-                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableBase)
-                        elements.Add(livableBase);
-                    if (isAllowed(AffectedElementModifier.Source) && Source is BaseLogic)
-                        elements.Add(Source);
-                    break;
-
-                case EffectObjectType.Zone:
-                    if (isAllowed(AffectedElementModifier.Target) && target is ILivable livableZone)
-                        elements.Add(livableZone);
-                    break;
-
-                case EffectObjectType.Player:
-                    if (isAllowed(AffectedElementModifier.Source) || isAllowed(AffectedElementModifier.Friendly))
-                        elements.Add(Owner);
-                    if (isAllowed(AffectedElementModifier.Enemy))
-                        elements.Add(Opponent);
-                    break;
-            }
+            ZoneLogic targetZone = target is ILivable l ? l.Zone : null;
+            elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
         }
-        return FilterAffectedElements(target, elements, affectedElements);
+        return elements;
     }
-
-    public List<ILivable> FilterAffectedElements(
-        IIdentifiable target,
-        List<ILivable> unfilteredList,
-        List<AffectedElement> affectedElements
-    )
-    {
-        List<ILivable> filteredList = new(unfilteredList);
-        foreach (AffectedElement affectedElement in affectedElements)
-        {
-            switch (affectedElement.affectedElementZone)
-            {
-                case AffectedElementZone.NoRestriction:
-                    break;
-
-                case AffectedElementZone.SameZoneAsSource:
-                    ZoneLogic sourceZone = Source.Zone;
-                    filteredList = filteredList.Where(el => el.Zone == sourceZone).ToList();
-                    break;
-
-                case AffectedElementZone.SameZoneAsTarget:
-                    ZoneLogic targetZone = GetZoneOf(target);
-                    filteredList = filteredList.Where(el => el.Zone == targetZone).ToList();
-                    break;
-            }
-        }
-
-        return filteredList;
-    }
-
-    private ZoneLogic GetZoneOf(IIdentifiable target) => target switch
-    {
-        ZoneLogic zone   => zone,
-        ILivable livable => livable.Zone,
-        _                => null
-    };
 }

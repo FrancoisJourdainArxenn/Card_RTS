@@ -2598,6 +2598,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
   - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
+  - {fileID: 11400000, guid: 1382fe5f7291e804db09f7c0546b3d54, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -2665,6 +2666,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
+  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
   buildings:
