@@ -11,14 +11,29 @@ public class CardPreviewUI : MonoBehaviour
 
     private GameObject currentPreview;
     private GameObject currentPrefab;
+    private RectTransform _anchorRect;
+    private Canvas _canvas;
 
     void Awake()
     {
         Instance = this;
+        _anchorRect = previewAnchor as RectTransform;
+        _canvas = previewAnchor.GetComponentInParent<Canvas>();
     }
 
-    public void Show(CardAsset asset)
+    public void Show(CardAsset asset, Vector2 mouseOffset)
     {
+        Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : _canvas.worldCamera;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _canvas.GetComponent<RectTransform>(),
+            Input.mousePosition,
+            uiCamera,
+            out Vector2 localPoint
+        );
+        _anchorRect.anchoredPosition = localPoint + mouseOffset;
+
         GameObject prefab = GetPrefab(asset);
 
         if (currentPreview != null && prefab != currentPrefab)

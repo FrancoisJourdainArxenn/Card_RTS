@@ -770,6 +770,7 @@ GameObject:
   - component: {fileID: 6282042548403811228}
   - component: {fileID: 2772558012068558336}
   - component: {fileID: 2407798415480423172}
+  - component: {fileID: 5224246551645395085}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -819,7 +820,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: -950959465
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!114 &2772558012068558336
 MonoBehaviour:
@@ -861,6 +862,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &5224246551645395085
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3049125339790109297}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &3111915817290891233
 GameObject:
   m_ObjectHideFlags: 0
@@ -1476,9 +1489,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
-  PreviewManager: {fileID: 0}
   NameText: {fileID: 3210977288471384358}
-  Type: {fileID: 2417086422155912971}
+  subType: {fileID: 2417086422155912971}
   MainCostText: {fileID: 6955613804869879659}
   SecondCostText: {fileID: 5164901951930280132}
   DescriptionText: {fileID: 3458456579256326795}
@@ -1501,6 +1513,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 3049125339790109297}
+  alphaHide: 0.5
+  trailPrefab: {fileID: 8140524533734234702, guid: a8e950fa7e0e4cb4e8d3605b611dc3cb, type: 3}
+  trailDuration: 0.25
+  previewOffset: {x: -200, y: 225}
 --- !u!114 &6510927260788657563
 MonoBehaviour:
   m_ObjectHideFlags: 0

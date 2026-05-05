@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
+  subType: 1
   Description: Melee
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 2
@@ -24,11 +25,7 @@ MonoBehaviour:
   melee: 1
   MoveSpeed: 1
   Celerity: 0
-  CreatureScriptName: 
-  specialCreatureAmount: 0
-  BuildingScriptName: 
-  specialBuildingAmount: 0
-  SpellScriptName: 
-  specialSpellAmount: 0
+  Keywords: []
   Targets: 0
   ActivationsForOneTurn: 0
+  Effects: []
