@@ -13,7 +13,7 @@ public class DealDamageSO : EffectSO
     )
     {
         List<IIdentifiable> eligibleTargets = new();
-        foreach (TargetInfo targetInfo in effectInfo.effectTargets)
+        foreach (EffectTargetInfo targetInfo in effectInfo.effectTargets)
             eligibleTargets.AddRange(context.GetExecutionTargets(targetInfo));
 
         List<ILivable> affectedElements = new();
