@@ -10,25 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Flammeur
+  m_Name: Blazer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  Description: Melee
+  subType: Soldier
+  Description: 'Melee.
+
+    At the beginning of combat, deal 1 to all enemy Units.'
   CardImage: {fileID: 21300000, guid: 4a3cbf0af05f742499b46d55ff6c1055, type: 3}
   MainCost: 3
   SecondCost: 1
-  Attack: 2
+  Attack: 0
   MaxHealth: 4
   AttacksForOneTurn: 1
   melee: 1
   MoveSpeed: 1
   Celerity: 0
   Keywords:
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  Targets: 3
+  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  Targets: 0
   ActivationsForOneTurn: 0
   Effects:
   - EffectName: Bruler
@@ -37,9 +38,10 @@ MonoBehaviour:
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 0
-        eligibleTargetModifiers: 
+      - targetType: 1
+        eligibleTargetModifiers: 02000000
         eligibleZoneModifiers: 
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 1
         affectedElementModifiers: 03000000

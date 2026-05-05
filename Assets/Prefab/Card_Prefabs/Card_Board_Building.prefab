@@ -97,6 +97,7 @@ GameObject:
   - component: {fileID: 788821529282024632}
   - component: {fileID: 1844786718779737165}
   - component: {fileID: 4213873224300810364}
+  - component: {fileID: 8416193232362022053}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -188,6 +189,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &8416193232362022053
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1025744701815881091}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &1171568673166602895
 GameObject:
   m_ObjectHideFlags: 0
@@ -1146,6 +1159,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 0}
+  trailPrefab: {fileID: 0}
+  trailDuration: 0.25
 --- !u!65 &595442661226241583
 BoxCollider:
   m_ObjectHideFlags: 0

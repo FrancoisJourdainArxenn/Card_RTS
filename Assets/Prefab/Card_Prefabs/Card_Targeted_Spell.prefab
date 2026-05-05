@@ -786,7 +786,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 11400000, guid: 72fee5bb0e446fd47aeb9f550fb87f35, type: 2}
   NameText: {fileID: 1250504248196119034}
-  Type: {fileID: 0}
+  subType: {fileID: 8669744817823777004}
   MainCostText: {fileID: 5307785542163209657}
   SecondCostText: {fileID: 6372489649523141953}
   DescriptionText: {fileID: 5132442027775868666}
@@ -1608,6 +1608,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 0}
+  alphaHide: 0.3
+  trailPrefab: {fileID: 0}
+  trailDuration: 0.25
 --- !u!114 &7949349227655251533
 MonoBehaviour:
   m_ObjectHideFlags: 0

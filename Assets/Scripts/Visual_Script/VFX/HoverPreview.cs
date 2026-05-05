@@ -3,6 +3,18 @@
 public class HoverPreview : MonoBehaviour
 {
     private static HoverPreview currentlyViewing = null;
+    public GameObject toHideWhilePrewiew;
+    [SerializeField] private float alphaHide = 0.3f;
+    [SerializeField] public Vector2 previewOffset = new(200f, 50f);
+
+    private CanvasGroup _cardCanvasGroup;
+
+    void Start()
+    {
+        if (toHideWhilePrewiew != null)
+            _cardCanvasGroup = toHideWhilePrewiew.GetComponent<CanvasGroup>();
+    }
+
 
     private static bool _PreviewsAllowed = true;
     public static bool PreviewsAllowed
@@ -67,20 +79,28 @@ public class HoverPreview : MonoBehaviour
     {
         StopAllPreviews();
         currentlyViewing = this;
+        if (_cardCanvasGroup != null) _cardCanvasGroup.alpha = alphaHide;
 
         CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset
-                       ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
-                       ?? GetComponentInParent<OneCardManager>()?.cardAsset;
+                    ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
+                    ?? GetComponentInParent<OneCardManager>()?.cardAsset;
 
-        if (asset != null)
-            CardPreviewUI.Instance?.Show(asset);
+        CardPreviewUI.Instance?.Show(asset, previewOffset);
     }
+
 
     private static void StopAllPreviews()
     {
         CardPreviewUI.Instance?.Hide();
-        currentlyViewing = null;
+
+        if (currentlyViewing != null)
+        {
+            HoverPreview prev = currentlyViewing;
+            currentlyViewing = null;
+            if (prev._cardCanvasGroup != null) prev._cardCanvasGroup.alpha = 1f;
+        }
     }
+
 
     private static bool PreviewingSomeCard()
     {
@@ -94,4 +114,5 @@ public class HoverPreview : MonoBehaviour
         }
         return false;
     }
+
 }

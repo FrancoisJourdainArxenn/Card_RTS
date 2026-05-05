@@ -11,14 +11,30 @@ public class CardPreviewUI : MonoBehaviour
 
     private GameObject currentPreview;
     private GameObject currentPrefab;
+    private RectTransform _anchorRect;
+    private Canvas _canvas;
 
     void Awake()
     {
         Instance = this;
+        _anchorRect = previewAnchor as RectTransform;
+        _canvas = previewAnchor.GetComponentInParent<Canvas>();
     }
 
-    public void Show(CardAsset asset)
+    public void Show(CardAsset asset, Vector2 mouseOffset)
     {
+        Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : _canvas.worldCamera;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _canvas.GetComponent<RectTransform>(),
+            Input.mousePosition,
+            uiCamera,
+            out Vector2 localPoint
+        );
+        Vector2 previewPosition = localPoint + mouseOffset;
+        _anchorRect.anchoredPosition = previewPosition;
+
         GameObject prefab = GetPrefab(asset);
 
         if (currentPreview != null && prefab != currentPrefab)
@@ -38,7 +54,8 @@ public class CardPreviewUI : MonoBehaviour
         OneCardManager manager = currentPreview.GetComponent<OneCardManager>();
         manager.cardAsset = asset;
         manager.ReadCardFromAsset();
-        ReminderTextManager.Instance?.ShowTooltips(asset.Keywords);
+        if (ReminderTextManager.Instance != null)
+            ReminderTextManager.Instance.ShowTooltips(asset.Keywords, previewPosition);
 
         currentPreview.SetActive(true);
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
