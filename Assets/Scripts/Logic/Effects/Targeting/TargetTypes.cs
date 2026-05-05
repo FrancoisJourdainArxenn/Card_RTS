@@ -4,12 +4,13 @@ using System.Collections.Generic;
 public struct EffectTargetInfo
 {
     public EffectObjectType targetType;
-    public List<TargetDetails> targetDetails;
+    public bool includesSource;
+    public List<TargetQuery> queries;
     public bool requiresPlayerSelection;
 }
 
 [System.Serializable]
-public struct TargetDetails
+public struct TargetQuery
 {
     public TargetTeam team;
     public TargetStatusFilter statusFilter;
@@ -19,7 +20,6 @@ public struct TargetDetails
 public enum TargetTeam
 {
     All,
-    Self,
     Friendly,
     Enemy,
 }
@@ -39,6 +39,7 @@ public enum TargetZoneFilter
 {
     All,
     SameZoneAsSource,
+    SameZoneAsTarget,
     // AdjacentZoneToSource,
     // VisibleZone,
 }

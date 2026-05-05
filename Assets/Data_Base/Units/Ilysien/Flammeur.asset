@@ -24,12 +24,11 @@ MonoBehaviour:
   melee: 1
   MoveSpeed: 1
   Celerity: 0
+  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
   - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
   - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  Targets: 3
-  ActivationsForOneTurn: 0
   Effects:
   - EffectName: Bruler
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
@@ -38,12 +37,17 @@ MonoBehaviour:
     Effectinfo:
       effectTargets:
       - targetType: 0
-        eligibleTargetModifiers: 
-        eligibleZoneModifiers: 
+        includesSource: 0
+        queries: []
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 1
-        affectedElementModifiers: 03000000
-        affectedElementZone: 1
+        includesTarget: 0
+        includesSource: 0
+        queries:
+        - team: 2
+          statusFilter: 1
+          zoneFilter: 1
       repartition: 0
     Parameters:
       Amount: 1
