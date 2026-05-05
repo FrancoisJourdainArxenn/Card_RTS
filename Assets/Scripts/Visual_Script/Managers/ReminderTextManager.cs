@@ -11,6 +11,7 @@ public class ReminderTextManager : MonoBehaviour
     public float tooltipDelay = 1f;
     public float fadeInDuration = 0.3f;
     public float fadeOutDuration = 0.15f;
+    [SerializeField] private Vector2 tooltipOffset = new(320f, 0f);
 
     private CanvasGroup canvasGroup;
     private readonly List<GameObject> _activePanels = new();
@@ -22,8 +23,9 @@ public class ReminderTextManager : MonoBehaviour
         canvasGroup.alpha = 0;
     }
 
-    public void ShowTooltips(List<Keyword> keywords)
+    public void ShowTooltips(List<Keyword> keywords, Vector2 previewPosition)
     {
+        ((RectTransform)tooltipContainer).anchoredPosition = previewPosition + tooltipOffset;
         canvasGroup.DOKill();
         ClearPanels();
 

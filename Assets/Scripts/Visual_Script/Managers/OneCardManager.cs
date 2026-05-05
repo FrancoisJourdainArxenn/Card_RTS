@@ -13,7 +13,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
-    public TMP_Text Type;
+    public TMP_Text subType;
     public TMP_Text MainCostText;
     public TMP_Text SecondCostText;
     public TMP_Text DescriptionText;
@@ -59,6 +59,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         NameText.text = cardAsset.name;
         MainCostText.text = cardAsset.MainCost.ToString();
         SecondCostText.text = cardAsset.SecondCost.ToString();
+        subType.text = cardAsset.subType.ToString();
         // 4) add description
         DescriptionText.text = cardAsset.Description.ToString();
         // 5) Change the card graphic sprite

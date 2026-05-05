@@ -1682,9 +1682,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
-  PreviewManager: {fileID: 0}
   NameText: {fileID: 6801832437530937297}
-  Type: {fileID: 8886240278299217661}
+  subType: {fileID: 8886240278299217661}
   MainCostText: {fileID: 8473048586835849894}
   SecondCostText: {fileID: 5094689029687660099}
   DescriptionText: {fileID: 7051935544696999227}

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6332010244949975801}
   - component: {fileID: 8857030270082171032}
   - component: {fileID: 926039522144151553}
+  - component: {fileID: 9212799544051126465}
   m_Layer: 5
   m_Name: CardPanel
   m_TagString: Untagged
@@ -61,7 +62,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: -950959465
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!114 &8857030270082171032
 MonoBehaviour:
@@ -103,6 +104,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &9212799544051126465
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3069003928010147}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &277904148792824193
 GameObject:
   m_ObjectHideFlags: 0
@@ -1642,7 +1655,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
   NameText: {fileID: 8266202276687814636}
-  Type: {fileID: 2179380013445278251}
+  subType: {fileID: 2179380013445278251}
   MainCostText: {fileID: 8740826583692334681}
   SecondCostText: {fileID: 4109252553912453360}
   DescriptionText: {fileID: 2808590226869227462}
@@ -1665,6 +1678,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 3069003928010147}
+  alphaHide: 0.5
+  trailPrefab: {fileID: 0}
+  trailDuration: 0.25
 --- !u!114 &1695059105343820685
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,12 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public enum CardType
 {
     Unit,
     Building,
     Spell
+}
+
+public enum SubType
+{
+    Soldier,
+    Swarm,
+    Robot,
+    Mechanical,
 }
 
 public enum TargetingOptions
@@ -26,6 +35,7 @@ public class CardAsset : ScriptableObject
     [Header("General info")]
     public FactionAsset Faction;  // if this is null, it`s a neutral card
     public CardType Type;
+    public SubType subType;
     [TextArea(2,3)]
     public string Description;  // Description for spell or character
 	public Sprite CardImage;

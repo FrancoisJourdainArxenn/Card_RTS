@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
   m_Name: Melee
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Contact
-  description: "Doit \xEAtre attaqu\xE9 en priorit\xE9. "
+  displayName: Melee
+  description: Must be attacked first.
