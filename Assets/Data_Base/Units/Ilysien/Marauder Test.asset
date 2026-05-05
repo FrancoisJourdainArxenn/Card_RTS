@@ -10,17 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Ghost Test
+  m_Name: Marauder Test
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  Description: 'Celerity
-
-    Speed : 2'
-  CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
+  Description: 
+  CardImage: {fileID: 21300000, guid: 8731a68ceb33110478e5c54f75fa0d5a, type: 3}
   MainCost: 0
   SecondCost: 0
-  Attack: 1
+  Attack: 2
   MaxHealth: 3
   AttacksForOneTurn: 1
   melee: 0
@@ -29,13 +27,13 @@ MonoBehaviour:
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Snipe
+  - EffectName: Bazooka
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 1
+      - targetType: 2
         includesSource: 0
         queries:
         - team: 2
@@ -43,7 +41,7 @@ MonoBehaviour:
           zoneFilter: 1
         requiresPlayerSelection: 1
       affectedElements:
-      - affectedElementType: 1
+      - affectedElementType: 2
         includesTarget: 1
         includesSource: 0
         queries: []

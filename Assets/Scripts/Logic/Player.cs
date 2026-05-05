@@ -503,7 +503,7 @@ public class Player : MonoBehaviour, ILivable
             }
             creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
-            creatureManager.UpdateCreatureGlow();
+            creatureManager.UpdateGlow();
         }
 
         foreach (BuildingLogic bl in playedCards.Buildings)
@@ -513,7 +513,7 @@ public class Player : MonoBehaviour, ILivable
             OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
             if (bm == null) continue;
             bm.CanAttackNow = canAttack && (bl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-            bm.UpdateBuildingGlow();
+            bm.UpdateGlow();
         }
 
     }

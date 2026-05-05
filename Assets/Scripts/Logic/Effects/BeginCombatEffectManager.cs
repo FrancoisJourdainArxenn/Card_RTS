@@ -178,6 +178,7 @@ public static class BeginCombatEffectManager
     private static void ShowCurrentSelectionWithChoice()
     {
         PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
+        
         foreach (KeyValuePair<int, CreatureLogic> creatureEntry in CreatureLogic.CreaturesCreatedThisGame)
         {
             CreatureLogic creature   = creatureEntry.Value;
@@ -188,7 +189,22 @@ public static class BeginCombatEffectManager
             GameObject creatureObject = IDHolder.GetGameObjectWithID(creatureID);
             creatureObject?.GetComponent<OneCreatureManager>()?.UpdateTargetableVisual(isEligible, isSelected);
         }
-        // TODO: highlight buildings, bases, players when those target types are used
+        
+        foreach (KeyValuePair<int, BuildingLogic> buildingEntry in BuildingLogic.BuildingsCreatedThisGame)
+        {
+            BuildingLogic building = buildingEntry.Value;
+            int           buildingID = buildingEntry.Key;
+            bool          isEligible = currentSelection.EligibleTargets.Contains(building);
+            bool          isSelected = currentSelection.SelectedTarget == building;
+
+            GameObject buildingObject = IDHolder.GetGameObjectWithID(buildingID);
+            buildingObject?.GetComponent<OneBuildingManager>()?.UpdateTargetableVisual(isEligible, isSelected);
+        }
+        
+        GameObject sourceObject = IDHolder.GetGameObjectWithID(currentSelection.SourceEntityID);
+        sourceObject?.GetComponent<OneCreatureManager>()?.UpdateUsingEffectVisual();
+
+        // TODO: highlight bases, players when those target types are used
     }
 
     private static void ClearHighlights()
@@ -206,12 +222,14 @@ public static class BeginCombatEffectManager
     /// </summary>
     public static void OnEntityClicked(IIdentifiable clickedEntity)
     {
+        Debug.Log($"Entity {clickedEntity.DisplayName} clicked");
         if (_selectionCursor >= _selectionQueue.Count) return;
 
         PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
         if (!currentSelection.EligibleTargets.Contains(clickedEntity)) return;
 
         currentSelection.SelectedTarget = clickedEntity;
+        Debug.Log($"Entity {clickedEntity.DisplayName} selected");
         ShowCurrentSelectionWithChoice();
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();

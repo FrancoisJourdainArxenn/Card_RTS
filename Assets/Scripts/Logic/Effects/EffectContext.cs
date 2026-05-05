@@ -59,8 +59,8 @@ public partial class EffectContext
         List<IIdentifiable> targets = new();
         if (targetInfo.includesSource)
         {
-            var src = GetSourceByType(targetInfo.targetType);
-            if (src != null) targets.Add(src);
+            IIdentifiable source = GetSourceByType(targetInfo.targetType);
+            if (source != null) targets.Add(source);
         }
         targets.AddRange(ResolveByType(targetInfo.targetType, targetInfo.queries));
         return targets;
@@ -69,17 +69,17 @@ public partial class EffectContext
     public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
     {
         List<IIdentifiable> elements = new();
-        foreach (AffectedElement ae in affectedElements)
+        foreach (AffectedElement affectedElement in affectedElements)
         {
-            if (ae.includesTarget && target != null)
+            if (affectedElement.includesTarget && target != null)
                 elements.Add(target);
-            if (ae.includesSource)
+            if (affectedElement.includesSource)
             {
-                var src = GetSourceByType(ae.affectedElementType);
+                var src = GetSourceByType(affectedElement.affectedElementType);
                 if (src != null) elements.Add(src);
             }
             ZoneLogic targetZone = target is ILivable l ? l.Zone : null;
-            elements.AddRange(ResolveByType(ae.affectedElementType, ae.queries, targetZone));
+            elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
         }
         return elements;
     }

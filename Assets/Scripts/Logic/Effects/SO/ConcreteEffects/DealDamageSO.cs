@@ -12,6 +12,7 @@ public class DealDamageSO : EffectSO
         EffectParameters parameters
     )
     {
+        Log($"{EffectName}: Start");
         List<IIdentifiable> eligibleTargets = new();
         foreach (EffectTargetInfo targetInfo in effectInfo.effectTargets)
             eligibleTargets.AddRange(context.GetExecutionTargets(targetInfo));

@@ -4,24 +4,8 @@ using UnityEngine.UI;
 using TMPro;
 using Unity.VisualScripting;
 
-public class OneCreatureManager : MonoBehaviour 
+public class OneCreatureManager : OneLivableManager 
 {
-    public CardAsset cardAsset;
-    public OneCardManager PreviewManager;
-    [Header("Text Component References")]
-    public TMP_Text HealthText;
-    public TMP_Text AttackText;         
-    [Header("Image References")]
-    public Image CreatureGraphicImage;
-    public Image CreatureFrameImage;
-    public Image CreatureGlowImage;
-    public Image MeleeImage;
-
-    [Header("Combat Indicators")]
-    public GameObject MarkedForDeathIndicator;
-    public GameObject WillBeDamagedIndicator;
-    public TMP_Text pendingDamageText;
-
     [Header("Pending Move Arrow")]
     [SerializeField] private LineRenderer pendingMoveArrow;
     [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
@@ -45,38 +29,10 @@ public class OneCreatureManager : MonoBehaviour
         pendingMoveArrowMat.SetTextureOffset("_MainTex", new Vector2(-offset % 1f, 0f));
     }
 
-    private bool canAttackNow = false;
-    public bool CanAttackNow
-    {
-        get
-        {
-            return canAttackNow;
-        }
-
-        set
-        {
-            canAttackNow = value;
-        }
-    }
-
-    private bool canMoveNow = false;
-    public bool CanMoveNow
-    {
-        get
-        {
-            return canMoveNow;
-        }
-
-        set
-        {
-            canMoveNow = value;
-        }
-    }
-    public int BaseID {get; set;}
     public void ReadCreatureFromAsset()
     {
         // Change the card graphic sprite
-        CreatureGraphicImage.sprite = cardAsset.CardImage;
+        art.sprite = cardAsset.CardImage;
 
         AttackText.text = cardAsset.Attack.ToString();
         HealthText.text = cardAsset.MaxHealth.ToString();
@@ -91,44 +47,21 @@ public class OneCreatureManager : MonoBehaviour
             PreviewManager.cardAsset = cardAsset;
             PreviewManager.ReadCardFromAsset();
         }
-    }	
-
-    public void TakeDamage(int amount, int healthAfter)
-    {
-        if (amount > 0)
-        {
-            DamageEffect.CreateDamageEffect(transform.position, amount);
-            HealthText.text = healthAfter.ToString();
-            GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
-        }
     }
 
-    public void UpdateCreatureGlow()
+    public void UpdateGlow()
     {
         if (CanAttackNow)
-            CreatureGlowImage.color = Color.red;
+            glow.color = Color.red;
         else if (CanMoveNow)
-            CreatureGlowImage.color = Color.green;
-        CreatureGlowImage.enabled = CanAttackNow || CanMoveNow;
-    }
-
-    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
-    {
-        CreatureGraphicImage.color = targetable ? Color.white : Color.gray;
-        CreatureGlowImage.color = targeted ? Color.green : Color.yellow;
-        CreatureGlowImage.enabled = targetable;
-    }
-
-    public void ClearTargetableVisual()
-    {
-        CreatureGlowImage.enabled = false;
-        CreatureGraphicImage.color = Color.white;
+            glow.color = Color.green;
+        glow.enabled = CanAttackNow || CanMoveNow;
     }
 
     public void SetGray(bool gray)
     {
-        CreatureGraphicImage.color = gray ? Color.gray : Color.white;
-        CreatureFrameImage.color = gray ? Color.gray : Color.white;
+        art.color = gray ? Color.gray : Color.white;
+        frame.color = gray ? Color.gray : Color.white;
     }
 
     public void ShowPendingDamage(int damage, int currentHealth)
