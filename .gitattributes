@@ -1,0 +1,37 @@
+# ─── Unity YAML (text serialized) ─────────────────────────────────────────────
+# -merge = git refusera de merger automatiquement, choix manuel requis
+*.unity                  -merge
+*.prefab                 -merge
+*.asset                  -merge
+*.mat                    -merge
+*.meta                   -merge
+*.anim                   -merge
+*.controller             -merge
+*.overrideController     -merge
+*.physicMaterial         -merge
+*.physicsMaterial2D      -merge
+*.renderTexture          -merge
+*.cubemap                -merge
+*.flare                  -merge
+*.shader                 -merge
+
+# ─── Binaires purs ─────────────────────────────────────────────────────────────
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.tga           binary
+*.tiff          binary
+*.psd           binary
+*.pdf           binary
+*.ttf           binary
+*.otf           binary
+*.mp3           binary
+*.wav           binary
+*.ogg           binary
+*.fbx           binary
+*.obj           binary
+*.dll           binary
+*.so            binary
+*.a             binary
+*.lib           binary
+*.exe           binary

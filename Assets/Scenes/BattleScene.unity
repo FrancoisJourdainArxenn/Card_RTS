@@ -477,7 +477,7 @@ MonoBehaviour:
   tooltipDelay: 0.5
   fadeInDuration: 0.3
   fadeOutDuration: 0.15
-  tooltipOffset: {x: 320, y: 0}
+  tooltipOffset: {x: 725, y: 0}
 --- !u!114 &37161077
 MonoBehaviour:
   m_ObjectHideFlags: 0
