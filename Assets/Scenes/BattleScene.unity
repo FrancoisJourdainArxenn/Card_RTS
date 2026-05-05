@@ -477,6 +477,7 @@ MonoBehaviour:
   tooltipDelay: 0.5
   fadeInDuration: 0.3
   fadeOutDuration: 0.15
+  tooltipOffset: {x: 320, y: 0}
 --- !u!114 &37161077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -930,7 +931,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardPreviewUI
   previewScale: 190
   previewAnchor: {fileID: 164374047}
-  previewAnchor3D: {fileID: 189538862}
 --- !u!1 &189538861
 GameObject:
   m_ObjectHideFlags: 0

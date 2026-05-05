@@ -1515,9 +1515,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
   toHideWhilePrewiew: {fileID: 3049125339790109297}
   alphaHide: 0.5
-  trailPrefab: {fileID: 8140524533734234702, guid: a8e950fa7e0e4cb4e8d3605b611dc3cb, type: 3}
-  trailDuration: 0.25
-  previewOffset: {x: -200, y: 225}
+  previewOffset: {x: -200, y: 275}
 --- !u!114 &6510927260788657563
 MonoBehaviour:
   m_ObjectHideFlags: 0
