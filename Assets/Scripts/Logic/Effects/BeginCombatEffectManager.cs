@@ -205,10 +205,14 @@ public static class BeginCombatEffectManager
         sourceObject?.GetComponent<OneCreatureManager>()?.UpdateUsingEffectVisual();
 
         // TODO: highlight bases, players when those target types are used
+
+        TargetingVisualEvents.RaiseTargetingStarted(_selectionQueue, _selectionCursor);
     }
 
     private static void ClearHighlights()
     {
+        TargetingVisualEvents.RaiseTargetingEnded();
+
         foreach (KeyValuePair<int, CreatureLogic> creatureEntry in CreatureLogic.CreaturesCreatedThisGame)
         {
             GameObject creatureObject = IDHolder.GetGameObjectWithID(creatureEntry.Key);

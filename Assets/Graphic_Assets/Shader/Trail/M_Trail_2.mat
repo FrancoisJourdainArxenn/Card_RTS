@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Trail 1
+  m_Name: M_Trail_2
   m_Shader: {fileID: -6465566751694194690, guid: b30727f6e5bdcc44ea980e950e3e9c8f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
