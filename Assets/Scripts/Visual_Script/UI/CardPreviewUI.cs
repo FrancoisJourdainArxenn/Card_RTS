@@ -26,6 +26,10 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private Transform trailTarget;
     [SerializeField] private float stackAppearDelay = 0.5f;
 
+    [Header("Hover Arrow")]
+    [SerializeField] private HoverArrow hoverArrow;
+    [SerializeField] private Transform arrowEndPoint;
+
     private List<GameObject> _targetingPreviews = new List<GameObject>();
 
     void Awake()
@@ -70,6 +74,10 @@ public class CardPreviewUI : MonoBehaviour
             if (sourceGO != null)
                 SpawnTrail(sourceGO.transform);
         }
+
+        GameObject frontSourceGO = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
+        if (hoverArrow != null && frontSourceGO != null && arrowEndPoint != null)
+            hoverArrow.Show(frontSourceGO.transform.position, arrowEndPoint.position);
 
         yield return new WaitForSeconds(stackAppearDelay);
         BuildStack(queue, currentIndex, remaining);
@@ -159,6 +167,7 @@ public class CardPreviewUI : MonoBehaviour
     private void HandleTargetingEnded()
     {
         StopAllCoroutines();
+        hoverArrow?.Hide();
         foreach (GameObject preview in _targetingPreviews)
             if (preview != null) Destroy(preview);
         _targetingPreviews.Clear();
