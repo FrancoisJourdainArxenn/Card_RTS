@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class OneLivableManager : MonoBehaviour
+public class OneLivableManager : MonoBehaviour, ITargetable
 {
     public CardAsset cardAsset;
     public OneCardManager PreviewManager;

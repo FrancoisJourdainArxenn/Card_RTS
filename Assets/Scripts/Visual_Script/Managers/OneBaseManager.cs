@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class OneBaseManager : MonoBehaviour
+public class OneBaseManager : MonoBehaviour, ITargetable
 {
     public BaseAsset baseAsset;
     public int CurrentHealth { get; private set; }
@@ -33,11 +33,21 @@ public class OneBaseManager : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (TurnManager.Instance == null || !TurnManager.Instance.IsBattlePhase) return;
+        if (TurnManager.Instance == null) return;
 
         IDHolder idHolder = GetComponent<IDHolder>();
         if (idHolder == null) return;
         int id = idHolder.UniqueID;
+
+        if (TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat)
+        {
+            IIdentifiable entity = ResolveEntity(id);
+            if (entity != null)
+                BeginCombatEffectManager.OnEntityClicked(entity);
+            return;
+        }
+
+        if (!TurnManager.Instance.IsBattlePhase) return;
 
         ZoneCombatResolver resolver;
 
@@ -54,6 +64,28 @@ public class OneBaseManager : MonoBehaviour
         }
 
         resolver?.TryRedirectDamageFromBase(id);
+    }
+
+    private IIdentifiable ResolveEntity(int id)
+    {
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic baseLogic))
+            return baseLogic;
+        foreach (Player player in Player.Players)
+            if (player.ID == id) return player;
+        return null;
+    }
+
+    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
+    {
+        ArtImage.color = targetable ? Color.white : Color.gray;
+        CardFaceGlowImage.color = targeted ? Color.green : Color.yellow;
+        CardFaceGlowImage.enabled = targetable;
+    }
+
+    public void ClearTargetableVisual()
+    {
+        CardFaceGlowImage.enabled = false;
+        ArtImage.color = Color.white;
     }
 
     public void ReadBaseFromAsset()

@@ -21,13 +21,10 @@ public partial class EffectContext
     /// If the player made a selection, returns [SelectedTarget]; otherwise returns all eligible targets.
     /// GetEligibleTargets is kept separate for displaying the selection panel.
     /// </summary>
-    public List<IIdentifiable> GetExecutionTargets(EffectTargetInfo targetInfo)
+    public List<IIdentifiable> GetExecutionAffectedElements(EffectTargetInfo targetInfo)
     {
         if (targetInfo.requiresPlayerSelection)
-        {
-            if (SelectedTarget != null) return new List<IIdentifiable> { SelectedTarget };
-            return new List<IIdentifiable>();
-        }
+            return new List<IIdentifiable> { SelectedTarget };
         return GetEligibleTargets(targetInfo);
     }
 

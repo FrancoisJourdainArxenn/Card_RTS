@@ -272,7 +272,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.07623219, b: 0, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1023,8 +1023,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
   toHideWhilePrewiew: {fileID: 0}
   alphaHide: 0.5
-  trailPrefab: {fileID: 8140524533734234702, guid: a8e950fa7e0e4cb4e8d3605b611dc3cb, type: 3}
-  trailDuration: 0.25
   previewOffset: {x: -250, y: 100}
 --- !u!65 &595442661226241583
 BoxCollider:

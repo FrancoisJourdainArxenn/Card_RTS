@@ -1,6 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public interface ITargetable
+{
+    void UpdateTargetableVisual(bool targetable, bool targeted = false);
+    void ClearTargetableVisual();
+}
+
 public interface ILivable: IIdentifiable
 {
     int Health { get; set; }
