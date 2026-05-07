@@ -212,6 +212,11 @@ public static class BeginCombatEffectManager
                 ?.UpdateTargetableVisual(isEligible, isSelected);
         }
 
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            zone.UpdateTargetableVisual(
+                currentSelection.EligibleTargets.Contains(zone.Logic),
+                currentSelection.SelectedTarget == zone.Logic);
+
         IDHolder.GetGameObjectWithID(currentSelection.SourceEntityID)
             ?.GetComponent<OneLivableManager>()?.UpdateUsingEffectVisual();
 
@@ -236,6 +241,8 @@ public static class BeginCombatEffectManager
             ClearEntityVisual(e.Key);
         foreach (Player player in Player.Players)
             ClearEntityVisual(player.ID);
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            zone.ClearTargetableVisual();
     }
 
     private static void ClearEntityVisual(int id)
@@ -424,6 +431,9 @@ public static class BeginCombatEffectManager
             return building;
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(entityID, out BaseLogic playerBase))
             return playerBase;
+
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            if (zone.Logic.ID == entityID) return zone.Logic;
 
         foreach (Player player in Player.Players)
             if (player.ID == entityID) return player;

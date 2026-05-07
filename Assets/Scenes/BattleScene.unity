@@ -2666,7 +2666,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: 89e0b9d214ac042418146a48c71f5018, type: 2}
+  - {fileID: 11400000, guid: 44118969143fc6a49af7abb5432e825d, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -3798,6 +3798,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2061236421816803597, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2592500776645058363, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
@@ -6053,6 +6057,14 @@ PrefabInstance:
       propertyPath: handVisual
       value: 
       objectReference: {fileID: 662666356}
+    - target: {fileID: 5746617305063668931, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6540294979739961604, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
+      propertyPath: _targetableOverlay
+      value: 
+      objectReference: {fileID: 1882244870}
     - target: {fileID: 6540294979739961604, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: adjacentZones.Array.size
       value: 3
@@ -7534,6 +7546,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1438455304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1882244870 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8330882494825226294, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
+  m_PrefabInstance: {fileID: 1439204025}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!224 &1892326683 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8107020563708303932, guid: 0b88f1c0a9d5f004ebeb9075fd5e08bc, type: 3}

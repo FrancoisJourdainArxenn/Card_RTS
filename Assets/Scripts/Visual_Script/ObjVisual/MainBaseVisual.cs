@@ -25,7 +25,8 @@ public class MainBaseVisual : MonoBehaviour, ITargetable {
     {
         if (!currentlyVisible)
             return;
-        HealthText.text = baseManager.HealthText.text;
+        // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
+        HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         SecondRessourceText.text = player.secondRessourceAvailable.ToString();
     }
@@ -38,8 +39,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetable {
             if(currentlyVisible)
             {
                 DamageEffect.CreateDamageEffect(transform.position, amount);
-                HealthText.text = healthAfter.ToString();    
-            }            
+                HealthText.text = healthAfter.ToString();
+            }
+            // Keep baseManager in sync so any other reader sees the correct value.
+            if (baseManager != null && baseManager.HealthText != null)
+                baseManager.HealthText.text = healthAfter.ToString();
             if (player == GlobalSettings.Instance.localPlayer)
                 GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }

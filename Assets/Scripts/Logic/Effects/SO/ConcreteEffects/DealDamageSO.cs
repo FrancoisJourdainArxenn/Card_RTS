@@ -12,7 +12,7 @@ public class DealDamageSO : EffectSO
         EffectParameters parameters
     )
     {
-        // Log($"{EffectName}: Execution");
+        Log($"{EffectName}: Execution");
         List<IIdentifiable> eligibleAffectedElements = new();
         foreach (EffectTargetInfo targetInfo in effectInfo.effectTargets)
             eligibleAffectedElements.AddRange(context.GetExecutionAffectedElements(targetInfo));
@@ -38,7 +38,7 @@ public class DealDamageSO : EffectSO
 
         affectedElements = affectedElements.Distinct().ToList();
 
-        Log($"{EffectName}: {parameters.Amount} damage to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => $"{t.DisplayName}#{t.ID}"))}");
+        Log($"{EffectName}: {parameters.Amount} damage to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
 
         foreach (ILivable target in affectedElements.Cast<ILivable>())
         {

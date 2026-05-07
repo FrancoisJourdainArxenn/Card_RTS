@@ -40,8 +40,8 @@ public class FogOfWarManager : MonoBehaviour
         if (GlobalSettings.Instance == null) return;
 
         // Cover ALL zones, not just neutral ones.
-        ZoneVisual[] allZones = FindObjectsByType<ZoneVisual>(FindObjectsSortMode.None);
-        foreach (ZoneVisual zone in allZones)
+        ZoneManager[] allZones = FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
+        foreach (ZoneManager zone in allZones)
         {
             // A neutral zone also has a NeutralZoneController for base fog.
             // Main base zones won't have one — that's fine, nbc will just be null.
@@ -51,7 +51,7 @@ public class FogOfWarManager : MonoBehaviour
     }
 
     // Recalculate and apply fog for a single zone.
-    void UpdateZone(ZoneVisual zone, NeutralZoneController nbc)
+    void UpdateZone(ZoneManager zone, NeutralZoneController nbc)
     {
         Player observer = ObservingPlayer;
         if (observer == null) return;
@@ -122,12 +122,12 @@ public class FogOfWarManager : MonoBehaviour
             buildingGO.SetActive(b.owner == observer || observerHasPresence);
         }
         // --- Bases joueur (fog comme les bases neutres) ---
-        // L'observer voit toujours sa propre base
-        if (observer.MainPArea != null 
-            && observer.MainPArea.parentZone == zone 
+        // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV)
+        if (observer.MainPArea != null
+            && observer.MainPArea.parentZone == zone
             && observer.baseVisual != null)
         {
-            observer.baseVisual.gameObject.SetActive(true);
+            observer.baseVisual.ApplyFogForObserver(true);
         }
 
         // La base ennemie suit le fog : invisible jusqu'à être vue, puis dernier état connu
@@ -141,7 +141,7 @@ public class FogOfWarManager : MonoBehaviour
     }
     // Returns true if 'player' has at least one creature OR base in the given zone.
 
-    bool HasPresenceInZone(Player player, ZoneVisual zone, NeutralZoneController nbc)
+    bool HasPresenceInZone(Player player, ZoneManager zone, NeutralZoneController nbc)
     {
         if(player.MainPArea.parentZone == zone)
         {
@@ -194,7 +194,7 @@ public class FogOfWarManager : MonoBehaviour
         return player == GlobalSettings.Instance.LowPlayer ? AreaPosition.Low : AreaPosition.Top;
     }
 
-    private Vector3 GetOriginPosForZone(ZoneVisual zone, Player player)
+    private Vector3 GetOriginPosForZone(ZoneManager zone, Player player)
     {
         foreach (PlayerArea pa in zone.subZones)
         {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 public partial class EffectContext
 {
@@ -66,6 +65,7 @@ public partial class EffectContext
     public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
     {
         List<IIdentifiable> elements = new();
+        ZoneLogic targetZone = target is ZoneLogic z ? z : (target is ILivable l ? l.Zone : null);
         foreach (AffectedElement affectedElement in affectedElements)
         {
             if (affectedElement.includesTarget && target != null)
@@ -75,7 +75,6 @@ public partial class EffectContext
                 var src = GetSourceByType(affectedElement.affectedElementType);
                 if (src != null) elements.Add(src);
             }
-            ZoneLogic targetZone = target is ILivable l ? l.Zone : null;
             elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
         }
         return elements;
