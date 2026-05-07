@@ -114,7 +114,10 @@ public class Player : MonoBehaviour, ILivable
                     zones.Add(pa.parentZone.Logic);
             }
             foreach (BaseLogic bl in controlledBases)
-                zones.Add(bl.neutralBaseController.zone.Logic);
+            {
+                ZoneLogic z = bl.Zone;
+                if (z != null) zones.Add(z);
+            }
             return zones.ToList();
         }
     }
@@ -129,6 +132,7 @@ public class Player : MonoBehaviour, ILivable
         }
 
         InitBaseIDs();
+        new BaseLogic(this, MainPArea?.parentZone?.Logic);
     }
     //private int secondRessourceTotal;
     public int SecondRessourceTotal

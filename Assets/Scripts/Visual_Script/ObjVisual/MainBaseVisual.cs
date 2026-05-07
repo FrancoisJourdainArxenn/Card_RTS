@@ -5,7 +5,7 @@ using DG.Tweening;
 using TMPro;
 
 
-public class MainBaseVisual : MonoBehaviour {
+public class MainBaseVisual : MonoBehaviour, ITargetable {
 
     public Player player;
     public OneBaseManager baseManager;
@@ -25,7 +25,8 @@ public class MainBaseVisual : MonoBehaviour {
     {
         if (!currentlyVisible)
             return;
-        HealthText.text = baseManager.HealthText.text;
+        // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
+        HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         SecondRessourceText.text = player.secondRessourceAvailable.ToString();
     }
@@ -38,8 +39,11 @@ public class MainBaseVisual : MonoBehaviour {
             if(currentlyVisible)
             {
                 DamageEffect.CreateDamageEffect(transform.position, amount);
-                HealthText.text = healthAfter.ToString();    
-            }            
+                HealthText.text = healthAfter.ToString();
+            }
+            // Keep baseManager in sync so any other reader sees the correct value.
+            if (baseManager != null && baseManager.HealthText != null)
+                baseManager.HealthText.text = healthAfter.ToString();
             if (player == GlobalSettings.Instance.localPlayer)
                 GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         }
@@ -51,6 +55,24 @@ public class MainBaseVisual : MonoBehaviour {
         Sequence s = DOTween.Sequence();
         s.PrependInterval(2f);
         s.OnComplete(() => GlobalSettings.Instance.GameOverPanel.SetActive(true));
+    }
+
+    void OnMouseDown()
+    {
+        if (TurnManager.Instance == null) return;
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat) return;
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(player.PlayerID, out BaseLogic homeBase))
+            BeginCombatEffectManager.OnEntityClicked(homeBase);
+    }
+
+    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
+    {
+        baseManager?.UpdateTargetableVisual(targetable, targeted);
+    }
+
+    public void ClearTargetableVisual()
+    {
+        baseManager?.ClearTargetableVisual();
     }
 
     public void ApplyFogForObserver(bool hasVision)

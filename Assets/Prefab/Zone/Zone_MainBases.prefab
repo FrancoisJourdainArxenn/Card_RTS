@@ -1878,6 +1878,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZoneView
   adjacentZones: []
+  _targetableOverlay: {fileID: 5635196427600468677}
   subZones: []
 --- !u!114 &1434784639420779512
 MonoBehaviour:

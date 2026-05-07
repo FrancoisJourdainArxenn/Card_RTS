@@ -12,14 +12,14 @@ public class DealDamageSO : EffectSO
         EffectParameters parameters
     )
     {
-        Log($"{EffectName}: Start");
-        List<IIdentifiable> eligibleTargets = new();
+        Log($"{EffectName}: Execution");
+        List<IIdentifiable> eligibleAffectedElements = new();
         foreach (EffectTargetInfo targetInfo in effectInfo.effectTargets)
-            eligibleTargets.AddRange(context.GetExecutionTargets(targetInfo));
+            eligibleAffectedElements.AddRange(context.GetExecutionAffectedElements(targetInfo));
 
         List<IIdentifiable> affectedElements = new();
 
-        if (eligibleTargets.Count == 0)
+        if (eligibleAffectedElements.Count == 0)
         {
             bool targetTypeIsNone = effectInfo.effectTargets.Count == 1
                 && effectInfo.effectTargets[0].targetType == EffectObjectType.None;
@@ -32,13 +32,13 @@ public class DealDamageSO : EffectSO
         }
         else
         {
-            foreach (IIdentifiable target in eligibleTargets)
+            foreach (IIdentifiable target in eligibleAffectedElements)
                 affectedElements.AddRange(context.GetSingleTargetAffectedElements(target, effectInfo.affectedElements));
         }
 
         affectedElements = affectedElements.Distinct().ToList();
 
-        Log($"{EffectName}: {parameters.Amount} damage to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => $"{t.DisplayName}#{t.ID}"))}");
+        Log($"{EffectName}: {parameters.Amount} damage to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
 
         foreach (ILivable target in affectedElements.Cast<ILivable>())
         {

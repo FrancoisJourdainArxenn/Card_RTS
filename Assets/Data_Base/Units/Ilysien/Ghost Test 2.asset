@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
+  subType: 0
   Description: 'Celerity
 
     Speed : 2'
@@ -29,29 +30,26 @@ MonoBehaviour:
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Nuke
+  - EffectName: Nuke Base
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 4
+      - targetType: 3
         includesSource: 0
         queries:
-        - team: 0
+        - team: 2
           statusFilter: 0
-          zoneFilter: 0
+          zoneFilter: 1
         requiresPlayerSelection: 1
       affectedElements:
-      - affectedElementType: 1
-        includesTarget: 0
+      - affectedElementType: 3
+        includesTarget: 1
         includesSource: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 2
+        queries: []
       repartition: 0
     Parameters:
-      Amount: 2
+      Amount: 3
       TokenToSummon: {fileID: 0}
       Placement: 0

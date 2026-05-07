@@ -4,13 +4,13 @@ public class ZoneEnemyIndicator : MonoBehaviour
 {
     public GameObject indicatorObject;
 
-    private ZoneVisual _zone;
+    private ZoneManager _zone;
 
     public static event System.Action OnRefreshRequested;
 
     void Awake()
     {
-        _zone = GetComponent<ZoneVisual>();
+        _zone = GetComponent<ZoneManager>();
         if (indicatorObject != null)
             indicatorObject.SetActive(false);
     }

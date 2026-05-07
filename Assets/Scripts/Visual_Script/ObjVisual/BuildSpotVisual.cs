@@ -12,8 +12,8 @@ public class BuildSpotVisual : MonoBehaviour
 
 
 
-    public ZoneVisual Zone => _ZoneView;
-    private ZoneVisual _ZoneView;
+    public ZoneManager Zone => _ZoneView;
+    private ZoneManager _ZoneView;
 
     void Awake()
     {
@@ -34,7 +34,7 @@ public class BuildSpotVisual : MonoBehaviour
 
     void Start()
     {
-        _ZoneView = GetComponentInParent<ZoneVisual>();
+        _ZoneView = GetComponentInParent<ZoneManager>();
         this.tag = _ZoneView.tag;
         originalTag = this.tag;
     }
@@ -74,7 +74,7 @@ public class BuildSpotVisual : MonoBehaviour
 
     }
 
-    private bool PlayerHasUnitsInZone(Player player, ZoneVisual zone)
+    private bool PlayerHasUnitsInZone(Player player, ZoneManager zone)
     {
         PlayerArea playerAreaInZone = null;
         foreach (PlayerArea pa in player.PAreas)
