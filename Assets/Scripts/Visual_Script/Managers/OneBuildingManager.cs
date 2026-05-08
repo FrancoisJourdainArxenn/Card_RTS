@@ -24,23 +24,18 @@ public class OneBuildingManager : OneLivableManager
         if (TurnManager.Instance == null) return;
         if (BuildingLogic == null) return;
 
-        switch (TurnManager.Instance.CurrentPhase)
+        if (!EffectTargetingManager.IsComplete)
         {
-            case TurnManager.TurnPhases.BeginCombat:
-                IDHolder idHolder = GetComponent<IDHolder>();
-                if (idHolder == null) return;
-                if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building)) return;
-                BeginCombatEffectManager.OnEntityClicked(building);
-                break;
-            
-            case TurnManager.TurnPhases.Battle:
-                ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
-                if (resolver != null)
-                    resolver.TryRedirectDamageFromBuilding(BuildingLogic);
-                break;
-            
-            default:
-                break;
+            IDHolder idHolder = GetComponent<IDHolder>();
+            if (idHolder == null) return;
+            if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building)) return;
+            EffectTargetingManager.OnEntityClicked(building);
+        }
+        else if (TurnManager.Instance.IsBattlePhase)
+        {
+            ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
+            if (resolver != null)
+                resolver.TryRedirectDamageFromBuilding(BuildingLogic);
         }
     }
 

@@ -39,11 +39,11 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         if (idHolder == null) return;
         int id = idHolder.UniqueID;
 
-        if (TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat)
+        if (!EffectTargetingManager.IsComplete)
         {
             IIdentifiable entity = ResolveEntity(id);
             if (entity != null)
-                BeginCombatEffectManager.OnEntityClicked(entity);
+                EffectTargetingManager.OnEntityClicked(entity);
             return;
         }
 

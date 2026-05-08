@@ -3,22 +3,24 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Manages BeginCombat phase effect resolution.
-///
-/// Flow (network):
-///   StartSession → if selection effects with valid targets, highlights them; player clicks targets.
-///   Player clicks End Phase (Accept) → ConfirmAndSubmit → steps through selection queue → submits to server.
-///   Server waits for both players, merges, broadcasts canonical resolution → simultaneous execution.
-///   IsComplete becomes true → AutoAdvanceFromBeginCombat advances to Battle.
+/// Manages effect resolution for all phases (Regroup, Command, BeginCombat, End).
 ///
 /// Flow (local):
-///   StartSession called for each player (TurnMaker foreach).
-///   BeginLocalSelectionSession starts the sequential UI after all players are registered.
-///   Players select targets one at a time; End Phase confirms each player's selections in order.
-///   After all players confirm, all effects execute simultaneously.
-///   IsComplete becomes true → AutoAdvanceFromBeginCombat advances.
+///   ResetForNewPhase() called at phase entry.
+///   StartSession called per player per TurnMaker callback — collects effects for one or more triggers.
+///   BeginLocalSelectionSession starts the sequential UI after all players have registered.
+///   If a player has selection effects: UI shown, player clicks target then End Phase to confirm.
+///   If no selection effects: auto-advances immediately.
+///   After all players confirm, all effects execute simultaneously → IsComplete = true.
+///   The phase's auto-advance coroutine (or player-driven End Phase) then proceeds.
+///
+/// Flow (network — BeginCombat):
+///   StartSession → if selection effects with valid targets, highlights them; player clicks targets.
+///   Player clicks End Phase → ConfirmAndSubmit → steps through queue → submits to server.
+///   Server waits for both players, merges, broadcasts canonical resolution → simultaneous execution.
+///   IsComplete becomes true → AutoAdvanceFromBeginCombat advances to Battle.
 /// </summary>
-public static class BeginCombatEffectManager
+public static class EffectTargetingManager
 {
     // Shared: active selection queue and cursor (reused for each player in turn)
     private static List<PendingEffectSelection> _selectionQueue = new List<PendingEffectSelection>();
@@ -43,7 +45,7 @@ public static class BeginCombatEffectManager
     public static bool IsComplete => _isComplete;
 
     /// <summary>
-    /// Returns true when the End Phase button should be blocked for this player during BeginCombat.
+    /// Returns true when the End Phase button should be blocked for this player.
     /// Network: blocked when the current selection effect has no target chosen yet.
     /// Local: blocked when it is not this player's turn, or they haven't chosen a target yet.
     /// </summary>
@@ -65,7 +67,7 @@ public static class BeginCombatEffectManager
     // Phase lifecycle
     // =========================================================================
 
-    /// <summary>Called by TurnManager.EnterPhase(BeginCombat) before TurnMakers are invoked.</summary>
+    /// <summary>Called by TurnManager.EnterPhase for every phase before TurnMakers are invoked.</summary>
     public static void ResetForNewPhase()
     {
         _allEffects.Clear();
@@ -81,13 +83,16 @@ public static class BeginCombatEffectManager
     }
 
     /// <summary>
-    /// Called by TurnMaker.OnBeginCombatPhaseEntered for each player.
+    /// Called by TurnMaker phase callbacks for each player.
+    /// Accepts one or more triggers so a single call can cover multiple trigger types (e.g. OnBattleEnd + OnEndTurn).
     /// Collects and stores effects; does not start the selection UI (BeginLocalSelectionSession does that).
     /// Network: once per client. Local: once per player, in TurnMaker foreach order.
     /// </summary>
-    public static void StartSession(Player player)
+    public static void StartSession(Player player, params TriggerType[] triggers)
     {
-        List<PendingEffectSelection> effects = EffectProcessor.CollectAllBeginCombatEffects(player);
+        List<PendingEffectSelection> effects = new();
+        foreach (TriggerType trigger in triggers)
+            effects.AddRange(EffectProcessor.StartPhaseCollectEffects(player, trigger));
         // Effects with no eligible targets stay in effects (they fire on nobody = skip),
         // but are excluded from the selection queue so the player is not asked to pick a target.
         foreach (PendingEffectSelection effect in effects)
@@ -123,14 +128,17 @@ public static class BeginCombatEffectManager
     }
 
     /// <summary>
-    /// Called by TurnManager.EnterPhase after all TurnMakers have run OnBeginCombatPhaseEntered.
+    /// Called by TurnManager.EnterPhase after all TurnMakers have registered their sessions.
     /// Starts the sequential selection UI for local mode. No-op in network mode.
+    /// If no player registered any effects, IsComplete is set to true immediately.
     /// </summary>
     public static void BeginLocalSelectionSession()
     {
         if (NetworkSessionData.IsNetworkSession) return;
         if (_localPlayerQueue.Count > 0)
             LoadLocalPlayerSelections(_localPlayerQueue[0]);
+        else
+            _isComplete = true; // Aucun effet à résoudre pour cette phase
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
     }
@@ -175,6 +183,7 @@ public static class BeginCombatEffectManager
             foreach (List<PendingEffectSelection> playerEffects in _pendingPerPlayer.Values)
                 ExecuteAll(playerEffects);
             _isComplete = true;
+            TurnManager.RefreshAllPlayableHighlights();
         }
     }
 
@@ -256,7 +265,7 @@ public static class BeginCombatEffectManager
     }
 
     /// <summary>
-    /// Called by entity click handlers (OneCreatureManager, etc.) during BeginCombat.
+    /// Called by entity click handlers (OneCreatureManager, etc.) when a targeting session is active.
     /// Records the player's target choice for the current selection. Does NOT submit.
     /// </summary>
     public static void OnEntityClicked(IIdentifiable clickedEntity)
@@ -279,10 +288,10 @@ public static class BeginCombatEffectManager
     // =========================================================================
 
     /// <summary>
-    /// Called when the player clicks End Phase during BeginCombat.
+    /// Called when the player clicks End Phase while a targeting session is active.
     /// Steps through the player's selection queue one at a time.
     /// Local: advances to the next player when done; executes all when every player has confirmed.
-    /// Network: submits to server when all selections are confirmed.
+    /// Network (BeginCombat): submits to server when all selections are confirmed.
     /// </summary>
     public static void ConfirmAndSubmit(Player player)
     {
@@ -371,7 +380,7 @@ public static class BeginCombatEffectManager
         }
 
         GameNetworkManager.Instance.SubmitEffectTargetsServerRpc(
-            playerIndex, sourceEntityIDs, effectIndexes, selectedTargetIDs);
+            playerIndex, TurnManager.Instance.CurrentPhase, sourceEntityIDs, effectIndexes, selectedTargetIDs);
     }
 
     // =========================================================================
@@ -392,6 +401,9 @@ public static class BeginCombatEffectManager
             EffectProcessor.ExecutePendingEffect(effectData, context);
         }
         _isComplete = true;
+        TurnManager.RefreshAllPlayableHighlights();
+        if (GlobalSettings.Instance != null)
+            GlobalSettings.Instance.RefreshEndPhaseButtons();
     }
 
     // =========================================================================

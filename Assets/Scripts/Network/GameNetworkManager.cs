@@ -138,19 +138,20 @@ public class GameNetworkManager : NetworkBehaviour
     private Dictionary<int, EffectTargetSubmission> _effectSubmissions = new Dictionary<int, EffectTargetSubmission>();
 
     /// <summary>
-    /// Envoyé par chaque joueur quand il confirme ses sélections de targets (End Phase en BeginCombat).
+    /// Envoyé par chaque joueur quand il confirme ses sélections de targets (toutes phases).
     /// Le serveur attend les deux soumissions, merge, puis broadcast la résolution canonique.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SubmitEffectTargetsServerRpc(
         int playerIndex,
+        TurnManager.TurnPhases forPhase,
         int[] sourceEntityIDs,
         int[] effectIndexes,
         int[] selectedTargetIDs)
     {
-        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat)
+        if (TurnManager.Instance.CurrentPhase != forPhase)
         {
-            Debug.Log("[GameNetworkManager] SubmitEffectTargets ignoré : pas en phase BeginCombat");
+            Debug.Log($"[GameNetworkManager] SubmitEffectTargets ignoré : requête pour {forPhase}, phase actuelle {TurnManager.Instance.CurrentPhase}");
             return;
         }
 
@@ -175,7 +176,7 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// Reçu par TOUS les clients : exécute les effets BeginCombat avec les targets choisies par chaque joueur.
+    /// Reçu par TOUS les clients : exécute les effets de la phase avec les targets choisies par chaque joueur.
     /// </summary>
     [ClientRpc]
     void ApplyCanonicalEffectResolutionClientRpc(
@@ -183,7 +184,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] effectIndexes,
         int[] selectedTargetIDs)
     {
-        BeginCombatEffectManager.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs);
+        EffectTargetingManager.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs);
     }
 
     // -------------------------------------------------------------------------

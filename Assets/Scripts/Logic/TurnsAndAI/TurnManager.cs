@@ -148,9 +148,10 @@ public class TurnManager : MonoBehaviour
     /// <summary>Registers end-of-phase for the participant at this index in <see cref="Player.Players"/>.</summary>
     public void RegisterEndPhase(int participantIndex)
     {
-        // BeginCombat : End Phase = confirmation des sélections de targets.
-        // Fonctionne en local et en réseau — AutoAdvanceFromBeginCombat prend le relais.
-        if (currentPhase == TurnPhases.BeginCombat)
+        // Any phase with an active targeting session: End Phase = confirmation des sélections.
+        // BeginCombat: AutoAdvanceFromBeginCombat prend le relais.
+        // Autres phases: AutoAdvanceFromRegroup / AutoAdvanceFromEnd prennent le relais.
+        if (currentPhase == TurnPhases.BeginCombat || !EffectTargetingManager.IsComplete)
         {
             Player player = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
                 ? Player.Players[participantIndex] : null;
@@ -162,7 +163,7 @@ public class TurnManager : MonoBehaviour
             }
 
             if (player != null)
-                BeginCombatEffectManager.ConfirmAndSubmit(player);
+                EffectTargetingManager.ConfirmAndSubmit(player);
             return;
         }
 
@@ -324,6 +325,7 @@ public class TurnManager : MonoBehaviour
         currentPhase = phase;
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
+        EffectTargetingManager.ResetForNewPhase();
 
         UpdatePhaseText();
 
@@ -350,7 +352,6 @@ public class TurnManager : MonoBehaviour
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
             case TurnPhases.BeginCombat:
-                BeginCombatEffectManager.ResetForNewPhase();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnBeginCombatPhaseEntered();
                 StartCoroutine(AutoAdvanceFromBeginCombat());
@@ -377,8 +378,8 @@ public class TurnManager : MonoBehaviour
 
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
+        EffectTargetingManager.BeginLocalSelectionSession();
         RefreshAllPlayableHighlights();
-        BeginCombatEffectManager.BeginLocalSelectionSession();
     }
 
     void UpdatePhaseText()
@@ -402,6 +403,8 @@ public class TurnManager : MonoBehaviour
         if (Command.CardDrawPending())
             return;
         if (Player.Players == null)
+            return;
+        if (!EffectTargetingManager.IsComplete)
             return;
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -462,17 +465,9 @@ public class TurnManager : MonoBehaviour
         return System.Array.IndexOf(Player.Players, p);
     }
 
-    IEnumerator CoAdvanceRegroupWhenCommandQueueIdle()
-    {
-        yield return new WaitWhile(() => Command.playingQueue || Command.CardDrawPending());
-        if (currentPhase != TurnPhases.Regroup)
-            yield break;
-        EnterPhase(TurnPhases.Command);
-    }
-
     IEnumerator AutoAdvanceFromBeginCombat()
     {
-        yield return new WaitWhile(() => !BeginCombatEffectManager.IsComplete || Command.playingQueue);
+        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
         if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
             AdvancePhaseWhenAllReady();
     }
@@ -486,13 +481,13 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator AutoAdvanceFromEnd()
     {
-        yield return new WaitWhile(() => Command.playingQueue);
+        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
         EnterPhase(TurnPhases.Regroup);
     }
 
     IEnumerator AutoAdvanceFromRegroup()
     {
-        yield return new WaitWhile(() => Command.playingQueue || Command.CardDrawPending());
+        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue || Command.CardDrawPending());
         yield return new WaitForSeconds(1.5f);
         EnterPhase(TurnPhases.Command);
     }

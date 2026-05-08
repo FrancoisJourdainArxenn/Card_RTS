@@ -79,9 +79,9 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     void OnMouseDown()
     {
         if (TurnManager.Instance == null) return;
-        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat) return;
+        if (EffectTargetingManager.IsComplete) return;
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(player.PlayerID, out BaseLogic homeBase))
-            BeginCombatEffectManager.OnEntityClicked(homeBase);
+            EffectTargetingManager.OnEntityClicked(homeBase);
     }
 
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)
