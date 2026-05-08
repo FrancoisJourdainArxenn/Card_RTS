@@ -11,7 +11,8 @@ public struct EffectInfo
 public enum EffectRepartition
 {
     Uniform,
-    // Random,
+    Random,
+    RandomMeleeFirst,
     // Selection,
 }
 

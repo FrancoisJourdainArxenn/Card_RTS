@@ -5,7 +5,7 @@ using DG.Tweening;
 using TMPro;
 
 
-public class MainBaseVisual : MonoBehaviour, ITargetable {
+public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
 
     public Player player;
     public OneBaseManager baseManager;
@@ -33,20 +33,39 @@ public class MainBaseVisual : MonoBehaviour, ITargetable {
 
     public void TakeDamage(int amount, int healthAfter)
     {
-        if (amount > 0)
+        if (amount <= 0)
+            return;
+
+        Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
+        if(currentlyVisible)
         {
-            Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
-            if(currentlyVisible)
-            {
-                DamageEffect.CreateDamageEffect(transform.position, amount);
-                HealthText.text = healthAfter.ToString();
-            }
-            // Keep baseManager in sync so any other reader sees the correct value.
-            if (baseManager != null && baseManager.HealthText != null)
-                baseManager.HealthText.text = healthAfter.ToString();
-            if (player == GlobalSettings.Instance.localPlayer)
-                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+            DamageEffect.CreateDamageEffect(transform.position, amount);
+            HealthText.text = healthAfter.ToString();
         }
+        // Keep baseManager in sync so any other reader sees the correct value.
+        if (baseManager != null && baseManager.HealthText != null)
+            baseManager.HealthText.text = healthAfter.ToString();
+        if (player == GlobalSettings.Instance.localPlayer)
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+    }
+
+    public void HealDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+
+        int currentHealth = Mathf.Min(player.baseAsset.MaxHealth, healthAfter);
+        Debug.Log("Healing damage: " + amount + " Health after: " + currentHealth);
+        if(currentlyVisible)
+        {
+            DamageEffect.CreateDamageEffect(transform.position, -amount);
+            HealthText.text = currentHealth.ToString();
+        }
+        // Keep baseManager in sync so any other reader sees the correct value.
+        if (baseManager != null && baseManager.HealthText != null)
+            baseManager.HealthText.text = currentHealth.ToString();
+        if (player == GlobalSettings.Instance.localPlayer)
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
     }
 
     public void Explode()

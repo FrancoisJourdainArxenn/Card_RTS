@@ -208,7 +208,7 @@ public static class BeginCombatEffectManager
             bool isSelected = currentSelection.SelectedTarget == player
                            || (homeBase != null && currentSelection.SelectedTarget == homeBase);
             IDHolder.GetGameObjectWithID(player.ID)
-                ?.GetComponent<ITargetable>()
+                ?.GetComponent<ITargetableVisual>()
                 ?.UpdateTargetableVisual(isEligible, isSelected);
         }
 
@@ -225,7 +225,7 @@ public static class BeginCombatEffectManager
     private static void UpdateEntityTargetableVisual(int id, IIdentifiable entity, PendingEffectSelection selection)
     {
         IDHolder.GetGameObjectWithID(id)
-            ?.GetComponent<ITargetable>()
+            ?.GetComponent<ITargetableVisual>()
             ?.UpdateTargetableVisual(
                 selection.EligibleTargets.Contains(entity),
                 selection.SelectedTarget == entity);
@@ -247,7 +247,7 @@ public static class BeginCombatEffectManager
 
     private static void ClearEntityVisual(int id)
     {
-        IDHolder.GetGameObjectWithID(id)?.GetComponent<ITargetable>()?.ClearTargetableVisual();
+        IDHolder.GetGameObjectWithID(id)?.GetComponent<ITargetableVisual>()?.ClearTargetableVisual();
     }
 
     /// <summary>

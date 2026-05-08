@@ -53,12 +53,16 @@ public partial class EffectContext
     public List<IIdentifiable> GetEligibleTargets(EffectTargetInfo targetInfo)
     {
         List<IIdentifiable> targets = new();
-        if (targetInfo.includesSource)
+        if (targetInfo.onlySource)
         {
             IIdentifiable source = GetSourceByType(targetInfo.targetType);
             if (source != null) targets.Add(source);
+            return targets;
         }
         targets.AddRange(ResolveByType(targetInfo.targetType, targetInfo.queries));
+        if (!targetInfo.includesSource && Source != null && targets.Contains(Source))
+            targets.Remove(Source);
+
         return targets;
     }
 
