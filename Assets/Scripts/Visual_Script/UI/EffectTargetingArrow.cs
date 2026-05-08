@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,8 +8,6 @@ public class EffectTargetingArrow : MonoBehaviour
 
     void OnEnable()
     {
-        Debug.Log("[EffectTargetingArrow] OnEnable — abonnement aux events");
-
         TargetingVisualEvents.OnTargetingStarted += OnTargetingStarted;
         TargetingVisualEvents.OnTargetingEnded   += OnTargetingEnded;
     }
@@ -22,12 +21,26 @@ public class EffectTargetingArrow : MonoBehaviour
     private void OnTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
     {
         GameObject sourceObject = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
-        Debug.Log($"[EffectTargetingArrow] sourceObject = {sourceObject}");
-
         if (sourceObject == null) return;
 
+        StopAllCoroutines();
+
+        if (queue[currentIndex].SelectedTarget != null)
+            arrow.Hide();
+        else
+            StartCoroutine(ShowArrowDelayed());
+    }
+
+    private IEnumerator ShowArrowDelayed()
+    {
+        float delay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0f;
+        yield return new WaitForSeconds(delay);
         arrow.ShowToMouse();
     }
 
-    private void OnTargetingEnded() => arrow.Hide();
+    private void OnTargetingEnded()
+    {
+        StopAllCoroutines();
+        arrow.Hide();
+    }
 }

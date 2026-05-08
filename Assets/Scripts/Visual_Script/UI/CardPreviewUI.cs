@@ -17,6 +17,7 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private GameObject effectTriggeredPrefab;
     private RectTransform _anchorRect;
     private Canvas _canvas;
+    private bool previewingEffects = false;
 
     [SerializeField] private RectTransform targetingAnchor;
     [SerializeField] private float stackScaleFactor = 0.85f;
@@ -27,6 +28,8 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private GameObject trailPrefab;
     [SerializeField] private Transform trailTarget;
     [SerializeField] private float stackAppearDelay = 0.5f;
+    public float StackAppearDelay => stackAppearDelay;
+
 
     [Header("Hover Arrow")]
     [SerializeField] private HoverArrow hoverArrow;
@@ -164,7 +167,7 @@ public class CardPreviewUI : MonoBehaviour
         OneCardManager manager = preview.GetComponent<OneCardManager>();
         manager.cardAsset = cardAsset;
         manager.ReadEffectFromAsset(selection.Data.EffectName);
-
+        previewingEffects = true;
         preview.SetActive(true);
         return preview;
     }
@@ -177,10 +180,14 @@ public class CardPreviewUI : MonoBehaviour
         foreach (GameObject preview in _targetingPreviews)
             if (preview != null) Destroy(preview);
         _targetingPreviews.Clear();
+        previewingEffects = false;
+
     }
 
     public void Show(CardAsset asset, Vector2 mouseOffset)
     {
+        if(previewingEffects)
+            return;
         Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
             ? null
             : _canvas.worldCamera;
@@ -233,12 +240,4 @@ public class CardPreviewUI : MonoBehaviour
             currentPreview.SetActive(false);
     }
 
-    static GameObject GetPrefab(CardAsset asset)
-    {
-        if (asset.MaxHealth > 0)
-            return GlobalSettings.Instance.CreatureCardPrefab;
-        if (asset.Effects[0].RequiresPlayerInput)
-            return GlobalSettings.Instance.NoTargetSpellCardPrefab;
-        return GlobalSettings.Instance.TargetedSpellCardPrefab;
-    }
 }

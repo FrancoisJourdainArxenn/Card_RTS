@@ -6,26 +6,22 @@ public class CurvedArrow : MonoBehaviour
     [SerializeField] private int resolution = 30;
     [SerializeField] private Vector2 cp1Factors = new Vector2(-0.3f, 0.8f);
     [SerializeField] private Vector2 cp2Factors = new Vector2(0.1f, 0.85f);
+    [SerializeField] private Transform arrowHead;
 
     private LineRenderer _line;
-    private Transform _originOverride;
-    private Transform Origin => _originOverride != null ? _originOverride : transform;
+    private Vector3 _fixedStart;
 
     void Awake()
     {
         _line = GetComponent<LineRenderer>();
+        _line.positionCount = 0;
         enabled = false;
     }
 
     public void Show()
     {
-        _originOverride = null;
-        enabled = true;
-    }
-
-    public void ShowFromTransform(Transform origin)
-    {
-        _originOverride = origin;
+        _fixedStart = transform.position;
+        if (arrowHead != null) arrowHead.gameObject.SetActive(true);
         enabled = true;
     }
 
@@ -33,11 +29,12 @@ public class CurvedArrow : MonoBehaviour
     {
         enabled = false;
         _line.positionCount = 0;
+        if (arrowHead != null) arrowHead.gameObject.SetActive(false);
     }
 
     void Update()
     {
-        DrawCurve(Origin.position, GetMouseWorldPosition());
+        DrawCurve(_fixedStart, GetMouseWorldPosition());
     }
 
     private void DrawCurve(Vector3 start, Vector3 end)
@@ -52,6 +49,23 @@ public class CurvedArrow : MonoBehaviour
             float t = i / (float)(resolution - 1);
             _line.SetPosition(i, CubicBezier(start, p1, p2, end, t));
         }
+
+        UpdateArrowHead(end, p2);
+    }
+
+    private void UpdateArrowHead(Vector3 tip, Vector3 beforeTip)
+    {
+        if (arrowHead == null) return;
+
+        arrowHead.position = tip;
+
+        // Tangente de la courbe en t=1 : direction de la dernière portion
+        Vector3 tangent = new Vector3(tip.x - beforeTip.x, 0f, tip.z - beforeTip.z);
+        if (tangent.sqrMagnitude > 0.001f)
+        {
+            float angle = Mathf.Atan2(tangent.x, tangent.z) * Mathf.Rad2Deg;
+            arrowHead.rotation = Quaternion.Euler(90f, angle, 0f);
+        }
     }
 
     private static Vector3 CubicBezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
@@ -63,7 +77,7 @@ public class CurvedArrow : MonoBehaviour
     private Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Plane gamePlane = new Plane(Vector3.up, Origin.position);
-        return gamePlane.Raycast(ray, out float distance) ? ray.GetPoint(distance) : Origin.position;
+        Plane gamePlane = new Plane(Vector3.up, new Vector3(0f, _fixedStart.y, 0f));
+        return gamePlane.Raycast(ray, out float distance) ? ray.GetPoint(distance) : _fixedStart;
     }
 }

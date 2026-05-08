@@ -11,13 +11,18 @@ public class DragCreatureActions : DraggingActions {
     private GameObject target;
     // Reference to creature manager, attached to the parent game object
     private OneCreatureManager manager;
-    [SerializeField] private BezierArrows targettingArrow;
+    private Vector3 originalLocalPosition;
+
+    
+    [SerializeField] private CurvedArrow targettingArrow;
     void Awake()
     {
         // establish all the connections
         sr = GetComponent<SpriteRenderer>();
         manager = GetComponentInParent<OneCreatureManager>();
         whereIsThisCreature = GetComponentInParent<WhereIsTheCardOrCreature>();
+        originalLocalPosition = transform.localPosition;
+
     }
 
     public override bool CanDrag
@@ -262,8 +267,7 @@ public class DragCreatureActions : DraggingActions {
         // ResetColorizeUnits();
         ResetAreaHighlights();
 
-        transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
-        sr.enabled = false;
+        transform.SetLocalPositionAndRotation(originalLocalPosition, Quaternion.Euler(90f, 0f, 0f));        sr.enabled = false;
         targettingArrow.Hide();
 
 
