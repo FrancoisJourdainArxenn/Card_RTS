@@ -122,10 +122,10 @@ public static class EffectProcessor
 
     // Collecte TOUS les effets OnBeginCombat d'un joueur (auto-fire et sélection joueur).
     // Utilisé par BeginCombatEffectManager pour la résolution simultanée.
-    public static List<PendingEffectSelection> CollectAllBeginCombatEffects(Player owner)
+    public static List<PendingEffectSelection> StartPhaseCollectEffects(Player owner, TriggerType trigger)
     {
         List<PendingEffectSelection> result = new List<PendingEffectSelection>();
-        if (!_listeners.TryGetValue(TriggerType.OnBeginCombat, out List<RegisteredEffect> effectList))
+        if (!_listeners.TryGetValue(trigger, out List<RegisteredEffect> effectList))
             return result;
 
         foreach (RegisteredEffect registeredEffect in effectList)
