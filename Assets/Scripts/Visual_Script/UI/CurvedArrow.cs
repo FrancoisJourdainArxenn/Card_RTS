@@ -1,11 +1,3 @@
-Ça fait sens. Le plan :
-
-Nouveau script CurvedArrow — LineRenderer + courbe de Bezier + suivi souris (fusion de HoverArrow et BezierArrows)
-DragCreatureActions passe de BezierArrows à CurvedArrow
-EffectTargetingArrow utilise aussi CurvedArrow
-Nouveau script CurvedArrow.cs :
-
-
 using UnityEngine;
 
 [RequireComponent(typeof(LineRenderer))]
@@ -75,26 +67,3 @@ public class CurvedArrow : MonoBehaviour
         return gamePlane.Raycast(ray, out float distance) ? ray.GetPoint(distance) : Origin.position;
     }
 }
-Les cp1Factors / cp2Factors reprennent exactement les valeurs hardcodées de BezierArrows, donc la courbe sera identique visuellement.
-
-Dans DragCreatureActions, une seule ligne change :
-
-
-// avant
-[SerializeField] private BezierArrows targettingArrow;
-// après
-[SerializeField] private CurvedArrow targettingArrow;
-Et dans EffectTargetingArrow :
-
-
-[SerializeField] private CurvedArrow arrow;
-
-private void OnTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
-{
-    GameObject sourceObject = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
-    if (sourceObject == null) return;
-    arrow.ShowFromTransform(sourceObject.transform);
-}
-
-private void OnTargetingEnded() => arrow.Hide();
-Dans Unity, tu devras re-assigner la référence targettingArrow sur le prefab de créature après le changement de type.

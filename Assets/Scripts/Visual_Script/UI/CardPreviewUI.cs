@@ -76,12 +76,13 @@ public class CardPreviewUI : MonoBehaviour
             if (sourceGO != null)
                 SpawnTrail(sourceGO.transform);
         }
+        
+        yield return new WaitForSeconds(stackAppearDelay);
 
         GameObject frontSourceGO = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
         if (hoverArrow != null && frontSourceGO != null && arrowEndPoint != null)
             hoverArrow.Show(frontSourceGO.transform, arrowEndPoint);
 
-        yield return new WaitForSeconds(stackAppearDelay);
         BuildStack(queue, currentIndex, remaining);
     }
 
