@@ -43,7 +43,7 @@ public class FogMapOverlay : MonoBehaviour
 
     // ─── API publique ────────────────────────────────────────────────────────
 
-    public void SetZoneFoggedInstant(ZoneVisual zone, bool fogged)
+    public void SetZoneFoggedInstant(ZoneManager zone, bool fogged)
     {
         StopZoneAnim(zone.Logic.ID);
         RectInt bounds = GetZonePixelBounds(zone);
@@ -52,7 +52,7 @@ public class FogMapOverlay : MonoBehaviour
         UploadTexture();
     }
 
-    public void RevealZoneAnimated(ZoneVisual zone, Vector3 originWorldPos)
+    public void RevealZoneAnimated(ZoneManager zone, Vector3 originWorldPos)
     {
         StopZoneAnim(zone.Logic.ID);
         RectInt  bounds    = GetZonePixelBounds(zone);
@@ -61,7 +61,7 @@ public class FogMapOverlay : MonoBehaviour
         activeAnims[zone.Logic.ID] = c;
     }
 
-    public void CoverZoneAnimated(ZoneVisual zone, Vector3 originWorldPos)
+    public void CoverZoneAnimated(ZoneManager zone, Vector3 originWorldPos)
     {
         StopZoneAnim(zone.Logic.ID);
         RectInt  bounds    = GetZonePixelBounds(zone);
@@ -74,7 +74,7 @@ public class FogMapOverlay : MonoBehaviour
 
     private void ComputeMapBounds()
     {
-        ZoneVisual[] allZones = FindObjectsByType<ZoneVisual>(FindObjectsSortMode.None);
+        ZoneManager[] allZones = FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
         if (allZones.Length == 0) return;
 
         Bounds total = GetZoneBounds(allZones[0]);
@@ -102,7 +102,7 @@ public class FogMapOverlay : MonoBehaviour
 
 
     // Calcule les bounds pixel d'une zone à partir de son Collider ou Renderer
-    private RectInt GetZonePixelBounds(ZoneVisual zone)
+    private RectInt GetZonePixelBounds(ZoneManager zone)
     {
         Bounds b = GetZoneBounds(zone);
         // Debug.Log($"Zone {zone.name} bounds: {b.min} → {b.max}");  // ← debug
@@ -118,7 +118,7 @@ public class FogMapOverlay : MonoBehaviour
         return new RectInt(xMin, yMin, xMax - xMin + 1, yMax - yMin + 1);
     }
 
-    private static Bounds GetZoneBounds(ZoneVisual zone)
+    private static Bounds GetZoneBounds(ZoneManager zone)
     {
         // Collider direct sur la zone
         Collider col = zone.GetComponent<Collider>();

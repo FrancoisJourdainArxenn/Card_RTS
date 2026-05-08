@@ -14,7 +14,7 @@ public class PlayerArea : MonoBehaviour
     public int baseID;
 
     [HideInInspector]
-    public ZoneVisual parentZone;
+    public ZoneManager parentZone;
     public Transform BattlePos;
 
     public TMP_Text AreaATKText;

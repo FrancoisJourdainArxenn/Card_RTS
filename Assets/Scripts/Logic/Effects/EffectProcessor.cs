@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public static class EffectProcessor
@@ -136,11 +137,10 @@ public static class EffectProcessor
             List<IIdentifiable> eligibleTargets = new List<IIdentifiable>();
             if (registeredEffect.Data.RequiresPlayerInput)
             {
-                foreach (EffectTargetInfo targetInfo in registeredEffect.Data.Effectinfo.effectTargets)
+                List<EffectTargetInfo> EffectsWithSelection = registeredEffect.Data.Effectinfo.effectTargets.Where(effect => effect.requiresPlayerSelection).ToList();
+                foreach (EffectTargetInfo targetInfo in EffectsWithSelection)
                 {
-                    if (!targetInfo.requiresPlayerSelection) continue;
                     eligibleTargets.AddRange(context.GetEligibleTargets(targetInfo));
-                    break; // une seule TargetInfo par effet pour l'instant
                 }
             }
 

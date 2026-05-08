@@ -5,7 +5,7 @@ using DG.Tweening;
 using TMPro;
 
 
-public class MainBaseVisual : MonoBehaviour {
+public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
 
     public Player player;
     public OneBaseManager baseManager;
@@ -25,24 +25,47 @@ public class MainBaseVisual : MonoBehaviour {
     {
         if (!currentlyVisible)
             return;
-        HealthText.text = baseManager.HealthText.text;
+        // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
+        HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         SecondRessourceText.text = player.secondRessourceAvailable.ToString();
     }
 
     public void TakeDamage(int amount, int healthAfter)
     {
-        if (amount > 0)
+        if (amount <= 0)
+            return;
+
+        Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
+        if(currentlyVisible)
         {
-            Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
-            if(currentlyVisible)
-            {
-                DamageEffect.CreateDamageEffect(transform.position, amount);
-                HealthText.text = healthAfter.ToString();    
-            }            
-            if (player == GlobalSettings.Instance.localPlayer)
-                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+            DamageEffect.CreateDamageEffect(transform.position, amount);
+            HealthText.text = healthAfter.ToString();
         }
+        // Keep baseManager in sync so any other reader sees the correct value.
+        if (baseManager != null && baseManager.HealthText != null)
+            baseManager.HealthText.text = healthAfter.ToString();
+        if (player == GlobalSettings.Instance.localPlayer)
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+    }
+
+    public void HealDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+
+        int currentHealth = Mathf.Min(player.baseAsset.MaxHealth, healthAfter);
+        Debug.Log("Healing damage: " + amount + " Health after: " + currentHealth);
+        if(currentlyVisible)
+        {
+            DamageEffect.CreateDamageEffect(transform.position, -amount);
+            HealthText.text = currentHealth.ToString();
+        }
+        // Keep baseManager in sync so any other reader sees the correct value.
+        if (baseManager != null && baseManager.HealthText != null)
+            baseManager.HealthText.text = currentHealth.ToString();
+        if (player == GlobalSettings.Instance.localPlayer)
+            GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
     }
 
     public void Explode()
@@ -51,6 +74,24 @@ public class MainBaseVisual : MonoBehaviour {
         Sequence s = DOTween.Sequence();
         s.PrependInterval(2f);
         s.OnComplete(() => GlobalSettings.Instance.GameOverPanel.SetActive(true));
+    }
+
+    void OnMouseDown()
+    {
+        if (TurnManager.Instance == null) return;
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat) return;
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(player.PlayerID, out BaseLogic homeBase))
+            BeginCombatEffectManager.OnEntityClicked(homeBase);
+    }
+
+    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
+    {
+        baseManager?.UpdateTargetableVisual(targetable, targeted);
+    }
+
+    public void ClearTargetableVisual()
+    {
+        baseManager?.ClearTargetableVisual();
     }
 
     public void ApplyFogForObserver(bool hasVision)

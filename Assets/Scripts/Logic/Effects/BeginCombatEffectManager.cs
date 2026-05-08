@@ -90,6 +90,13 @@ public static class BeginCombatEffectManager
         List<PendingEffectSelection> effects = EffectProcessor.CollectAllBeginCombatEffects(player);
         // Effects with no eligible targets stay in effects (they fire on nobody = skip),
         // but are excluded from the selection queue so the player is not asked to pick a target.
+        foreach (PendingEffectSelection effect in effects)
+        {
+            string name = effect.Data.EffectName;
+            string selectionChecked = effect.Data.RequiresPlayerInput ? "X" : " ";
+            int targetCount = effect.EligibleTargets.Count;
+            Debug.Log($"[{name}] Select [{selectionChecked}] - {targetCount} Eligible targets ");
+        }
         List<PendingEffectSelection> selectionQueue = effects
             .Where(effect => effect.Data.RequiresPlayerInput && effect.EligibleTargets.Count > 0).ToList();
 
@@ -139,6 +146,7 @@ public static class BeginCombatEffectManager
             ? sq : new List<PendingEffectSelection>();
         _selectionCursor = 0;
 
+        Debug.Log($"[Selection] : {_selectionQueue.Count}");
         if (_selectionQueue.Count > 0)
             ShowCurrentSelectionWithChoice();
         else
@@ -178,46 +186,73 @@ public static class BeginCombatEffectManager
     private static void ShowCurrentSelectionWithChoice()
     {
         PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
-        
-        foreach (KeyValuePair<int, CreatureLogic> creatureEntry in CreatureLogic.CreaturesCreatedThisGame)
-        {
-            CreatureLogic creature   = creatureEntry.Value;
-            int           creatureID = creatureEntry.Key;
-            bool          isEligible = currentSelection.EligibleTargets.Contains(creature);
-            bool          isSelected = currentSelection.SelectedTarget == creature;
+        Debug.Log($"[Update Visual Selection] : {currentSelection.Data.EffectName} by {currentSelection.Context.Source.DisplayName}");
 
-            GameObject creatureObject = IDHolder.GetGameObjectWithID(creatureID);
-            creatureObject?.GetComponent<OneCreatureManager>()?.UpdateTargetableVisual(isEligible, isSelected);
-        }
-        
-        foreach (KeyValuePair<int, BuildingLogic> buildingEntry in BuildingLogic.BuildingsCreatedThisGame)
-        {
-            BuildingLogic building = buildingEntry.Value;
-            int           buildingID = buildingEntry.Key;
-            bool          isEligible = currentSelection.EligibleTargets.Contains(building);
-            bool          isSelected = currentSelection.SelectedTarget == building;
+        foreach (KeyValuePair<int, CreatureLogic> e in CreatureLogic.CreaturesCreatedThisGame)
+            UpdateEntityTargetableVisual(e.Key, e.Value, currentSelection);
 
-            GameObject buildingObject = IDHolder.GetGameObjectWithID(buildingID);
-            buildingObject?.GetComponent<OneBuildingManager>()?.UpdateTargetableVisual(isEligible, isSelected);
+        foreach (KeyValuePair<int, BuildingLogic> e in BuildingLogic.BuildingsCreatedThisGame)
+            UpdateEntityTargetableVisual(e.Key, e.Value, currentSelection);
+
+        foreach (KeyValuePair<int, BaseLogic> e in BaseLogic.BasesCreatedThisGame)
+        {
+            if (!e.Value.IsHomeBase)
+                UpdateEntityTargetableVisual(e.Key, e.Value, currentSelection);
         }
-        
-        GameObject sourceObject = IDHolder.GetGameObjectWithID(currentSelection.SourceEntityID);
-        sourceObject?.GetComponent<OneCreatureManager>()?.UpdateUsingEffectVisual();
+
+        foreach (Player player in Player.Players)
+        {
+            BaseLogic.BasesCreatedThisGame.TryGetValue(player.PlayerID, out BaseLogic homeBase);
+            bool isEligible = currentSelection.EligibleTargets.Contains(player)
+                           || (homeBase != null && currentSelection.EligibleTargets.Contains(homeBase));
+            bool isSelected = currentSelection.SelectedTarget == player
+                           || (homeBase != null && currentSelection.SelectedTarget == homeBase);
+            IDHolder.GetGameObjectWithID(player.ID)
+                ?.GetComponent<ITargetableVisual>()
+                ?.UpdateTargetableVisual(isEligible, isSelected);
+        }
 
         // TODO: highlight bases, players when those target types are used
 
         TargetingVisualEvents.RaiseTargetingStarted(_selectionQueue, _selectionCursor);
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            zone.UpdateTargetableVisual(
+                currentSelection.EligibleTargets.Contains(zone.Logic),
+                currentSelection.SelectedTarget == zone.Logic);
+
+        IDHolder.GetGameObjectWithID(currentSelection.SourceEntityID)
+            ?.GetComponent<OneLivableManager>()?.UpdateUsingEffectVisual();
+
+    }
+
+    private static void UpdateEntityTargetableVisual(int id, IIdentifiable entity, PendingEffectSelection selection)
+    {
+        IDHolder.GetGameObjectWithID(id)
+            ?.GetComponent<ITargetableVisual>()
+            ?.UpdateTargetableVisual(
+                selection.EligibleTargets.Contains(entity),
+                selection.SelectedTarget == entity);
     }
 
     private static void ClearHighlights()
     {
         TargetingVisualEvents.RaiseTargetingEnded();
 
-        foreach (KeyValuePair<int, CreatureLogic> creatureEntry in CreatureLogic.CreaturesCreatedThisGame)
-        {
-            GameObject creatureObject = IDHolder.GetGameObjectWithID(creatureEntry.Key);
-            creatureObject?.GetComponent<OneCreatureManager>()?.ClearTargetableVisual();
-        }
+        foreach (int id in CreatureLogic.CreaturesCreatedThisGame.Keys)
+            ClearEntityVisual(id);
+        foreach (int id in BuildingLogic.BuildingsCreatedThisGame.Keys)
+            ClearEntityVisual(id);
+        foreach (KeyValuePair<int, BaseLogic> e in BaseLogic.BasesCreatedThisGame.Where(e => !e.Value.IsHomeBase))
+            ClearEntityVisual(e.Key);
+        foreach (Player player in Player.Players)
+            ClearEntityVisual(player.ID);
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            zone.ClearTargetableVisual();
+    }
+
+    private static void ClearEntityVisual(int id)
+    {
+        IDHolder.GetGameObjectWithID(id)?.GetComponent<ITargetableVisual>()?.ClearTargetableVisual();
     }
 
     /// <summary>
@@ -401,6 +436,9 @@ public static class BeginCombatEffectManager
             return building;
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(entityID, out BaseLogic playerBase))
             return playerBase;
+
+        foreach (ZoneManager zone in ZoneManager.AllZones)
+            if (zone.Logic.ID == entityID) return zone.Logic;
 
         foreach (Player player in Player.Players)
             if (player.ID == entityID) return player;

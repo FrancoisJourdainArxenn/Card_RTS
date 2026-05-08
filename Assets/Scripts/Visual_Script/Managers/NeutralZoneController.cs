@@ -8,7 +8,7 @@ public class NeutralZoneController : MonoBehaviour
     public AreaPosition owner;
     public Color ownerColor;
     public GameObject background;
-    public ZoneVisual zone;
+    public ZoneManager zone;
 
     public TableVisual[] tables;
 
@@ -28,7 +28,7 @@ public class NeutralZoneController : MonoBehaviour
         lastSeenColorTop = initial;
 
         tables = GetComponentsInChildren<TableVisual>();
-
+        if (zone == null) zone = GetComponent<ZoneManager>();
     }
 
     public void SetTrueColor(Color color)

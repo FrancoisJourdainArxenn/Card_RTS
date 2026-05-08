@@ -1,0 +1,82 @@
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Linq;
+
+public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandler
+{
+    [Header("Adjacent Zones")]
+    public List<ZoneManager> adjacentZones;
+
+    [Header("Targeting")]
+    [SerializeField] private Image _targetableOverlay;
+
+    [HideInInspector]
+    public List<PlayerArea> subZones = new List<PlayerArea>();
+
+    public ZoneLogic Logic { get; private set; }
+
+    public static List<ZoneManager> AllZones { get; } = new List<ZoneManager>();
+
+    void Awake()
+    {
+        AllZones.Add(this);
+        int id = GetHierarchyPath(transform).GetHashCode();
+        Logic = new ZoneLogic(id, name, () => subZones.Select(sz => sz.baseID).ToList());
+
+        foreach (PlayerArea pa in GetComponentsInChildren<PlayerArea>())
+        {
+            subZones.Add(pa);
+            pa.parentZone = this;
+        }
+
+        if (_targetableOverlay != null)
+            _targetableOverlay.gameObject.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        AllZones.Remove(this);
+    }
+
+    void Start()
+    {
+        Logic.SetAdjacentZones(adjacentZones.ConvertAll(z => z.Logic));
+    }
+
+    public bool IsAdjacentTo(ZoneManager other) => Logic.IsAdjacentTo(other.Logic);
+
+    public void UpdateTargetableVisual(bool targetable, bool targeted = false)
+    {
+        if (_targetableOverlay == null) return;
+        _targetableOverlay.gameObject.SetActive(targetable);
+        _targetableOverlay.color = targeted
+            ? new Color(0f, 1f, 0f, 0.3f)
+            : new Color(1f, 1f, 0f, 0.15f);
+    }
+
+    public void ClearTargetableVisual()
+    {
+        if (_targetableOverlay != null)
+            _targetableOverlay.gameObject.SetActive(false);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (TurnManager.Instance == null) return;
+        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.BeginCombat) return;
+        BeginCombatEffectManager.OnEntityClicked(Logic);
+    }
+
+    private static string GetHierarchyPath(Transform t)
+    {
+        string path = t.name;
+        while (t.parent != null)
+        {
+            t = t.parent;
+            path = t.name + "/" + path;
+        }
+        return path;
+    }
+}

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 
 public partial class EffectContext
 {
@@ -21,13 +20,10 @@ public partial class EffectContext
     /// If the player made a selection, returns [SelectedTarget]; otherwise returns all eligible targets.
     /// GetEligibleTargets is kept separate for displaying the selection panel.
     /// </summary>
-    public List<IIdentifiable> GetExecutionTargets(EffectTargetInfo targetInfo)
+    public List<IIdentifiable> GetExecutionAffectedElements(EffectTargetInfo targetInfo)
     {
         if (targetInfo.requiresPlayerSelection)
-        {
-            if (SelectedTarget != null) return new List<IIdentifiable> { SelectedTarget };
-            return new List<IIdentifiable>();
-        }
+            return new List<IIdentifiable> { SelectedTarget };
         return GetEligibleTargets(targetInfo);
     }
 
@@ -57,18 +53,23 @@ public partial class EffectContext
     public List<IIdentifiable> GetEligibleTargets(EffectTargetInfo targetInfo)
     {
         List<IIdentifiable> targets = new();
-        if (targetInfo.includesSource)
+        if (targetInfo.onlySource)
         {
             IIdentifiable source = GetSourceByType(targetInfo.targetType);
             if (source != null) targets.Add(source);
+            return targets;
         }
         targets.AddRange(ResolveByType(targetInfo.targetType, targetInfo.queries));
+        if (!targetInfo.includesSource && Source != null && targets.Contains(Source))
+            targets.Remove(Source);
+
         return targets;
     }
 
     public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
     {
         List<IIdentifiable> elements = new();
+        ZoneLogic targetZone = target is ZoneLogic z ? z : (target is ILivable l ? l.Zone : null);
         foreach (AffectedElement affectedElement in affectedElements)
         {
             if (affectedElement.includesTarget && target != null)
@@ -78,7 +79,6 @@ public partial class EffectContext
                 var src = GetSourceByType(affectedElement.affectedElementType);
                 if (src != null) elements.Add(src);
             }
-            ZoneLogic targetZone = target is ILivable l ? l.Zone : null;
             elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
         }
         return elements;

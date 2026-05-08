@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class OneLivableManager : MonoBehaviour
+public class OneLivableManager : MonoBehaviour, ITargetableVisual
 {
     public CardAsset cardAsset;
     public OneCardManager PreviewManager;
@@ -45,6 +45,18 @@ public class OneLivableManager : MonoBehaviour
         Debug.Log($"{cardAsset.name} took {amount} damage. {healthAfter} left afterwards.");
         DamageEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
+        GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
+    }
+
+    public void HealDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+        
+        int currentHealth = Mathf.Min(cardAsset.MaxHealth, healthAfter);
+        Debug.Log($"{cardAsset.name} heal {amount} damage. {currentHealth} left afterwards.");
+        DamageEffect.CreateDamageEffect(transform.position, -amount);
+        HealthText.text = currentHealth.ToString();
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 

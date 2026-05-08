@@ -23,9 +23,13 @@ public partial class EffectContext
 
             candidates = query.statusFilter switch
             {
-                TargetStatusFilter.Melee  => candidates.Where(t => t is CreatureLogic c && c.IsMelee),
-                TargetStatusFilter.Ranged => candidates.Where(t => t is CreatureLogic c && c.IsRanged),
-                _                         => candidates
+                TargetStatusFilter.Melee      => candidates.Where(t => t is ILivable c && c.IsMelee),
+                TargetStatusFilter.Ranged     => candidates.Where(t => t is ILivable c && c.IsRanged),
+                TargetStatusFilter.MeleeFirst => candidates.Any(t => t is ILivable c && c.IsMelee)
+                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
+                    : candidates,
+                TargetStatusFilter.Damaged    => candidates.Where(t => t is ILivable l && l.IsDamaged),
+                _                             => candidates
             };
 
             if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource && Source?.Zone != null)
@@ -66,9 +70,21 @@ public partial class EffectContext
             getEnemy:    () => Opponent.controlledBases,
             targetZone:  targetZone);
 
-    public List<IIdentifiable> GetZoneTargets(List<TargetQuery> queries, ZoneLogic targetZone = null) =>
-        GetTargetsByTeam(queries,
-            getFriendly: () => Caster.VisibleZones,
-            getEnemy:    () => Opponent.VisibleZones,
-            targetZone:  targetZone);
+    public List<IIdentifiable> GetZoneTargets(List<TargetQuery> queries, ZoneLogic targetZone = null)
+    {
+        List<IIdentifiable> targets = new();
+        foreach (TargetQuery query in queries)
+        {
+            IEnumerable<IIdentifiable> candidates = query.team switch
+            {
+                // All zones in the scene — neutral zones not owned by either player must still be selectable
+                TargetTeam.All      => ZoneManager.AllZones.Select(z => (IIdentifiable)z.Logic),
+                TargetTeam.Friendly => Caster.VisibleZones.Cast<IIdentifiable>(),
+                TargetTeam.Enemy    => Opponent.VisibleZones.Cast<IIdentifiable>(),
+                _                   => Enumerable.Empty<IIdentifiable>()
+            };
+            targets.AddRange(candidates);
+        }
+        return targets;
+    }
 }

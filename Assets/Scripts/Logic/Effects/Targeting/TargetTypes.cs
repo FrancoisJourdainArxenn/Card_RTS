@@ -5,6 +5,7 @@ public struct EffectTargetInfo
 {
     public EffectObjectType targetType;
     public bool includesSource;
+    public bool onlySource;
     public List<TargetQuery> queries;
     public bool requiresPlayerSelection;
 }
@@ -29,7 +30,8 @@ public enum TargetStatusFilter
     All,
     Melee,
     Ranged,
-    // Damaged,
+    MeleeFirst,
+    Damaged,
     // Undamaged,
     // Visible,
     // Fogged,

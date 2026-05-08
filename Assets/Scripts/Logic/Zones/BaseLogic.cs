@@ -8,26 +8,29 @@ public class BaseLogic: ILivable
     public Player owner;
     public BaseAsset ba;
     public NeutralZoneController neutralBaseController;
-    //public BuildingEffect effect;
     private int uniqueBaseID;
+    private ZoneLogic _homeZone;
+
+    public bool IsHomeBase => neutralBaseController == null;
 
     public int ID => uniqueBaseID;
     public string DisplayName => ba.name;
-    public ZoneLogic Zone => neutralBaseController.zone.Logic;
-       
-    private int baseHealth; // the basic health that we have in BaseAsset
-    public int MaxHealth // health with all the current buffs taken into account
-    {
-        get{ return baseHealth;}
-    }
+    public ZoneLogic Zone => IsHomeBase ? _homeZone : neutralBaseController?.zone?.Logic;
 
-    private int health; // current health of this base
+    private int baseHealth;
+    public int MaxHealth => baseHealth;
+
+    private int health;
     public int Health
     {
-        get{ return health; }
-
+        get => IsHomeBase ? owner.Health : health;
         set
         {
+            if (IsHomeBase)
+            {
+                owner.Health = value; // délègue au Player — Player.Die() gère le game-over
+                return;
+            }
             if (value > MaxHealth)
                 health = MaxHealth;
             else if (value <= 0)
@@ -53,6 +56,7 @@ public class BaseLogic: ILivable
     
     public void Die()
     {
+        if (IsHomeBase) return; // mort de la home base gérée par Player
         owner.controlledBaseAssets.Remove(ba);
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
@@ -60,18 +64,34 @@ public class BaseLogic: ILivable
         new BaseDieCommand(uniqueBaseID, neutralBaseController).AddToQueue();
     }
 
+    // Constructeur pour les bases neutres capturées
     public BaseLogic(Player owner, BaseAsset ba, NeutralZoneController neutralBaseController, int networkID = -1)
     {
         this.ba = ba;
         this.neutralBaseController = neutralBaseController;
         baseHealth = ba.MaxHealth;
-        Health = baseHealth;
+        health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;
         baseSecondRessourceIncome = ba.secondRessourceIncome;
         this.owner = owner;
         uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BasesCreatedThisGame.Add(uniqueBaseID, this);
         FogOfWarManager.Refresh();
+    }
+
+    // Constructeur pour les home bases des joueurs
+    public BaseLogic(Player owner, ZoneLogic homeZone)
+    {
+        this.ba = owner.baseAsset;
+        this.neutralBaseController = null;
+        this._homeZone = homeZone;
+        baseHealth = ba.MaxHealth;
+        health = baseHealth;
+        baseMainRessourceIncome = ba.mainRessourceIncome;
+        baseSecondRessourceIncome = ba.secondRessourceIncome;
+        this.owner = owner;
+        uniqueBaseID = owner.PlayerID;
+        BasesCreatedThisGame[uniqueBaseID] = this;
     }
 
     // STATIC For managing IDs
