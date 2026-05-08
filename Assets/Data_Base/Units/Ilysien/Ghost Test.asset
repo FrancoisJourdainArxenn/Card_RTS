@@ -26,7 +26,8 @@ MonoBehaviour:
   MoveSpeed: 2
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
   Effects:
   - EffectName: Snipe
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}

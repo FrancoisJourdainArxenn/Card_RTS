@@ -212,6 +212,9 @@ public static class BeginCombatEffectManager
                 ?.UpdateTargetableVisual(isEligible, isSelected);
         }
 
+        // TODO: highlight bases, players when those target types are used
+
+        TargetingVisualEvents.RaiseTargetingStarted(_selectionQueue, _selectionCursor);
         foreach (ZoneManager zone in ZoneManager.AllZones)
             zone.UpdateTargetableVisual(
                 currentSelection.EligibleTargets.Contains(zone.Logic),
@@ -233,6 +236,8 @@ public static class BeginCombatEffectManager
 
     private static void ClearHighlights()
     {
+        TargetingVisualEvents.RaiseTargetingEnded();
+
         foreach (int id in CreatureLogic.CreaturesCreatedThisGame.Keys)
             ClearEntityVisual(id);
         foreach (int id in BuildingLogic.BuildingsCreatedThisGame.Keys)

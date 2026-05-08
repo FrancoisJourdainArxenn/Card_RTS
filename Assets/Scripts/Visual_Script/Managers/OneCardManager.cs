@@ -25,7 +25,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image ArtImage;
     public Image FrameImage;
     public Image CardFaceGlowImage;
-
     public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
 
@@ -77,6 +76,14 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     }
 
+    public void ReadEffectFromAsset(string effectName)
+    {
+        if (NameText != null)        NameText.text = effectName;
+        if (DescriptionText != null) DescriptionText.text = cardAsset.Description.ToString();
+        if (ArtImage != null)        ArtImage.sprite = cardAsset.CardImage;
+    }
+
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
@@ -98,6 +105,5 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         if (!canBePlayedNow) return;
         GlobalSettings.Instance.buildingShop.OnBuildingSelected(cardAsset);
     }
-
 
 }
