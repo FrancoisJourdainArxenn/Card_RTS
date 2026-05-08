@@ -401,6 +401,9 @@ public static class EffectTargetingManager
             EffectProcessor.ExecutePendingEffect(effectData, context);
         }
         _isComplete = true;
+        TurnManager.RefreshAllPlayableHighlights();
+        if (GlobalSettings.Instance != null)
+            GlobalSettings.Instance.RefreshEndPhaseButtons();
     }
 
     // =========================================================================

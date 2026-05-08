@@ -30,7 +30,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Heal other unit
     Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
-    Trigger: 2
+    Trigger: 3
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
