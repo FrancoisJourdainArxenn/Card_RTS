@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: Soldier
+  subType: 0
   Description: At the begining of combat, deal 2 to a Unit.
   CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
   MainCost: 0
@@ -25,10 +25,9 @@ MonoBehaviour:
   melee: 0
   MoveSpeed: 2
   Celerity: 1
-  Keywords: []
-  Targets: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
   Effects:
   - EffectName: Snipe
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}

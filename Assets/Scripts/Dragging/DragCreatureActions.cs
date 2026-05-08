@@ -18,8 +18,6 @@ public class DragCreatureActions : DraggingActions {
         sr = GetComponent<SpriteRenderer>();
         manager = GetComponentInParent<OneCreatureManager>();
         whereIsThisCreature = GetComponentInParent<WhereIsTheCardOrCreature>();
-        targettingArrow.originOverride = transform.parent;
-
     }
 
     public override bool CanDrag

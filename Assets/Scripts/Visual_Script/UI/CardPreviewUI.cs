@@ -13,6 +13,8 @@ public class CardPreviewUI : MonoBehaviour
 
     private GameObject currentPreview;
     private GameObject currentPrefab;
+    [SerializeField] private GameObject cardPreviewPrefab;
+    [SerializeField] private GameObject effectTriggeredPrefab;
     private RectTransform _anchorRect;
     private Canvas _canvas;
 
@@ -77,7 +79,7 @@ public class CardPreviewUI : MonoBehaviour
 
         GameObject frontSourceGO = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
         if (hoverArrow != null && frontSourceGO != null && arrowEndPoint != null)
-            hoverArrow.Show(frontSourceGO.transform.position, arrowEndPoint.position);
+            hoverArrow.Show(frontSourceGO.transform, arrowEndPoint);
 
         yield return new WaitForSeconds(stackAppearDelay);
         BuildStack(queue, currentIndex, remaining);
@@ -149,20 +151,23 @@ public class CardPreviewUI : MonoBehaviour
         if (sourceGO == null) return null;
 
         CardAsset cardAsset = sourceGO.GetComponent<OneCreatureManager>()?.cardAsset
-                           ?? sourceGO.GetComponent<OneBuildingManager>()?.cardAsset;
+                        ?? sourceGO.GetComponent<OneBuildingManager>()?.cardAsset;
         if (cardAsset == null) return null;
 
-        GameObject preview = Instantiate(GetPrefab(cardAsset), targetingAnchor);
+        if (effectTriggeredPrefab == null) return null;
+
+        GameObject preview = Instantiate(effectTriggeredPrefab, targetingAnchor);
         preview.transform.localPosition = Vector3.zero;
-        preview.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+        preview.transform.localRotation = Quaternion.identity;
 
         OneCardManager manager = preview.GetComponent<OneCardManager>();
         manager.cardAsset = cardAsset;
-        manager.ReadCardFromAsset();
+        manager.ReadEffectFromAsset(selection.Data.EffectName);
 
         preview.SetActive(true);
         return preview;
     }
+
 
     private void HandleTargetingEnded()
     {
@@ -192,9 +197,9 @@ public class CardPreviewUI : MonoBehaviour
 
     private void ShowPreview(CardAsset asset, Vector2 previewPosition)
     {
-        GameObject prefab = GetPrefab(asset);
+        if (cardPreviewPrefab == null) return;
 
-        if (currentPreview != null && prefab != currentPrefab)
+        if (currentPreview != null && currentPrefab != cardPreviewPrefab)
         {
             Destroy(currentPreview);
             currentPreview = null;
@@ -202,10 +207,10 @@ public class CardPreviewUI : MonoBehaviour
 
         if (currentPreview == null)
         {
-            currentPreview = Instantiate(prefab, previewAnchor);
+            currentPreview = Instantiate(cardPreviewPrefab, previewAnchor);
             currentPreview.transform.localPosition = Vector3.zero;
-            currentPreview.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-            currentPrefab = prefab;
+            currentPreview.transform.localRotation = Quaternion.identity;
+            currentPrefab = cardPreviewPrefab;
         }
 
         OneCardManager manager = currentPreview.GetComponent<OneCardManager>();
@@ -218,6 +223,7 @@ public class CardPreviewUI : MonoBehaviour
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
     }
+
 
     public void Hide()
     {

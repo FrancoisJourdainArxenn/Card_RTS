@@ -9,10 +9,10 @@ public class BezierArrows : MonoBehaviour
     public float scaleFactor = 1f;
 
     #region Private Fields
-    private Transform origin;
     private List<Transform> arrowNodes = new List<Transform>();
     private List<Vector3> controlPoints = new List<Vector3>();
     [SerializeField] public Transform originOverride;
+    private Transform Origin => originOverride != null ? originOverride : this.transform;
     private readonly List<Vector2> controlPointsFactors = new List<Vector2>
     {
         new Vector2(-0.3f, 0.8f),
@@ -22,8 +22,6 @@ public class BezierArrows : MonoBehaviour
 
     void Awake()
     {
-        this.origin = originOverride != null ? originOverride : this.transform;
-
         for (int i = 0; i < this.arrowNodeNum; ++i)
             this.arrowNodes.Add(Instantiate(this.ArrowNodePrefab, this.transform).transform);
 
@@ -53,7 +51,7 @@ public class BezierArrows : MonoBehaviour
     {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
 
-        this.controlPoints[0] = this.origin.position;
+        this.controlPoints[0] = Origin.position;
         this.controlPoints[3] = mouseWorldPos;
 
         // Apply the curve factors to the XY delta; keep Z flat
@@ -98,9 +96,9 @@ public class BezierArrows : MonoBehaviour
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         // Plane perpendicular to Z axis at the same depth as the emitter
-        Plane gamePlane = new Plane(Vector3.up, origin.position);
+        Plane gamePlane = new Plane(Vector3.up, Origin.position);
         if (gamePlane.Raycast(ray, out float distance))
             return ray.GetPoint(distance);
-        return origin.position; // fallback
+        return Origin.position; // fallback
     }
 }

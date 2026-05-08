@@ -5,48 +5,42 @@ public class HoverArrow : MonoBehaviour
 {
     [SerializeField] private float arcHeight = 3f;
     [SerializeField] private int resolution = 30;
+    private Transform _startTransform;
+    private Transform _endTransform;
 
     private LineRenderer _line;
     private Vector3 _start;
     private Vector3 _end;
     private bool _active;
 
-    void Awake()
+    public void Show(Transform start, Transform end)
     {
-        _line = GetComponent<LineRenderer>();
-        _line.enabled = false;
+        if(_line == null) _line = GetComponent<LineRenderer>();
+        _startTransform = start;
+        _endTransform = end;
+        gameObject.SetActive(true);
     }
 
     void Update()
     {
-        if (_active)
-            DrawCurve();
-    }
-
-    public void Show(Vector3 start, Vector3 end)
-    {
-        _start = start;
-        _end = end;
-        _active = true;
-        _line.enabled = true;
+        _start = _startTransform.position;
+        _end = _endTransform.position;
         DrawCurve();
-    }
-
-    public void UpdateEnd(Vector3 end)
-    {
-        _end = end;
     }
 
     public void Hide()
     {
-        _active = false;
-        _line.enabled = false;
+        gameObject.SetActive(false);
     }
 
     private void DrawCurve()
     {
         _line.positionCount = resolution;
-        Vector3 apex = (_start + _end) * 0.5f + Vector3.up * arcHeight;
+
+        Vector3 mid = (_start + _end) * 0.5f;
+        Vector3 dir = (_end - _start).normalized;
+        Vector3 perp = Vector3.Cross(dir, Vector3.up).normalized;
+        Vector3 apex = mid + perp * arcHeight;
 
         for (int i = 0; i < resolution; i++)
         {
@@ -54,7 +48,6 @@ public class HoverArrow : MonoBehaviour
             _line.SetPosition(i, Bezier(_start, apex, _end, t));
         }
     }
-
     private static Vector3 Bezier(Vector3 p0, Vector3 p1, Vector3 p2, float t)
     {
         float u = 1f - t;
