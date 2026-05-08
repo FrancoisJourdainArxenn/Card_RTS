@@ -23,9 +23,13 @@ public partial class EffectContext
 
             candidates = query.statusFilter switch
             {
-                TargetStatusFilter.Melee  => candidates.Where(t => t is CreatureLogic c && c.IsMelee),
-                TargetStatusFilter.Ranged => candidates.Where(t => t is CreatureLogic c && c.IsRanged),
-                _                         => candidates
+                TargetStatusFilter.Melee      => candidates.Where(t => t is ILivable c && c.IsMelee),
+                TargetStatusFilter.Ranged     => candidates.Where(t => t is ILivable c && c.IsRanged),
+                TargetStatusFilter.MeleeFirst => candidates.Any(t => t is ILivable c && c.IsMelee)
+                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
+                    : candidates,
+                TargetStatusFilter.Damaged    => candidates.Where(t => t is ILivable l && l.IsDamaged),
+                _                             => candidates
             };
 
             if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource && Source?.Zone != null)

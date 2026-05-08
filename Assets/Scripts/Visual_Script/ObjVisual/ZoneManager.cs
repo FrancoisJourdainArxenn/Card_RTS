@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ZoneManager : MonoBehaviour, ITargetable, IPointerClickHandler
+public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandler
 {
     [Header("Adjacent Zones")]
     public List<ZoneManager> adjacentZones;

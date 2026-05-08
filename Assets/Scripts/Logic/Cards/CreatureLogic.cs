@@ -12,20 +12,14 @@ public class CreatureLogic: ILivable
 
     // PROPERTIES
     // property from ILivable interface
-    public int ID
-    {
-        get{ return UniqueCreatureID; }
-    }
+    public int ID => UniqueCreatureID;
     public string DisplayName => ca.name;
 
     public int BaseID {get; private set;}
     // the basic health that we have in CardAsset
     private int baseHealth;
     // health with all the current buffs taken into account
-    public int MaxHealth
-    {
-        get{ return baseHealth;}
-    }
+    public int MaxHealth => baseHealth;
 
     // current health of this creature
     private int health;
@@ -68,37 +62,20 @@ public class CreatureLogic: ILivable
 
     // property for Attack
     private int baseAttack;
-    public int Attack
-    {
-        get{ return baseAttack; }
-    }
+    public int Attack => baseAttack;
      
     // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
     private int attacksForOneTurn = 1;
-    public int AttacksLeftThisTurn
-    {
-        get;
-        set;
-    }
+    public int AttacksLeftThisTurn { get; set; }
 
     // number of movements for one turn if (movementsForOneTurn==2) => Celerity
     private int movementsForOneTurn = 1;
-    public int MovementsLeftThisTurn
-    {
-        get;
-        set;
-    }
+    public int MovementsLeftThisTurn { get; set; }
 
     public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
 
-    public bool IsMelee
-    {
-        get { return ca.melee; }
-    }
-    public bool IsRanged
-    {
-        get { return !ca.melee; }
-    }
+    public bool IsMelee => ca.melee;
+    public bool IsRanged => !ca.melee;
     public bool Targetable
     {
         get

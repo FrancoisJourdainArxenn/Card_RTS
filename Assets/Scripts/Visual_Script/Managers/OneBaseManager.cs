@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class OneBaseManager : MonoBehaviour, ITargetable
+public class OneBaseManager : MonoBehaviour, ITargetableVisual
 {
     public BaseAsset baseAsset;
     public int CurrentHealth { get; private set; }
@@ -125,6 +125,16 @@ public class OneBaseManager : MonoBehaviour, ITargetable
             baseVisual.ResetBuildingZone();
             Destroy(gameObject);
         }
+        HealthText.text = CurrentHealth.ToString();
+    }
+
+    public void HealDamage(int amount, int healthAfter)
+    {
+        if (amount <= 0)
+            return;
+
+        CurrentHealth = Mathf.Min(baseAsset.MaxHealth, healthAfter);
+        DamageEffect.CreateDamageEffect(transform.position, -amount);
         HealthText.text = CurrentHealth.ToString();
     }
 

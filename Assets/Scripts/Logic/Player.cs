@@ -77,6 +77,10 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
+    public int MaxHealth
+    {
+        get { return baseAsset.MaxHealth;}
+    }
 
     //private int mainRessourceAvailable;
     public int MainRessourceAvailable
