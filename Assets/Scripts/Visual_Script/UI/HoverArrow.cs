@@ -38,7 +38,8 @@ public class HoverArrow : MonoBehaviour
 
     void Update()
     {
-        if (_startTransform == null) return;
+        if (_startTransform == null) { Hide(); return; }
+        if (!_followMouse && _endTransform == null) { Hide(); return; }
 
         _start = _startTransform.position;
         _end = _followMouse ? GetMouseWorldPosition() : _endTransform.position;

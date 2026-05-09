@@ -37,6 +37,7 @@ Transform:
   - {fileID: 3943300099967023651}
   - {fileID: 7165418902205234437}
   - {fileID: 1583018141698161382}
+  - {fileID: 7791550586606667239}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8468115925956771946
@@ -412,8 +413,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 1}
-      key1: {r: 1, g: 1, b: 1, a: 1}
+      key0: {r: 1, g: 0.48200065, b: 0, a: 1}
+      key1: {r: 1, g: 0, b: 0, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -437,7 +438,7 @@ LineRenderer:
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: -1
+      m_ColorSpace: 0
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
@@ -590,8 +591,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.79330486, y: 0.0877479}
   m_AnchorMax: {x: 0.9318499, y: 0.19169998}
-  m_AnchoredPosition: {x: 66.44751, y: 256.2984}
-  m_SizeDelta: {x: 137.5629, y: -22.688492}
+  m_AnchoredPosition: {x: -45.07, y: 284.2}
+  m_SizeDelta: {x: -2.48, y: -17.329}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6541985452900729748
 CanvasRenderer:
@@ -687,7 +688,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -38.047523, y: -34.52873, z: 182.04242, w: 29.786173}
+  m_margin: {x: 3.9830022, y: -2.0845776, z: 0.43859866, w: 0.1147232}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1073,6 +1074,37 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!1 &5578332722745137734
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7791550586606667239}
+  m_Layer: 0
+  m_Name: CenterPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7791550586606667239
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578332722745137734}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.012, y: 0.42448, z: 0.376}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1670990553462151866}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6452760144860771032
 GameObject:
   m_ObjectHideFlags: 0
@@ -1266,8 +1298,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.08384804, y: 0.081}
   m_AnchorMax: {x: 0.22229469, y: 0.19034548}
-  m_AnchoredPosition: {x: 108.50046, y: 259.34714}
-  m_SizeDelta: {x: 137.83081, y: -21.340942}
+  m_AnchoredPosition: {x: 37.14, y: 286.84}
+  m_SizeDelta: {x: -4.9, y: -20.83}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4367404943766338588
 CanvasRenderer:
@@ -1363,7 +1395,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -0.15366362, y: -29.185753, z: 143.49776, w: 31.221842}
+  m_margin: {x: -0.15366362, y: 0.9032116, z: 0.9411693, w: 1.0745012}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
