@@ -62,7 +62,7 @@ public class CreatureLogic: ILivable
 
     // property for Attack
     private int baseAttack;
-    public int Attack => baseAttack;
+    public int Attack { get; set; }
      
     // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
     private int attacksForOneTurn = 1;
@@ -106,6 +106,7 @@ public class CreatureLogic: ILivable
         baseHealth = ca.MaxHealth;
         Health = ca.MaxHealth;
         baseAttack = ca.Attack;
+        Attack = baseAttack;
         attacksForOneTurn = ca.AttacksForOneTurn;
         movementsForOneTurn = ca.MoveSpeed;
         // AttacksLeftThisTurn is now equal to 0

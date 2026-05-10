@@ -32,7 +32,7 @@ public class BuildingLogic : ILivable
     }
 
     private int baseAttack;
-    public int Attack => baseAttack;
+    public int Attack { get; set; }
 
     private int attacksForOneTurn = 0;
     private int activationForOneTurn = 0;
@@ -62,6 +62,7 @@ public class BuildingLogic : ILivable
         baseHealth = ca.MaxHealth;
         health = ca.MaxHealth;
         baseAttack = ca.Attack;
+        Attack = baseAttack;
         attacksForOneTurn = ca.AttacksForOneTurn;
         activationForOneTurn = ca.ActivationsForOneTurn;
         UniqueBuildingID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();

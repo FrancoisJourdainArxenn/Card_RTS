@@ -21,19 +21,15 @@ public class DealDamageCommand : Command {
         {
             // target is a hero
             target.GetComponent<MainBaseVisual>().TakeDamage(amount, healthAfter);
+            return;
         }
-        else if (target != null && target.GetComponent<OneBaseManager>() != null)
-        {
+        if (target == null)
+            return;
+        if (target.GetComponent<OneBaseManager>() != null)
             target.GetComponent<OneBaseManager>().TakeDamage(amount, healthAfter);
-        }
-        else if (target != null && target.GetComponent<OneBuildingManager>() != null)
-        {
-            target.GetComponent<OneBuildingManager>().TakeDamage(amount, healthAfter);
-        }
-        else
-        {
-            target?.GetComponent<OneCreatureManager>()?.TakeDamage(amount, healthAfter);
-        }
+        else if (target.GetComponent<OneLivableManager>() != null)
+            target.GetComponent<OneLivableManager>().TakeDamage(amount, healthAfter);
+        
         CommandExecutionComplete();
     }
 }
