@@ -16,6 +16,7 @@ public interface ILivable: IIdentifiable
     public bool IsDamaged => Health < MaxHealth;
     public bool IsMelee => false;
     public bool IsRanged => false;
+    public int Attack { get; set; }
     void Die();
 }
 

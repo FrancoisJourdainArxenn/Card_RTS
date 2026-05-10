@@ -102,7 +102,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         this.baseAsset = baseAsset;
         ReadBaseFromAsset();
     }
-
+    
     public void TakeDamage(int amount, int healthAfter)
     {
         if (amount <= 0)
