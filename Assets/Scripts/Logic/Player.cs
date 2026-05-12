@@ -82,6 +82,14 @@ public class Player : MonoBehaviour, ILivable
         get { return baseAsset.MaxHealth;}
     }
 
+    // TODO clean this
+    public int Attack {
+        get {
+            return 0;
+        }
+        set {} 
+    }
+
     //private int mainRessourceAvailable;
     public int MainRessourceAvailable
     {

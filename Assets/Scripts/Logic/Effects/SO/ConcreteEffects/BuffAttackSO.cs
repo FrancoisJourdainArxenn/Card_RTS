@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public abstract class HealthEffectSO : EffectSO
+[CreateAssetMenu(menuName = "Effects/BuffAttackSO")]
+public class BuffAttackSO : EffectSO
 {
     public override void Execute(
         string EffectName,
@@ -22,4 +23,12 @@ public abstract class HealthEffectSO : EffectSO
         Log($"{EffectName}: {parameters.Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
         ApplyEffect(effectInfo, affectedElements, parameters);
     }
+
+    protected override void ApplyToTarget(ILivable target, int amount)
+    {
+        new BuffAttackCommand(target.ID, amount, target.Attack + amount).AddToQueue();
+        target.Attack += amount;
+    }
+    protected override bool IsTargetSaturated(EffectTarget target) => false;
+    public override string GetDescription(EffectParameters parameters) => $"Ajoute {parameters.Amount} Attack";
 }

@@ -80,14 +80,12 @@ public class OneCreatureManager : OneLivableManager
 
     public void OnCreatureClicked()
     {
-        TurnManager.TurnPhases phase = TurnManager.Instance.CurrentPhase;
-
-        if (phase == TurnManager.TurnPhases.BeginCombat)
+        if (!EffectTargetingManager.IsComplete)
         {
             IDHolder idHolder = GetComponent<IDHolder>();
             if (idHolder == null) return;
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature)) return;
-            BeginCombatEffectManager.OnEntityClicked(creature);
+            EffectTargetingManager.OnEntityClicked(creature);
             return;
         }
 

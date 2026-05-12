@@ -19,7 +19,14 @@ public class BaseLogic: ILivable
 
     private int baseHealth;
     public int MaxHealth => baseHealth;
-
+    
+    // TODO clean this
+    public int Attack {
+        get {
+            return 0;
+        }
+        set {} 
+    }
     private int health;
     public int Health
     {

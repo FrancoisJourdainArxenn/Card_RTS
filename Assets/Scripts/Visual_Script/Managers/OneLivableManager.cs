@@ -60,6 +60,17 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
+    public void BuffAttack(int amount, int attackAfter)
+    {
+        if (amount <= 0)
+            return;
+        
+        Debug.Log($"{cardAsset.name} gains {amount} attack. {attackAfter} attack now.");
+        DamageEffect.CreateDamageEffect(transform.position, -amount);
+        AttackText.text = attackAfter.ToString();
+        GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
+    }
+
     public virtual void UpgdateGlow() {}
     
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)

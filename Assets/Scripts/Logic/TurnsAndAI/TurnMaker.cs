@@ -21,21 +21,29 @@ public abstract class TurnMaker : MonoBehaviour {
     public virtual void OnRegroupPhaseStart()
     {
         p.OnTurnStart();
-        EffectProcessor.NotifyRegroup(p);
-        if(NetworkSessionData.IsNetworkSession)
+        if (NetworkSessionData.IsNetworkSession)
         {
-            if(NetworkManager.Singleton.IsServer)
+            if (NetworkManager.Singleton.IsServer)
                 GameNetworkManager.Instance.BroadCastDrawCard(p.playerIndex);
         }
         else
         {
             p.DrawACard();
         }
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            EffectTargetingManager.StartSession(p, TriggerType.OnRegroup);
     }
 
     public virtual void OnCommandPhaseEntered()
     {
-        EffectProcessor.NotifyCommand(p);
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            EffectTargetingManager.StartSession(p, TriggerType.OnCommand);
     }
 
     public virtual void OnBeginCombatPhaseEntered()
@@ -46,13 +54,16 @@ public abstract class TurnMaker : MonoBehaviour {
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            BeginCombatEffectManager.StartSession(p);
+            EffectTargetingManager.StartSession(p, TriggerType.OnBeginCombat);
     }
 
     public virtual void OnEndPhaseEntered()
     {
-        EffectProcessor.NotifyBattleEnd(p);
-        EffectProcessor.NotifyEndTurn(p);
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            EffectTargetingManager.StartSession(p, TriggerType.OnBattleEnd, TriggerType.OnEndTurn);
     }
 
 }

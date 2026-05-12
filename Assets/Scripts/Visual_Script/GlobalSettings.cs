@@ -127,11 +127,13 @@ public class GlobalSettings : MonoBehaviour
         bool isLocalPlayer        = player.MainPArea.AllowedToControlThisPlayer;
         bool gameActive           = player.MainPArea.ControlsON;
         bool notYetReady          = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
-        bool waitingForSelection  = TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat
-                                    && BeginCombatEffectManager.BlocksEndPhaseButton(player);
+        bool hasActiveTargeting   = !EffectTargetingManager.IsComplete;
+        bool waitingForSelection  = hasActiveTargeting && EffectTargetingManager.BlocksEndPhaseButton(player);
 
-        // Interactable uniquement pour le joueur local qui n'a pas encore confirmé et peut agir
-        button.interactable = isLocalPlayer && gameActive && notYetReady && !waitingForSelection;
+        // Interactable si le joueur peut confirmer ses sélections ou terminer sa phase normalement
+        bool canConfirmTargeting = isLocalPlayer && hasActiveTargeting && !waitingForSelection;
+        bool canEndPhaseNormally = isLocalPlayer && gameActive && notYetReady && !waitingForSelection;
+        button.interactable = canConfirmTargeting || canEndPhaseNormally;
 
         // Feedback couleur pour le bouton du joueur adverse
         if (!isLocalPlayer)
