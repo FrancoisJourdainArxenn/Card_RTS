@@ -9,7 +9,8 @@ public class BuffAttackSO : EffectSO
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters
+        EffectParameters parameters,
+        EffectVisualData visualData
     )
     {
         Log($"{EffectName}: Execution");
@@ -21,10 +22,10 @@ public class BuffAttackSO : EffectSO
         }
 
         Log($"{EffectName}: {parameters.Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
-        ApplyEffect(effectInfo, affectedElements, parameters);
+        ApplyEffect(effectInfo, affectedElements, parameters, visualData);
     }
 
-    protected override void ApplyToTarget(ILivable target, int amount)
+    protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData)
     {
         new BuffAttackCommand(target.ID, amount, target.Attack + amount, visualData).AddToQueue();
         target.Attack += amount;

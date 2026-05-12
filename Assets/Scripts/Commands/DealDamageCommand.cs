@@ -8,18 +8,27 @@ public class DealDamageCommand : Command
     private int healthAfter;
     private EffectVisualData visualData;
 
-    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1)
+    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1, EffectVisualData visualData = null)
     {
         this.targetID = targetID;
         this.amount = amount;
         this.healthAfter = healthAfter;
         this.sourceID = sourceID;
+        this.visualData = visualData;
     }
 
     public override void StartCommandExecution()
     {
         GameObject target = IDHolder.GetGameObjectWithID(targetID);
         if (target == null) { CommandExecutionComplete(); return; }
+
+        if (visualData != null)
+        {
+            target.GetComponent<VfxManager>()?.Play(visualData, amount);
+            ApplyDamageVisual(target);
+            CommandExecutionComplete();
+            return;
+        }
 
         if (sourceID != -1)
         {

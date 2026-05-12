@@ -7,7 +7,8 @@ public class DrawCardsSO : EffectSO
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters
+        EffectParameters parameters,
+        EffectVisualData visualData
     )
     {
         if (context.Caster == null)
@@ -22,7 +23,7 @@ public class DrawCardsSO : EffectSO
     }
 
     // Jamais appelées — on bypass ApplyEffect — mais abstraites dans EffectSO
-    protected override void ApplyToTarget(ILivable target, int amount) { }
+    protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData) { }
     protected override bool IsTargetSaturated(EffectTarget target) => false;
 
     public override string GetDescription(EffectParameters parameters) =>
