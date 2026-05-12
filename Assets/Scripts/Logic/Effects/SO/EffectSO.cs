@@ -5,6 +5,9 @@ using UnityEngine;
 public abstract class EffectSO : ScriptableObject
 {
     public string Description = "";
+    [SerializeField] protected EffectVisualData visualData;
+    protected int _sourceID = -1; //A retirer si ça fou la merde 
+
     
     protected class EffectTarget
     {

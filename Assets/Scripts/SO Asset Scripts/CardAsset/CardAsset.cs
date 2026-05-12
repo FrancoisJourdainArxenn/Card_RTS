@@ -16,6 +16,7 @@ public enum SubType
     Swarm,
     Robot,
     Mechanical,
+    Building,
 }
 
 public enum TargetingOptions

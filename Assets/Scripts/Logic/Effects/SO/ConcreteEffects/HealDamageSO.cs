@@ -5,7 +5,7 @@ public class HealDamageSO : HealthEffectSO
 {
     protected override void ApplyToTarget(ILivable target, int amount)
     {
-        new HealDamageCommand(target.ID, amount, target.Health + amount).AddToQueue();
+        new HealDamageCommand(target.ID, amount, target.Health + amount, visualData).AddToQueue();
         target.Health += amount;
     }
 

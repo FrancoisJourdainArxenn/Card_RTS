@@ -109,7 +109,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             return;
 
         CurrentHealth = Mathf.Max(0, healthAfter);
-        DamageEffect.CreateDamageEffect(transform.position, amount);
+        VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
 
         if (CurrentHealth <= 0)
         {
@@ -134,7 +134,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             return;
 
         CurrentHealth = Mathf.Min(baseAsset.MaxHealth, healthAfter);
-        DamageEffect.CreateDamageEffect(transform.position, -amount);
+        // DamageEffect.CreateDamageEffect(transform.position, -amount);
         HealthText.text = CurrentHealth.ToString();
     }
 

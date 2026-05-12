@@ -13,3 +13,11 @@ MonoBehaviour:
   m_Name: BuffAttackSO
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
   Description: 
+  visualData:
+    vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+    overlayMaterial: {fileID: 0}
+    overlayDuration: 0
+    vfxLifetime: 1
+    AttackDuration: 0.3
+    showAmount: 1
+    textColor: {r: 0.4625756, g: 0.79275066, b: 0.990566, a: 1}

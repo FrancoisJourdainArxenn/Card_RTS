@@ -1,39 +1,57 @@
 using UnityEngine;
-using System.Collections;
-
-public class DealDamageCommand : Command {
-
+using DG.Tweening;
+public class DealDamageCommand : Command
+{
     private int targetID;
+    private int sourceID;
     private int amount;
     private int healthAfter;
+    private EffectVisualData visualData;
 
-    public DealDamageCommand( int targetID, int amount, int healthAfter)
+    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1)
     {
         this.targetID = targetID;
         this.amount = amount;
         this.healthAfter = healthAfter;
+        this.sourceID = sourceID;
     }
 
     public override void StartCommandExecution()
     {
         GameObject target = IDHolder.GetGameObjectWithID(targetID);
-        if (target == null)
+        if (target == null) { CommandExecutionComplete(); return; }
+
+        if (sourceID != -1)
         {
-            CommandExecutionComplete();
-            return;
+            GameObject source = IDHolder.GetGameObjectWithID(sourceID);
+            CreatureAttackVisual attackVisual = source?.GetComponent<CreatureAttackVisual>();
+            if (attackVisual != null)
+            {
+                CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out var sourceLogic);
+                int sourceHealth = sourceLogic?.Health ?? 0;
+                DOVirtual.DelayedCall(0.2f, () =>
+                    attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter)
+                ).SetLink(source);
+                return;
+            }
         }
-        if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
+
+        ApplyDamageVisual(target);
+        CommandExecutionComplete();
+    }
+
+    private void ApplyDamageVisual(GameObject target)
+    {
+        bool isPlayer = targetID == GlobalSettings.Instance.LowPlayer.PlayerID
+                     || targetID == GlobalSettings.Instance.TopPlayer.PlayerID;
+        if (isPlayer)
         {
-            // target is a hero
-            target.GetComponent<MainBaseVisual>().TakeDamage(amount, healthAfter);
-            CommandExecutionComplete();
+            target.GetComponent<MainBaseVisual>()?.TakeDamage(amount, healthAfter);
             return;
         }
         if (target.GetComponent<OneBaseManager>() != null)
             target.GetComponent<OneBaseManager>().TakeDamage(amount, healthAfter);
         else if (target.GetComponent<OneLivableManager>() != null)
             target.GetComponent<OneLivableManager>().TakeDamage(amount, healthAfter);
-        
-        CommandExecutionComplete();
     }
 }

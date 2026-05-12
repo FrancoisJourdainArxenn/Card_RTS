@@ -27,7 +27,7 @@ public class BuildingAttackCommand : Command
         if (attackerGO != null)
         {
             if (damageTakenByAttacker > 0)
-                DamageEffect.CreateDamageEffect(attackerGO.transform.position, damageTakenByAttacker);
+                VisualFeedbackEffect.CreateDamageEffect(attackerGO.transform.position, damageTakenByAttacker);
             OneBuildingManager attackerManager = attackerGO.GetComponent<OneBuildingManager>();
             if (attackerManager != null)
                 attackerManager.HealthText.text = attackerHealthAfter.ToString();
@@ -36,7 +36,7 @@ public class BuildingAttackCommand : Command
         if (targetGO != null)
         {
             if (damageTakenByTarget > 0)
-                DamageEffect.CreateDamageEffect(targetGO.transform.position, damageTakenByTarget);
+                VisualFeedbackEffect.CreateDamageEffect(targetGO.transform.position, damageTakenByTarget);
 
             if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID))
                 targetGO.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
