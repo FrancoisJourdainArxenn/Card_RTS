@@ -11,9 +11,9 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 9bb4715f66e5a38439bcf52b544e48bb, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _SURFACE_TYPE_TRANSPARENT
-  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -27,6 +27,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _EffectTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _HealText:
         m_Texture: {fileID: 2800000, guid: ed2c1e12d59b89948b8bf5a655ef7aec, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -57,6 +61,7 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _CastShadows: 1
+    - _ColorMask: 15
     - _Cull: 2
     - _DstBlend: 10
     - _DstBlendAlpha: 10
@@ -65,14 +70,22 @@ Material:
     - _QueueOffset: 0
     - _SrcBlend: 5
     - _SrcBlendAlpha: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
     - _Surface: 1
+    - _UIMaskSoftnessX: 1
+    - _UIMaskSoftnessY: 1
     - _ZTest: 4
     - _ZWrite: 0
     - _ZWriteControl: 0
     m_Colors:
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0.197098, g: 1, b: 0, a: 1}
-    - _Main_Color: {r: 0.58746594, g: 2.9960783, b: 0, a: 1}
-    - _Power: {r: 10, g: 0, b: 0, a: 0}
+    - _Main_Color: {r: 0.5620535, g: 3.0672052, b: 0, a: 1}
+    - _Power: {r: 5, g: 5, b: 0, a: 0}
     - _SpeedForce: {r: 1, g: 1, b: 0, a: 0}
     - _Tiling: {r: 2, g: 2, b: 0, a: 0}
     - _Tilling: {r: 2, g: 2, b: 0, a: 0}
