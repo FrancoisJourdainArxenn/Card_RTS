@@ -2763,7 +2763,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1382fe5f7291e804db09f7c0546b3d54, type: 2}
   - {fileID: 11400000, guid: 9f4841127758a644bb98cabac6aed838, type: 2}
   buildings:
-  - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
+  - {fileID: 11400000, guid: 4f050af837ad239499879d5e640d464a, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
 --- !u!1 &633582952
@@ -2883,7 +2883,7 @@ MonoBehaviour:
   slots: {fileID: 662666358}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
-  OtherCardDrawSourceTransform: {fileID: 0}
+  OtherCardDrawSourceTransform: {fileID: 189538862}
   PlayPreviewSpot: {fileID: 189538862}
 --- !u!4 &662666357
 Transform:
@@ -6325,7 +6325,7 @@ MonoBehaviour:
   slots: {fileID: 1438455305}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
-  OtherCardDrawSourceTransform: {fileID: 0}
+  OtherCardDrawSourceTransform: {fileID: 189538862}
   PlayPreviewSpot: {fileID: 189538862}
 --- !u!1001 &1439204025
 PrefabInstance:
