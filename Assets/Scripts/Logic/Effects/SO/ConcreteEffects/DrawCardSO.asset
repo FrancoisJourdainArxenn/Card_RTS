@@ -9,15 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
-  m_Name: BuffAttackSO
-  m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
+  m_Script: {fileID: 11500000, guid: 064c001bf9214ef41b45207ebe5af8d6, type: 3}
+  m_Name: DrawCardSO
+  m_EditorClassIdentifier: Assembly-CSharp::DrawCardsSO
   Description: 
   visualData:
-    vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+    vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}
-    overlayDuration: 0
-    vfxLifetime: 1
+    overlayDuration: 1.5
+    vfxLifetime: 3
     AttackDuration: 0.3
     showAmount: 1
-    textColor: {r: 0.4625756, g: 0.79275066, b: 0.990566, a: 1}
+    textColor: {r: 1, g: 1, b: 1, a: 1}

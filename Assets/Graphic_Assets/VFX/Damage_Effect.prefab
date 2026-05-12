@@ -142,8 +142,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: -X
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
-  m_sharedMaterial: {fileID: 7467016293197990090, guid: 95ead4b99af748648a4a104acb3a657b, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -167,7 +167,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 2.45
+  m_fontSize: 2.2
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -337,9 +337,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 39351459037889294}
-  - component: {fileID: 8171865827196829278}
+  - component: {fileID: 7035055954016065695}
   m_Layer: 0
-  m_Name: DamageEffect
+  m_Name: Damage_Effect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -361,7 +361,7 @@ Transform:
   - {fileID: 6251973787714879596}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
---- !u!114 &8171865827196829278
+--- !u!114 &7035055954016065695
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -370,10 +370,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 8646957825748758392}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11a00e47212724346ac469c370e0767c, type: 3}
+  m_Script: {fileID: 11500000, guid: d50565ef43fef7e4f993f3852920dc26, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DamageEffect
-  Splashes:
+  m_EditorClassIdentifier: Assembly-CSharp::VisualFeedbackEffect
+  damagePrefab: {fileID: 0}
+  splashes:
+  - {fileID: -583723805, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
   - {fileID: -583723805, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
   - {fileID: 630426766, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
   - {fileID: 227918025, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
@@ -390,6 +392,6 @@ MonoBehaviour:
   - {fileID: -1141703174, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
   - {fileID: -2007088051, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
   - {fileID: -1232208374, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  DamageImage: {fileID: 1331067025434292697}
+  damageImage: {fileID: 1331067025434292697}
   cg: {fileID: 938873067984362573}
-  AmountText: {fileID: 647838653913987161}
+  amountText: {fileID: 647838653913987161}

@@ -43,7 +43,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             return;
         
         Debug.Log($"{cardAsset.name} took {amount} damage. {healthAfter} left afterwards.");
-        DamageEffect.CreateDamageEffect(transform.position, amount);
+        VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
@@ -55,7 +55,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         
         int currentHealth = Mathf.Min(cardAsset.MaxHealth, healthAfter);
         Debug.Log($"{cardAsset.name} heal {amount} damage. {currentHealth} left afterwards.");
-        DamageEffect.CreateDamageEffect(transform.position, -amount);
+        // DamageEffect.CreateDamageEffect(transform.position, -amount);
         HealthText.text = currentHealth.ToString();
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
@@ -66,7 +66,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             return;
         
         Debug.Log($"{cardAsset.name} gains {amount} attack. {attackAfter} attack now.");
-        DamageEffect.CreateDamageEffect(transform.position, -amount);
+        // DamageEffect.CreateDamageEffect(transform.position, -amount);
         AttackText.text = attackAfter.ToString();
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }

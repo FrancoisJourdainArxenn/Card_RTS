@@ -6,12 +6,15 @@ public class HealDamageCommand : Command {
     private int targetID;
     private int amount;
     private int healthAfter;
+    private EffectVisualData visualData;
 
-    public HealDamageCommand( int targetID, int amount, int healthAfter)
+
+    public HealDamageCommand(int targetID, int amount, int healthAfter, EffectVisualData visualData = null)
     {
         this.targetID = targetID;
         this.amount = amount;
         this.healthAfter = healthAfter;
+        this.visualData = visualData;
     }
 
     public override void StartCommandExecution()
@@ -34,6 +37,8 @@ public class HealDamageCommand : Command {
         {
             target?.GetComponent<OneCreatureManager>()?.HealDamage(amount, healthAfter);
         }
+        target?.GetComponent<VfxManager>()?.Play(visualData, amount);
+
         CommandExecutionComplete();
     }
 }

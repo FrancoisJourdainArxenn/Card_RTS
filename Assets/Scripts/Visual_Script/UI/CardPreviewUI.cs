@@ -67,6 +67,14 @@ public class CardPreviewUI : MonoBehaviour
         else if (_targetingPreviews.Count > remaining)
         {
             PopFront();
+
+            // Mettre à jour la source de la flèche pour le nouvel effet en tête
+            if (remaining > 0 && hoverArrow != null && arrowEndPoint != null)
+            {
+                GameObject newFrontSourceGO = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
+                if (newFrontSourceGO != null)
+                    hoverArrow.Show(newFrontSourceGO.transform, arrowEndPoint);
+            }
         }
         // equal count = target selected/deselected, no stack change
     }

@@ -39,7 +39,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         Debug.Log("Taking damage: " + amount + " Health after: " + healthAfter);
         if(currentlyVisible)
         {
-            DamageEffect.CreateDamageEffect(transform.position, amount);
+            VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
             HealthText.text = healthAfter.ToString();
         }
         // Keep baseManager in sync so any other reader sees the correct value.
@@ -58,7 +58,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         Debug.Log("Healing damage: " + amount + " Health after: " + currentHealth);
         if(currentlyVisible)
         {
-            DamageEffect.CreateDamageEffect(transform.position, -amount);
+            VisualFeedbackEffect.CreateDamageEffect(transform.position, -amount);
             HealthText.text = currentHealth.ToString();
         }
         // Keep baseManager in sync so any other reader sees the correct value.

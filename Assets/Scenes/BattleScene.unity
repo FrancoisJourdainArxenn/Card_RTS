@@ -1934,7 +1934,7 @@ GameObject:
   m_Component:
   - component: {fileID: 440465261}
   m_Layer: 0
-  m_Name: Effect_Low_Arrow
+  m_Name: Effect_Under_Arrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1952,7 +1952,8 @@ Transform:
   m_LocalPosition: {x: 4.25, y: 1.7499928, z: -1.6500006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1095996409}
   m_Father: {fileID: 219902736}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &441014059
@@ -2829,8 +2830,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
   - {fileID: 11400000, guid: fc5f647e99e6487438d92c23264ad9e9, type: 2}
-  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   - {fileID: 11400000, guid: c44193175e1c9db46917e0b4f0c7b65c, type: 2}
+  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   buildings:
   - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -4992,27 +4993,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1139208193}
-  - component: {fileID: 1139208192}
+  - component: {fileID: 1139208194}
   m_Layer: 0
-  m_Name: DamageEffectTest
+  m_Name: FeedbackEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1139208192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1139208191}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7350ab1ca3cf6347afd69e1199bfd1b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DamageEffectTest
-  DamagePrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
 --- !u!4 &1139208193
 Transform:
   m_ObjectHideFlags: 0
@@ -5028,6 +5016,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1793398063}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!114 &1139208194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139208191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d50565ef43fef7e4f993f3852920dc26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisualFeedbackEffect
+  damagePrefab: {fileID: 8646957825748758392, guid: afc8478b569702e45ab4a99deae60d06, type: 3}
+  textPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
+  splashes: []
+  damageImage: {fileID: 0}
+  cg: {fileID: 0}
+  amountText: {fileID: 0}
 --- !u!1 &1147602225
 GameObject:
   m_ObjectHideFlags: 0
@@ -6116,7 +6122,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1293432355592994448, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_Name
-      value: HoverArrow
+      value: UpperArrow_Targeting
       objectReference: {fileID: 0}
     - target: {fileID: 1293432355592994448, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_IsActive
@@ -6736,6 +6742,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!1 &1474879432
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1474879433}
+  - component: {fileID: 1474879434}
+  m_Layer: 0
+  m_Name: RegisteredTargetManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1474879433
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1474879432}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1793398063}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1474879434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1474879432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aedfa0cb01c629a4ea29b33acb7cb34b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TargetedArrowManager
+  arrowPrefab: {fileID: 2935548585029002072, guid: 7835c8963c99d3c4cad3e1d2a23694d5, type: 3}
 --- !u!1 &1498998919
 GameObject:
   m_ObjectHideFlags: 0
@@ -7848,8 +7899,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1095996409}
   - {fileID: 1139208193}
+  - {fileID: 1474879433}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1798011438 stripped
@@ -9408,23 +9459,23 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1793398063}
+    m_TransformParent: {fileID: 440465261}
     m_Modifications:
     - target: {fileID: 1293432355592994448, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_Name
-      value: HoverArrow
+      value: UnderArrow_Targeting
       objectReference: {fileID: 0}
     - target: {fileID: 3322924101715671293, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.93735
+      value: -6.1873503
       objectReference: {fileID: 0}
     - target: {fileID: 3322924101715671293, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.23915
+      value: -31.510864
       objectReference: {fileID: 0}
     - target: {fileID: 3322924101715671293, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 6.18842
+      value: 9.58842
       objectReference: {fileID: 0}
     - target: {fileID: 3322924101715671293, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_LocalRotation.w

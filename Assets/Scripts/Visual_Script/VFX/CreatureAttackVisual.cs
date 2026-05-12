@@ -89,9 +89,9 @@ public class CreatureAttackVisual : MonoBehaviour
                 }
 
                 if (damageTakenByTarget > 0 && target != null)
-                    DamageEffect.CreateDamageEffect(target.transform.position, damageTakenByTarget);
+                    VisualFeedbackEffect.CreateDamageEffect(target.transform.position, damageTakenByTarget);
                 if (damageTakenByAttacker > 0)
-                    DamageEffect.CreateDamageEffect(transform.position, damageTakenByAttacker);
+                    VisualFeedbackEffect.CreateDamageEffect(transform.position, damageTakenByAttacker);
 
                 if (target != null)
                 {

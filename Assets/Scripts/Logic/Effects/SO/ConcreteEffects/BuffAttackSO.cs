@@ -26,7 +26,7 @@ public class BuffAttackSO : EffectSO
 
     protected override void ApplyToTarget(ILivable target, int amount)
     {
-        new BuffAttackCommand(target.ID, amount, target.Attack + amount).AddToQueue();
+        new BuffAttackCommand(target.ID, amount, target.Attack + amount, visualData).AddToQueue();
         target.Attack += amount;
     }
     protected override bool IsTargetSaturated(EffectTarget target) => false;

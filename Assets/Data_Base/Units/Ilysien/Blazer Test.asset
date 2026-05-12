@@ -29,20 +29,21 @@ MonoBehaviour:
   MoveSpeed: 2
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
-  - {fileID: 11400000, guid: bd8fbdd59b0111344b71ec5a5534be0e, type: 2}
+  Keywords: []
   Effects:
-  - EffectName: Bruler
+  - EffectName: Burn Baby Burn
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 0
+      - targetType: 1
         includesSource: 0
-        queries: []
+        onlySource: 0
+        queries:
+        - team: 2
+          statusFilter: 3
+          zoneFilter: 1
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 1
@@ -50,10 +51,10 @@ MonoBehaviour:
         includesSource: 0
         queries:
         - team: 2
-          statusFilter: 0
+          statusFilter: 3
           zoneFilter: 1
       repartition: 2
     Parameters:
-      Amount: 3
+      Amount: 10
       TokenToSummon: {fileID: 0}
       Placement: 0

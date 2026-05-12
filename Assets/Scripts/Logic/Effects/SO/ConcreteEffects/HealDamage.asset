@@ -13,3 +13,10 @@ MonoBehaviour:
   m_Name: HealDamage
   m_EditorClassIdentifier: Assembly-CSharp::HealDamageSO
   Description: 
+  visualData:
+    vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
+    overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
+    overlayDuration: 1
+    vfxLifetime: 1.5
+    showAmount: 1
+    textColor: {r: 0.7513349, g: 1, b: 0.4292453, a: 1}

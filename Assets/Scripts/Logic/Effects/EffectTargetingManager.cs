@@ -55,13 +55,13 @@ public static class EffectTargetingManager
 
         if (!NetworkSessionData.IsNetworkSession)
         {
-            if (_confirmedPlayers.Contains(playerIndex)) return true;    // already confirmed
-            if (_currentLocalPlayerIndex != playerIndex) return true;    // not this player's turn
+            if (_confirmedPlayers.Contains(playerIndex)) return true;
+            if (_currentLocalPlayerIndex != playerIndex) return true;
         }
 
-        return _selectionCursor < _selectionQueue.Count
-            && _selectionQueue[_selectionCursor].SelectedTarget == null;
+        return _selectionCursor < _selectionQueue.Count;
     }
+
 
     // =========================================================================
     // Phase lifecycle
@@ -278,10 +278,26 @@ public static class EffectTargetingManager
 
         currentSelection.SelectedTarget = clickedEntity;
         Debug.Log($"Entity {clickedEntity.DisplayName} selected");
-        ShowCurrentSelectionWithChoice();
+        TargetingVisualEvents.RaiseTargetingStarted(_selectionQueue, _selectionCursor);
+        _selectionCursor++;
+
+        if (_selectionCursor < _selectionQueue.Count)
+        {
+            ShowCurrentSelectionWithChoice();
+        }
+        else if (!NetworkSessionData.IsNetworkSession)
+        {
+            AdvanceLocalPlayer(); // tous les effets sélectionnés → exécute et IsComplete = true
+        }
+        else
+        {
+            ClearHighlights(); // network : attend le EndTurn pour submit
+        }
+
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
     }
+
 
     // =========================================================================
     // End Phase confirmation — called by TurnManager.RegisterEndPhase

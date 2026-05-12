@@ -142,6 +142,8 @@ public class BuildSpotVisual : MonoBehaviour
             manager.ReadBuidingFromAsset();
             spotVisual.SetActive(false);
         }
+            HoverPreview hover = manager.GetComponentInChildren<HoverPreview>();
+            if (hover != null) hover.ThisPreviewEnabled = true;
     }
 
     public void OnBuildingDestroyed()

@@ -22,7 +22,7 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
   MoveSpeed: 2
   Celerity: 1
   ActivationsForOneTurn: 0

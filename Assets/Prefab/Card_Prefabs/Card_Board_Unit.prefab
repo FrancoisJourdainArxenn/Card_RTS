@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7798889525310481750}
   - component: {fileID: 4625757885066953041}
   - component: {fileID: 6299583033060770085}
+  - component: {fileID: 7711922499335050855}
   m_Layer: 0
   m_Name: Card_Board_Unit
   m_TagString: LowPlayer
@@ -114,6 +115,19 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!114 &7711922499335050855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 126706081317096460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0b5e428f1b59614681af22be9e36e0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EffectVisualHandler
+  effectOverlay: {fileID: 7489697531336130228}
 --- !u!1 &1025744701815881091
 GameObject:
   m_ObjectHideFlags: 0
