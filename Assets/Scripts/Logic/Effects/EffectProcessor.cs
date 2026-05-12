@@ -223,6 +223,6 @@ public static class EffectProcessor
             Debug.Log("Conditions not met");
             return;
         }
-        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters);
+        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters, data.VisualData);
     }
 }

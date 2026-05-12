@@ -7,16 +7,19 @@ public class DealDamageSO : HealthEffectSO
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters
+        EffectParameters parameters,
+        EffectVisualData visualData
     )
     {
         _sourceID = context.Source?.ID ?? -1;
-        base.Execute(EffectName, context, effectInfo, parameters);
+        base.Execute(EffectName, context, effectInfo, parameters, visualData);
     }
-    
-    protected override void ApplyToTarget(ILivable target, int amount)
+
+    protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData)
     {
-        new DealDamageCommand(target.ID, amount, target.Health - amount, _sourceID).AddToQueue();
+        bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
+        int sourceId = hasCustomVfx ? -1 : _sourceID;
+        new DealDamageCommand(target.ID, amount, target.Health - amount, sourceId, hasCustomVfx ? visualData : null).AddToQueue();
         target.Health -= amount;
     }
 

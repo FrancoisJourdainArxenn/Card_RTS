@@ -37,6 +37,7 @@ MonoBehaviour:
       effectTargets:
       - targetType: 1
         includesSource: 0
+        onlySource: 0
         queries:
         - team: 2
           statusFilter: 0
@@ -52,3 +53,11 @@ MonoBehaviour:
       Amount: 2
       TokenToSummon: {fileID: 0}
       Placement: 0
+    VisualData:
+      vfxPrefab: {fileID: 0}
+      overlayMaterial: {fileID: 0}
+      overlayDuration: 0
+      vfxLifetime: 0
+      AttackDuration: 0.2
+      showAmount: 1
+      textColor: {r: 1, g: 0.11792451, b: 0.11792451, a: 1}

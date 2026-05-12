@@ -55,6 +55,14 @@ MonoBehaviour:
           zoneFilter: 1
       repartition: 2
     Parameters:
-      Amount: 10
+      Amount: 3
       TokenToSummon: {fileID: 0}
       Placement: 0
+    VisualData:
+      vfxPrefab: {fileID: 0}
+      overlayMaterial: {fileID: 0}
+      overlayDuration: 0
+      vfxLifetime: 0
+      AttackDuration: 0.1
+      showAmount: 1
+      textColor: {r: 1, g: 0, b: 0, a: 1}

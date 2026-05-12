@@ -2831,9 +2831,10 @@ MonoBehaviour:
   cards:
   - {fileID: 11400000, guid: fc5f647e99e6487438d92c23264ad9e9, type: 2}
   - {fileID: 11400000, guid: c44193175e1c9db46917e0b4f0c7b65c, type: 2}
+  - {fileID: 11400000, guid: 17f153776b4c2844eb375e167bac8069, type: 2}
   - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
   buildings:
-  - {fileID: 11400000, guid: 03d3fc23b1940364c8ce7047da6906b7, type: 2}
+  - {fileID: 11400000, guid: 4464a0c83f14ebd4fadcbe1d2fc9080e, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
 --- !u!114 &645481813 stripped

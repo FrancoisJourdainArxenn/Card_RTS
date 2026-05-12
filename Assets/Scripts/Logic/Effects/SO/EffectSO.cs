@@ -5,8 +5,7 @@ using UnityEngine;
 public abstract class EffectSO : ScriptableObject
 {
     public string Description = "";
-    [SerializeField] protected EffectVisualData visualData;
-    protected int _sourceID = -1; //A retirer si ça fou la merde 
+    protected int _sourceID = -1;
 
     
     protected class EffectTarget
@@ -24,7 +23,8 @@ public abstract class EffectSO : ScriptableObject
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters
+        EffectParameters parameters,
+        EffectVisualData visualData
     );
     
     public List<IIdentifiable> GetAffectedElements(EffectContext context, EffectInfo effectInfo)
@@ -56,13 +56,13 @@ public abstract class EffectSO : ScriptableObject
         return affectedElements.Distinct().ToList();
     }
 
-    public void ApplyEffect(EffectInfo effectInfo, List<IIdentifiable> affectedElements, EffectParameters parameters)
+    public void ApplyEffect(EffectInfo effectInfo, List<IIdentifiable> affectedElements, EffectParameters parameters, EffectVisualData visualData)
     {
         switch (effectInfo.repartition)
         {
             case EffectRepartition.Uniform:
                 foreach (ILivable target in affectedElements.Cast<ILivable>())
-                    ApplyToTarget(target, parameters.Amount);
+                    ApplyToTarget(target, parameters.Amount, visualData);
                 break;
 
             case EffectRepartition.Random:
@@ -70,7 +70,7 @@ public abstract class EffectSO : ScriptableObject
                 List<EffectTarget> repartition = BuildTargets(affectedElements);
                 DistributeRandomly(parameters.Amount, repartition, new());
                 Log($"Random repartition — {string.Join(", ", repartition.Select(t => string.Join(" : ", t.target.DisplayName, t.amount)))}");
-                ApplyAll(repartition);
+                ApplyAll(repartition, visualData);
                 break;
             }
 
@@ -82,12 +82,12 @@ public abstract class EffectSO : ScriptableObject
                 List<EffectTarget> fallbackPool = meleePool.Count > 0 ? repartition.Except(meleePool).ToList() : new();
                 DistributeRandomly(parameters.Amount, primaryPool, fallbackPool);
                 Log($"RandomMeleeFirst repartition — {string.Join(", ", repartition.Select(t => string.Join(" : ", t.target.DisplayName, t.amount)))}");
-                ApplyAll(repartition);
+                ApplyAll(repartition, visualData);
                 break;
             }
         }
     }
-    protected abstract void ApplyToTarget(ILivable target, int amount);
+    protected abstract void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData);
     protected abstract bool IsTargetSaturated(EffectTarget target);
 
     List<EffectTarget> BuildTargets(List<IIdentifiable> elements) =>
@@ -112,12 +112,12 @@ public abstract class EffectSO : ScriptableObject
         }
     }
 
-    void ApplyAll(List<EffectTarget> repartition)
+    void ApplyAll(List<EffectTarget> repartition, EffectVisualData visualData)
     {
         foreach (EffectTarget dt in repartition)
         {
             if (dt.amount == 0) continue;
-            ApplyToTarget(dt.target, dt.amount);
+            ApplyToTarget(dt.target, dt.amount, visualData);
         }
     }
 

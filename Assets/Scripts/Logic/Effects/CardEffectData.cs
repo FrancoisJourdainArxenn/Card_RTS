@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 [System.Serializable]
 public class CardEffectData
@@ -9,6 +10,8 @@ public class CardEffectData
     public ConditionSO Condition;
     public EffectInfo Effectinfo;
     public EffectParameters Parameters;
+    public EffectVisualData VisualData;
+
     public bool RequiresPlayerInput
     {
         get
