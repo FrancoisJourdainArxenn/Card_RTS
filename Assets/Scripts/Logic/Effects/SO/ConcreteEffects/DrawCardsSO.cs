@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Effects/DrawCardsSO")]
@@ -18,11 +19,21 @@ public class DrawCardsSO : EffectSO
         }
 
         Log($"{EffectName}: {context.Caster.name} draws {parameters.Amount} card(s)");
-        for (int i = 0; i < parameters.Amount; i++)
-            context.Caster.DrawACard(fast: false);
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            // Seul le serveur génère les IDs — les clients attendent le ClientRpc
+            if (!NetworkManager.Singleton.IsServer) return;
+            for (int i = 0; i < parameters.Amount; i++)
+                GameNetworkManager.Instance.BroadCastDrawCard(context.Caster.playerIndex);
+        }
+        else
+        {
+            for (int i = 0; i < parameters.Amount; i++)
+                context.Caster.DrawACard(fast: false);
+        }
     }
 
-    // Jamais appelées — on bypass ApplyEffect — mais abstraites dans EffectSO
     protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData) { }
     protected override bool IsTargetSaturated(EffectTarget target) => false;
 
