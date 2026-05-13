@@ -98,6 +98,7 @@ public class BuildSpotVisual : MonoBehaviour
     public void SpawnPendingBuilding(CardAsset building, Player owner)
     {
         GameObject buildingGO = Instantiate(GlobalSettings.Instance.BuildingPrefab, spawner.transform.position, Quaternion.identity);
+        buildingGO.transform.SetParent(transform, true);
         buildingGO.tag = owner.tag;
 
         OneBuildingManager manager = buildingGO.GetComponent<OneBuildingManager>();
@@ -129,6 +130,7 @@ public class BuildSpotVisual : MonoBehaviour
         else
         {
             GameObject buildingGO = Instantiate(GlobalSettings.Instance.BuildingPrefab, spawner.transform.position, Quaternion.identity);
+            buildingGO.transform.SetParent(transform, true);
             buildingGO.tag = owner.tag;
 
             IDHolder idHolder = buildingGO.GetComponent<IDHolder>();

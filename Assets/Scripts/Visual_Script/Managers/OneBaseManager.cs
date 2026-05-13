@@ -39,15 +39,16 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         if (idHolder == null) return;
         int id = idHolder.UniqueID;
 
-        if (!EffectTargetingManager.IsComplete)
+        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IIdentifiable entity = ResolveEntity(id);
-            if (entity != null)
-                EffectTargetingManager.OnEntityClicked(entity);
-            return;
+            if (entity != null && EffectTargetingManager.OnEntityClicked(entity))
+                return; // consumed by targeting
+            // Not eligible — fall through
         }
 
-        if (!TurnManager.Instance.IsBattlePhase) return;
+        if (!TurnManager.Instance.IsBattlePhase)
+            return;
 
         ZoneCombatResolver resolver;
 

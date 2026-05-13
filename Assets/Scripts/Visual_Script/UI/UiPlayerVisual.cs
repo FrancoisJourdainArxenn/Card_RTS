@@ -7,7 +7,6 @@ public class UiPlayerVisual : MonoBehaviour
     [SerializeField] TMP_Text countText;
     public TMP_Text mainRessourceText,secondRessourceText;
     public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
-    public TMP_Text UiHealthText; 
 
     [Tooltip("Si renseigné, prend la priorité sur owner.")]
     [SerializeField] Player player;
@@ -63,8 +62,6 @@ public class UiPlayerVisual : MonoBehaviour
             MainRessourceIncomeText.text = player.playerMainIncome.ToString();
         if (SecondRessourceIncomeText != null)
             SecondRessourceIncomeText.text = player.playerSecondIncome.ToString();
-        if (UiHealthText != null)
-            UiHealthText.text = player.Health.ToString();
     }
 
 }

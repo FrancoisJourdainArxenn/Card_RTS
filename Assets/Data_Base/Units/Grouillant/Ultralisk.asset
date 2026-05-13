@@ -15,17 +15,49 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  Description: Melee
+  Description: 'Melee
+
+    Frenzy'
   CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
   MainCost: 7
   SecondCost: 5
-  Attack: 6
+  Attack: 4
   MaxHealth: 8
   AttacksForOneTurn: 1
   melee: 1
   MoveSpeed: 1
   Celerity: 0
-  Keywords: []
-  Targets: 0
   ActivationsForOneTurn: 0
-  Effects: []
+  Keywords:
+  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  - {fileID: 11400000, guid: 180137d89e841c94c873544e8df3ebed, type: 2}
+  Effects:
+  - EffectName: Frenzy
+    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Trigger: 5
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 0
+        includesSource: 1
+        queries: []
+      repartition: 0
+    Parameters:
+      Amount: 1
+      TokenToSummon: {fileID: 0}
+      Placement: 0
+    VisualData:
+      vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+      overlayMaterial: {fileID: 0}
+      overlayDuration: 1
+      vfxLifetime: 1
+      AttackDuration: 0
+      showAmount: 1
+      textColor: {r: 0, g: 0.3254902, b: 1, a: 0}

@@ -40,7 +40,8 @@ public class TokenGenerationSO : EffectSO
             }
 
             PlayerArea targetArea = ResolveTargetArea(context);
-            int baseTablePos = context.Caster.playedCards.Creatures.Count;
+            int baseTablePos = targetArea.tableVisual.CreaturesOnTable.Count;
+            int maxSlots = targetArea.tableVisual.slots.Children.Length;
 
             for (int i = 0; i < parameters.Amount; i++)
             {
@@ -50,6 +51,12 @@ public class TokenGenerationSO : EffectSO
                         GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
                         break;
                     case TokenPlacement.ToZone:
+                        if (baseTablePos + i >= maxSlots)
+                        {
+                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({baseTablePos + i}/{maxSlots}), token {i + 1} annulé.");
+                            new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
+                            continue;
+                        }
                         GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, baseTablePos + i, targetArea.baseID);
                         break;
                 }
@@ -88,11 +95,20 @@ public class TokenGenerationSO : EffectSO
         Player caster = context.Caster;
         PlayerArea targetArea = ResolveTargetArea(context);
 
+        int currentCount = targetArea.tableVisual.CreaturesOnTable.Count;
+        int maxSlots = targetArea.tableVisual.slots.Children.Length;
+        if (currentCount >= maxSlots)
+        {
+            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{maxSlots}), token annulé.");
+            new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
+            return;
+        }
+
         CardLogic tokenCard = new CardLogic(tokenAsset);
         tokenCard.owner = caster;
 
         CreatureLogic newCreature = new CreatureLogic(caster, tokenAsset, targetArea.baseID);
-        int tablePos = caster.playedCards.Creatures.Count;
+        int tablePos = targetArea.tableVisual.CreaturesOnTable.Count; // était: caster.playedCards.Creatures.Count
         caster.playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
 

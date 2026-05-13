@@ -169,10 +169,12 @@ public class GameNetworkManager : NetworkBehaviour
         EffectTargetSubmission submission1 = _effectSubmissions[1];
         _effectSubmissions.Clear();
 
+        int effectSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         ApplyCanonicalEffectResolutionClientRpc(
             ConcatArrays(submission0.SourceEntityIDs,   submission1.SourceEntityIDs),
             ConcatArrays(submission0.EffectIndexes,     submission1.EffectIndexes),
-            ConcatArrays(submission0.SelectedTargetIDs, submission1.SelectedTargetIDs));
+            ConcatArrays(submission0.SelectedTargetIDs, submission1.SelectedTargetIDs),
+            effectSeed);
     }
 
     /// <summary>
@@ -182,9 +184,12 @@ public class GameNetworkManager : NetworkBehaviour
     void ApplyCanonicalEffectResolutionClientRpc(
         int[] sourceEntityIDs,
         int[] effectIndexes,
-        int[] selectedTargetIDs)
+        int[] selectedTargetIDs,
+        int effectSeed)
     {
-        EffectTargetingManager.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs);
+        EffectTargetingManager.ApplyCanonicalResolution(
+            sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -782,5 +787,31 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void NotifyOpponentSelectingServerRpc(int senderPlayerIndex, int[] sourceEntityIDs, int[] effectIndexes)
+    {
+        BroadcastOpponentSelectingClientRpc(senderPlayerIndex, sourceEntityIDs, effectIndexes);
+    }
 
+    [ClientRpc]
+    void BroadcastOpponentSelectingClientRpc(int senderPlayerIndex, int[] sourceEntityIDs, int[] effectIndexes)
+    {
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (senderPlayerIndex == localIndex) return;
+        TargetingVisualEvents.RaiseOpponentTargetingStarted(sourceEntityIDs, effectIndexes);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void NotifyOpponentSelectingEndedServerRpc(int senderPlayerIndex)
+    {
+        BroadcastOpponentSelectingEndedClientRpc(senderPlayerIndex);
+    }
+
+    [ClientRpc]
+    void BroadcastOpponentSelectingEndedClientRpc(int senderPlayerIndex)
+    {
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (senderPlayerIndex == localIndex) return;
+        TargetingVisualEvents.RaiseOpponentTargetingEnded();
+    }
 }

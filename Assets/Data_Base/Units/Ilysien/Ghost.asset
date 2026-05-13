@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: Soldier
-  Description: 'Celerity
-
-    Speed : 2'
+  subType: 0
+  Description: 'Battle Start : Deal 2 to a Unit.'
   CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
   MainCost: 3
   SecondCost: 3
@@ -27,7 +25,6 @@ MonoBehaviour:
   melee: 0
   MoveSpeed: 2
   Celerity: 1
-  Keywords: []
-  Targets: 0
   ActivationsForOneTurn: 0
+  Keywords: []
   Effects: []

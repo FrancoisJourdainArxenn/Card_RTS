@@ -24,14 +24,16 @@ public class OneBuildingManager : OneLivableManager
         if (TurnManager.Instance == null) return;
         if (BuildingLogic == null) return;
 
-        if (!EffectTargetingManager.IsComplete)
+        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IDHolder idHolder = GetComponent<IDHolder>();
             if (idHolder == null) return;
             if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building)) return;
-            EffectTargetingManager.OnEntityClicked(building);
+            if (EffectTargetingManager.OnEntityClicked(building))
+                return; // consumed by targeting
+            // Not eligible — fall through
         }
-        else if (TurnManager.Instance.IsBattlePhase)
+        if (TurnManager.Instance.IsBattlePhase)
         {
             ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
             if (resolver != null)

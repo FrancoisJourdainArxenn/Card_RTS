@@ -17,8 +17,8 @@ MonoBehaviour:
   subType: 4
   Description: 'In Command: Draw a card.'
   CardImage: {fileID: 21300000, guid: 56fc62b1d6abc2245a330ff34060eac4, type: 3}
-  MainCost: 0
-  SecondCost: 0
+  MainCost: 3
+  SecondCost: 2
   Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 0
@@ -40,3 +40,11 @@ MonoBehaviour:
       Amount: 1
       TokenToSummon: {fileID: 0}
       Placement: 0
+    VisualData:
+      vfxPrefab: {fileID: 0}
+      overlayMaterial: {fileID: 0}
+      overlayDuration: 1.5
+      vfxLifetime: 1.5
+      AttackDuration: 0.1
+      showAmount: 1
+      textColor: {r: 1, g: 1, b: 1, a: 1}

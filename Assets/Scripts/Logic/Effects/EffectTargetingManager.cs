@@ -55,14 +55,42 @@ public static class EffectTargetingManager
 
         if (!NetworkSessionData.IsNetworkSession)
         {
-            if (_confirmedPlayers.Contains(playerIndex)) return true;
-            if (_currentLocalPlayerIndex != playerIndex) return true;
+            if (_confirmedPlayers.Contains(playerIndex))
+                return true;
+            if (playerIndex == _currentLocalPlayerIndex)
+                return _selectionCursor < _selectionQueue.Count;
+            // Other players: only blocked if they have their own selections to resolve later
+            return _localSelectionQueues.TryGetValue(playerIndex, out var selectionQueue) && selectionQueue.Count > 0;
         }
 
         return _selectionCursor < _selectionQueue.Count;
     }
 
+    /// <summary>
+    /// True when this player has no remaining targeting selections.
+    /// Unlike IsComplete, does not require all players to be done —
+    /// lets a player resume normal phase actions while an opponent is still targeting.
+    /// </summary>
+    public static bool IsPlayerTargetingComplete(Player player)
+    {
+        if (_isComplete)
+            return true;
 
+        int playerIndex = System.Array.IndexOf(Player.Players, player);
+
+        if (!NetworkSessionData.IsNetworkSession)
+        {
+            if (_confirmedPlayers.Contains(playerIndex))
+                return true;
+            if (!_localSelectionQueues.TryGetValue(playerIndex, out var sq) || sq.Count == 0)
+                return true;
+            if (playerIndex == _currentLocalPlayerIndex)
+                return _selectionCursor >= _selectionQueue.Count;
+            return false;
+        }
+
+        return player.MainPArea.AllowedToControlThisPlayer ? _hasSubmitted : _isComplete;
+    }
     // =========================================================================
     // Phase lifecycle
     // =========================================================================
@@ -121,7 +149,16 @@ public static class EffectTargetingManager
             _selectionCursor = 0;
 
             if (_selectionQueue.Count > 0)
+            {
+                if (GameNetworkManager.Instance != null)
+                {
+                    int localIndex   = System.Array.IndexOf(Player.Players, player);
+                    int[] sourceIDs  = _selectionQueue.Select(e => e.SourceEntityID).ToArray();
+                    int[] effectIdxs = _selectionQueue.Select(e => e.EffectIndexInCard).ToArray();
+                    GameNetworkManager.Instance.NotifyOpponentSelectingServerRpc(localIndex, sourceIDs, effectIdxs);
+                }
                 ShowCurrentSelectionWithChoice();
+            }
             else
                 SubmitToServer(player); // nothing to select — auto-submit immediately
         }
@@ -178,6 +215,10 @@ public static class EffectTargetingManager
             _confirmedPlayers.Add(_currentLocalPlayerIndex);
             _localPlayerQueue.RemoveAt(0);
         }
+
+        // Skip players who pre-confirmed while another player was selecting
+        while (_localPlayerQueue.Count > 0 && _confirmedPlayers.Contains(_localPlayerQueue[0]))
+            _localPlayerQueue.RemoveAt(0);
 
         if (_localPlayerQueue.Count > 0)
         {
@@ -276,13 +317,13 @@ public static class EffectTargetingManager
     /// Called by entity click handlers (OneCreatureManager, etc.) when a targeting session is active.
     /// Records the player's target choice for the current selection. Does NOT submit.
     /// </summary>
-    public static void OnEntityClicked(IIdentifiable clickedEntity)
+    public static bool OnEntityClicked(IIdentifiable clickedEntity)
     {
         Debug.Log($"Entity {clickedEntity.DisplayName} clicked");
-        if (_selectionCursor >= _selectionQueue.Count) return;
+        if (_selectionCursor >= _selectionQueue.Count) return false;
 
         PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
-        if (!currentSelection.EligibleTargets.Contains(clickedEntity)) return;
+        if (!currentSelection.EligibleTargets.Contains(clickedEntity)) return false;
 
         currentSelection.SelectedTarget = clickedEntity;
         Debug.Log($"Entity {clickedEntity.DisplayName} selected");
@@ -290,20 +331,15 @@ public static class EffectTargetingManager
         _selectionCursor++;
 
         if (_selectionCursor < _selectionQueue.Count)
-        {
             ShowCurrentSelectionWithChoice();
-        }
         else if (!NetworkSessionData.IsNetworkSession)
-        {
-            AdvanceLocalPlayer(); // tous les effets sélectionnés → exécute et IsComplete = true
-        }
+            AdvanceLocalPlayer();
         else
-        {
-            ClearHighlights(); // network : attend le EndTurn pour submit
-        }
+            ClearHighlights();
 
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
+        return true;
     }
 
 
@@ -319,29 +355,44 @@ public static class EffectTargetingManager
     /// </summary>
     public static void ConfirmAndSubmit(Player player)
     {
-        if (_isComplete) return;
+        if (_isComplete)
+            return;
 
         if (!NetworkSessionData.IsNetworkSession)
         {
             int playerIndex = System.Array.IndexOf(Player.Players, player);
-            if (playerIndex != _currentLocalPlayerIndex) return; // not this player's turn
+            if (_confirmedPlayers.Contains(playerIndex))
+                return;
 
-            if (_selectionCursor < _selectionQueue.Count)
+            if (playerIndex == _currentLocalPlayerIndex)
             {
-                PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
-                if (currentSelection.SelectedTarget == null) return; // defensive: button should be disabled
-
-                _selectionCursor++;
-
                 if (_selectionCursor < _selectionQueue.Count)
                 {
-                    ShowCurrentSelectionWithChoice();
-                    return; // more selections for this player
-                }
-            }
+                    PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
+                    if (currentSelection.SelectedTarget == null)
+                        return;
 
-            // This player's selections are all confirmed
-            AdvanceLocalPlayer();
+                    _selectionCursor++;
+
+                    if (_selectionCursor < _selectionQueue.Count)
+                    {
+                        ShowCurrentSelectionWithChoice();
+                        return;
+                    }
+                }
+
+                AdvanceLocalPlayer();
+            }
+            else
+            {
+                // Player with no pending selections pre-confirms while another player is selecting
+                bool hasOwnSelections = _localSelectionQueues.TryGetValue(playerIndex, out var sq) && sq.Count > 0;
+                if (hasOwnSelections)
+                    return; // Has own selections — sequential, must wait for their turn
+                _confirmedPlayers.Add(playerIndex);
+                if (GlobalSettings.Instance != null)
+                    GlobalSettings.Instance.RefreshEndPhaseButtons();
+            }
         }
         else
         {
@@ -349,7 +400,8 @@ public static class EffectTargetingManager
             if (_selectionCursor < _selectionQueue.Count)
             {
                 PendingEffectSelection currentSelection = _selectionQueue[_selectionCursor];
-                if (currentSelection.SelectedTarget == null) return; // defensive: button should be disabled
+                if (currentSelection.SelectedTarget == null)
+                    return; // defensive: button should be disabled
 
                 _selectionCursor++;
 
@@ -413,8 +465,15 @@ public static class EffectTargetingManager
 
     /// <summary>Called by GameNetworkManager.ApplyCanonicalEffectResolutionClientRpc on all clients.</summary>
     public static void ApplyCanonicalResolution(
-        int[] sourceEntityIDs, int[] effectIndexes, int[] selectedTargetIDs)
+        int[] sourceEntityIDs, int[] effectIndexes, int[] selectedTargetIDs, int effectSeed)
     {
+        // Pré-générer un seed isolé pour chaque effet, avant d'en exécuter un seul.
+        // Si un effet ne s'exécute pas sur un client, ça n'affecte pas les seeds des autres.
+        System.Random masterRng = new System.Random(effectSeed);
+        int[] subSeeds = new int[sourceEntityIDs.Length];
+        for (int i = 0; i < subSeeds.Length; i++)
+            subSeeds[i] = masterRng.Next();
+
         for (int i = 0; i < sourceEntityIDs.Length; i++)
         {
             TargetingVisualEvents.RaiseEffectsExecuting();
@@ -422,9 +481,13 @@ public static class EffectTargetingManager
                 sourceEntityIDs[i], effectIndexes[i], out EffectContext context);
             if (effectData == null || context == null) continue;
 
-            context.SelectedTarget = ResolveEntityByID(selectedTargetIDs[i]); // null if id == -1
+            context.SelectedTarget = ResolveEntityByID(selectedTargetIDs[i]);
+
+            EffectSO.SetNetworkRng(new System.Random(subSeeds[i]));
             EffectProcessor.ExecutePendingEffect(effectData, context);
+            EffectSO.ClearNetworkRng();
         }
+
         _isComplete = true;
         TurnManager.RefreshAllPlayableHighlights();
         if (GlobalSettings.Instance != null)

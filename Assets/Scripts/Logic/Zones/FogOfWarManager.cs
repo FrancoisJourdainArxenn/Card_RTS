@@ -139,6 +139,12 @@ public class FogOfWarManager : MonoBehaviour
             enemy.baseVisual.ApplyFogForObserver(observerHasPresence);
         }
     }
+    public bool IsZoneFogged(ZoneManager zone)
+    {
+        if (zone == null) return false;
+        return !zoneFogCache.TryGetValue(zone.Logic.ID, out bool isFogged) || isFogged;
+    }
+
     // Returns true if 'player' has at least one creature OR base in the given zone.
 
     bool HasPresenceInZone(Player player, ZoneManager zone, NeutralZoneController nbc)
