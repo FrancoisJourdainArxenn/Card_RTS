@@ -53,7 +53,7 @@ MonoBehaviour:
         - team: 2
           statusFilter: 0
           zoneFilter: 1
-      repartition: 2
+      repartition: 1
     Parameters:
       Amount: 3
       TokenToSummon: {fileID: 0}

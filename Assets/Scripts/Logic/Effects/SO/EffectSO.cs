@@ -7,7 +7,9 @@ public abstract class EffectSO : ScriptableObject
     public string Description = "";
     protected int _sourceID = -1;
 
-    
+    private static System.Random _networkRng;
+    internal static void SetNetworkRng(System.Random rng) => _networkRng = rng;
+    internal static void ClearNetworkRng() => _networkRng = null;
     protected class EffectTarget
     {
         public ILivable target;
@@ -104,7 +106,9 @@ public abstract class EffectSO : ScriptableObject
                 if (nextPool.Count == 0) break;
                 (currentPool, nextPool) = (nextPool, new());
             }
-            int targetIndex = Random.Range(0, currentPool.Count);
+            int targetIndex = _networkRng != null
+                ? _networkRng.Next(0, currentPool.Count)
+                : Random.Range(0, currentPool.Count);
             EffectTarget chosen = currentPool[targetIndex];
             chosen.amount += 1;
             if (IsTargetSaturated(chosen))

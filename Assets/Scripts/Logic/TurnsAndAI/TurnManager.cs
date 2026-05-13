@@ -404,16 +404,17 @@ public class TurnManager : MonoBehaviour
             return;
         if (Player.Players == null)
             return;
-        if (!EffectTargetingManager.IsComplete)
-            return;
         if (NetworkSessionData.IsNetworkSession)
         {
-            GlobalSettings.Instance.localPlayer.HighlightPlayableCards();
+            Player local = GlobalSettings.Instance.localPlayer;
+            if (EffectTargetingManager.IsPlayerTargetingComplete(local))
+                local.HighlightPlayableCards();
         }
         else
         {
             foreach (Player p in Player.Players)
-                p.HighlightPlayableCards();
+                if (EffectTargetingManager.IsPlayerTargetingComplete(p))
+                    p.HighlightPlayableCards();
         }
     }
 

@@ -80,25 +80,31 @@ public class OneCreatureManager : OneLivableManager
 
     public void OnCreatureClicked()
     {
-        if (!EffectTargetingManager.IsComplete)
+        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IDHolder idHolder = GetComponent<IDHolder>();
-            if (idHolder == null) return;
-            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature)) return;
-            EffectTargetingManager.OnEntityClicked(creature);
-            return;
+            if (idHolder == null)
+                return;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
+                return;
+            if (EffectTargetingManager.OnEntityClicked(creature))
+                return; // consumed by targeting
+            // Not an eligible target — fall through to normal handling
         }
 
         Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
-        if (!TurnManager.Instance.IsBattlePhase) return;
+        if (!TurnManager.Instance.IsBattlePhase)
+            return;
 
         IDHolder battleIdHolder = GetComponent<IDHolder>();
         Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
-        if (battleIdHolder == null) return;
+        if (battleIdHolder == null)
+            return;
 
         bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(battleIdHolder.UniqueID, out CreatureLogic battleCreature);
         Debug.Log($"[Click] CreatureFound={found}");
-        if (!found) return;
+        if (!found)
+            return;
 
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         bool isOwn = localPlayer.playedCards.Creatures.Contains(battleCreature);

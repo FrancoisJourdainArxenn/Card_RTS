@@ -20,9 +20,10 @@ public class CardPreviewUI : MonoBehaviour
     private bool previewingEffects = false;
 
     [SerializeField] private RectTransform targetingAnchor;
-    [SerializeField] private float stackScaleFactor = 0.85f;
-    [SerializeField] private float stackOffsetX     = 15f;
-    [SerializeField] private float stackOffsetY     = -15f;
+    [SerializeField] private float stackScaleFactor  = 0.85f;
+    [SerializeField] private float stackDisplayScale = 0.75f;
+    [SerializeField] private float stackOffsetX      = 15f;
+    [SerializeField] private float stackOffsetY      = -15f;
 
     [Header("Trail")]
     [SerializeField] private GameObject trailPrefab;
@@ -35,7 +36,11 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private HoverArrow hoverArrow;
     [SerializeField] private Transform arrowEndPoint;
 
-    private List<GameObject> _targetingPreviews = new List<GameObject>();
+    private List<GameObject> _targetingPreviews  = new List<GameObject>();
+    private List<GameObject> _autoEffectPreviews     = new List<GameObject>();
+    private List<GameObject> _opponentEffectPreviews = new List<GameObject>();
+    private Coroutine _autoEffectDismissCoroutine;
+    [SerializeField] private float autoEffectDisplayDuration = 3f;
 
     void Awake()
     {
@@ -46,21 +51,65 @@ public class CardPreviewUI : MonoBehaviour
 
     void OnEnable()
     {
-        TargetingVisualEvents.OnTargetingStarted += HandleTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded   += HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered += HandleAutoEffect;  // nouveau
+        TargetingVisualEvents.OnTargetingStarted         += HandleTargetingStarted;
+        TargetingVisualEvents.OnTargetingEnded           += HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered      += HandleAutoEffect;
+        TargetingVisualEvents.OnEffectsExecuting         += ClearOpponentStack;
+        TargetingVisualEvents.OnOpponentTargetingStarted += HandleOpponentTargetingStarted;
+        TargetingVisualEvents.OnOpponentTargetingEnded   += HandleOpponentTargetingEnded;
     }
 
     void OnDisable()
     {
-        TargetingVisualEvents.OnTargetingStarted -= HandleTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded   -= HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered -= HandleAutoEffect;  // nouveau
+        TargetingVisualEvents.OnTargetingStarted         -= HandleTargetingStarted;
+        TargetingVisualEvents.OnTargetingEnded           -= HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered      -= HandleAutoEffect;
+        TargetingVisualEvents.OnEffectsExecuting         -= ClearOpponentStack;
+        TargetingVisualEvents.OnOpponentTargetingStarted -= HandleOpponentTargetingStarted;
+        TargetingVisualEvents.OnOpponentTargetingEnded   -= HandleOpponentTargetingEnded;
     }
 
+    private ZoneLogic GetCreatureZone(CreatureLogic creature)
+    {
+        foreach (PlayerArea pa in creature.owner.PAreas)
+            if (pa.baseID == creature.BaseID)
+                return pa.parentZone.Logic;
+        return null;
+    }
+    
+    private bool IsEntityZoneVisible(ILivable entity, List<ZoneLogic> visibleZones)
+    {
+        if (entity == null) return false;
+        ZoneLogic zone = entity switch
+        {
+            CreatureLogic c => GetCreatureZone(c),
+            BuildingLogic b => b.OriginSpot.Zone.Logic,
+            BaseLogic     b => b.Zone,
+            _               => null
+        };
+        return zone != null && visibleZones.Contains(zone);
+    }
+
+    
+    private bool IsEffectVisibleToLocalPlayer(EffectContext context)
+    {
+        Player local = GlobalSettings.Instance.localPlayer;
+        if (context.Caster == local) return true;
+
+        List<ZoneLogic> visible = local.VisibleZones;
+        return IsEntityZoneVisible(context.Source, visible)
+            || IsEntityZoneVisible(context.Target, visible)
+            || (context.TargetedZone != null && visible.Contains(context.TargetedZone));
+    }
+    
     private void HandleTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
     {
         int remaining = queue.Count - currentIndex;
+
+        if (queue.Count > currentIndex && !IsEffectVisibleToLocalPlayer(queue[currentIndex].Context))
+            return;
+
+        ClearAutoStack();
 
         if (_targetingPreviews.Count == 0 && remaining > 0)
         {
@@ -101,67 +150,46 @@ public class CardPreviewUI : MonoBehaviour
 
     private void HandleAutoEffect(CardEffectData data, EffectContext context)
     {
-        // Récupère la CardAsset depuis la source (créature/bâtiment)
+        if (!IsEffectVisibleToLocalPlayer(context)) return;
+        if (_targetingPreviews.Count > 0) return;
+
         CardAsset ca = (context.Source as CreatureLogic)?.ca
                     ?? (context.Source as BuildingLogic)?.ca;
         if (ca == null) return;
 
-        // Récupère l'ID de la source pour la flèche/trail
         int sourceID = (context.Source as CreatureLogic)?.UniqueCreatureID
                     ?? (context.Source as BuildingLogic)?.UniqueBuildingID
                     ?? -1;
 
-        // Réutilise CreateTargetingPreview en construisant un PendingEffectSelection factice
-        var fakeSelection = new PendingEffectSelection
+        PushToAutoStack(new PendingEffectSelection
         {
-            Data           = data,
-            Context        = context,
-            EligibleTargets = new System.Collections.Generic.List<IIdentifiable>(),
-            SourceEntityID = sourceID
-        };
-
-        // Affiche brièvement puis détruit
-        StartCoroutine(ShowAutoEffectBriefly(fakeSelection));
+            Data            = data,
+            Context         = context,
+            EligibleTargets = new List<IIdentifiable>(),
+            SourceEntityID  = sourceID
+        });
     }
 
 
     private void BuildStack(List<PendingEffectSelection> queue, int currentIndex, int remaining)
     {
-        // Create back cards first so front ends up as the top sibling
         for (int i = remaining - 1; i >= 0; i--)
         {
             GameObject preview = CreateTargetingPreview(queue[currentIndex + i]);
             if (preview == null) continue;
-
             _targetingPreviews.Insert(0, preview);
-
-            float scale = previewScale * Mathf.Pow(stackScaleFactor, i);
-            preview.transform.localPosition = StackPosition(i);
-            preview.transform.localScale    = Vector3.one * scale;
+            preview.transform.localPosition = Vector3.zero;
+            preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
         }
-
-        if (_targetingPreviews.Count > 0)
-        {
-            _targetingPreviews[0].transform.localScale = Vector3.one * previewScale * 0.5f;
-            _targetingPreviews[0].transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
-        }
+        RefreshAllStacks();
     }
 
     private void PopFront()
     {
         if (_targetingPreviews.Count == 0) return;
-
         Destroy(_targetingPreviews[0]);
         _targetingPreviews.RemoveAt(0);
-
-        for (int i = 0; i < _targetingPreviews.Count; i++)
-        {
-            float   scale     = previewScale * Mathf.Pow(stackScaleFactor, i);
-            Vector3 targetPos = StackPosition(i);
-            _targetingPreviews[i].transform.DOLocalMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
-            _targetingPreviews[i].transform.DOScale(
-                Vector3.one * scale, 0.3f).SetEase(i == 0 ? Ease.OutBack : Ease.OutQuad);
-        }
+        RefreshAllStacks();
     }
 
     private Vector3 StackPosition(int index)
@@ -212,12 +240,17 @@ public class CardPreviewUI : MonoBehaviour
     private void HandleTargetingEnded()
     {
         StopAllCoroutines();
+        _autoEffectDismissCoroutine = null;
         hoverArrow?.Hide();
         foreach (GameObject preview in _targetingPreviews)
             if (preview != null) Destroy(preview);
         _targetingPreviews.Clear();
-        previewingEffects = false;
-
+        foreach (GameObject go in _autoEffectPreviews)
+            if (go != null) Destroy(go);
+        _autoEffectPreviews.Clear();
+        // _opponentEffectPreviews persiste jusqu'à OnEffectsExecuting → ClearOpponentStack()
+        if (_opponentEffectPreviews.Count == 0)
+            previewingEffects = false;
     }
 
     public void Show(CardAsset asset, Vector2 mouseOffset)
@@ -268,17 +301,120 @@ public class CardPreviewUI : MonoBehaviour
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
     }
 
-    private IEnumerator ShowAutoEffectBriefly(PendingEffectSelection selection)
+    private void HandleOpponentTargetingStarted(int[] sourceEntityIDs, int[] effectIndexes)
     {
-        GameObject preview = CreateTargetingPreview(selection);
-        if (preview == null) yield break;
+        ClearOpponentStack();
 
-        // Trail depuis la source
+        for (int i = 0; i < sourceEntityIDs.Length; i++)
+        {
+            int sourceEntityID = sourceEntityIDs[i];
+            int effectIndex    = effectIndexes[i];
+
+            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature);
+            BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building);
+
+            CardAsset ca = creature != null ? creature.ca : building != null ? building.ca : null;
+            if (ca == null || ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) continue;
+
+            Player caster   = creature != null ? creature.owner : building != null ? building.owner : null;
+            ILivable source = creature != null ? (ILivable)creature : (ILivable)building;
+            EffectContext context = new EffectContext { Caster = caster, Source = source };
+
+            if (!IsEffectVisibleToLocalPlayer(context)) continue;
+
+            PendingEffectSelection selection = new PendingEffectSelection
+            {
+                Data              = ca.Effects[effectIndex],
+                Context           = context,
+                EligibleTargets   = new List<IIdentifiable>(),
+                SourceEntityID    = sourceEntityID,
+                EffectIndexInCard = effectIndex
+            };
+
+            GameObject preview = CreateTargetingPreview(selection);
+            if (preview == null) continue;
+
+            preview.transform.localPosition = Vector3.zero;
+            preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
+            _opponentEffectPreviews.Add(preview);
+
+            GameObject sourceGO = IDHolder.GetGameObjectWithID(sourceEntityID);
+            if (sourceGO != null) SpawnTrail(sourceGO.transform);
+        }
+
+        RefreshAllStacks();
+    }
+
+    private void HandleOpponentTargetingEnded() => ClearOpponentStack();
+
+    private void ClearOpponentStack()
+    {
+        foreach (GameObject go in _opponentEffectPreviews)
+            if (go != null) Destroy(go);
+        _opponentEffectPreviews.Clear();
+        if (_targetingPreviews.Count == 0 && _autoEffectPreviews.Count == 0)
+            previewingEffects = false;
+    }
+
+    private void PushToAutoStack(PendingEffectSelection selection)
+    {
+        if (_autoEffectDismissCoroutine != null)
+            StopCoroutine(_autoEffectDismissCoroutine);
+
+        GameObject preview = CreateTargetingPreview(selection);
+        if (preview == null) return;
+
+        preview.transform.localPosition = Vector3.zero;
+        preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
+        _autoEffectPreviews.Insert(0, preview);
+
         GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
         if (sourceGO != null) SpawnTrail(sourceGO.transform);
 
-        yield return new WaitForSeconds(3f);  // durée d'affichage à ajuster
-        if (preview != null) Destroy(preview);
+        RefreshAllStacks();
+
+        _autoEffectDismissCoroutine = StartCoroutine(AutoDismissStack());
+    }
+
+    private void RefreshAllStacks()
+    {
+        var combined = new List<GameObject>();
+        combined.AddRange(_targetingPreviews);
+        combined.AddRange(_opponentEffectPreviews);
+        combined.AddRange(_autoEffectPreviews);
+
+        for (int i = 0; i < combined.Count; i++)
+        {
+            if (combined[i] == null) continue;
+            float scale = previewScale * stackDisplayScale * Mathf.Pow(stackScaleFactor, i);
+            combined[i].transform.DOLocalMove(StackPosition(i), 0.3f).SetEase(Ease.OutQuad);
+            combined[i].transform.DOScale(
+                Vector3.one * scale, 0.3f).SetEase(i == 0 ? Ease.OutBack : Ease.OutQuad);
+        }
+
+        // Sibling order : du fond vers l'avant, l'index 0 se retrouve en dernière position = rendu au-dessus
+        for (int i = combined.Count - 1; i >= 0; i--)
+            if (combined[i] != null) combined[i].transform.SetAsLastSibling();
+    }
+
+    private void ClearAutoStack()
+    {
+        if (_autoEffectDismissCoroutine != null)
+        {
+            StopCoroutine(_autoEffectDismissCoroutine);
+            _autoEffectDismissCoroutine = null;
+        }
+        foreach (GameObject go in _autoEffectPreviews)
+            if (go != null) Destroy(go);
+        _autoEffectPreviews.Clear();
+        if (_targetingPreviews.Count == 0)
+            previewingEffects = false;
+    }
+
+    private IEnumerator AutoDismissStack()
+    {
+        yield return new WaitForSeconds(autoEffectDisplayDuration);
+        ClearAutoStack();
     }
 
 
