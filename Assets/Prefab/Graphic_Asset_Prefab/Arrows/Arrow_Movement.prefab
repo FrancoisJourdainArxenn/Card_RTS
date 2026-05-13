@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 231150399263457921}
   - component: {fileID: 3661540824057357452}
   m_Layer: 0
-  m_Name: CurvedArrow
+  m_Name: Arrow_Movement
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

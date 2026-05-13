@@ -5,6 +5,7 @@ public class HoverArrow : MonoBehaviour
 {
     [SerializeField] private float arcHeight = 3f;
     [SerializeField] private int resolution = 30;
+    [SerializeField] private float _arrowHeadYaw   = 0f;
     private Transform _startTransform;
     private Transform _endTransform;
     [Header("ArrowHead")]
@@ -52,7 +53,7 @@ public class HoverArrow : MonoBehaviour
             if (tangent != Vector3.zero)
             {
                 Quaternion look = Quaternion.LookRotation(tangent, Vector3.up);
-                _arrowHead.rotation = look * Quaternion.Euler(_arrowHeadPitch, 0f, 0f);
+                _arrowHead.rotation = look * Quaternion.Euler(_arrowHeadPitch, 0f, _arrowHeadYaw);
             }
         }
     }

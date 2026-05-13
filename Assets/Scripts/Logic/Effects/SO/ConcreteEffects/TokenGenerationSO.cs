@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Effects/TokenGenerationSO")]
@@ -8,7 +9,7 @@ public class TokenGenerationSO : EffectSO
         EffectContext context,
         EffectInfo effectInfo,
         EffectParameters parameters,
-         EffectVisualData visualData
+        EffectVisualData visualData
     )
     {
         if (context.Caster == null || parameters.TokenToSummon == null)
@@ -19,34 +20,74 @@ public class TokenGenerationSO : EffectSO
 
         Log($"{EffectName}: {context.Caster.name} creates {parameters.Amount}x {parameters.TokenToSummon.name} — {parameters.Placement}");
 
-        for (int i = 0; i < parameters.Amount; i++)
+        if (NetworkSessionData.IsNetworkSession)
         {
-            switch (parameters.Placement)
+            if (!NetworkManager.Singleton.IsServer) return;
+
+            int playerIndex = context.Caster.playerIndex;
+            int sourceEntityID = context.Source is CreatureLogic c ? c.UniqueCreatureID
+                : context.Source is BuildingLogic b ? b.UniqueBuildingID : -1;
+            int effectIndex = -1;
+            if (context.Source is CreatureLogic sc && sc.ca?.Effects != null)
+                effectIndex = sc.ca.Effects.FindIndex(e => e.Effect == this);
+            else if (context.Source is BuildingLogic sb && sb.ca?.Effects != null)
+                effectIndex = sb.ca.Effects.FindIndex(e => e.Effect == this);
+
+            if (sourceEntityID == -1 || effectIndex == -1)
             {
-                case TokenPlacement.ToHand:
-                    context.Caster.GetACardNotFromDeck(parameters.TokenToSummon);
-                    break;
-                case TokenPlacement.ToZone:
-                    SpawnToZone(context, parameters.TokenToSummon, visualData);
-                    break;
+                Log($"{EffectName}: impossible de résoudre sourceEntityID/effectIndex, annulé.");
+                return;
+            }
+
+            PlayerArea targetArea = ResolveTargetArea(context);
+            int baseTablePos = context.Caster.playedCards.Creatures.Count;
+
+            for (int i = 0; i < parameters.Amount; i++)
+            {
+                switch (parameters.Placement)
+                {
+                    case TokenPlacement.ToHand:
+                        GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
+                        break;
+                    case TokenPlacement.ToZone:
+                        GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, baseTablePos + i, targetArea.baseID);
+                        break;
+                }
             }
         }
+        else
+        {
+            for (int i = 0; i < parameters.Amount; i++)
+            {
+                switch (parameters.Placement)
+                {
+                    case TokenPlacement.ToHand:
+                        context.Caster.GetACardNotFromDeck(parameters.TokenToSummon);
+                        break;
+                    case TokenPlacement.ToZone:
+                        SpawnToZone(context, parameters.TokenToSummon, visualData);
+                        break;
+                }
+            }
+        }
+    }
+
+    private static PlayerArea ResolveTargetArea(EffectContext context)
+    {
+        PlayerArea target = context.Caster.MainPArea;
+        if (context.Source is CreatureLogic sourceCreature)
+        {
+            PlayerArea sourceArea = context.Caster.GetPlayerAreaByID(sourceCreature.BaseID);
+            if (sourceArea != null) target = sourceArea;
+        }
+        return target;
     }
 
     private void SpawnToZone(EffectContext context, CardAsset tokenAsset, EffectVisualData visualData)
     {
         Player caster = context.Caster;
+        PlayerArea targetArea = ResolveTargetArea(context);
 
-        // Spawn in the same zone as the source creature, fallback to MainPArea
-        PlayerArea targetArea = caster.MainPArea;
-        if (context.Source is CreatureLogic sourceCreature)
-        {
-            PlayerArea sourceArea = caster.GetPlayerAreaByID(sourceCreature.BaseID);
-            if (sourceArea != null) targetArea = sourceArea;
-        }
-
-        // CardLogic temporaire — jamais ajouté en main, sert uniquement à transmettre
-        // le CardAsset à PlayACreatureCommand pour le spawn visuel
         CardLogic tokenCard = new CardLogic(tokenAsset);
         tokenCard.owner = caster;
 
@@ -62,8 +103,6 @@ public class TokenGenerationSO : EffectSO
             Caster = caster,
             Source = newCreature
         });
-
-        caster.HighlightPlayableCards();
     }
 
     protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData) { }

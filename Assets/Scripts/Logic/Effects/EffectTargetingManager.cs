@@ -134,7 +134,14 @@ public static class EffectTargetingManager
     /// </summary>
     public static void BeginLocalSelectionSession()
     {
-        if (NetworkSessionData.IsNetworkSession) return;
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            if (_pendingPerPlayer.Count == 0)
+                _isComplete = true;
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
+            return;
+        }
         if (_localPlayerQueue.Count > 0)
             LoadLocalPlayerSelections(_localPlayerQueue[0]);
         else
@@ -180,6 +187,7 @@ public static class EffectTargetingManager
         {
             // All players confirmed — execute all effects simultaneously
             ClearHighlights();
+            TargetingVisualEvents.RaiseEffectsExecuting();
             foreach (List<PendingEffectSelection> playerEffects in _pendingPerPlayer.Values)
                 ExecuteAll(playerEffects);
             _isComplete = true;
@@ -409,6 +417,7 @@ public static class EffectTargetingManager
     {
         for (int i = 0; i < sourceEntityIDs.Length; i++)
         {
+            TargetingVisualEvents.RaiseEffectsExecuting();
             CardEffectData effectData = ResolveEffectData(
                 sourceEntityIDs[i], effectIndexes[i], out EffectContext context);
             if (effectData == null || context == null) continue;
@@ -473,4 +482,20 @@ public static class EffectTargetingManager
 
         return null;
     }
+
+    public static CardAsset GetTokenAsset(int sourceEntityID, int effectIndex)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
+        {
+            if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
+                return creature.ca.Effects[effectIndex].Parameters.TokenToSummon;
+        }
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
+        {
+            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
+                return building.ca.Effects[effectIndex].Parameters.TokenToSummon;
+        }
+        return null;
+    }
+
 }

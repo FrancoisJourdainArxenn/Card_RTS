@@ -9,14 +9,14 @@ public class TargetedArrowManager : MonoBehaviour
 
     void OnEnable()
     {
-        TargetingVisualEvents.OnTargetingStarted += OnTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded   += OnTargetingEnded;
+        TargetingVisualEvents.OnTargetingStarted  += OnTargetingStarted;
+        TargetingVisualEvents.OnEffectsExecuting  += OnTargetingEnded; // OnTargetingEnded → OnEffectsExecuting
     }
 
     void OnDisable()
     {
-        TargetingVisualEvents.OnTargetingStarted -= OnTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded   -= OnTargetingEnded;
+        TargetingVisualEvents.OnTargetingStarted  -= OnTargetingStarted;
+        TargetingVisualEvents.OnEffectsExecuting  -= OnTargetingEnded;
     }
 
     private void OnTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)

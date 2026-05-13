@@ -746,6 +746,40 @@ public class GameNetworkManager : NetworkBehaviour
         player.ExecutePlaceBuilding(building, spot, buildingUniqueID, alreadyPaid);
     }
 
+    // -------------------------------------------------------------------------
+    // Effets de cartes
+    // -------------------------------------------------------------------------
+
+    public void BroadCastTokenToHand(int playerIndex, int sourceEntityID, int effectIndex)
+    {
+        if (!IsServer) return;
+        int cardID = IDFactory.GetUniqueID();
+        TokenToHandClientRpc(playerIndex, sourceEntityID, effectIndex, cardID);
+    }
+
+    [ClientRpc]
+    void TokenToHandClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int cardID)
+    {
+        CardAsset tokenAsset = EffectTargetingManager.GetTokenAsset(sourceEntityID, effectIndex);
+        if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
+        Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID);
+    }
+
+    public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID)
+    {
+        if (!IsServer) return;
+        int cardID = IDFactory.GetUniqueID();
+        int creatureID = IDFactory.GetUniqueID();
+        TokenToZoneClientRpc(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID);
+    }
+
+    [ClientRpc]
+    void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID)
+    {
+        CardAsset tokenAsset = EffectTargetingManager.GetTokenAsset(sourceEntityID, effectIndex);
+        if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
+        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID);
+    }
 
 
 

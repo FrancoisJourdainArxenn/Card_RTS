@@ -304,19 +304,33 @@ public class Player : MonoBehaviour, ILivable
     }
 
     // get card NOT from deck (a token or a coin)
-    public void GetACardNotFromDeck(CardAsset cardAsset)
+    public void GetACardNotFromDeck(CardAsset cardAsset, int networkID = -1)
     {
         if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
         {
-            // 1) logic: add card to hand
-            CardLogic newCard = new CardLogic(cardAsset);
+            CardLogic newCard = new CardLogic(cardAsset, networkID);
             newCard.owner = this;
             hand.CardsInHand.Insert(0, newCard);
-            // 2) send message to the visual Deck
-            new DrawACardCommand(hand.CardsInHand[0], this, fast: true, fromDeck: false).AddToQueue(); 
+            new DrawACardCommand(hand.CardsInHand[0], this, fast: true, fromDeck: false).AddToQueue();
         }
-        // no removal from deck because the card was not in the deck
     }
+
+    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID)
+    {
+        PlayerArea targetArea = GetPlayerAreaByID(baseID);
+        if (targetArea == null) { Debug.LogError($"[Token] PlayerArea introuvable baseID={baseID}"); return; }
+
+        CardLogic tokenCard = new CardLogic(tokenAsset, cardID);
+        tokenCard.owner = this;
+
+        CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
+        playedCards.Creatures.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
+
+        new PlayACreatureCommand(tokenCard, this, tablePos, creatureID, targetArea).AddToQueue();
+        EffectProcessor.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
+    }
+
 
     // 2 METHODS FOR PLAYING SPELLS
     // 1st overload - takes ids as arguments
