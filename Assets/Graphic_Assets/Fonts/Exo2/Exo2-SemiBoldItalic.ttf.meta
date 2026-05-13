@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 503b37eb82c2b6741ae1e4564609f612
+guid: 39e4e38f7104d0841a4abeccbbf991af
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,13 +9,12 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Jali Greek Variable
-  fallbackFontReferences:
-  - {fileID: 12800000, guid: 5f1dada5d2780b94590714e806a58a93, type: 3}
+  - Exo 2
+  fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
-  useLegacyBoundsCalculation: 1
+  useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
   userData: 
   assetBundleName: 

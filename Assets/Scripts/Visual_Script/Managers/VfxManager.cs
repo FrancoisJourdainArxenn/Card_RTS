@@ -17,10 +17,19 @@ public class VfxManager : MonoBehaviour
     {
         if (data == null) return;
 
-        if (data.vfxPrefab != null)
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null || !FogOfWarManager.Instance.IsZoneFogged(zone);
+
+        if (isVisible)
         {
-            GameObject vfx = Instantiate(data.vfxPrefab, transform.position, Quaternion.identity);
-            Destroy(vfx, data.vfxLifetime);
+            if (data.vfxPrefab != null)
+            {
+                GameObject vfx = Instantiate(data.vfxPrefab, transform.position, Quaternion.identity);
+                Destroy(vfx, data.vfxLifetime);
+            }
+
+            if (data.showAmount)
+                VisualFeedbackEffect.CreateTextEffect(transform.position, amount, data.textColor);
         }
 
         if (effectOverlay != null && data.overlayDuration > 0)
@@ -29,9 +38,6 @@ public class VfxManager : MonoBehaviour
                 effectOverlayImage.material = data.overlayMaterial;
             StartCoroutine(ShowOverlay(data.overlayDuration));
         }
-
-        if (data.showAmount)
-            VisualFeedbackEffect.CreateTextEffect(transform.position, amount, data.textColor);
     }
 
     private IEnumerator ShowOverlay(float duration)
