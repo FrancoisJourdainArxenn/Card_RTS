@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Research Center
+  m_Name: Barracks
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 0}
   Type: 1
   subType: 4
-  Description: 'In Command: Draw a card.'
-  CardImage: {fileID: 21300000, guid: 56fc62b1d6abc2245a330ff34060eac4, type: 3}
-  MainCost: 3
+  Description: 'Command : Create a Marine in your hand.'
+  CardImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
+  MainCost: 1
   SecondCost: 2
   Attack: 0
   MaxHealth: 3
@@ -26,10 +26,11 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
   Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 50935793bb75ac740a3ee0566f4b1d0e, type: 2}
+  - EffectName: Recruit
+    Effect: {fileID: 11400000, guid: 6997254306650b84a97bc1e413d3c30d, type: 2}
     Trigger: 3
     Condition: {fileID: 0}
     Effectinfo:
@@ -38,13 +39,13 @@ MonoBehaviour:
       repartition: 0
     Parameters:
       Amount: 1
-      TokenToSummon: {fileID: 0}
-      Placement: 0
+      TokenToSummon: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
+      Placement: 1
     VisualData:
       vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 1.5
-      vfxLifetime: 1.5
-      AttackDuration: 0.1
-      showAmount: 1
-      textColor: {r: 1, g: 1, b: 1, a: 1}
+      overlayDuration: 0
+      vfxLifetime: 0
+      AttackDuration: 0
+      showAmount: 0
+      textColor: {r: 0, g: 0, b: 0, a: 0}

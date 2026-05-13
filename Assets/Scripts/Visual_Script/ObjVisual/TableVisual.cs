@@ -235,7 +235,7 @@ public class TableVisual : MonoBehaviour
             targetSlotIndex = Mathf.Clamp(targetSlotIndex, 0, slotCount - 1);
             Vector3 targetLocalPos = slots.Children[targetSlotIndex].transform.localPosition;
             g.transform.DOKill();
-            g.transform.DOLocalJump(targetLocalPos, 10, 1, 0.3f);
+            g.transform.DOLocalMove(targetLocalPos, 0.3f).SetEase(Ease.OutQuad);
             // apply correct sorting order and HandSlot value for later 
             // TODO: figure out if I need to do something here:
             // g.GetComponent<WhereIsTheCardOrCreature>().SetTableSortingOrder() = CreaturesOnTable.IndexOf(g);

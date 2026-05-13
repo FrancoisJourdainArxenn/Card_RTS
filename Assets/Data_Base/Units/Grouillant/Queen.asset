@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Medic
+  m_Name: Queen
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 0
-  Description: 'End Turn : Heal 1 another Unit.'
-  CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
+  subType: 1
+  Description: 'Battle Start : 1 '
+  CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
   MainCost: 1
-  SecondCost: 1
-  Attack: 0
-  MaxHealth: 2
+  SecondCost: 2
+  Attack: 1
+  MaxHealth: 3
   AttacksForOneTurn: 1
   melee: 0
   MoveSpeed: 1
@@ -29,9 +29,9 @@ MonoBehaviour:
   Keywords:
   - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
   Effects:
-  - EffectName: Heal
+  - EffectName: Transfuse
     Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
-    Trigger: 6
+    Trigger: 5
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -42,7 +42,7 @@ MonoBehaviour:
         - team: 1
           statusFilter: 4
           zoneFilter: 1
-        requiresPlayerSelection: 1
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 1
         includesTarget: 1
@@ -56,8 +56,8 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
       overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
-      overlayDuration: 1.5
-      vfxLifetime: 1.5
-      AttackDuration: 0.1
+      overlayDuration: 1
+      vfxLifetime: 1
+      AttackDuration: 0
       showAmount: 1
-      textColor: {r: 1, g: 1, b: 1, a: 1}
+      textColor: {r: 0, g: 1, b: 0, a: 0}

@@ -51,7 +51,7 @@ MonoBehaviour:
         includesSource: 0
         queries:
         - team: 2
-          statusFilter: 3
+          statusFilter: 0
           zoneFilter: 1
       repartition: 2
     Parameters:

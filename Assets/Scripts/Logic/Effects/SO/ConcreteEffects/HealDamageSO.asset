@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eb453f0a5de109c489cdeb9ee921b4bd, type: 3}
-  m_Name: HealDamage
+  m_Name: HealDamageSO
   m_EditorClassIdentifier: Assembly-CSharp::HealDamageSO
   Description: 
   visualData:

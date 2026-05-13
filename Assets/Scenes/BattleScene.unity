@@ -2759,13 +2759,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: 9f4841127758a644bb98cabac6aed838, type: 2}
-  - {fileID: 11400000, guid: 1382fe5f7291e804db09f7c0546b3d54, type: 2}
-  - {fileID: 11400000, guid: 9f4841127758a644bb98cabac6aed838, type: 2}
+  - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
+  - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
+  - {fileID: 11400000, guid: 280fbb14ba7df9146b983efd6d4b06ae, type: 2}
+  - {fileID: 11400000, guid: f01c93db45d9f87428921f110cec8624, type: 2}
+  - {fileID: 11400000, guid: 1c962ece523e3c1479439a5a12255cca, type: 2}
+  - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
   buildings:
   - {fileID: 11400000, guid: 4f050af837ad239499879d5e640d464a, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
+  - {fileID: 11400000, guid: a20021cb0d2a6d548a1bf9d4823cf453, type: 2}
 --- !u!1 &633582952
 GameObject:
   m_ObjectHideFlags: 0
@@ -2829,13 +2833,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: fc5f647e99e6487438d92c23264ad9e9, type: 2}
-  - {fileID: 11400000, guid: c44193175e1c9db46917e0b4f0c7b65c, type: 2}
-  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
+  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
+  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
+  - {fileID: 11400000, guid: f94ed962b11bdfe4a9ccad30280ecc42, type: 2}
+  - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
+  - {fileID: 11400000, guid: c0696d4d5db064e48b77655d8691b3cb, type: 2}
+  - {fileID: 11400000, guid: 44fdfb085f63d904d80fb87a514e61ce, type: 2}
   buildings:
   - {fileID: 11400000, guid: 4464a0c83f14ebd4fadcbe1d2fc9080e, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
+  - {fileID: 11400000, guid: 92e6910a2c3c36b4b8df04ee090c8f5e, type: 2}
 --- !u!114 &645481813 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7416908257185595393, guid: 87955cc3aa9b36940b157da29917e177, type: 3}
@@ -5787,7 +5795,7 @@ MonoBehaviour:
   baseVisual: {fileID: 8182161546712294166}
   playerColor: {r: 0, g: 0, b: 0, a: 0}
   mainRessourceTotal: 20
-  mainRessourceAvailable: 5
+  mainRessourceAvailable: 0
   secondRessourceTotal: 10
   secondRessourceAvailable: 0
   playerMainIncome: 0
@@ -7682,7 +7690,7 @@ MonoBehaviour:
   baseVisual: {fileID: 1405452651}
   playerColor: {r: 0, g: 0, b: 0, a: 0}
   mainRessourceTotal: 20
-  mainRessourceAvailable: 5
+  mainRessourceAvailable: 0
   secondRessourceTotal: 10
   secondRessourceAvailable: 0
   playerMainIncome: 0

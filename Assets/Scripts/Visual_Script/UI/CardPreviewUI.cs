@@ -48,12 +48,14 @@ public class CardPreviewUI : MonoBehaviour
     {
         TargetingVisualEvents.OnTargetingStarted += HandleTargetingStarted;
         TargetingVisualEvents.OnTargetingEnded   += HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered += HandleAutoEffect;  // nouveau
     }
 
     void OnDisable()
     {
         TargetingVisualEvents.OnTargetingStarted -= HandleTargetingStarted;
         TargetingVisualEvents.OnTargetingEnded   -= HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered -= HandleAutoEffect;  // nouveau
     }
 
     private void HandleTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
@@ -96,6 +98,32 @@ public class CardPreviewUI : MonoBehaviour
 
         BuildStack(queue, currentIndex, remaining);
     }
+
+    private void HandleAutoEffect(CardEffectData data, EffectContext context)
+    {
+        // Récupère la CardAsset depuis la source (créature/bâtiment)
+        CardAsset ca = (context.Source as CreatureLogic)?.ca
+                    ?? (context.Source as BuildingLogic)?.ca;
+        if (ca == null) return;
+
+        // Récupère l'ID de la source pour la flèche/trail
+        int sourceID = (context.Source as CreatureLogic)?.UniqueCreatureID
+                    ?? (context.Source as BuildingLogic)?.UniqueBuildingID
+                    ?? -1;
+
+        // Réutilise CreateTargetingPreview en construisant un PendingEffectSelection factice
+        var fakeSelection = new PendingEffectSelection
+        {
+            Data           = data,
+            Context        = context,
+            EligibleTargets = new System.Collections.Generic.List<IIdentifiable>(),
+            SourceEntityID = sourceID
+        };
+
+        // Affiche brièvement puis détruit
+        StartCoroutine(ShowAutoEffectBriefly(fakeSelection));
+    }
+
 
     private void BuildStack(List<PendingEffectSelection> queue, int currentIndex, int remaining)
     {
@@ -238,6 +266,19 @@ public class CardPreviewUI : MonoBehaviour
         currentPreview.SetActive(true);
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    private IEnumerator ShowAutoEffectBriefly(PendingEffectSelection selection)
+    {
+        GameObject preview = CreateTargetingPreview(selection);
+        if (preview == null) yield break;
+
+        // Trail depuis la source
+        GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
+        if (sourceGO != null) SpawnTrail(sourceGO.transform);
+
+        yield return new WaitForSeconds(3f);  // durée d'affichage à ajuster
+        if (preview != null) Destroy(preview);
     }
 
 

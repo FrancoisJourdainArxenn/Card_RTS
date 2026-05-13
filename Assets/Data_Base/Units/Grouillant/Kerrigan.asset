@@ -10,26 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Ultralisk
+  m_Name: Kerrigan
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  Description: 'Melee
-
-    Frenzy'
-  CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
-  MainCost: 7
-  SecondCost: 5
-  Attack: 4
-  MaxHealth: 8
+  Description: Frenzy
+  CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
+  MainCost: 4
+  SecondCost: 3
+  Attack: 2
+  MaxHealth: 5
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
   Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
   - {fileID: 11400000, guid: 180137d89e841c94c873544e8df3ebed, type: 2}
   Effects:
   - EffectName: Frenzy
@@ -40,7 +37,7 @@ MonoBehaviour:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 1
+        onlySource: 0
         queries: []
         requiresPlayerSelection: 0
       affectedElements:
@@ -56,8 +53,8 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 1
+      overlayDuration: 0
       vfxLifetime: 1
       AttackDuration: 0
       showAmount: 1
-      textColor: {r: 0, g: 0.3254902, b: 1, a: 0}
+      textColor: {r: 0, g: 0.40392157, b: 1, a: 0}

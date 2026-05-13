@@ -18,14 +18,46 @@ MonoBehaviour:
   Description: Melee
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 2
-  SecondCost: 1
+  SecondCost: 0
   Attack: 1
-  MaxHealth: 4
+  MaxHealth: 3
   AttacksForOneTurn: 1
   melee: 1
   MoveSpeed: 1
   Celerity: 0
-  Keywords: []
-  Targets: 0
   ActivationsForOneTurn: 0
-  Effects: []
+  Keywords:
+  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  Effects:
+  - EffectName: Regen
+    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
+    Trigger: 5
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries:
+        - team: 0
+          statusFilter: 4
+          zoneFilter: 0
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 0
+        includesSource: 1
+        queries: []
+      repartition: 0
+    Parameters:
+      Amount: 1
+      TokenToSummon: {fileID: 0}
+      Placement: 0
+    VisualData:
+      vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
+      overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
+      overlayDuration: 1
+      vfxLifetime: 1
+      AttackDuration: 0
+      showAmount: 1
+      textColor: {r: 0, g: 1, b: 0, a: 0}

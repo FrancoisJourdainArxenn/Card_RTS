@@ -224,5 +224,9 @@ public static class EffectProcessor
             return;
         }
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters, data.VisualData);
+        
+        // Notifie le visuel pour les effets sans sélection joueur
+        // if (!data.RequiresPlayerInput)
+        //     TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
     }
 }
