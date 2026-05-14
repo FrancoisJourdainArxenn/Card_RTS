@@ -85,7 +85,19 @@ public class HoverPreview : MonoBehaviour
                     ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
                     ?? GetComponentInParent<OneCardManager>()?.cardAsset;
 
-        CardPreviewUI.Instance?.Show(asset, previewOffset);
+        int? attackOverride    = null;
+        int? healthOverride    = null;
+        int? maxHealthOverride = null;
+
+        IDHolder idHolder = GetComponentInParent<IDHolder>();
+        if (idHolder != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
+        {
+            attackOverride    = creature.Attack;
+            healthOverride    = creature.Health;
+            maxHealthOverride = creature.MaxHealth;
+        }
+
+        CardPreviewUI.Instance?.Show(asset, previewOffset, attackOverride, healthOverride, maxHealthOverride);
     }
 
 

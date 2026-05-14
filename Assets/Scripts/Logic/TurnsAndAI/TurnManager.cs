@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
@@ -10,6 +12,7 @@ using Unity.Netcode;
 public class TurnManager : MonoBehaviour
 {
     public int initdraw = 5;
+    [SerializeField] private float effectSequenceDelay = 1.5f;
 
     public static TurnManager Instance;
 
@@ -148,14 +151,19 @@ public class TurnManager : MonoBehaviour
     /// <summary>Registers end-of-phase for the participant at this index in <see cref="Player.Players"/>.</summary>
     public void RegisterEndPhase(int participantIndex)
     {
-        // Any phase with an active targeting session: End Phase = confirmation des sélections.
-        // BeginCombat: AutoAdvanceFromBeginCombat prend le relais.
-        // Autres phases: AutoAdvanceFromRegroup / AutoAdvanceFromEnd prennent le relais.
-        if (currentPhase == TurnPhases.BeginCombat || !EffectTargetingManager.IsComplete)
-        {
-            Player player = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
-                ? Player.Players[participantIndex] : null;
+        Player player = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
+            ? Player.Players[participantIndex] : null;
 
+        // Any phase with an active targeting session AND the player hasn't already submitted:
+        // clicking End Phase = confirming selections.
+        // BeginCombat always goes through this path (confirmation IS the phase-end).
+        // En réseau seulement : si le joueur a déjà soumis ses sélections (auto ou manuel),
+        // on bypass ConfirmAndSubmit pour envoyer directement RegisterEndPhaseServerRpc.
+        // En local ce check n'est pas nécessaire — le state machine gère déjà tout via AdvanceLocalPlayer.
+        bool playerTargetingDone = NetworkSessionData.IsNetworkSession &&
+            (player == null || EffectTargetingManager.IsPlayerTargetingComplete(player));
+        if (currentPhase == TurnPhases.BeginCombat || (!EffectTargetingManager.IsComplete && !playerTargetingDone))
+        {
             if (NetworkSessionData.IsNetworkSession)
             {
                 bool isMyPlayer = player != null && player.MainPArea.AllowedToControlThisPlayer;
@@ -169,9 +177,7 @@ public class TurnManager : MonoBehaviour
 
         if (NetworkSessionData.IsNetworkSession)
         {
-            Player p = (Player.Players != null && participantIndex >= 0 && participantIndex < Player.Players.Length)
-                ? Player.Players[participantIndex] : null;
-            bool isMyPlayer = p != null && p.MainPArea.AllowedToControlThisPlayer;
+            bool isMyPlayer = player != null && player.MainPArea.AllowedToControlThisPlayer;
 
             if (!isMyPlayer)
                 return; // On ne traite jamais la phase-end d'un joueur qu'on ne contrôle pas
@@ -491,5 +497,26 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue || Command.CardDrawPending());
         yield return new WaitForSeconds(1.5f);
         EnterPhase(TurnPhases.Command);
+    }
+
+    public void RunEffectsSequentially(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
+        => StartCoroutine(EffectSequenceCoroutine(callbacks, hasVisuals, onComplete));
+
+    private IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
+    {
+        float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
+        yield return new WaitForSeconds(stackDelay);
+
+        for (int i = 0; i < callbacks.Count; i++)
+        {
+            callbacks[i]?.Invoke();
+            if (hasVisuals != null && i < hasVisuals.Count && hasVisuals[i])
+            {
+                yield return new WaitForSeconds(effectSequenceDelay);
+                TargetingVisualEvents.RaiseEffectResolved();
+            }
+        }
+        TargetingVisualEvents.RaiseEffectsBatchComplete();
+        onComplete?.Invoke();
     }
 }

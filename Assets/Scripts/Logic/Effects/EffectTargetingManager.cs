@@ -63,7 +63,34 @@ public static class EffectTargetingManager
             return _localSelectionQueues.TryGetValue(playerIndex, out var selectionQueue) && selectionQueue.Count > 0;
         }
 
+        if (_hasSubmitted && !_isComplete) return true;
         return _selectionCursor < _selectionQueue.Count;
+    }
+
+    /// <summary>True uniquement quand c'est le tour de ce joueur de sélectionner/confirmer ses cibles.</summary>
+    public static bool IsTargetingActiveForPlayer(Player player)
+    {
+        if (_isComplete) return false;
+        int playerIndex = System.Array.IndexOf(Player.Players, player);
+
+        if (!NetworkSessionData.IsNetworkSession)
+            return playerIndex == _currentLocalPlayerIndex;
+
+        return player.MainPArea.AllowedToControlThisPlayer && !_hasSubmitted;
+    }
+
+    /// <summary>True when the player's targeting session is active and every selection slot has been filled.</summary>
+    public static bool AreAllTargetsAssigned(Player player)
+    {
+        if (_isComplete) return false;
+        int playerIndex = System.Array.IndexOf(Player.Players, player);
+        if (!NetworkSessionData.IsNetworkSession)
+            return playerIndex == _currentLocalPlayerIndex
+                && _selectionQueue.Count > 0
+                && _selectionCursor >= _selectionQueue.Count;
+        return _selectionQueue.Count > 0
+            && _selectionCursor >= _selectionQueue.Count
+            && !_hasSubmitted;
     }
 
     /// <summary>
@@ -226,13 +253,49 @@ public static class EffectTargetingManager
         }
         else
         {
-            // All players confirmed — execute all effects simultaneously
+            _currentLocalPlayerIndex = -1;
+            if (GlobalSettings.Instance != null)          // ← ajouter ces deux lignes
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
             ClearHighlights();
             TargetingVisualEvents.RaiseEffectsExecuting();
+
+            List<PendingEffectSelection> allEffects = new List<PendingEffectSelection>();
             foreach (List<PendingEffectSelection> playerEffects in _pendingPerPlayer.Values)
-                ExecuteAll(playerEffects);
-            _isComplete = true;
-            TurnManager.RefreshAllPlayableHighlights();
+                allEffects.AddRange(playerEffects);
+
+            List<System.Action> callbacks  = new List<System.Action>();
+            List<bool>          hasVisuals = new List<bool>();
+            foreach (PendingEffectSelection e in allEffects)
+            {
+                PendingEffectSelection captured = e;
+                callbacks.Add(() =>
+                {
+                    captured.Context.SelectedTarget = captured.SelectedTarget;
+                    EffectProcessor.ExecutePendingEffect(captured.Data, captured.Context);
+                });
+                hasVisuals.Add(!e.Data.RequiresPlayerInput || e.EligibleTargets.Count > 0);
+            }
+
+            TargetingVisualEvents.RaiseEffectsBatchPending(allEffects, hasVisuals);
+
+            if (TurnManager.Instance != null)
+            {
+                TurnManager.Instance.RunEffectsSequentially(callbacks, hasVisuals, () =>
+                {
+                    _isComplete = true;
+                    TurnManager.RefreshAllPlayableHighlights();
+                    if (GlobalSettings.Instance != null)
+                        GlobalSettings.Instance.RefreshEndPhaseButtons();
+                });
+            }
+            else
+            {
+                foreach (System.Action cb in callbacks) cb?.Invoke();
+                _isComplete = true;
+                TurnManager.RefreshAllPlayableHighlights();
+                if (GlobalSettings.Instance != null)
+                    GlobalSettings.Instance.RefreshEndPhaseButtons();
+            }
         }
     }
 
@@ -333,7 +396,10 @@ public static class EffectTargetingManager
         if (_selectionCursor < _selectionQueue.Count)
             ShowCurrentSelectionWithChoice();
         else if (!NetworkSessionData.IsNetworkSession)
-            AdvanceLocalPlayer();
+        {
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
+        }
         else
             ClearHighlights();
 
@@ -415,6 +481,8 @@ public static class EffectTargetingManager
 
             ClearHighlights();
             SubmitToServer(player);
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
         }
     }
 
@@ -429,6 +497,8 @@ public static class EffectTargetingManager
             // SelectedTarget is null for auto-fire effects — GetExecutionTargets handles that correctly
             pendingEffect.Context.SelectedTarget = pendingEffect.SelectedTarget;
             EffectProcessor.ExecutePendingEffect(pendingEffect.Data, pendingEffect.Context);
+            if (pendingEffect.Data.RequiresPlayerInput && pendingEffect.EligibleTargets.Count > 0)
+                TargetingVisualEvents.RaiseAutoEffectTriggered(pendingEffect.Data, pendingEffect.Context);
         }
     }
 
@@ -474,24 +544,60 @@ public static class EffectTargetingManager
         for (int i = 0; i < subSeeds.Length; i++)
             subSeeds[i] = masterRng.Next();
 
+        TargetingVisualEvents.RaiseEffectsExecuting();
+
+        List<PendingEffectSelection> visualEffects = new List<PendingEffectSelection>();
+        List<System.Action>          callbacks     = new List<System.Action>();
+        List<bool>                   hasVisuals    = new List<bool>();
+
         for (int i = 0; i < sourceEntityIDs.Length; i++)
         {
-            TargetingVisualEvents.RaiseEffectsExecuting();
             CardEffectData effectData = ResolveEffectData(
                 sourceEntityIDs[i], effectIndexes[i], out EffectContext context);
             if (effectData == null || context == null) continue;
 
             context.SelectedTarget = ResolveEntityByID(selectedTargetIDs[i]);
 
-            EffectSO.SetNetworkRng(new System.Random(subSeeds[i]));
-            EffectProcessor.ExecutePendingEffect(effectData, context);
-            EffectSO.ClearNetworkRng();
+            visualEffects.Add(new PendingEffectSelection
+            {
+                Data            = effectData,
+                Context         = context,
+                SourceEntityID  = sourceEntityIDs[i],
+                EligibleTargets = new List<IIdentifiable>()
+            });
+            hasVisuals.Add(!effectData.RequiresPlayerInput || selectedTargetIDs[i] >= 0);
+
+            CardEffectData capturedData    = effectData;
+            EffectContext  capturedContext  = context;
+            int            capturedSeedIdx = i;
+            callbacks.Add(() =>
+            {
+                EffectSO.SetNetworkRng(new System.Random(subSeeds[capturedSeedIdx]));
+                EffectProcessor.ExecutePendingEffect(capturedData, capturedContext);
+                EffectSO.ClearNetworkRng();
+            });
         }
 
-        _isComplete = true;
-        TurnManager.RefreshAllPlayableHighlights();
-        if (GlobalSettings.Instance != null)
-            GlobalSettings.Instance.RefreshEndPhaseButtons();
+        TargetingVisualEvents.RaiseEffectsBatchPending(visualEffects, hasVisuals);
+
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.RunEffectsSequentially(callbacks, hasVisuals, () =>
+            {
+                _isComplete = true;
+                TurnManager.RefreshAllPlayableHighlights();
+                if (GlobalSettings.Instance != null)
+                    GlobalSettings.Instance.RefreshEndPhaseButtons();
+            });
+        }
+        else
+        {
+            foreach (System.Action cb in callbacks) cb?.Invoke();
+            _isComplete = true;
+            TurnManager.RefreshAllPlayableHighlights();
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
+        }
     }
 
     // =========================================================================

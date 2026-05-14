@@ -21,6 +21,8 @@ public class GlobalSettings : MonoBehaviour
     public Color32 TopColor;
     public Color32 LowColor;
     public Color32 NeutralColor;
+    public Color statBuffColor   = Color.blue;
+    public Color statDebuffColor = Color.red;
 
     [Header("Neutral Base")]
     public NeutralZoneController[] NeutralBases;
@@ -41,8 +43,8 @@ public class GlobalSettings : MonoBehaviour
     public GameObject NeutralBasePrefab;
     public GameObject BuildingPrefab;
     [Header("Other")]
-    [Tooltip("End phase button for the top-area human player (assign in the scene).")]
-    public Button EndPhaseButtonTopPlayer;
+    public Button ConfirmTargetingButton;
+
     public GameObject GameOverPanel;
     public TMP_Text localPlayerDebugText;
 
@@ -68,6 +70,10 @@ public class GlobalSettings : MonoBehaviour
         LowPlayer.playerColor = LowColor;
         LowPlayer.tag = "LowPlayer";
         TopPlayer.tag = "TopPlayer";
+
+        if (ConfirmTargetingButton != null)
+            ConfirmTargetingButton.gameObject.SetActive(false);
+
 
         if (NetworkSessionData.IsNetworkSession == false)
         {
@@ -106,18 +112,29 @@ public class GlobalSettings : MonoBehaviour
 
     public void RefreshEndPhaseButtons()
     {
-        foreach (EndTurnButton eb in Object.FindObjectsByType<EndTurnButton>(FindObjectsSortMode.None))
+        bool confirmActive = localPlayer != null && EffectTargetingManager.IsTargetingActiveForPlayer(localPlayer);
+
+        foreach (EndTurnButton eb in Object.FindObjectsByType<EndTurnButton>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             Button btn = eb.GetComponent<Button>();
             if (btn == null)
                 continue;
             Player player = eb.GetParticipantPlayer();
+
+            if (player == localPlayer)
+                eb.gameObject.SetActive(!confirmActive);
+
             SetEndPhaseButtonState(btn, player);
         }
-    }
 
-    static readonly Color ColorReadyConfirmed = new Color(0.35f, 0.75f, 0.35f, 0.8f); // vert : adversaire a confirmé
-    static readonly Color ColorDisabledDefault = new Color(0.78f, 0.78f, 0.78f, 0.5f); // gris Unity par défaut
+        if (ConfirmTargetingButton != null)
+        {
+            ConfirmTargetingButton.gameObject.SetActive(confirmActive);
+            ConfirmTargetingButton.interactable = true;
+            bool allAssigned = confirmActive && EffectTargetingManager.AreAllTargetsAssigned(localPlayer);
+            ConfirmTargetingButton.GetComponent<ConfirmButtonFeedback>()?.SetReadyState(allAssigned);
+        }
+    }
 
     static void SetEndPhaseButtonState(Button button, Player player)
     {
@@ -127,7 +144,7 @@ public class GlobalSettings : MonoBehaviour
         bool isLocalPlayer        = player.MainPArea.AllowedToControlThisPlayer;
         bool gameActive           = player.MainPArea.ControlsON;
         bool notYetReady          = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
-        bool hasActiveTargeting   = !EffectTargetingManager.IsComplete;
+        bool hasActiveTargeting   = EffectTargetingManager.IsTargetingActiveForPlayer(player);
         bool waitingForSelection  = hasActiveTargeting && EffectTargetingManager.BlocksEndPhaseButton(player);
 
         // Interactable si le joueur peut confirmer ses sélections ou terminer sa phase normalement
@@ -135,14 +152,6 @@ public class GlobalSettings : MonoBehaviour
         bool canEndPhaseNormally = isLocalPlayer && gameActive && notYetReady && !waitingForSelection;
         button.interactable = canConfirmTargeting || canEndPhaseNormally;
 
-        // Feedback couleur pour le bouton du joueur adverse
-        if (!isLocalPlayer)
-        {
-            ColorBlock colors = button.colors;
-            // Vert si l'adversaire a confirmé, gris sinon
-            colors.disabledColor = notYetReady ? ColorDisabledDefault : ColorReadyConfirmed;
-            button.colors = colors;
-        }
     }
 
 }

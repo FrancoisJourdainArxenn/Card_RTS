@@ -27,11 +27,14 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image CardFaceGlowImage;
     public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
-
+    private Color _originalAttackColor;
+    private Color _originalHealthColor;
 
     void Awake()
     {
         originalScale = transform.localScale;
+        if (AttackText != null) _originalAttackColor = AttackText.color;
+        if (HealthText != null) _originalHealthColor = HealthText.color;
 
         if (cardAsset != null)
             ReadCardFromAsset();
@@ -74,6 +77,42 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             AttackText.text = cardAsset.Attack.ToString();
         } else { if (ATK_BG != null) ATK_BG.SetActive(false); }
 
+    }
+
+    public void OverrideStats(int? attack, int? health, int? maxHealth = null)
+    {
+        Color buffColor   = GlobalSettings.Instance != null ? GlobalSettings.Instance.statBuffColor   : Color.blue;
+        Color debuffColor = GlobalSettings.Instance != null ? GlobalSettings.Instance.statDebuffColor : Color.red;
+
+        if (AttackText != null)
+        {
+            if (attack.HasValue)
+            {
+                AttackText.text  = attack.Value.ToString();
+                AttackText.color = attack.Value > cardAsset.Attack ? buffColor
+                                 : attack.Value < cardAsset.Attack ? debuffColor
+                                 : _originalAttackColor;
+            }
+            else
+            {
+                AttackText.color = _originalAttackColor;
+            }
+        }
+
+        if (HealthText != null)
+        {
+            if (health.HasValue && maxHealth.HasValue)
+            {
+                HealthText.text  = health.Value.ToString();
+                HealthText.color = health.Value > maxHealth.Value ? buffColor
+                                 : health.Value < maxHealth.Value ? debuffColor
+                                 : _originalHealthColor;
+            }
+            else
+            {
+                HealthText.color = _originalHealthColor;
+            }
+        }
     }
 
     public void ReadEffectFromAsset(string effectName)
