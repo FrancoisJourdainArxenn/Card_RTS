@@ -22,6 +22,26 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     public GameObject WillBeDamagedIndicator;
     public TMP_Text pendingDamageText;
 
+    private Color _originalAttackColor;
+    private Color _originalHealthColor;
+    private bool _colorsCached = false;
+
+    private void EnsureColorsCached()
+    {
+        if (_colorsCached) return;
+        if (AttackText != null) _originalAttackColor = AttackText.color;
+        if (HealthText != null) _originalHealthColor = HealthText.color;
+        _colorsCached = true;
+    }
+
+    protected void ApplyStatColor(TMP_Text text, int current, int baseValue, Color originalColor)
+    {
+        if (text == null || GlobalSettings.Instance == null) return;
+        text.color = current > baseValue ? GlobalSettings.Instance.statBuffColor
+                   : current < baseValue ? GlobalSettings.Instance.statDebuffColor
+                   : originalColor;
+    }
+
     private bool canAttackNow = false;
     public bool CanAttackNow
     {
@@ -41,10 +61,12 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     {
         if (amount <= 0)
             return;
-        
+
+        EnsureColorsCached();
         Debug.Log($"{cardAsset.name} took {amount} damage. {healthAfter} left afterwards.");
         VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
+        ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
@@ -52,11 +74,12 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     {
         if (amount <= 0)
             return;
-        
+
+        EnsureColorsCached();
         int currentHealth = Mathf.Min(cardAsset.MaxHealth, healthAfter);
         Debug.Log($"{cardAsset.name} heal {amount} damage. {currentHealth} left afterwards.");
-        // DamageEffect.CreateDamageEffect(transform.position, -amount);
         HealthText.text = currentHealth.ToString();
+        ApplyStatColor(HealthText, currentHealth, cardAsset.MaxHealth, _originalHealthColor);
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
@@ -64,10 +87,11 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     {
         if (amount <= 0)
             return;
-        
+
+        EnsureColorsCached();
         Debug.Log($"{cardAsset.name} gains {amount} attack. {attackAfter} attack now.");
-        // DamageEffect.CreateDamageEffect(transform.position, -amount);
         AttackText.text = attackAfter.ToString();
+        ApplyStatColor(AttackText, attackAfter, cardAsset.Attack, _originalAttackColor);
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 

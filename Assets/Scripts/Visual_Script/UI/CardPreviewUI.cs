@@ -312,7 +312,7 @@ public class CardPreviewUI : MonoBehaviour
         previewingEffects = false;
     }
 
-    public void Show(CardAsset asset, Vector2 mouseOffset)
+    public void Show(CardAsset asset, Vector2 mouseOffset, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
     {
         if(previewingEffects)
             return;
@@ -328,10 +328,10 @@ public class CardPreviewUI : MonoBehaviour
         Vector2 previewPosition = localPoint + mouseOffset;
         _anchorRect.anchoredPosition = previewPosition;
 
-        ShowPreview(asset, previewPosition);
+        ShowPreview(asset, previewPosition, attackOverride, healthOverride, maxHealthOverride);
     }
 
-    private void ShowPreview(CardAsset asset, Vector2 previewPosition)
+    private void ShowPreview(CardAsset asset, Vector2 previewPosition, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
     {
         if (cardPreviewPrefab == null) return;
 
@@ -352,6 +352,7 @@ public class CardPreviewUI : MonoBehaviour
         OneCardManager manager = currentPreview.GetComponent<OneCardManager>();
         manager.cardAsset = asset;
         manager.ReadCardFromAsset();
+        manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         if (ReminderTextManager.Instance != null)
             ReminderTextManager.Instance.ShowTooltips(asset.Keywords, previewPosition);
 

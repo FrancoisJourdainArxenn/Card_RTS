@@ -63,7 +63,34 @@ public static class EffectTargetingManager
             return _localSelectionQueues.TryGetValue(playerIndex, out var selectionQueue) && selectionQueue.Count > 0;
         }
 
+        if (_hasSubmitted && !_isComplete) return true;
         return _selectionCursor < _selectionQueue.Count;
+    }
+
+    /// <summary>True uniquement quand c'est le tour de ce joueur de sélectionner/confirmer ses cibles.</summary>
+    public static bool IsTargetingActiveForPlayer(Player player)
+    {
+        if (_isComplete) return false;
+        int playerIndex = System.Array.IndexOf(Player.Players, player);
+
+        if (!NetworkSessionData.IsNetworkSession)
+            return playerIndex == _currentLocalPlayerIndex;
+
+        return player.MainPArea.AllowedToControlThisPlayer && !_hasSubmitted;
+    }
+
+    /// <summary>True when the player's targeting session is active and every selection slot has been filled.</summary>
+    public static bool AreAllTargetsAssigned(Player player)
+    {
+        if (_isComplete) return false;
+        int playerIndex = System.Array.IndexOf(Player.Players, player);
+        if (!NetworkSessionData.IsNetworkSession)
+            return playerIndex == _currentLocalPlayerIndex
+                && _selectionQueue.Count > 0
+                && _selectionCursor >= _selectionQueue.Count;
+        return _selectionQueue.Count > 0
+            && _selectionCursor >= _selectionQueue.Count
+            && !_hasSubmitted;
     }
 
     /// <summary>
@@ -226,6 +253,9 @@ public static class EffectTargetingManager
         }
         else
         {
+            _currentLocalPlayerIndex = -1;
+            if (GlobalSettings.Instance != null)          // ← ajouter ces deux lignes
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
             ClearHighlights();
             TargetingVisualEvents.RaiseEffectsExecuting();
 
@@ -254,6 +284,8 @@ public static class EffectTargetingManager
                 {
                     _isComplete = true;
                     TurnManager.RefreshAllPlayableHighlights();
+                    if (GlobalSettings.Instance != null)
+                        GlobalSettings.Instance.RefreshEndPhaseButtons();
                 });
             }
             else
@@ -261,6 +293,8 @@ public static class EffectTargetingManager
                 foreach (System.Action cb in callbacks) cb?.Invoke();
                 _isComplete = true;
                 TurnManager.RefreshAllPlayableHighlights();
+                if (GlobalSettings.Instance != null)
+                    GlobalSettings.Instance.RefreshEndPhaseButtons();
             }
         }
     }
@@ -362,7 +396,10 @@ public static class EffectTargetingManager
         if (_selectionCursor < _selectionQueue.Count)
             ShowCurrentSelectionWithChoice();
         else if (!NetworkSessionData.IsNetworkSession)
-            AdvanceLocalPlayer();
+        {
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
+        }
         else
             ClearHighlights();
 
@@ -444,6 +481,8 @@ public static class EffectTargetingManager
 
             ClearHighlights();
             SubmitToServer(player);
+            if (GlobalSettings.Instance != null)
+                GlobalSettings.Instance.RefreshEndPhaseButtons();
         }
     }
 
