@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
@@ -10,6 +12,7 @@ using Unity.Netcode;
 public class TurnManager : MonoBehaviour
 {
     public int initdraw = 5;
+    [SerializeField] private float effectSequenceDelay = 1.5f;
 
     public static TurnManager Instance;
 
@@ -491,5 +494,26 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue || Command.CardDrawPending());
         yield return new WaitForSeconds(1.5f);
         EnterPhase(TurnPhases.Command);
+    }
+
+    public void RunEffectsSequentially(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
+        => StartCoroutine(EffectSequenceCoroutine(callbacks, hasVisuals, onComplete));
+
+    private IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
+    {
+        float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
+        yield return new WaitForSeconds(stackDelay);
+
+        for (int i = 0; i < callbacks.Count; i++)
+        {
+            callbacks[i]?.Invoke();
+            if (hasVisuals != null && i < hasVisuals.Count && hasVisuals[i])
+            {
+                yield return new WaitForSeconds(effectSequenceDelay);
+                TargetingVisualEvents.RaiseEffectResolved();
+            }
+        }
+        TargetingVisualEvents.RaiseEffectsBatchComplete();
+        onComplete?.Invoke();
     }
 }

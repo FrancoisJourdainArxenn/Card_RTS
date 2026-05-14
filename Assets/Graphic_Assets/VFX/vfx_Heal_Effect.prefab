@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5638778911496646770}
+  - component: {fileID: -5693314301531597745}
   m_Layer: 0
   m_Name: vfx_Heal_Effect
   m_TagString: Untagged
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 6604363207873346278}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-5693314301531597745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1460341048999879763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44208a8f235d82042b8999d44e93cb4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VfxAmountConfig
+  textColor: {r: 0.1998928, g: 0.764151, b: 0.16941082, a: 1}
+  prefix: +
 --- !u!1 &4383084974823949963
 GameObject:
   m_ObjectHideFlags: 0

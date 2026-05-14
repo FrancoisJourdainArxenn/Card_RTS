@@ -19,6 +19,8 @@ public class CardPreviewUI : MonoBehaviour
     private Canvas _canvas;
     private bool previewingEffects = false;
 
+    [SerializeField] private Material _opponentHologramMaterial;
+
     [SerializeField] private RectTransform targetingAnchor;
     [SerializeField] private float stackScaleFactor  = 0.85f;
     [SerializeField] private float stackDisplayScale = 0.75f;
@@ -37,9 +39,9 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private Transform arrowEndPoint;
 
     private List<GameObject> _targetingPreviews  = new List<GameObject>();
-    private List<GameObject> _autoEffectPreviews     = new List<GameObject>();
-    private List<GameObject> _opponentEffectPreviews = new List<GameObject>();
+    private List<GameObject> _autoEffectPreviews = new List<GameObject>();
     private Coroutine _autoEffectDismissCoroutine;
+    private bool _batchActive = false;
     [SerializeField] private float autoEffectDisplayDuration = 3f;
 
     void Awake()
@@ -51,22 +53,22 @@ public class CardPreviewUI : MonoBehaviour
 
     void OnEnable()
     {
-        TargetingVisualEvents.OnTargetingStarted         += HandleTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded           += HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered      += HandleAutoEffect;
-        TargetingVisualEvents.OnEffectsExecuting         += ClearOpponentStack;
-        TargetingVisualEvents.OnOpponentTargetingStarted += HandleOpponentTargetingStarted;
-        TargetingVisualEvents.OnOpponentTargetingEnded   += HandleOpponentTargetingEnded;
+        TargetingVisualEvents.OnTargetingStarted    += HandleTargetingStarted;
+        TargetingVisualEvents.OnTargetingEnded      += HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered += HandleAutoEffect;
+        TargetingVisualEvents.OnEffectsBatchPending  += HandleEffectsBatch;
+        TargetingVisualEvents.OnEffectResolved       += HandleEffectResolved;
+        TargetingVisualEvents.OnEffectsBatchComplete += HandleEffectsBatchComplete;
     }
 
     void OnDisable()
     {
-        TargetingVisualEvents.OnTargetingStarted         -= HandleTargetingStarted;
-        TargetingVisualEvents.OnTargetingEnded           -= HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered      -= HandleAutoEffect;
-        TargetingVisualEvents.OnEffectsExecuting         -= ClearOpponentStack;
-        TargetingVisualEvents.OnOpponentTargetingStarted -= HandleOpponentTargetingStarted;
-        TargetingVisualEvents.OnOpponentTargetingEnded   -= HandleOpponentTargetingEnded;
+        TargetingVisualEvents.OnTargetingStarted    -= HandleTargetingStarted;
+        TargetingVisualEvents.OnTargetingEnded      -= HandleTargetingEnded;
+        TargetingVisualEvents.OnAutoEffectTriggered -= HandleAutoEffect;
+        TargetingVisualEvents.OnEffectsBatchPending  -= HandleEffectsBatch;
+        TargetingVisualEvents.OnEffectResolved       -= HandleEffectResolved;
+        TargetingVisualEvents.OnEffectsBatchComplete -= HandleEffectsBatchComplete;
     }
 
     private ZoneLogic GetCreatureZone(CreatureLogic creature)
@@ -150,6 +152,7 @@ public class CardPreviewUI : MonoBehaviour
 
     private void HandleAutoEffect(CardEffectData data, EffectContext context)
     {
+        if (_batchActive) return;
         if (!IsEffectVisibleToLocalPlayer(context)) return;
         if (_targetingPreviews.Count > 0) return;
 
@@ -161,15 +164,64 @@ public class CardPreviewUI : MonoBehaviour
                     ?? (context.Source as BuildingLogic)?.UniqueBuildingID
                     ?? -1;
 
+        Material mat = context.Caster != GlobalSettings.Instance.localPlayer
+            ? _opponentHologramMaterial
+            : null;
+
         PushToAutoStack(new PendingEffectSelection
         {
             Data            = data,
             Context         = context,
             EligibleTargets = new List<IIdentifiable>(),
             SourceEntityID  = sourceID
-        });
+        }, mat);
     }
 
+
+    private void HandleEffectsBatch(List<PendingEffectSelection> effects, List<bool> hasVisuals)
+    {
+        _batchActive = true;
+        if (_targetingPreviews.Count > 0) return;
+
+        ClearAutoStack();
+
+        for (int i = 0; i < effects.Count; i++)
+        {
+            if (hasVisuals != null && i < hasVisuals.Count && !hasVisuals[i]) continue;
+            if (!IsEffectVisibleToLocalPlayer(effects[i].Context)) continue;
+
+            GameObject preview = CreateTargetingPreview(effects[i]);
+            if (preview == null) continue;
+
+            Material mat = effects[i].Context.Caster != GlobalSettings.Instance.localPlayer
+                ? _opponentHologramMaterial : null;
+            if (mat != null) ApplyMaterialToHologram(preview, mat);
+
+            preview.transform.localPosition = Vector3.zero;
+            preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
+            _autoEffectPreviews.Add(preview);
+
+            GameObject sourceGO = IDHolder.GetGameObjectWithID(effects[i].SourceEntityID);
+            if (sourceGO != null) SpawnTrail(sourceGO.transform);
+        }
+        RefreshAllStacks();
+    }
+
+    private void HandleEffectResolved()
+    {
+        if (_autoEffectPreviews.Count == 0) return;
+        GameObject front = _autoEffectPreviews[0];
+        _autoEffectPreviews.RemoveAt(0);
+        if (front != null) Destroy(front);
+        RefreshAllStacks();
+    }
+
+    private void HandleEffectsBatchComplete()
+    {
+        _batchActive = false;
+        if (_autoEffectPreviews.Count == 0 && _targetingPreviews.Count == 0)
+            previewingEffects = false;
+    }
 
     private void BuildStack(List<PendingEffectSelection> queue, int currentIndex, int remaining)
     {
@@ -213,6 +265,15 @@ public class CardPreviewUI : MonoBehaviour
         trail.Play(origin, trailTarget, isZoomed);
     }
 
+    private void ApplyMaterialToHologram(GameObject preview, Material material)
+    {
+        if (material == null) return;
+        Transform hologram = preview.transform.Find("CardPanel/Hologram");
+        if (hologram == null) return;
+        UnityEngine.UI.Image img = hologram.GetComponent<UnityEngine.UI.Image>();
+        if (img != null) img.material = material;
+    }
+
     private GameObject CreateTargetingPreview(PendingEffectSelection selection)
     {
         GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
@@ -248,9 +309,7 @@ public class CardPreviewUI : MonoBehaviour
         foreach (GameObject go in _autoEffectPreviews)
             if (go != null) Destroy(go);
         _autoEffectPreviews.Clear();
-        // _opponentEffectPreviews persiste jusqu'à OnEffectsExecuting → ClearOpponentStack()
-        if (_opponentEffectPreviews.Count == 0)
-            previewingEffects = false;
+        previewingEffects = false;
     }
 
     public void Show(CardAsset asset, Vector2 mouseOffset)
@@ -301,86 +360,31 @@ public class CardPreviewUI : MonoBehaviour
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
     }
 
-    private void HandleOpponentTargetingStarted(int[] sourceEntityIDs, int[] effectIndexes)
+    private void PushToAutoStack(PendingEffectSelection selection, Material materialOverride = null)
     {
-        ClearOpponentStack();
-
-        for (int i = 0; i < sourceEntityIDs.Length; i++)
-        {
-            int sourceEntityID = sourceEntityIDs[i];
-            int effectIndex    = effectIndexes[i];
-
-            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature);
-            BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building);
-
-            CardAsset ca = creature != null ? creature.ca : building != null ? building.ca : null;
-            if (ca == null || ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) continue;
-
-            Player caster   = creature != null ? creature.owner : building != null ? building.owner : null;
-            ILivable source = creature != null ? (ILivable)creature : (ILivable)building;
-            EffectContext context = new EffectContext { Caster = caster, Source = source };
-
-            if (!IsEffectVisibleToLocalPlayer(context)) continue;
-
-            PendingEffectSelection selection = new PendingEffectSelection
-            {
-                Data              = ca.Effects[effectIndex],
-                Context           = context,
-                EligibleTargets   = new List<IIdentifiable>(),
-                SourceEntityID    = sourceEntityID,
-                EffectIndexInCard = effectIndex
-            };
-
-            GameObject preview = CreateTargetingPreview(selection);
-            if (preview == null) continue;
-
-            preview.transform.localPosition = Vector3.zero;
-            preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
-            _opponentEffectPreviews.Add(preview);
-
-            GameObject sourceGO = IDHolder.GetGameObjectWithID(sourceEntityID);
-            if (sourceGO != null) SpawnTrail(sourceGO.transform);
-        }
-
-        RefreshAllStacks();
-    }
-
-    private void HandleOpponentTargetingEnded() => ClearOpponentStack();
-
-    private void ClearOpponentStack()
-    {
-        foreach (GameObject go in _opponentEffectPreviews)
-            if (go != null) Destroy(go);
-        _opponentEffectPreviews.Clear();
-        if (_targetingPreviews.Count == 0 && _autoEffectPreviews.Count == 0)
-            previewingEffects = false;
-    }
-
-    private void PushToAutoStack(PendingEffectSelection selection)
-    {
-        if (_autoEffectDismissCoroutine != null)
-            StopCoroutine(_autoEffectDismissCoroutine);
-
         GameObject preview = CreateTargetingPreview(selection);
         if (preview == null) return;
 
+        if (materialOverride != null)
+            ApplyMaterialToHologram(preview, materialOverride);
+
         preview.transform.localPosition = Vector3.zero;
         preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
-        _autoEffectPreviews.Insert(0, preview);
+        _autoEffectPreviews.Add(preview);
 
         GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
         if (sourceGO != null) SpawnTrail(sourceGO.transform);
 
         RefreshAllStacks();
 
-        _autoEffectDismissCoroutine = StartCoroutine(AutoDismissStack());
+        if (_autoEffectDismissCoroutine == null)
+            _autoEffectDismissCoroutine = StartCoroutine(AutoDismissStack());
     }
 
     private void RefreshAllStacks()
     {
         var combined = new List<GameObject>();
         combined.AddRange(_targetingPreviews);
-        combined.AddRange(_opponentEffectPreviews);
         combined.AddRange(_autoEffectPreviews);
 
         for (int i = 0; i < combined.Count; i++)
@@ -413,8 +417,22 @@ public class CardPreviewUI : MonoBehaviour
 
     private IEnumerator AutoDismissStack()
     {
-        yield return new WaitForSeconds(autoEffectDisplayDuration);
-        ClearAutoStack();
+        while (_autoEffectPreviews.Count > 0)
+        {
+            yield return new WaitForSeconds(autoEffectDisplayDuration);
+
+            if (_autoEffectPreviews.Count == 0) break;
+
+            GameObject front = _autoEffectPreviews[0];
+            _autoEffectPreviews.RemoveAt(0);
+            if (front != null) Destroy(front);
+
+            RefreshAllStacks();
+        }
+
+        if (_targetingPreviews.Count == 0)
+            previewingEffects = false;
+        _autoEffectDismissCoroutine = null;
     }
 
 

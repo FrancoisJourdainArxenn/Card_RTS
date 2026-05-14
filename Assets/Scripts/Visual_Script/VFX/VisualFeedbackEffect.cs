@@ -34,12 +34,12 @@ public class VisualFeedbackEffect : MonoBehaviour
         de.StartCoroutine(de.ShowFeedbackEffect());
     }
 
-    public static void CreateTextEffect(Vector3 position, int amount, Color color)
+    public static void CreateTextEffect(Vector3 position, int amount, Color color, string prefix = "+")
     {
         if (amount == 0 || _manager == null) return;
         var go = Instantiate(_manager.textPrefab, position, Quaternion.Euler(90, 0, 0));
         var de = go.GetComponent<VisualFeedbackEffect>();
-        de.amountText.text = "+" + amount;
+        de.amountText.text = prefix + amount;
         de.amountText.color = color;
         de.StartCoroutine(de.ShowFeedbackEffect());
     }

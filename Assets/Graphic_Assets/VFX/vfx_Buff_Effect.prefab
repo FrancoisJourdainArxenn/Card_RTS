@@ -9815,6 +9815,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2346290791694936920}
+  - component: {fileID: -8864369479151681387}
   m_Layer: 0
   m_Name: vfx_Buff_Effect
   m_TagString: Untagged
@@ -9839,3 +9840,17 @@ Transform:
   - {fileID: 545201349608764759}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-8864369479151681387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7192022332265547404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44208a8f235d82042b8999d44e93cb4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VfxAmountConfig
+  textColor: {r: 0, g: 0.61415195, b: 1, a: 1}
+  prefix: +

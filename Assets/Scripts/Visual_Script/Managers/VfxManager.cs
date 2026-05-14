@@ -25,20 +25,34 @@ public class VfxManager : MonoBehaviour
             if (data.vfxPrefab != null)
             {
                 GameObject vfx = Instantiate(data.vfxPrefab, transform.position, Quaternion.identity);
-                Destroy(vfx, data.vfxLifetime);
+                var config = vfx.GetComponent<VfxAmountConfig>();
+                if (config != null)
+                    VisualFeedbackEffect.CreateTextEffect(transform.position, amount, config.textColor, config.prefix);
+                Destroy(vfx, GetParticleLifetime(vfx));
             }
-
-            if (data.showAmount)
-                VisualFeedbackEffect.CreateTextEffect(transform.position, amount, data.textColor);
         }
 
-        if (effectOverlay != null && data.overlayDuration > 0)
+        if (effectOverlay != null && data.overlayMaterial != null)
         {
-            if (effectOverlayImage != null && data.overlayMaterial != null)
+            if (effectOverlayImage != null)
                 effectOverlayImage.material = data.overlayMaterial;
-            StartCoroutine(ShowOverlay(data.overlayDuration));
+            float duration = data.OverrideOverlayDuration != 0 ? data.OverrideOverlayDuration : 1.5f;
+            StartCoroutine(ShowOverlay(duration));
+
         }
     }
+
+    private float GetParticleLifetime(GameObject vfx)
+    {
+        var ps = vfx.GetComponentInChildren<ParticleSystem>();
+        if (ps != null)
+        {
+            var main = ps.main;
+            return main.duration + main.startLifetime.constantMax;
+        }
+        return 2f;
+    }
+
 
     private IEnumerator ShowOverlay(float duration)
     {
