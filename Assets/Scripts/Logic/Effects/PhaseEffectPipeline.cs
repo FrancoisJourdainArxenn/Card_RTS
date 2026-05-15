@@ -30,6 +30,10 @@ public static class PhaseEffectPipeline
 
     public static void ResetForNewPhase()
     {
+        List<PendingEffectSelection> stale = EffectStack.GetAllEffects();
+        if (stale.Count > 0)
+            Debug.Log($"[Pipeline] ResetForNewPhase — stack non vide avant reset ({stale.Count} effet(s)): {string.Join(", ", stale.Select(e => $"{e.Data.EffectName}({e.Data.Trigger})"))}");
+
         EffectStack.Reset();
         EffectSelectionController.Reset();
         _confirmedPlayers.Clear();
@@ -335,6 +339,8 @@ public static class PhaseEffectPipeline
 
         List<PendingEffectSelection> allEffects = EffectStack.GetAllEffects();
         Debug.Log($"[Pipeline] SubmitToServer — joueur {GetIndex(player)} | {allEffects.Count} effet(s) soumis au serveur");
+        foreach (PendingEffectSelection e in allEffects)
+            Debug.Log($"[Pipeline] SubmitToServer   → {e.Data.EffectName} | trigger: {e.Data.Trigger} | srcID: {e.SourceEntityID} | effectIdx: {e.EffectIndexInCard}");
         int n = allEffects.Count;
 
         int[] sourceEntityIDs   = new int[n];
@@ -411,26 +417,27 @@ public static class PhaseEffectPipeline
 
     private static void RunEffectsSequentially(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
     {
-        if (TurnManager.Instance != null)
-            TurnManager.Instance.StartCoroutine(EffectSequenceCoroutine(callbacks, hasVisuals, onComplete));
-        else
-        {
-            foreach (Action cb in callbacks)
-                cb?.Invoke();
+        // Game-state changes execute immediately so the board is up-to-date before the next
+        // StartSession runs (which can happen synchronously in the same network message frame).
+        foreach (Action cb in callbacks)
+            cb?.Invoke();
 
-            onComplete?.Invoke();
-        }
+        // onComplete fires synchronously here so it always runs against the current phase's
+        // pipeline state. If deferred to the visual coroutine it would fire after a phase
+        // transition and corrupt the new phase's _isComplete / highlight state.
+        onComplete?.Invoke();
+
+        if (TurnManager.Instance != null)
+            TurnManager.Instance.StartCoroutine(EffectSequenceCoroutine(callbacks.Count, hasVisuals));
     }
 
-    private static IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
+    private static IEnumerator EffectSequenceCoroutine(int count, List<bool> hasVisuals)
     {
         float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
         yield return new UnityEngine.WaitForSeconds(stackDelay);
 
-        for (int i = 0; i < callbacks.Count; i++)
+        for (int i = 0; i < count; i++)
         {
-            callbacks[i]?.Invoke();
-
             if (hasVisuals != null && i < hasVisuals.Count && hasVisuals[i])
             {
                 float delay = TurnManager.Instance != null ? TurnManager.Instance.EffectSequenceDelay : 1.5f;
@@ -440,7 +447,6 @@ public static class PhaseEffectPipeline
         }
 
         TargetingVisualEvents.RaiseEffectsBatchComplete();
-        onComplete?.Invoke();
     }
 
     private static void OnAllEffectsComplete()

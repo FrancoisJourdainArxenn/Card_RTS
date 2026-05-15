@@ -83,7 +83,6 @@ public class TurnManager : MonoBehaviour
             Debug.Log("TurnManager: Deck shuffled with random seed");
         }
 
-        timer.StartTimer();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
@@ -109,13 +108,7 @@ public class TurnManager : MonoBehaviour
         foreach (Player p in Player.Players)
             p.OnTurnStart();
 
-        // EnterPhase n'est jamais appelé pour la phase Command initiale,
-        // donc on initialise explicitement le pipeline ici.
-        PhaseEffectPipeline.ResetForNewPhase();
-        foreach (Player p in Player.Players)
-            p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
-        PhaseEffectPipeline.BeginLocalSelectionSession();
-
+        EnterPhase(TurnPhases.Command);
         StartCoroutine(HighlightAfterDraws());
 
     }
@@ -312,7 +305,7 @@ public class TurnManager : MonoBehaviour
                 if (roundEnded)
                 {
                     foreach (Player p in Player.Players)
-                        p.OnTurnEnd();
+                        p.GetComponent<TurnMaker>().OnTurnEnd();
                     // currentRound++;
                 }
                 EnterPhase(next);
@@ -532,7 +525,7 @@ public class TurnManager : MonoBehaviour
         if (roundEnded)
         {
             foreach (Player p in Player.Players)
-                p.OnTurnEnd();
+                p.GetComponent<TurnMaker>().OnTurnEnd();
             // curorentRound++;
         }
         EnterPhase(next);

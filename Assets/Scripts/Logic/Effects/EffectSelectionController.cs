@@ -126,6 +126,12 @@ public static class EffectSelectionController
             ?.GetComponent<OneLivableManager>()?.UpdateUsingEffectVisual();
     }
 
+    public static void RefreshCurrentHighlights()
+    {
+        if (HasPendingSelection)
+            ShowCurrentHighlights();
+    }
+
     public static void ClearHighlights()
     {
         TargetingVisualEvents.RaiseTargetingEnded();

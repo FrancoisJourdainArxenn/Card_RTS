@@ -29,6 +29,7 @@ public class Command
         else
             playingQueue = false;
         TurnManager.RefreshAllPlayableHighlights();
+        EffectSelectionController.RefreshCurrentHighlights();
         ZoneEnemyIndicator.RefreshAll();
     }
 

@@ -21,26 +21,39 @@ public abstract class TurnMaker : MonoBehaviour {
     public virtual void OnRegroupPhaseStart()
     {
         p.OnTurnStart();
+
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        Debug.Log($"[TurnMaker] OnRegroupPhaseStart — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
+
+        // StartSession before the draw: on the host, BroadCastDrawCard calls DrawAcardClientRpc
+        // synchronously, so effects must be collected and submitted before the draw could
+        // otherwise trigger RegisterEndPhase → SubmitToServer(0 effects).
+        if (isLocalPlayer)
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnRegroup);
+
         if (NetworkSessionData.IsNetworkSession)
         {
             if (NetworkManager.Singleton.IsServer)
                 GameNetworkManager.Instance.BroadCastDrawCard(p.playerIndex);
+
+            if (isLocalPlayer)
+                TurnManager.Instance.RegisterEndPhase(p);
         }
         else
         {
             p.DrawACard();
+            TurnManager.Instance.RegisterEndPhase(p);
         }
-        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
-            || p.MainPArea.AllowedToControlThisPlayer;
-
-        if (isLocalPlayer)
-            PhaseEffectPipeline.StartSession(p, TriggerType.OnRegroup);
     }
 
     public virtual void OnCommandPhaseEntered()
     {
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
+
+        Debug.Log($"[TurnMaker] OnCommandPhaseEntered — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
 
         if (isLocalPlayer)
             PhaseEffectPipeline.StartSession(p, TriggerType.OnCommand);
@@ -66,4 +79,9 @@ public abstract class TurnMaker : MonoBehaviour {
             PhaseEffectPipeline.StartSession(p, TriggerType.OnBattleEnd, TriggerType.OnEndTurn);
     }
 
+    public virtual void OnTurnEnd()
+    {
+        StopAllCoroutines();
+        p.OnTurnEnd();
+    }
 }

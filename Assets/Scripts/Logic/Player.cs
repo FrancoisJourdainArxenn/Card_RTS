@@ -246,7 +246,6 @@ public class Player : MonoBehaviour, ILivable
     {
         if(EndTurnEvent != null)
             EndTurnEvent.Invoke();
-        GetComponent<TurnMaker>().StopAllCoroutines();
     }
 
     // STUFF THAT OUR PLAYER CAN DO
@@ -296,11 +295,6 @@ public class Player : MonoBehaviour, ILivable
             // there are no cards in the deck, take fatigue damage.
         }
 
-        if (TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Regroup)
-        {
-            TurnManager.Instance.RegisterEndPhase(this);
-        }
-       
     }
 
     // get card NOT from deck (a token or a coin)
