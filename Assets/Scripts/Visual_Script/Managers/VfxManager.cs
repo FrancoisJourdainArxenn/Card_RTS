@@ -5,6 +5,9 @@ using UnityEngine.UI;
 public class VfxManager : MonoBehaviour
 {
     [SerializeField] private GameObject effectOverlay;
+    
+    [Header("Death Pending")]
+    [SerializeField] private Material deathPendingMaterial;
     [SerializeField] private GameObject deathVfxPrefab;
     private Image effectOverlayImage;
 
@@ -62,6 +65,13 @@ public class VfxManager : MonoBehaviour
         effectOverlay.SetActive(false);
     }
 
+    public void ShowDeathPending()
+    {
+        if (deathPendingMaterial == null) return;
+        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
+            sr.material = deathPendingMaterial;
+    }
+    
     public void PlayDeath()
     {
         if (deathVfxPrefab == null) return;

@@ -32,11 +32,35 @@ public class CreatureLogic: ILivable
             if (value > MaxHealth)
                 health = MaxHealth;
             else if (value <= 0)
-                Die();
+            {
+                if (IsPendingDeath) return;
+
+                bool inCombatPhase = TurnManager.Instance != null && (
+                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat ||
+                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle ||
+                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.End
+                );
+
+                if (inCombatPhase)
+                {
+                    health = 0;
+                    IsPendingDeath = true;
+                    PendingDeathList.Add(this);
+                    GameObject go = IDHolder.GetGameObjectWithID(UniqueCreatureID);
+                    go?.GetComponent<VfxManager>()?.ShowDeathPending();
+                }
+                else
+                {
+                    Die();
+                }
+            }
             else
                 health = value;
         }
     }
+
+    public bool IsPendingDeath { get; private set; }
+    public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
 
     // returns true if we can attack with this creature now
     public bool CanAttack
@@ -195,6 +219,14 @@ public class CreatureLogic: ILivable
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
+    }
+
+    public static void ProcessPendingDeaths()
+    {
+        List<CreatureLogic> toProcess = new (PendingDeathList);
+        PendingDeathList.Clear();
+        foreach (CreatureLogic creature in toProcess)
+            creature.Die();
     }
 
     // STATIC For managing IDs

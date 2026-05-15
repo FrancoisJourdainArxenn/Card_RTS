@@ -75,7 +75,7 @@ public class CreatureAttackVisual : MonoBehaviour
         w.VisualState = VisualStates.Transition;
         Vector3 originalPosition = transform.position;
         // SetLink tue automatiquement le tween si ce GameObject est détruit pendant l'animation
-        transform.DOMove(target.transform.position, 0.4f)
+        transform.DOMove(target.transform.position, 0.3f)
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InBack)
             .SetLink(gameObject)

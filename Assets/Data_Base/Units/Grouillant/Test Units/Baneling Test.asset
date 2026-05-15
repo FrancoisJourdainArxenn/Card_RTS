@@ -19,14 +19,14 @@ MonoBehaviour:
 
     Death : Deals 3 Damage randomly.'
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
-  MainCost: 1
-  SecondCost: 1
+  MainCost: 0
+  SecondCost: 0
   Attack: 0
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
-  MoveSpeed: 1
-  Celerity: 0
+  MoveSpeed: 2
+  Celerity: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
@@ -63,8 +63,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 1.5
-      vfxLifetime: 1.5
-      AttackDuration: 0.1
-      showAmount: 1
-      textColor: {r: 1, g: 1, b: 1, a: 1}
+      OverrideOverlayDuration: 0

@@ -14681,7 +14681,7 @@ GameObject:
   - component: {fileID: 7622172182739863812}
   - component: {fileID: 8010664113041635742}
   m_Layer: 0
-  m_Name: Vfx_Die_Unit
+  m_Name: Vfx_EpicDeath_Unit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

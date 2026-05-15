@@ -289,14 +289,22 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // Mode local : comportement existant
-            if (roundEnded)
+            bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
+                                 currentPhase == TurnPhases.Battle;
+            if (isCombatPhase)
             {
-                foreach (Player p in Player.Players)
-                    p.OnTurnEnd();
-                currentRound++;
+                StartCoroutine(CombatPhaseTransitionCoroutine(next, roundEnded));
             }
-            EnterPhase(next);
+            else
+            {
+                if (roundEnded)
+                {
+                    foreach (Player p in Player.Players)
+                        p.OnTurnEnd();
+                    // currentRound++;
+                }
+                EnterPhase(next);
+            }
         }
     }
 
@@ -489,7 +497,23 @@ public class TurnManager : MonoBehaviour
     IEnumerator AutoAdvanceFromEnd()
     {
         yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
+        CreatureLogic.ProcessPendingDeaths();
+        yield return new WaitWhile(() => Command.playingQueue);
         EnterPhase(TurnPhases.Regroup);
+    }
+
+    IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        CreatureLogic.ProcessPendingDeaths();
+        yield return new WaitWhile(() => Command.playingQueue);
+        if (roundEnded)
+        {
+            foreach (Player p in Player.Players)
+                p.OnTurnEnd();
+            // curorentRound++;
+        }
+        EnterPhase(next);
     }
 
     IEnumerator AutoAdvanceFromRegroup()
