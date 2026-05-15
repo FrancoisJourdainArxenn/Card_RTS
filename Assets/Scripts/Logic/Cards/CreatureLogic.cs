@@ -141,9 +141,9 @@ public class CreatureLogic: ILivable
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
+        CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
         if (ca.Effects != null && ca.Effects.Count > 0)
             EffectRegistry.RegisterCreatureEffects(this, ca);
-        CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
     }
 
     // METHODS

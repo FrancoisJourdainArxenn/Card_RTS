@@ -497,7 +497,8 @@ public class TurnManager : MonoBehaviour
     {
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
         // yield return new WaitForSeconds(1.5f);
-        EnterPhase(TurnPhases.Command);
+        if (currentPhase == TurnPhases.Regroup)
+            EnterPhase(TurnPhases.Command);
     }
     
     IEnumerator AutoAdvanceFromBeginCombat()
@@ -519,7 +520,8 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         CreatureLogic.ProcessPendingDeaths();
         yield return new WaitWhile(() => Command.playingQueue);
-        EnterPhase(TurnPhases.Regroup);
+        if (currentPhase == TurnPhases.End)
+            EnterPhase(TurnPhases.Regroup);
     }
 
     IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)

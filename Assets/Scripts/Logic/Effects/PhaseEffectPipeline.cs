@@ -374,7 +374,8 @@ public static class PhaseEffectPipeline
         for (int i = 0; i < sourceEntityIDs.Length; i++)
         {
             CardEffectData data = ResolveEffectData(sourceEntityIDs[i], effectIndexes[i], out EffectContext ctx);
-
+            Debug.Log($"[Pipeline] Effect : {data.EffectName} by {ctx.Source.DisplayName}");
+            
             if (data == null || ctx == null)
                 continue;
 
