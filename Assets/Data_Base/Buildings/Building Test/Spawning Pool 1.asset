@@ -41,10 +41,6 @@ MonoBehaviour:
       TokenToSummon: {fileID: 11400000, guid: d1149232ec4d3034d9410f25cacc35c7, type: 2}
       Placement: 2
     VisualData:
-      vfxPrefab: {fileID: 0}
+      vfxPrefab: {fileID: 5965768918663700131, guid: 12d57b414b4a77245aac755b80b15b26, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 0
-      AttackDuration: 0
-      showAmount: 0
-      textColor: {r: 0, g: 0, b: 0, a: 0}
+      OverrideOverlayDuration: 0
