@@ -68,7 +68,7 @@ public class BuildingLogic : ILivable
         UniqueBuildingID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
         if (ca.Effects != null && ca.Effects.Count > 0)
-            EffectProcessor.RegisterBuildingEffects(this, ca);
+            EffectRegistry.RegisterBuildingEffects(this, ca);
     }
 
     public void OnTurnStart()
@@ -80,7 +80,7 @@ public class BuildingLogic : ILivable
     public void Die()
     {
         owner.playedCards.Buildings.Remove(this);
-        EffectProcessor.NotifyBuildingDied(this, owner);
+        EffectRegistry.NotifyBuildingDied(this, owner);
         new BuildingDieCommand(UniqueBuildingID).AddToQueue();
     }
 

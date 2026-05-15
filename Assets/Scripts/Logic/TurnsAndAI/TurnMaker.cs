@@ -34,7 +34,7 @@ public abstract class TurnMaker : MonoBehaviour {
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            EffectTargetingManager.StartSession(p, TriggerType.OnRegroup);
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnRegroup);
     }
 
     public virtual void OnCommandPhaseEntered()
@@ -43,7 +43,7 @@ public abstract class TurnMaker : MonoBehaviour {
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            EffectTargetingManager.StartSession(p, TriggerType.OnCommand);
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnCommand);
     }
 
     public virtual void OnBeginCombatPhaseEntered()
@@ -54,7 +54,7 @@ public abstract class TurnMaker : MonoBehaviour {
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            EffectTargetingManager.StartSession(p, TriggerType.OnBeginCombat);
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnBeginCombat);
     }
 
     public virtual void OnEndPhaseEntered()
@@ -63,7 +63,7 @@ public abstract class TurnMaker : MonoBehaviour {
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            EffectTargetingManager.StartSession(p, TriggerType.OnBattleEnd, TriggerType.OnEndTurn);
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnBattleEnd, TriggerType.OnEndTurn);
     }
 
 }

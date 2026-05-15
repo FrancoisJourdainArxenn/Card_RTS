@@ -114,7 +114,7 @@ public class TokenGenerationSO : EffectSO
 
         new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
 
-        EffectProcessor.ETB(tokenAsset, new EffectContext
+        EffectRegistry.ETB(tokenAsset, new EffectContext
         {
             Caster = caster,
             Source = newCreature

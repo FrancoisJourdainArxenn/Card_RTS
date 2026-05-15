@@ -187,7 +187,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] selectedTargetIDs,
         int effectSeed)
     {
-        EffectTargetingManager.ApplyCanonicalResolution(
+        PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
         );
     }
@@ -765,7 +765,7 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void TokenToHandClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int cardID)
     {
-        CardAsset tokenAsset = EffectTargetingManager.GetTokenAsset(sourceEntityID, effectIndex);
+        CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID);
     }
@@ -781,7 +781,7 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID)
     {
-        CardAsset tokenAsset = EffectTargetingManager.GetTokenAsset(sourceEntityID, effectIndex);
+        CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID);
     }

@@ -328,7 +328,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(tokenCard, this, tablePos, creatureID, targetArea).AddToQueue();
-        EffectProcessor.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
     }
 
 
@@ -362,7 +362,7 @@ public class Player : MonoBehaviour, ILivable
         MainRessourceAvailable -= playedCard.MainCost;
         SecondRessourceAvailable -= playedCard.SecondCost;
 
-        EffectProcessor.ETB(playedCard.ca, new EffectContext
+        EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
             Caster = this,
             Target = target
@@ -393,7 +393,7 @@ public class Player : MonoBehaviour, ILivable
         // 
         new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         // cause battlecry Effect
-        EffectProcessor.ETB(playedCard.ca, new EffectContext
+        EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
             Caster = this,
             Target = null,
@@ -451,7 +451,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
-        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
 
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -481,7 +481,7 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        EffectProcessor.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
 
 
         hand.CardsInHand.Remove(playedCard);

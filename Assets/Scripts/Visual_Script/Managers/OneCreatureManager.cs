@@ -81,14 +81,14 @@ public class OneCreatureManager : OneLivableManager
 
     public void OnCreatureClicked()
     {
-        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
+        if (!PhaseEffectPipeline.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IDHolder idHolder = GetComponent<IDHolder>();
             if (idHolder == null)
                 return;
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
                 return;
-            if (EffectTargetingManager.OnEntityClicked(creature))
+            if (PhaseEffectPipeline.OnEntityClicked(creature))
                 return; // consumed by targeting
             // Not an eligible target — fall through to normal handling
         }
