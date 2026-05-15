@@ -55,7 +55,7 @@ MonoBehaviour:
         includesTarget: 0
         includesSource: 0
         queries: []
-      repartition: 0
+      repartition: 2
     Parameters:
       Amount: 1
       TokenToSummon: {fileID: 0}
