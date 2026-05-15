@@ -19,6 +19,9 @@ public class BuildingDieCommand : Command
             return;
         }
 
+        buildingGO.GetComponent<VfxManager>()?.PlayDeath();
+
+
         OneBuildingManager manager = buildingGO.GetComponent<OneBuildingManager>();
         BuildSpotVisual originSpot = manager?.OriginSpot;
         manager?.OriginSpot?.OnBuildingDestroyed();

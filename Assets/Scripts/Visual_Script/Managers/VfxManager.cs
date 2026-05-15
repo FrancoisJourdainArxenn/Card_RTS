@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class VfxManager : MonoBehaviour
 {
     [SerializeField] private GameObject effectOverlay;
+    [SerializeField] private GameObject deathVfxPrefab;
     private Image effectOverlayImage;
 
     void Awake()
@@ -59,5 +60,18 @@ public class VfxManager : MonoBehaviour
         effectOverlay.SetActive(true);
         yield return new WaitForSeconds(duration);
         effectOverlay.SetActive(false);
+    }
+
+    public void PlayDeath()
+    {
+        if (deathVfxPrefab == null) return;
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null
+                        || !FogOfWarManager.Instance.IsZoneFogged(zone);
+        if (!isVisible) return;
+
+        GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
+        Destroy(vfx, GetParticleLifetime(vfx));
     }
 }

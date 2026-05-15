@@ -1909,6 +1909,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EffectVisualHandler
   effectOverlay: {fileID: 6406302029300316302}
+  deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
 --- !u!1 &8597402261057766994
 GameObject:
   m_ObjectHideFlags: 0
