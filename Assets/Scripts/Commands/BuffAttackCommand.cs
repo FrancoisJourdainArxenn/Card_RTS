@@ -21,9 +21,15 @@ public class BuffAttackCommand : Command {
     public override void StartCommandExecution()
     {
         GameObject target = IDHolder.GetGameObjectWithID(targetID);
-        if (target.GetComponent<OneLivableManager>() != null)
-            target.GetComponent<OneLivableManager>().BuffAttack(amount, attackAfter);
-        target?.GetComponent<VfxManager>()?.Play(visualData, amount);
+        if (target == null)
+        {
+            CommandExecutionComplete();
+            return;
+        }
+        if (target.TryGetComponent(out OneLivableManager livable))
+            livable.BuffAttack(amount, attackAfter);
+        if (target.TryGetComponent(out VfxManager vfx))
+            vfx.Play(visualData, amount);
         CommandExecutionComplete();
     }
 }
