@@ -32,7 +32,7 @@ public static class PhaseEffectPipeline
     {
         List<PendingEffectSelection> stale = EffectStack.GetAllEffects();
         if (stale.Count > 0)
-            // Debug.Log($"[Pipeline] ResetForNewPhase — stack non vide avant reset ({stale.Count} effet(s)): {string.Join(", ", stale.Select(e => $"{e.Data.EffectName}({e.Data.Trigger})"))}");
+            Debug.Log($"[Pipeline] ResetForNewPhase — stack non vide avant reset ({stale.Count} effet(s)): {string.Join(", ", stale.Select(e => $"{e.Data.EffectName}({e.Data.Trigger})"))}");
 
         EffectStack.Reset();
         EffectSelectionController.Reset();
@@ -41,7 +41,7 @@ public static class PhaseEffectPipeline
         _currentLocalPlayerIndex = -1;
         _hasSubmitted            = false;
         _isComplete              = false;
-        // Debug.Log("[Pipeline] ResetForNewPhase — tout l'état réinitialisé");
+        Debug.Log("[Pipeline] ResetForNewPhase — tout l'état réinitialisé");
     }
 
     /// <summary>
@@ -61,10 +61,10 @@ public static class PhaseEffectPipeline
             .Where(e => e.Data.RequiresPlayerInput && e.EligibleTargets.Count > 0)
             .ToList();
 
-        // Debug.Log($"[Pipeline] StartSession — joueur {playerIndex} ({player?.name}) | {effects.Count} effet(s) dont {selectionEffects.Count} avec sélection | triggers: {string.Join(", ", triggers)}");
+        Debug.Log($"[Pipeline] StartSession — joueur {playerIndex} ({player?.name}) | {effects.Count} effet(s) dont {selectionEffects.Count} avec sélection | triggers: {string.Join(", ", triggers)}");
 
         foreach (PendingEffectSelection e in effects)
-            // Debug.Log($"[Pipeline]   effet: {e.Data.EffectName} | Input [{(e.Data.RequiresPlayerInput ? "X" : " ")}] | Cibles éligibles: {e.EligibleTargets.Count}");
+            Debug.Log($"[Pipeline]   effet: {e.Data.EffectName} | Input [{(e.Data.RequiresPlayerInput ? "X" : " ")}] | Cibles éligibles: {e.EligibleTargets.Count}");
 
         EffectStack.AddFor(playerIndex, effects);
 
@@ -76,7 +76,7 @@ public static class PhaseEffectPipeline
         {
             if (selectionEffects.Count > 0)
             {
-                // Debug.Log($"[Pipeline] StartSession (réseau) — {selectionEffects.Count} effet(s) à sélectionner, chargement queue UI");
+                Debug.Log($"[Pipeline] StartSession (réseau) — {selectionEffects.Count} effet(s) à sélectionner, chargement queue UI");
                 if (GameNetworkManager.Instance != null)
                     GameNetworkManager.Instance.NotifyOpponentSelectingServerRpc(
                         playerIndex,
@@ -87,7 +87,7 @@ public static class PhaseEffectPipeline
             }
             else
             {
-                // Debug.Log($"[Pipeline] StartSession (réseau) — aucune sélection requise, auto-soumission");
+                Debug.Log($"[Pipeline] StartSession (réseau) — aucune sélection requise, auto-soumission");
                 SubmitToServer(player);
             }
         }
@@ -99,7 +99,7 @@ public static class PhaseEffectPipeline
     /// </summary>
     public static void BeginLocalSelectionSession()
     {
-        // Debug.Log($"[Pipeline] BeginLocalSelectionSession — réseau={NetworkSessionData.IsNetworkSession} | queueLocale=[{string.Join(", ", _localPlayerQueue)}]");
+        Debug.Log($"[Pipeline] BeginLocalSelectionSession — réseau={NetworkSessionData.IsNetworkSession} | queueLocale=[{string.Join(", ", _localPlayerQueue)}]");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -140,7 +140,7 @@ public static class PhaseEffectPipeline
     public static void ConfirmAndSubmit(Player player)
     {
         int playerIndex = GetIndex(player);
-        // Debug.Log($"[Pipeline] ConfirmAndSubmit — joueur {playerIndex} ({player?.name}) | réseau={NetworkSessionData.IsNetworkSession}");
+        Debug.Log($"[Pipeline] ConfirmAndSubmit — joueur {playerIndex} ({player?.name}) | réseau={NetworkSessionData.IsNetworkSession}");
 
         if (_isComplete)
             return;
@@ -258,7 +258,7 @@ public static class PhaseEffectPipeline
         _currentLocalPlayerIndex = playerIndex;
 
         List<PendingEffectSelection> selectionEffects = EffectStack.GetSelectionEffectsFor(playerIndex);
-        // Debug.Log($"[Pipeline] LoadLocalPlayerSelections — joueur {playerIndex} | {selectionEffects.Count} sélection(s)");
+        Debug.Log($"[Pipeline] LoadLocalPlayerSelections — joueur {playerIndex} | {selectionEffects.Count} sélection(s)");
 
         EffectSelectionController.LoadQueue(selectionEffects);
 
@@ -281,14 +281,14 @@ public static class PhaseEffectPipeline
 
         if (_localPlayerQueue.Count > 0)
         {
-            // Debug.Log($"[Pipeline] AdvanceLocalPlayer — joueur {_currentLocalPlayerIndex} confirmé → passage joueur {_localPlayerQueue[0]}");
+            Debug.Log($"[Pipeline] AdvanceLocalPlayer — joueur {_currentLocalPlayerIndex} confirmé → passage joueur {_localPlayerQueue[0]}");
             LoadLocalPlayerSelections(_localPlayerQueue[0]);
         }
         else
         {
             _currentLocalPlayerIndex = -1;
             List<PendingEffectSelection> allEffects = EffectStack.GetAllEffects();
-            // Debug.Log($"[Pipeline] AdvanceLocalPlayer — tous joueurs traités → {(allEffects.Count == 0 ? "complétion immédiate" : $"ExecuteAll ({allEffects.Count} effet(s))")}");
+            Debug.Log($"[Pipeline] AdvanceLocalPlayer — tous joueurs traités → {(allEffects.Count == 0 ? "complétion immédiate" : $"ExecuteAll ({allEffects.Count} effet(s))")}");
             GlobalSettings.Instance?.RefreshEndPhaseButtons();
             // Pas d'effets : on complète immédiatement sans passer par la coroutine,
             // pour éviter une race condition si le joueur clique avant la fin du délai.
@@ -303,7 +303,7 @@ public static class PhaseEffectPipeline
 
     private static void ExecuteAll(List<PendingEffectSelection> effects)
     {
-        // Debug.Log($"[Pipeline] ExecuteAll — {effects.Count} effet(s) à exécuter");
+        Debug.Log($"[Pipeline] ExecuteAll — {effects.Count} effet(s) à exécuter");
         EffectSelectionController.ClearHighlights();
         TargetingVisualEvents.RaiseEffectsExecuting();
 
@@ -331,16 +331,16 @@ public static class PhaseEffectPipeline
     {
         if (_hasSubmitted)
         {
-            // Debug.Log("[Pipeline] SubmitToServer — SKIP: déjà soumis");
+            Debug.Log("[Pipeline] SubmitToServer — SKIP: déjà soumis");
             return;
         }
 
         _hasSubmitted = true;
 
         List<PendingEffectSelection> allEffects = EffectStack.GetAllEffects();
-        // Debug.Log($"[Pipeline] SubmitToServer — joueur {GetIndex(player)} | {allEffects.Count} effet(s) soumis au serveur");
-        // foreach (PendingEffectSelection e in allEffects)
-            // Debug.Log($"[Pipeline] SubmitToServer   → {e.Data.EffectName} | trigger: {e.Data.Trigger} | srcID: {e.SourceEntityID} | effectIdx: {e.EffectIndexInCard}");
+        Debug.Log($"[Pipeline] SubmitToServer — joueur {GetIndex(player)} | {allEffects.Count} effet(s) soumis au serveur");
+        foreach (PendingEffectSelection e in allEffects)
+            Debug.Log($"[Pipeline] SubmitToServer   → {e.Data.EffectName} | trigger: {e.Data.Trigger} | srcID: {e.SourceEntityID} | effectIdx: {e.EffectIndexInCard}");
         int n = allEffects.Count;
 
         int[] sourceEntityIDs   = new int[n];
@@ -380,7 +380,7 @@ public static class PhaseEffectPipeline
         for (int i = 0; i < sourceEntityIDs.Length; i++)
         {
             CardEffectData data = ResolveEffectData(sourceEntityIDs[i], effectIndexes[i], out EffectContext ctx);
-            // Debug.Log($"[Pipeline] Effect : {data.EffectName} by {ctx.Source.DisplayName}");
+            Debug.Log($"[Pipeline] Effect : {data.EffectName} by {ctx.Source.DisplayName}");
             
             if (data == null || ctx == null)
                 continue;
@@ -452,7 +452,7 @@ public static class PhaseEffectPipeline
     private static void OnAllEffectsComplete()
     {
         _isComplete = true;
-        // Debug.Log("[Pipeline] OnAllEffectsComplete — _isComplete = true");
+        Debug.Log("[Pipeline] OnAllEffectsComplete — _isComplete = true");
         TurnManager.RefreshAllPlayableHighlights();
         GlobalSettings.Instance?.RefreshEndPhaseButtons();
     }

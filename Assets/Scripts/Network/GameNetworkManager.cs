@@ -548,6 +548,7 @@ public class GameNetworkManager : NetworkBehaviour
     /// <summary>
     /// Reçu par TOUS les clients (y compris le serveur/host) :
     /// applique la fin de round si nécessaire, puis entre dans la nouvelle phase.
+    /// Pour la transition vers Battle, draine d'abord les morts pendantes issues de BeginCombat.
     /// </summary>
     [ClientRpc]
     void PhaseTransitionClientRpc(TurnManager.TurnPhases nextPhase, bool roundEnded, int newRound)
@@ -561,12 +562,25 @@ public class GameNetworkManager : NetworkBehaviour
         }
 
         TurnManager.Instance.SetCurrentRound(newRound);
+
+        if (nextPhase == TurnManager.TurnPhases.Battle)
+        {
+            StartCoroutine(DrainThenEnterPhase(nextPhase));
+            return;
+        }
+
         TurnManager.Instance.EnterPhase(nextPhase);
 
         // Après la End phase, les dégâts de bataille ont été appliqués (OnBattlePhaseEnd vient d'être appelé).
         // Le serveur diffuse l'état complet pour corriger tout désync résiduel côté client.
         if (nextPhase == TurnManager.TurnPhases.End && IsServer)
             BroadcastFullGameState();
+    }
+
+    IEnumerator DrainThenEnterPhase(TurnManager.TurnPhases nextPhase)
+    {
+        yield return StartCoroutine(TurnManager.Instance.DrainPendingDeaths());
+        TurnManager.Instance.EnterPhase(nextPhase);
     }
 
     private int _drawSeedOffset = 0;
