@@ -494,7 +494,7 @@ public class TurnManager : MonoBehaviour
             EnterPhase(TurnPhases.Command);
     }
     
-    IEnumerator DrainPendingDeaths()
+    public IEnumerator DrainPendingDeaths()
     {
         yield return new WaitWhile(() => Command.playingQueue);
         while (CreatureLogic.PendingDeathList.Count > 0)
