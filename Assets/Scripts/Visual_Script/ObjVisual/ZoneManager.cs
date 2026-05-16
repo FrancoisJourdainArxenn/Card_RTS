@@ -65,8 +65,8 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
     public void OnPointerClick(PointerEventData eventData)
     {
         if (TurnManager.Instance == null) return;
-        if (EffectTargetingManager.IsComplete) return;
-        EffectTargetingManager.OnEntityClicked(Logic);
+        if (PhaseEffectPipeline.IsComplete) return;
+        PhaseEffectPipeline.OnEntityClicked(Logic);
     }
 
     private static string GetHierarchyPath(Transform t)

@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
@@ -13,6 +11,7 @@ public class TurnManager : MonoBehaviour
 {
     public int initdraw = 5;
     [SerializeField] private float effectSequenceDelay = 1.5f;
+    public float EffectSequenceDelay => effectSequenceDelay;
 
     public static TurnManager Instance;
 
@@ -49,7 +48,7 @@ public class TurnManager : MonoBehaviour
 
     public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
     {
-        EffectProcessor.Reset();
+        EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             Debug.LogError("TurnManager: need at least 2 Player instances.");
@@ -84,7 +83,6 @@ public class TurnManager : MonoBehaviour
             Debug.Log("TurnManager: Deck shuffled with random seed");
         }
 
-        timer.StartTimer();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
@@ -109,6 +107,8 @@ public class TurnManager : MonoBehaviour
             GameNetworkManager.Instance.InitDrawSeedOffset(drawSeedOffset);
         foreach (Player p in Player.Players)
             p.OnTurnStart();
+
+        EnterPhase(TurnPhases.Command);
         StartCoroutine(HighlightAfterDraws());
 
     }
@@ -161,8 +161,12 @@ public class TurnManager : MonoBehaviour
         // on bypass ConfirmAndSubmit pour envoyer directement RegisterEndPhaseServerRpc.
         // En local ce check n'est pas nécessaire — le state machine gère déjà tout via AdvanceLocalPlayer.
         bool playerTargetingDone = NetworkSessionData.IsNetworkSession &&
-            (player == null || EffectTargetingManager.IsPlayerTargetingComplete(player));
-        if (currentPhase == TurnPhases.BeginCombat || (!EffectTargetingManager.IsComplete && !playerTargetingDone))
+            (player == null || PhaseEffectPipeline.IsPlayerTargetingComplete(player));
+        bool routeToConfirm = currentPhase == TurnPhases.BeginCombat || (!PhaseEffectPipeline.IsComplete && !playerTargetingDone);
+
+        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
+
+        if (routeToConfirm)
         {
             if (NetworkSessionData.IsNetworkSession)
             {
@@ -171,7 +175,7 @@ public class TurnManager : MonoBehaviour
             }
 
             if (player != null)
-                EffectTargetingManager.ConfirmAndSubmit(player);
+                PhaseEffectPipeline.ConfirmAndSubmit(player);
             return;
         }
 
@@ -279,6 +283,7 @@ public class TurnManager : MonoBehaviour
 
 
         int newRound = roundEnded ? currentRound + 1 : currentRound;
+        Debug.Log($"[TurnMgr] AdvancePhaseWhenAllReady — {currentPhase} → {next} (round {currentRound} → {newRound})");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -300,7 +305,7 @@ public class TurnManager : MonoBehaviour
                 if (roundEnded)
                 {
                     foreach (Player p in Player.Players)
-                        p.OnTurnEnd();
+                        p.GetComponent<TurnMaker>().OnTurnEnd();
                     // currentRound++;
                 }
                 EnterPhase(next);
@@ -336,10 +341,11 @@ public class TurnManager : MonoBehaviour
 
     public void EnterPhase(TurnPhases phase)
     {
+        Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
-        EffectTargetingManager.ResetForNewPhase();
+        PhaseEffectPipeline.ResetForNewPhase();
 
         UpdatePhaseText();
 
@@ -392,8 +398,8 @@ public class TurnManager : MonoBehaviour
 
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
-        EffectTargetingManager.BeginLocalSelectionSession();
         RefreshAllPlayableHighlights();
+        PhaseEffectPipeline.BeginLocalSelectionSession();
     }
 
     void UpdatePhaseText()
@@ -421,13 +427,13 @@ public class TurnManager : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             Player local = GlobalSettings.Instance.localPlayer;
-            if (EffectTargetingManager.IsPlayerTargetingComplete(local))
+            if (PhaseEffectPipeline.IsPlayerTargetingComplete(local))
                 local.HighlightPlayableCards();
         }
         else
         {
             foreach (Player p in Player.Players)
-                if (EffectTargetingManager.IsPlayerTargetingComplete(p))
+                if (PhaseEffectPipeline.IsPlayerTargetingComplete(p))
                     p.HighlightPlayableCards();
         }
     }
@@ -480,6 +486,14 @@ public class TurnManager : MonoBehaviour
         return System.Array.IndexOf(Player.Players, p);
     }
 
+    IEnumerator AutoAdvanceFromRegroup()
+    {
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
+        // yield return new WaitForSeconds(1.5f);
+        if (currentPhase == TurnPhases.Regroup)
+            EnterPhase(TurnPhases.Command);
+    }
+    
     IEnumerator DrainPendingDeaths()
     {
         yield return new WaitWhile(() => Command.playingQueue);
@@ -492,7 +506,7 @@ public class TurnManager : MonoBehaviour
     }
     IEnumerator AutoAdvanceFromBeginCombat()
     {
-        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
             AdvancePhaseWhenAllReady();
     }
@@ -506,7 +520,7 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator AutoAdvanceFromEnd()
     {
-        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         yield return StartCoroutine(DrainPendingDeaths());
         EnterPhase(TurnPhases.Regroup);
     }
@@ -517,37 +531,10 @@ public class TurnManager : MonoBehaviour
         if (roundEnded)
         {
             foreach (Player p in Player.Players)
-                p.OnTurnEnd();
+                p.GetComponent<TurnMaker>().OnTurnEnd();
             // curorentRound++;
         }
         EnterPhase(next);
     }
 
-    IEnumerator AutoAdvanceFromRegroup()
-    {
-        yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue || Command.CardDrawPending());
-        yield return new WaitForSeconds(1.5f);
-        EnterPhase(TurnPhases.Command);
-    }
-
-    public void RunEffectsSequentially(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
-        => StartCoroutine(EffectSequenceCoroutine(callbacks, hasVisuals, onComplete));
-
-    private IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
-    {
-        float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
-        yield return new WaitForSeconds(stackDelay);
-
-        for (int i = 0; i < callbacks.Count; i++)
-        {
-            callbacks[i]?.Invoke();
-            if (hasVisuals != null && i < hasVisuals.Count && hasVisuals[i])
-            {
-                yield return new WaitForSeconds(effectSequenceDelay);
-                TargetingVisualEvents.RaiseEffectResolved();
-            }
-        }
-        TargetingVisualEvents.RaiseEffectsBatchComplete();
-        onComplete?.Invoke();
-    }
 }

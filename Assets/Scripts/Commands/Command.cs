@@ -28,7 +28,9 @@ public class Command
             PlayFirstCommandFromQueue();
         else
             playingQueue = false;
-        TurnManager.RefreshAllPlayableHighlights();
+        if (!EffectSelectionController.HasPendingSelection)
+            TurnManager.RefreshAllPlayableHighlights();
+        EffectSelectionController.RefreshCurrentHighlights();
         ZoneEnemyIndicator.RefreshAll();
     }
 

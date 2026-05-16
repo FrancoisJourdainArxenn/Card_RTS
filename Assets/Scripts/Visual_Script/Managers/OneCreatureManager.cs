@@ -81,39 +81,39 @@ public class OneCreatureManager : OneLivableManager
 
     public void OnCreatureClicked()
     {
-        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
+        if (!PhaseEffectPipeline.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IDHolder idHolder = GetComponent<IDHolder>();
             if (idHolder == null)
                 return;
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
                 return;
-            if (EffectTargetingManager.OnEntityClicked(creature))
+            if (PhaseEffectPipeline.OnEntityClicked(creature))
                 return; // consumed by targeting
             // Not an eligible target — fall through to normal handling
         }
 
-        Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
+        // Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
         if (!TurnManager.Instance.IsBattlePhase)
             return;
 
         IDHolder battleIdHolder = GetComponent<IDHolder>();
-        Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
+        // Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
         if (battleIdHolder == null)
             return;
 
         bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(battleIdHolder.UniqueID, out CreatureLogic battleCreature);
-        Debug.Log($"[Click] CreatureFound={found}");
+        // Debug.Log($"[Click] CreatureFound={found}");
         if (!found)
             return;
 
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         bool isOwn = localPlayer.playedCards.Creatures.Contains(battleCreature);
-        Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
+        // Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
         if (isOwn) return;
 
         ZoneCombatResolver resolver = ZoneCombatResolver.FindForBase(BaseID);
-        Debug.Log($"[Click] Resolver={resolver}");
+        // Debug.Log($"[Click] Resolver={resolver}");
         resolver?.TryRedirectDamageFrom(battleCreature);
     }
 

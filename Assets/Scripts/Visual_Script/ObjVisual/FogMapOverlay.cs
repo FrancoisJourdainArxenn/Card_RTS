@@ -17,6 +17,7 @@ public class FogMapOverlay : MonoBehaviour
     private Texture2D fogTex;
     private float[]   fogData; // [0..1] par pixel, CPU-side
     private Material  mat;
+    private bool      _dirty; // true = fogData a changé, Apply() sera appelé dans LateUpdate
 
     // Une coroutine active par zone (ZoneID → coroutine)
     private Dictionary<int, Coroutine> activeAnims = new Dictionary<int, Coroutine>();
@@ -34,11 +35,19 @@ public class FogMapOverlay : MonoBehaviour
         fogTex = new Texture2D(textureWidth, textureHeight, TextureFormat.RFloat, false);
         fogTex.filterMode = FilterMode.Bilinear;
         fogTex.wrapMode   = TextureWrapMode.Clamp;
-        UploadTexture();
+        MarkDirty();
 
         mat = GetComponent<MeshRenderer>().material;
         mat.SetTexture("_FogTex", fogTex);
         ComputeMapBounds();
+    }
+
+    void LateUpdate()
+    {
+        if (!_dirty) return;
+        _dirty = false;
+        fogTex.SetPixelData(fogData, 0);
+        fogTex.Apply(false);
     }
 
     // ─── API publique ────────────────────────────────────────────────────────
@@ -49,7 +58,7 @@ public class FogMapOverlay : MonoBehaviour
         RectInt bounds = GetZonePixelBounds(zone);
         if (fogged) PaintRegionFlat(bounds, 0f);
         else        PaintRegionGradient(bounds);
-        UploadTexture();
+        MarkDirty();
     }
 
     public void RevealZoneAnimated(ZoneManager zone, Vector3 originWorldPos)
@@ -204,14 +213,14 @@ public class FogMapOverlay : MonoBehaviour
                     fogData[texIdx] = progress * targetValues[localIdx];
             }
 
-            UploadTexture();
+            MarkDirty();
             yield return null;
         }
 
         // État final propre
         if (covering) PaintRegionFlat(bounds, 0f);
         else          PaintRegionGradient(bounds);
-        UploadTexture();
+        MarkDirty();
         activeAnims.Remove(zoneID);
     }
 
@@ -261,15 +270,8 @@ public class FogMapOverlay : MonoBehaviour
         return values;
     }
 
-    private void UploadTexture()
-    {
-        // Convertit float[] en Color[] pour SetPixels
-        Color[] colors = new Color[fogData.Length];
-        for (int i = 0; i < fogData.Length; i++)
-            colors[i] = new Color(fogData[i], 0, 0, 1);
-        fogTex.SetPixels(colors);
-        fogTex.Apply(false);
-    }
+    // Marque fogData comme modifié — LateUpdate appellera Apply() une seule fois par frame.
+    private void MarkDirty() => _dirty = true;
 
     private void StopZoneAnim(int zoneID)
     {

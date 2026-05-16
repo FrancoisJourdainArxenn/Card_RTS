@@ -39,10 +39,10 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         if (idHolder == null) return;
         int id = idHolder.UniqueID;
 
-        if (!EffectTargetingManager.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
+        if (!PhaseEffectPipeline.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IIdentifiable entity = ResolveEntity(id);
-            if (entity != null && EffectTargetingManager.OnEntityClicked(entity))
+            if (entity != null && PhaseEffectPipeline.OnEntityClicked(entity))
                 return; // consumed by targeting
             // Not eligible — fall through
         }

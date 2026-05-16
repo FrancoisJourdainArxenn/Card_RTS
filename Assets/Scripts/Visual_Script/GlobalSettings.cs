@@ -112,7 +112,7 @@ public class GlobalSettings : MonoBehaviour
 
     public void RefreshEndPhaseButtons()
     {
-        bool confirmActive = localPlayer != null && EffectTargetingManager.IsTargetingActiveForPlayer(localPlayer);
+        bool confirmActive = localPlayer != null && PhaseEffectPipeline.IsTargetingActiveForPlayer(localPlayer);
 
         foreach (EndTurnButton eb in Object.FindObjectsByType<EndTurnButton>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
@@ -131,7 +131,7 @@ public class GlobalSettings : MonoBehaviour
         {
             ConfirmTargetingButton.gameObject.SetActive(confirmActive);
             ConfirmTargetingButton.interactable = true;
-            bool allAssigned = confirmActive && EffectTargetingManager.AreAllTargetsAssigned(localPlayer);
+            bool allAssigned = confirmActive && PhaseEffectPipeline.AreAllTargetsAssigned(localPlayer);
             ConfirmTargetingButton.GetComponent<ConfirmButtonFeedback>()?.SetReadyState(allAssigned);
         }
     }
@@ -144,14 +144,12 @@ public class GlobalSettings : MonoBehaviour
         bool isLocalPlayer        = player.MainPArea.AllowedToControlThisPlayer;
         bool gameActive           = player.MainPArea.ControlsON;
         bool notYetReady          = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
-        bool hasActiveTargeting   = EffectTargetingManager.IsTargetingActiveForPlayer(player);
-        bool waitingForSelection  = hasActiveTargeting && EffectTargetingManager.BlocksEndPhaseButton(player);
+        bool hasActiveTargeting   = PhaseEffectPipeline.IsTargetingActiveForPlayer(player);
+        bool waitingForSelection  = hasActiveTargeting && PhaseEffectPipeline.BlocksEndPhaseButton(player);
 
-        // Interactable si le joueur peut confirmer ses sélections ou terminer sa phase normalement
         bool canConfirmTargeting = isLocalPlayer && hasActiveTargeting && !waitingForSelection;
         bool canEndPhaseNormally = isLocalPlayer && gameActive && notYetReady && !waitingForSelection;
         button.interactable = canConfirmTargeting || canEndPhaseNormally;
-
     }
 
 }

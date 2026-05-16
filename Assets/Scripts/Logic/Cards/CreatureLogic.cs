@@ -141,9 +141,9 @@ public class CreatureLogic: ILivable
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
-        if (ca.Effects != null && ca.Effects.Count > 0)
-            EffectProcessor.RegisterCreatureEffects(this, ca);
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
+        if (ca.Effects != null && ca.Effects.Count > 0)
+            EffectRegistry.RegisterCreatureEffects(this, ca);
     }
 
     // METHODS
@@ -166,7 +166,7 @@ public class CreatureLogic: ILivable
         owner.playedCards.Creatures.Remove(this);
         
         // cause Deathrattle Effect
-        EffectProcessor.NotifyCreatureDied(this, owner);
+        EffectRegistry.NotifyCreatureDied(this, owner);
         
         FogOfWarManager.Refresh();
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();

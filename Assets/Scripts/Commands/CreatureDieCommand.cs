@@ -33,6 +33,7 @@ public class CreatureDieCommand : Command
 
                 if (area.tableVisual.CreaturesOnTable.Contains(creatureToRemove))
                 {
+                    // RemoveCreatureWithID calls CommandExecutionComplete internally via its tween OnComplete.
                     area.tableVisual.RemoveCreatureWithID(DeadCreatureID);
                     return;
                 }
