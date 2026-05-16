@@ -10,7 +10,10 @@ public class FogOfWarManager : MonoBehaviour
 {
     public static FogOfWarManager Instance;
     private Dictionary<int, bool> zoneFogCache = new Dictionary<int, bool>();
-
+    private ZoneManager[] cachedZones;
+    private Dictionary<int, BuildSpotVisual[]> cachedBuildSpots = new Dictionary<int, BuildSpotVisual[]>();
+    private bool _refreshPending;
+    private Player _lastObserver;
 
     void Awake()
     {
@@ -19,7 +22,17 @@ public class FogOfWarManager : MonoBehaviour
 
     void Start()
     {
-        // Apply the initial fog state once all other objects have finished Awake().
+        cachedZones = FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
+        foreach (ZoneManager zone in cachedZones)
+            cachedBuildSpots[zone.Logic.ID] = zone.GetComponentsInChildren<BuildSpotVisual>(true);
+        UpdateAllZones();
+    }
+
+    // LateUpdate exécute l'update fog une seule fois par frame, même si Refresh() a été appelé plusieurs fois.
+    void LateUpdate()
+    {
+        if (!_refreshPending) return;
+        _refreshPending = false;
         UpdateAllZones();
     }
 
@@ -28,10 +41,11 @@ public class FogOfWarManager : MonoBehaviour
 
     // Static shortcut so any class can call FogOfWarManager.Refresh()
     // without needing a reference to the Instance.
+    // Plusieurs appels dans le même frame ne déclenchent qu'un seul UpdateAllZones() via LateUpdate.
     public static void Refresh()
     {
         if (Instance != null)
-            Instance.UpdateAllZones();
+            Instance._refreshPending = true;
     }
 
     // Recalculate fog for every neutral zone.
@@ -39,19 +53,22 @@ public class FogOfWarManager : MonoBehaviour
     {
         if (GlobalSettings.Instance == null) return;
 
-        // Cover ALL zones, not just neutral ones.
-        ZoneManager[] allZones = FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
+        Player observer = ObservingPlayer;
+        bool observerChanged = observer != _lastObserver;
+        _lastObserver = observer;
+
+        ZoneManager[] allZones = cachedZones ?? FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
         foreach (ZoneManager zone in allZones)
         {
             // A neutral zone also has a NeutralZoneController for base fog.
             // Main base zones won't have one — that's fine, nbc will just be null.
             NeutralZoneController nbc = zone.GetComponent<NeutralZoneController>();
-            UpdateZone(zone, nbc);
+            UpdateZone(zone, nbc, observerChanged);
         }
     }
 
     // Recalculate and apply fog for a single zone.
-    void UpdateZone(ZoneManager zone, NeutralZoneController nbc)
+    void UpdateZone(ZoneManager zone, NeutralZoneController nbc, bool observerChanged)
     {
         Player observer = ObservingPlayer;
         if (observer == null) return;
@@ -75,12 +92,14 @@ public class FogOfWarManager : MonoBehaviour
                 if (isFogged) overlay.CoverZoneAnimated(zone, originPos);
                 else          overlay.RevealZoneAnimated(zone, originPos);
             }
-            else
-            {
-                overlay.SetZoneFoggedInstant(zone, isFogged);
-            }
+            // Pas de SetZoneFoggedInstant si l'état n'a pas changé : la texture est déjà correcte.
         }
-        
+
+        // Ne mettre à jour les visuels que si l'état du fog ou l'observateur a changé.
+        // Évite des SetActive et Image.color inutiles (Canvas rebuild, GPU resource churn).
+        if (!stateChanged && !observerChanged)
+            return;
+
         foreach (PlayerArea pa in zone.subZones)
         {
             if (pa.tableVisual == null) continue;
@@ -108,10 +127,11 @@ public class FogOfWarManager : MonoBehaviour
         }
 
         // Show/hide all build spots in the zone based on observer presence
-        foreach (BuildSpotVisual spot in zone.GetComponentsInChildren<BuildSpotVisual>(true))
-            spot.gameObject.SetActive(observerHasPresence);
-       
-       foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
+        if (cachedBuildSpots.TryGetValue(zone.Logic.ID, out BuildSpotVisual[] spots))
+            foreach (BuildSpotVisual spot in spots)
+                spot.gameObject.SetActive(observerHasPresence);
+
+        foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
         {
             BuildingLogic b = kvp.Value;
             if (b.OriginSpot == null || b.OriginSpot.Zone != zone) continue;
@@ -131,9 +151,9 @@ public class FogOfWarManager : MonoBehaviour
         }
 
         // La base ennemie suit le fog : invisible jusqu'à être vue, puis dernier état connu
-        if (enemy != null 
-            && enemy.MainPArea != null 
-            && enemy.MainPArea.parentZone == zone 
+        if (enemy != null
+            && enemy.MainPArea != null
+            && enemy.MainPArea.parentZone == zone
             && enemy.baseVisual != null)
         {
             enemy.baseVisual.ApplyFogForObserver(observerHasPresence);

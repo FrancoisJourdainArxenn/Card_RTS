@@ -73,26 +73,22 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
     }
 
+    private static readonly RaycastHit[] _raycastBuffer = new RaycastHit[8];
+
     // CURSOR/MOUSE DETECTION
     void Update()
     {
-        // we need to Raycast because OnMouseEnter, etc reacts to colliders on cards and cards "cover" the table
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        Debug.DrawRay(ray.origin, ray.direction * 300f, Color.red);
-        // create an array of RaycastHits
-        RaycastHit[] hits = Physics.RaycastAll(ray, 300f, tableRaycastMask, QueryTriggerInteraction.Ignore);
-        bool isHoveringThisTable = false;
-        for (int i = 0; i < hits.Length; i++)
+        int count = Physics.RaycastNonAlloc(ray, _raycastBuffer, 300f, tableRaycastMask, QueryTriggerInteraction.Ignore);
+        cursorOverThisTable = false;
+        for (int i = 0; i < count; i++)
         {
-            if (hits[i].collider == col)
+            if (_raycastBuffer[i].collider == col)
             {
-                isHoveringThisTable = true;
+                cursorOverThisTable = true;
                 break;
             }
         }
-        // State used by other gameplay scripts
-        cursorOverThisTable = isHoveringThisTable;
-
     }
 
     public void SetHighlight(bool active)

@@ -17,12 +17,13 @@ public class NeutralZoneController : MonoBehaviour
     private Color trueColor;
     private Color lastSeenColorLow;
     private Color lastSeenColorTop;
+    private Image backgroundImage;
 
 
     void Awake()
     {
-        Image bg = background != null ? background.GetComponent<Image>() : null;
-        Color initial = bg != null ? bg.color : Color.white;
+        backgroundImage = background != null ? background.GetComponent<Image>() : null;
+        Color initial = backgroundImage != null ? backgroundImage.color : Color.white;
         trueColor = initial;
         lastSeenColorLow = initial;
         lastSeenColorTop = initial;
@@ -41,23 +42,27 @@ public class NeutralZoneController : MonoBehaviour
     public void ApplyColorForObserver(Player observer, bool hasVision)
     {
         bool isLow = observer == GlobalSettings.Instance.LowPlayer;
+        Color targetColor;
         if (hasVision)
         {
             if (isLow) lastSeenColorLow = trueColor;
             else lastSeenColorTop = trueColor;
-            background.GetComponent<Image>().color = trueColor;
+            targetColor = trueColor;
         }
         else
         {
-            background.GetComponent<Image>().color = isLow ? lastSeenColorLow : lastSeenColorTop;
+            targetColor = isLow ? lastSeenColorLow : lastSeenColorTop;
         }
+        if (backgroundImage != null && backgroundImage.color != targetColor)
+            backgroundImage.color = targetColor;
     }
 
 
     public void SetOwnerColor(Color color)
     {
         ownerColor = color;
-        background.GetComponent<Image>().color = ownerColor;
+        if (backgroundImage != null)
+            backgroundImage.color = ownerColor;
     }
 
     public void AddBase(BaseAsset ba, int baseUniqueID, Player player, NeutralBaseVisual nBaseVisual)

@@ -93,27 +93,27 @@ public class OneCreatureManager : OneLivableManager
             // Not an eligible target — fall through to normal handling
         }
 
-        Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
+        // Debug.Log($"[Click] IsBattlePhase={TurnManager.Instance?.IsBattlePhase}");
         if (!TurnManager.Instance.IsBattlePhase)
             return;
 
         IDHolder battleIdHolder = GetComponent<IDHolder>();
-        Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
+        // Debug.Log($"[Click] IDHolder={battleIdHolder?.UniqueID}");
         if (battleIdHolder == null)
             return;
 
         bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(battleIdHolder.UniqueID, out CreatureLogic battleCreature);
-        Debug.Log($"[Click] CreatureFound={found}");
+        // Debug.Log($"[Click] CreatureFound={found}");
         if (!found)
             return;
 
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         bool isOwn = localPlayer.playedCards.Creatures.Contains(battleCreature);
-        Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
+        // Debug.Log($"[Click] IsOwnCreature={isOwn}, BaseID={BaseID}");
         if (isOwn) return;
 
         ZoneCombatResolver resolver = ZoneCombatResolver.FindForBase(BaseID);
-        Debug.Log($"[Click] Resolver={resolver}");
+        // Debug.Log($"[Click] Resolver={resolver}");
         resolver?.TryRedirectDamageFrom(battleCreature);
     }
 

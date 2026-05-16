@@ -398,8 +398,8 @@ public class TurnManager : MonoBehaviour
 
         if (GlobalSettings.Instance != null)
             GlobalSettings.Instance.RefreshEndPhaseButtons();
-        PhaseEffectPipeline.BeginLocalSelectionSession();
         RefreshAllPlayableHighlights();
+        PhaseEffectPipeline.BeginLocalSelectionSession();
     }
 
     void UpdatePhaseText()

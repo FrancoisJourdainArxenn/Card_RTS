@@ -24,39 +24,17 @@ public class BetterCardRotation : MonoBehaviour {
     private bool showingBack = false;
 
 	// Update is called once per frame
-	void Update () 
+	void Update ()
     {
-        // Raycast from Camera to a target point on the face of the card
-        // If it passes through the card`s collider, we should show the back of the card
-        RaycastHit[] hits;
-        hits = Physics.RaycastAll(origin: Camera.main.transform.position, 
-                                  direction: (-Camera.main.transform.position + targetFacePoint.position).normalized, 
-            maxDistance: (-Camera.main.transform.position + targetFacePoint.position).magnitude) ;
-        bool passedThroughColliderOnCard = false;
-        foreach (RaycastHit h in hits)
+        Vector3 dir = targetFacePoint.position - Camera.main.transform.position;
+        Ray ray = new Ray(Camera.main.transform.position, dir.normalized);
+        bool passedThroughColliderOnCard = col.Raycast(ray, out _, dir.magnitude);
+
+        if (passedThroughColliderOnCard != showingBack)
         {
-            if (h.collider == col)
-                passedThroughColliderOnCard = true;
-        }
-        //Debug.Log("TotalHits: " + hits.Length); 
-        if (passedThroughColliderOnCard!= showingBack)
-        {
-            // something changed
             showingBack = passedThroughColliderOnCard;
-            if (showingBack)
-            {
-                // show the back side
-                CardFront.gameObject.SetActive(false);
-                CardBack.gameObject.SetActive(true);
-            }
-            else
-            {
-                // show the front side
-                CardFront.gameObject.SetActive(true);
-                CardBack.gameObject.SetActive(false);
-            }
-
+            CardFront.gameObject.SetActive(!showingBack);
+            CardBack.gameObject.SetActive(showingBack);
         }
-
 	}
 }
