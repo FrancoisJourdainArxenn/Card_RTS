@@ -53,6 +53,9 @@ TagManager:
   - name: Units
     uniqueID: 477187261
     locked: 0
+  - name: Vfx
+    uniqueID: 831422131
+    locked: 0
   - name: FogOverlay
     uniqueID: 3896059543
     locked: 0

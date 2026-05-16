@@ -494,6 +494,16 @@ public class TurnManager : MonoBehaviour
             EnterPhase(TurnPhases.Command);
     }
     
+    IEnumerator DrainPendingDeaths()
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        while (CreatureLogic.PendingDeathList.Count > 0)
+        {
+            CreatureLogic.ProcessPendingDeaths();     // déclenche les deathrattles
+            yield return new WaitWhile(() => Command.playingQueue);   // attend la fin de la chaîne
+        }
+        // ici : queue vide ET aucune mort en attente
+    }
     IEnumerator AutoAdvanceFromBeginCombat()
     {
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
@@ -511,17 +521,13 @@ public class TurnManager : MonoBehaviour
     IEnumerator AutoAdvanceFromEnd()
     {
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
-        CreatureLogic.ProcessPendingDeaths();
-        yield return new WaitWhile(() => Command.playingQueue);
-        if (currentPhase == TurnPhases.End)
-            EnterPhase(TurnPhases.Regroup);
+        yield return StartCoroutine(DrainPendingDeaths());
+        EnterPhase(TurnPhases.Regroup);
     }
 
     IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)
     {
-        yield return new WaitWhile(() => Command.playingQueue);
-        CreatureLogic.ProcessPendingDeaths();
-        yield return new WaitWhile(() => Command.playingQueue);
+        yield return StartCoroutine(DrainPendingDeaths());
         if (roundEnded)
         {
             foreach (Player p in Player.Players)

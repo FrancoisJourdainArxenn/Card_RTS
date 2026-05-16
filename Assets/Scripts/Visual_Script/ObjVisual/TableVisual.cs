@@ -117,10 +117,16 @@ public class TableVisual : MonoBehaviour
     // method to create a new creature and add it to the table
     public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int index, int baseID)
     {
-        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, slots.Children[index].transform.position);
+        int newCount = CreaturesOnTable.Count + 1;
+        int listIndex = Mathf.Min(index, CreaturesOnTable.Count);
+        int firstSlot = (slots.Children.Length - newCount) / 2;
+        int finalSlotIndex = Mathf.Clamp(firstSlot + listIndex, 0, slots.Children.Length - 1);
+        Vector3 spawnPos = slots.Children[finalSlotIndex].transform.position;
+
+        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
 
         creature.transform.SetParent(slots.transform);
-        CreaturesOnTable.Insert(Mathf.Min(index, CreaturesOnTable.Count), creature);
+        CreaturesOnTable.Insert(listIndex, creature);
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = index;

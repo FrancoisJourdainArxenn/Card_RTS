@@ -69,7 +69,7 @@ public class TokenGenerationSO : EffectSO
                 switch (parameters.Placement)
                 {
                     case TokenPlacement.ToHand:
-                        context.Caster.GetACardNotFromDeck(parameters.TokenToSummon);
+                        context.Caster.GetACardNotFromDeck(parameters.TokenToSummon, visualData: visualData);
                         break;
                     case TokenPlacement.ToZone:
                         SpawnToZone(context, parameters.TokenToSummon, visualData);
@@ -104,6 +104,16 @@ public class TokenGenerationSO : EffectSO
             return;
         }
 
+        if (visualData?.vfxPrefab != null)
+        {
+            int newCount = currentCount + 1;
+            int firstSlot = (maxSlots - newCount) / 2;
+            int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
+            Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
+            GameObject vfx = Object.Instantiate(visualData.vfxPrefab, spawnPos, Quaternion.identity);
+            Object.Destroy(vfx, 3f);
+        }
+
         CardLogic tokenCard = new CardLogic(tokenAsset);
         tokenCard.owner = caster;
 
@@ -111,6 +121,9 @@ public class TokenGenerationSO : EffectSO
         int tablePos = targetArea.tableVisual.CreaturesOnTable.Count; // était: caster.playedCards.Creatures.Count
         caster.playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
+
+        if (visualData?.vfxPrefab != null)
+            new DelayCommand(0.9f).AddToQueue();
 
         new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
 

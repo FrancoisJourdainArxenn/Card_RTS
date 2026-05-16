@@ -68,10 +68,10 @@ public class VfxManager : MonoBehaviour
     public void ShowDeathPending()
     {
         if (deathPendingMaterial == null) return;
-        foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>())
-            sr.material = deathPendingMaterial;
+        effectOverlayImage.material = deathPendingMaterial;
+        effectOverlay.SetActive(true);
     }
-    
+
     public void PlayDeath()
     {
         if (deathVfxPrefab == null) return;
