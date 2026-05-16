@@ -868,7 +868,7 @@ GameObject:
   m_Component:
   - component: {fileID: 189538862}
   m_Layer: 0
-  m_Name: PreviewSpot
+  m_Name: Effect_PreviewSpot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -952,7 +952,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5265503876409122859, guid: c8929473daac91f48944186fb7aaec9b, type: 3}
       propertyPath: m_SortingLayer
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5265503876409122859, guid: c8929473daac91f48944186fb7aaec9b, type: 3}
       propertyPath: m_SortingLayerID
@@ -1055,6 +1055,7 @@ Transform:
   m_Children:
   - {fileID: 837471976}
   - {fileID: 1110240074}
+  - {fileID: 535798243}
   - {fileID: 189538862}
   - {fileID: 440465261}
   - {fileID: 1528412343}
@@ -1748,7 +1749,7 @@ MonoBehaviour:
   CreatureCardPrefab: {fileID: 6821526227381898363, guid: a18732ceb6304d347b384e170c1e008f, type: 3}
   CreaturePrefab: {fileID: 126706081317096460, guid: 0c83baa8f0f3a2c42b0039d4e559f657, type: 3}
   DamageEffectPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
-  ExplosionPrefab: {fileID: 0}
+  ExplosionPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
   BuildingPrefab: {fileID: 126706081317096460, guid: a1d0ad6a13751354b993f8d8c8ec1cca, type: 3}
   ConfirmTargetingButton: {fileID: 162971764}
@@ -2075,6 +2076,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!1 &535798242
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 535798243}
+  m_Layer: 0
+  m_Name: GeneratedCards
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &535798243
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535798242}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.84, y: 0, z: 0.14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 219902736}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &540669340
 GameObject:
   m_ObjectHideFlags: 0
@@ -2481,6 +2513,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
+  - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
+  - {fileID: 11400000, guid: d7cfb2585fb780241b2897135c60efd2, type: 2}
   - {fileID: 11400000, guid: d7cfb2585fb780241b2897135c60efd2, type: 2}
   buildings:
   - {fileID: 11400000, guid: 3ef05a20881ef304893514f23f17547a, type: 2}
@@ -2532,8 +2566,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
-  - {fileID: 11400000, guid: fc5f647e99e6487438d92c23264ad9e9, type: 2}
   - {fileID: 11400000, guid: 7fd71d72ab7eb994b9094150d03b6405, type: 2}
+  - {fileID: 11400000, guid: d7cfb2585fb780241b2897135c60efd2, type: 2}
+  - {fileID: 11400000, guid: d7cfb2585fb780241b2897135c60efd2, type: 2}
   buildings:
   - {fileID: 11400000, guid: 4464a0c83f14ebd4fadcbe1d2fc9080e, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
@@ -3810,7 +3845,7 @@ Transform:
   m_GameObject: {fileID: 837471975}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.81, y: 0, z: 0.5}
+  m_LocalPosition: {x: 0.06, y: 0, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5373,7 +5408,7 @@ MonoBehaviour:
   slots: {fileID: 1438455305}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
-  OtherCardDrawSourceTransform: {fileID: 189538862}
+  OtherCardDrawSourceTransform: {fileID: 535798243}
   PlayPreviewSpot: {fileID: 189538862}
 --- !u!1001 &1439204025
 PrefabInstance:

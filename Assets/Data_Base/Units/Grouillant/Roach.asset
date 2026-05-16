@@ -15,7 +15,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  Description: Melee
+  Description: <b>Melee</b>
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 2
   SecondCost: 0
@@ -56,8 +56,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
       overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
-      overlayDuration: 1
-      vfxLifetime: 1
-      AttackDuration: 0
-      showAmount: 1
-      textColor: {r: 0, g: 1, b: 0, a: 0}
+      OverrideOverlayDuration: 0

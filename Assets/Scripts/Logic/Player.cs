@@ -304,14 +304,14 @@ public class Player : MonoBehaviour, ILivable
     }
 
     // get card NOT from deck (a token or a coin)
-    public void GetACardNotFromDeck(CardAsset cardAsset, int networkID = -1)
+    public void GetACardNotFromDeck(CardAsset cardAsset, int networkID = -1, EffectVisualData visualData = null)
     {
         if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
         {
             CardLogic newCard = new CardLogic(cardAsset, networkID);
             newCard.owner = this;
             hand.CardsInHand.Insert(0, newCard);
-            new DrawACardCommand(hand.CardsInHand[0], this, fast: true, fromDeck: false).AddToQueue();
+            new DrawACardCommand(hand.CardsInHand[0], this, fast: true, fromDeck: false, visualData: visualData).AddToQueue();
         }
     }
 

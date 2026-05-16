@@ -289,14 +289,22 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // Mode local : comportement existant
-            if (roundEnded)
+            bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
+                                 currentPhase == TurnPhases.Battle;
+            if (isCombatPhase)
             {
-                foreach (Player p in Player.Players)
-                    p.OnTurnEnd();
-                currentRound++;
+                StartCoroutine(CombatPhaseTransitionCoroutine(next, roundEnded));
             }
-            EnterPhase(next);
+            else
+            {
+                if (roundEnded)
+                {
+                    foreach (Player p in Player.Players)
+                        p.OnTurnEnd();
+                    // currentRound++;
+                }
+                EnterPhase(next);
+            }
         }
     }
 
@@ -472,6 +480,16 @@ public class TurnManager : MonoBehaviour
         return System.Array.IndexOf(Player.Players, p);
     }
 
+    IEnumerator DrainPendingDeaths()
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        while (CreatureLogic.PendingDeathList.Count > 0)
+        {
+            CreatureLogic.ProcessPendingDeaths();     // déclenche les deathrattles
+            yield return new WaitWhile(() => Command.playingQueue);   // attend la fin de la chaîne
+        }
+        // ici : queue vide ET aucune mort en attente
+    }
     IEnumerator AutoAdvanceFromBeginCombat()
     {
         yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
@@ -489,7 +507,20 @@ public class TurnManager : MonoBehaviour
     IEnumerator AutoAdvanceFromEnd()
     {
         yield return new WaitWhile(() => !EffectTargetingManager.IsComplete || Command.playingQueue);
+        yield return StartCoroutine(DrainPendingDeaths());
         EnterPhase(TurnPhases.Regroup);
+    }
+
+    IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)
+    {
+        yield return StartCoroutine(DrainPendingDeaths());
+        if (roundEnded)
+        {
+            foreach (Player p in Player.Players)
+                p.OnTurnEnd();
+            // curorentRound++;
+        }
+        EnterPhase(next);
     }
 
     IEnumerator AutoAdvanceFromRegroup()

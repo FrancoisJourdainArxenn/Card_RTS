@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 
 public class OneCreatureManager : OneLivableManager 
 {
+
     [Header("Pending Move Arrow")]
     [SerializeField] private LineRenderer pendingMoveArrow;
     [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
@@ -115,7 +116,6 @@ public class OneCreatureManager : OneLivableManager
         Debug.Log($"[Click] Resolver={resolver}");
         resolver?.TryRedirectDamageFrom(battleCreature);
     }
-
 
     public void ClearPendingDamageIndicator()
     {

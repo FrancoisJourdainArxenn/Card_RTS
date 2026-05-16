@@ -15,9 +15,9 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  Description: 'Play : Creates another Zergling.
+  Description: '<b>Melee</b>
 
-    Melee'
+    Play : Creates another Zergling.'
   CardImage: {fileID: 21300000, guid: acca65c89799521429ba0c9a7617f829, type: 3}
   MainCost: 2
   SecondCost: 0
@@ -51,8 +51,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 0
-      AttackDuration: 0
-      showAmount: 0
-      textColor: {r: 0, g: 0, b: 0, a: 0}
+      OverrideOverlayDuration: 0

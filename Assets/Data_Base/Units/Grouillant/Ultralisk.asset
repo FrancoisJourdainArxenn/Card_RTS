@@ -15,9 +15,9 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  Description: 'Melee
+  Description: '<b>Melee</b>
 
-    Frenzy'
+    <b>Frenzy</b>'
   CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
   MainCost: 7
   SecondCost: 5
@@ -56,8 +56,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 1
-      vfxLifetime: 1
-      AttackDuration: 0
-      showAmount: 1
-      textColor: {r: 0, g: 0.3254902, b: 1, a: 0}
+      OverrideOverlayDuration: 0

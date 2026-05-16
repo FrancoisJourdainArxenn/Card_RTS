@@ -21,6 +21,9 @@ public class CreatureDieCommand : Command
             return;
         }
 
+        creatureToRemove.GetComponent<VfxManager>()?.PlayDeath();
+
+
         if (p.PAreas != null)
         {
             foreach (PlayerArea area in p.PAreas)

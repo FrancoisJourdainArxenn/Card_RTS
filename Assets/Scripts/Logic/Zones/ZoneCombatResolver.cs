@@ -343,7 +343,9 @@ public class ZoneCombatResolver : MonoBehaviour
 
     public static bool WouldSurvive(CreatureLogic creature)
     {
-        foreach (var r in allResolvers)
+        if (creature.IsPendingDeath) 
+            return false;
+        foreach (ZoneCombatResolver r in allResolvers)
             if (r.pendingDamage.TryGetValue(creature.UniqueCreatureID, out int dmg))
                 return dmg < creature.Health;
         return true; // no pending damage → survives
