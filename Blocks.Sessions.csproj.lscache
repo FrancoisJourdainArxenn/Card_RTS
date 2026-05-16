@@ -67,7 +67,7 @@ Assets/Blocks/MultiplayerSession/Runtime/SessionBrowser/
 Temp/obj/Blocks.Sessions/.NETStandard,Version=v2.1.AssemblyAttributes.cs
 
 [metadataReferences]
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/Managed/UnityEngine/
+../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/Managed/UnityEngine/
  UnityEditor.AccessibilityModule.dll
  UnityEditor.AdaptivePerformanceModule.dll
  UnityEditor.AssetComplianceModule.dll
@@ -202,7 +202,7 @@ Temp/obj/Blocks.Sessions/.NETStandard,Version=v2.1.AssemblyAttributes.cs
  UnityEngine.VRModule.dll
  UnityEngine.WindModule.dll
  UnityEngine.XRModule.dll
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/compat/2.1.0/shims/netfx/
+../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/compat/2.1.0/shims/netfx/
  mscorlib.dll
  System.ComponentModel.Composition.dll
  System.Core.dll
@@ -220,7 +220,7 @@ Temp/obj/Blocks.Sessions/.NETStandard,Version=v2.1.AssemblyAttributes.cs
  System.Xml.dll
  System.Xml.Linq.dll
  System.Xml.Serialization.dll
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/compat/2.1.0/shims/netstandard/
+../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/compat/2.1.0/shims/netstandard/
  Microsoft.Win32.Primitives.dll
  System.AppContext.dll
  System.Buffers.dll
@@ -324,12 +324,9 @@ Temp/obj/Blocks.Sessions/.NETStandard,Version=v2.1.AssemblyAttributes.cs
  System.Xml.XmlSerializer.dll
  System.Xml.XPath.dll
  System.Xml.XPath.XDocument.dll
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/
+../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/NetStandard/
  Extensions/2.0.0/System.Runtime.InteropServices.WindowsRuntime.dll
  ref/2.1.0/netstandard.dll
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/
- Unity.Android.Gradle.dll
- Unity.Android.Types.dll
 Assets/DOTween/DOTween.dll
 Library/PackageCache/com.unity.collections@aea9d3bd5e19/
  Unity.Collections.LowLevel.ILSupport/Unity.Collections.LowLevel.ILSupport.dll
@@ -343,18 +340,20 @@ Library/PackageCache/
 Library/ScriptAssemblies/
  Unity.Services.Core.dll
  Unity.Services.Multiplayer.dll
- UnityEditor.UI.dll
- UnityEngine.UI.dll
 Temp/bin/Debug/
  Blocks.Common.dll
  Blocks.Sessions.Common.dll
+ UnityEditor.TestRunner.dll
+ UnityEditor.UI.dll
+ UnityEngine.TestRunner.dll
+ UnityEngine.UI.dll
 
 [analyzerReferences]
-../../../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/Tools/BuildPipeline/Unity.SourceGenerators/
+../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/Tools/BuildPipeline/Unity.SourceGenerators/
  Unity.Properties.SourceGenerator.dll
  Unity.SourceGenerators.dll
  Unity.UIToolkit.SourceGenerator.dll
-../../../.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.2/Analyzers/Microsoft.Unity.Analyzers.dll
+../.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.2/Analyzers/Microsoft.Unity.Analyzers.dll
 
 [analyzerConfigFiles]
 Temp/obj/Blocks.Sessions/Blocks.Sessions.GeneratedMSBuildEditorConfig.editorconfig

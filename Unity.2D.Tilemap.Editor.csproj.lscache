@@ -13,17 +13,17 @@ primary
 lastDtbSucceeded
 
 [properties]
-AssemblyName=Assembly-CSharp-Editor
+AssemblyName=Unity.2D.Tilemap.Editor
 CommandLineArgsForDesignTimeEvaluation=-langversion:9.0 -define:UNITY_6000_3_10;UNITY_6000_3;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;UNITY_6000_3_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_AUDIO_SCRIPTABLE_PIPELINE;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;ENABLE_ACCESSIBILITY_SCREEN_READER;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;TEXTCORE_FONT_ENGINE_1_6_OR_NEWER;DOTWEEN;DOTWEEN_NOAUDIO;DOTWEEN_UITOOLKIT;LEVELPLAY_DEPENDENCIES_INSTALLED;UNITY_POST_PROCESSING_STACK_V2;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER;UNITY_EDITOR_ONLY_COMPILATION
 CompilerGeneratedFilesOutputPath=
 MaxSupportedLangVersion=8.0
-ProjectAssetsFile=<PATH>Temp/obj/Assembly-CSharp-Editor/project.assets.json
+ProjectAssetsFile=<PATH>Temp/obj/Unity.2D.Tilemap.Editor/project.assets.json
 RootNamespace=
 RunAnalyzers=
 RunAnalyzersDuringLiveAnalysis=
 SolutionPath=<PATH>Card_RTS.slnx
 TargetFrameworkIdentifier=.NETStandard
-TargetPath=<PATH>Temp/bin/Debug/Assembly-CSharp-Editor.dll
+TargetPath=<PATH>Temp/bin/Debug/Unity.2D.Tilemap.Editor.dll
 TargetRefPath=
 TemporaryDependencyNodeTargetIdentifier=netstandard2.1
 
@@ -41,7 +41,7 @@ TemporaryDependencyNodeTargetIdentifier=netstandard2.1
 /debug:portable
 /filealign:512
 /optimize-
-/out:Temp\obj\Assembly-CSharp-Editor\Assembly-CSharp-Editor.dll
+/out:Temp\obj\Unity.2D.Tilemap.Editor\Unity.2D.Tilemap.Editor.dll
 /target:library
 /warnaserror-
 /utf8output
@@ -50,12 +50,129 @@ TemporaryDependencyNodeTargetIdentifier=netstandard2.1
 /warnaserror+:NU1605
 
 [sourceFiles]
-Assets/Scripts/SO Asset Scripts/
- CardAsset/Editor/CardUnityIntegration.cs
- Editor/ScriptableObjectUtility2.cs
- FactionAsset/Editor/FactionUnityIntegration.cs
-Assets/Z_Unused/TutorialInfo/Scripts/Editor/ReadmeEditor.cs
-Temp/obj/Assembly-CSharp-Editor/.NETStandard,Version=v2.1.AssemblyAttributes.cs
+Library/PackageCache/com.unity.2d.tilemap@f011712243ad/Editor/
+ AssemblyInfo.cs
+ CreateTileFromPaletteAttribute.cs
+ EditorTools/
+  BoxTool.cs
+  BrushToolsAttribute.cs
+  EraseTool.cs
+  FillTool.cs
+  FlipTool.cs
+  GridSelection/
+   GridSelectionMoveTool.cs
+   GridSelectionRotationTool.cs
+   GridSelectionScaleTool.cs
+   GridSelectionTool.cs
+   GridSelectionToolEditor.cs
+   GridSelectionTransformTool.cs
+  MoveTool.cs
+  PaintTool.cs
+  PickingTool.cs
+  RotateTool.cs
+  SelectTool.cs
+  TilemapEditorTool.cs
+  TilemapEditorToolPreferences.cs
+  TilemapEditorToolPreferencesAsset.cs
+ GridBrush.cs
+ GridBrushEditor.cs
+ GridBrushEditorBase.cs
+ GridBrushesDropdown.cs
+ GridBrushPickStore.cs
+ GridBrushPickStoreSettings.cs
+ GridEditorUtility.cs
+ GridPaintCreateTargetsDropdown.cs
+ GridPaintingState.cs
+ GridPaintPaletteClipboard.cs
+ GridPaintPaletteWindow.cs
+ GridPaintPaletteWindowPreferences.cs
+ GridPaintSortingAttribute.cs
+ GridPaintTargetsDropdown.cs
+ GridPaletteAddPopup.cs
+ GridPaletteAddWhiteboxPopup.cs
+ GridPaletteBrushes.cs
+ GridPaletteEditor.cs
+ GridPalettes.cs
+ GridPalettesDropdown.cs
+ GridPaletteUtility.cs
+ GridPaletteWhiteboxPalettesDropdown.cs
+ GridSelection.cs
+ GridSelectionEditor.cs
+ ObjectCreationMenu/
+  DefaultAssetCreation.cs
+  GameObjectCreation.cs
+ PaintableGrid.cs
+ PaintableSceneViewGrid.cs
+ SceneViewGridManager.cs
+ SceneViewOpenTilePaletteHelper.cs
+ TileDragAndDrop.cs
+ TileDragAndDropHoverData.cs
+ TileDragAndDropManager.cs
+ TilemapFocusModeUtility.cs
+ TilemapPrefabStageHelper.cs
+ TilePaletteActiveTargetsProperties.cs
+ TilePalettePrefabUtility.cs
+ TilePaletteSaveUtility.cs
+ TilePaletteWhiteboxSamplesUtility.cs
+ TileSet/
+  PositionTileTemplate.cs
+  TileSet.cs
+  TileSetImporter.cs
+  TileSetImporterEditor.cs
+  TileSetUtility.cs
+  TileTemplate.cs
+ TileUtility.cs
+ UI/
+  BoolFieldOverlayPopupWindow.cs
+  External/
+   GridView.cs
+   RenameableLabel.cs
+  GridPaintingToolbar.cs
+  GridPaintPaletteWindowActiveTargets.cs
+  GridPaintPaletteWindowSplitView.cs
+  SceneViewOpenTilePaletteOverlay.cs
+  SceneViewTilemapFocusOverlay.cs
+  TextUtility.cs
+  TilemapEditorToolbarStrip.cs
+  TilemapEditorToolButton.cs
+  TilePaletteActivePaletteDropdownMenu.cs
+  TilePaletteActivePalettePopup.cs
+  TilePaletteActiveTargetsButton.cs
+  TilePaletteActiveTargetsDropdownMenu.cs
+  TilePaletteActiveTargetsPopup.cs
+  TilePaletteBrushesButton.cs
+  TilePaletteBrushesDropdownMenu.cs
+  TilePaletteBrushesDropdownToggle.cs
+  TilePaletteBrushesLabel.cs
+  TilePaletteBrushesPopup.cs
+  TilePaletteBrushInspector.cs
+  TilePaletteBrushInspectorElement.cs
+  TilePaletteBrushInspectorPopup.cs
+  TilePaletteBrushModalElement.cs
+  TilePaletteBrushPanelButton.cs
+  TilePaletteBrushPickButton.cs
+  TilePaletteBrushPickElement.cs
+  TilePaletteBrushPickItemElement.cs
+  TilePaletteBrushPickOverlay.cs
+  TilePaletteBrushPickPanelPopup.cs
+  TilePaletteClipboardButton.cs
+  TilePaletteClipboardElement.cs
+  TilePaletteClipboardErrorElement.cs
+  TilePaletteClipboardFirstUserElement.cs
+  TilePaletteClipboardOverlay.cs
+  TilePaletteClipboardPanelPopup.cs
+  TilePaletteClipboardViewElement.cs
+  TilePaletteContextMenuHandler.cs
+  TilePaletteCreateTargetsDropdownMenu.cs
+  TilePaletteDragHandler.cs
+  TilePaletteElement.cs
+  TilePaletteMouseCursorUtility.cs
+  TilePaletteOverlayToolbarElementAttribute.cs
+  TilePaletteOverlayUtility.cs
+  TilePaletteWhiteboxPaletteDropdownMenu.cs
+  TileSetImporterDragAndDropManipulator.cs
+  TilesetImporterElement.cs
+Temp/obj/Unity.2D.Tilemap.Editor/.NETStandard,Version=v2.1.AssemblyAttributes.cs
 
 [metadataReferences]
 ../../../Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/Managed/
@@ -351,125 +468,8 @@ Library/PackageCache/
  com.unity.visualscripting@191c0d7e3b69/
   Editor/VisualScripting.Core/EditorAssetResources/Unity.VisualScripting.TextureAssets.dll
   Runtime/VisualScripting.Flow/Dependencies/NCalc/Unity.VisualScripting.Antlr3.Runtime.dll
-Library/ScriptAssemblies/
- com.unity.multiplayer.tools.window.dll
- glTFast.dll
- glTFast.dots.dll
- glTFast.Editor.dll
- HFDownloader.dll
- Unity.AI.Assistant.Agent.Dynamic.Extension.Editor.dll
- Unity.AI.Assistant.Annotations.Editor.dll
- Unity.AI.Assistant.API.Editor.dll
- Unity.AI.Assistant.Bridge.Editor.dll
- Unity.AI.Assistant.Integrations.Profiler.Editor.dll
- Unity.AI.Assistant.Runtime.dll
- Unity.AI.Assistant.Tools.Editor.dll
- Unity.AI.MCP.Editor.dll
- Unity.AI.MCP.Runtime.dll
- Unity.AI.Navigation.dll
- Unity.AI.Navigation.Editor.ConversionSystem.dll
- Unity.AI.Navigation.Editor.dll
- Unity.AI.Navigation.Updater.dll
- Unity.AI.Tracing.dll
- Unity.Burst.dll
- Unity.Burst.Editor.dll
- Unity.Collections.dll
- Unity.Collections.Editor.dll
- Unity.InputSystem.dll
- Unity.InputSystem.ForUI.dll
- Unity.Mathematics.dll
- Unity.Mathematics.Editor.dll
- Unity.Multiplayer.Tools.Adapters.dll
- Unity.Multiplayer.Tools.Common.dll
- Unity.Multiplayer.Tools.DependencyInjection.dll
- Unity.Multiplayer.Tools.DependencyInjection.UIElements.dll
- Unity.Multiplayer.Tools.Editor.dll
- Unity.Multiplayer.Tools.Initialization.dll
- Unity.Multiplayer.Tools.MetricEvents.dll
- Unity.Multiplayer.Tools.MetricTestData.dll
- Unity.Multiplayer.Tools.MetricTypes.dll
- Unity.Multiplayer.Tools.NetStats.dll
- Unity.Multiplayer.Tools.NetStatsMonitor.Component.dll
- Unity.Multiplayer.Tools.NetStatsMonitor.Configuration.dll
- Unity.Multiplayer.Tools.NetStatsMonitor.Editor.dll
- Unity.Multiplayer.Tools.NetStatsMonitor.Implementation.dll
- Unity.Multiplayer.Tools.NetStatsReporting.dll
- Unity.Multiplayer.Tools.NetVis.Configuration.dll
- Unity.Multiplayer.Tools.NetVis.Editor.UI.dll
- Unity.Multiplayer.Tools.NetVis.Editor.Visualization.dll
- Unity.Multiplayer.Tools.NetworkProfiler.Editor.dll
- Unity.Multiplayer.Tools.NetworkProfiler.Runtime.dll
- Unity.Multiplayer.Tools.NetworkSimulator.Editor.dll
- Unity.Multiplayer.Tools.NetworkSimulator.Runtime.dll
- Unity.Multiplayer.Tools.NetworkSolutionInterface.dll
- Unity.Netcode.Editor.dll
- Unity.Netcode.PackageChecker.Editor.dll
- Unity.Netcode.Runtime.dll
- Unity.Networking.Editor.dll
- Unity.Networking.Transport.dll
- Unity.PlasticSCM.Editor.dll
- Unity.Postprocessing.Editor.dll
- Unity.Postprocessing.Runtime.dll
- Unity.Profiling.Core.dll
- Unity.Rider.Editor.dll
- Unity.Searcher.Editor.dll
- Unity.Services.Authentication.dll
- Unity.Services.Authentication.Editor.Shared.dll
- Unity.Services.Authentication.PlayerAccounts.dll
- Unity.Services.Core.Analytics.dll
- Unity.Services.Core.Components.dll
- Unity.Services.Core.dll
- Unity.Services.Core.Environments.dll
- Unity.Services.Multiplayer.dll
- Unity.Services.Multiplayer.Editor.Matchmaker.Authoring.dll
- Unity.Services.Multiplayer.Editor.Shared.dll
- Unity.Services.QoS.dll
- Unity.Timeline.dll
- Unity.Timeline.Editor.dll
- Unity.VisualScripting.Core.dll
- Unity.VisualScripting.Core.Editor.dll
- Unity.VisualScripting.Flow.dll
- Unity.VisualScripting.Flow.Editor.dll
- Unity.VisualScripting.SettingsProvider.Editor.dll
- Unity.VisualScripting.Shared.Editor.dll
- Unity.VisualScripting.State.dll
- Unity.VisualScripting.State.Editor.dll
- Unity.VisualStudio.Editor.dll
 Temp/bin/Debug/
- Assembly-CSharp.dll
- Blocks.Common.dll
- Blocks.Sessions.Common.dll
- Blocks.Sessions.dll
- PPv2URPConverters.dll
- Unity.2D.Sprite.Editor.dll
- Unity.2D.Tilemap.Editor.dll
- Unity.InternalAPIEngineBridge.004.dll
- Unity.Multiplayer.Center.Common.dll
- Unity.Multiplayer.Center.Editor.dll
- Unity.Rendering.LightTransport.Editor.dll
- Unity.RenderPipeline.Universal.ShaderLibrary.dll
- Unity.RenderPipelines.Core.Editor.dll
- Unity.RenderPipelines.Core.Editor.Shared.dll
- Unity.RenderPipelines.Core.Runtime.dll
- Unity.RenderPipelines.Core.Runtime.Shared.dll
- Unity.RenderPipelines.Core.ShaderLibrary.dll
- Unity.RenderPipelines.GPUDriven.Runtime.dll
- Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll
- Unity.RenderPipelines.Universal.2D.Editor.Overrides.dll
- Unity.RenderPipelines.Universal.2D.Runtime.dll
- Unity.RenderPipelines.Universal.Config.Runtime.dll
- Unity.RenderPipelines.Universal.Editor.dll
- Unity.RenderPipelines.Universal.Runtime.dll
- Unity.RenderPipelines.Universal.Shaders.dll
- Unity.ShaderGraph.Editor.dll
- Unity.ShaderGraph.Utilities.dll
- Unity.TextMeshPro.dll
- Unity.TextMeshPro.Editor.dll
- Unity.UnifiedRayTracing.Runtime.dll
- Unity.VisualEffectGraph.Editor.dll
- Unity.VisualEffectGraph.Runtime.dll
  UnityEditor.TestRunner.dll
- UnityEditor.UI.Analytics.dll
  UnityEditor.UI.dll
  UnityEngine.TestRunner.dll
  UnityEngine.UI.dll
@@ -482,4 +482,4 @@ Temp/bin/Debug/
 ../.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.2/Analyzers/Microsoft.Unity.Analyzers.dll
 
 [analyzerConfigFiles]
-Temp/obj/Assembly-CSharp-Editor/Assembly-CSharp-Editor.GeneratedMSBuildEditorConfig.editorconfig
+Temp/obj/Unity.2D.Tilemap.Editor/Unity.2D.Tilemap.Editor.GeneratedMSBuildEditorConfig.editorconfig
