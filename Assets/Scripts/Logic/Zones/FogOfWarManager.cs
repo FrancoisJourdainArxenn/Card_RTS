@@ -95,29 +95,6 @@ public class FogOfWarManager : MonoBehaviour
             // Pas de SetZoneFoggedInstant si l'état n'a pas changé : la texture est déjà correcte.
         }
 
-        // Ne mettre à jour les visuels que si l'état du fog ou l'observateur a changé.
-        // Évite des SetActive et Image.color inutiles (Canvas rebuild, GPU resource churn).
-        if (!stateChanged && !observerChanged)
-            return;
-
-        foreach (PlayerArea pa in zone.subZones)
-        {
-            if (pa.tableVisual == null) continue;
-
-            if (pa.owner == observerAreaPos)
-            {
-                // The observer always sees their own board.
-                pa.tableVisual.SetFogged(false);
-                pa.SetStatsFogged(false);
-            }
-            else if (pa.owner == enemyAreaPos)
-            {
-                // Enemy board is visible only if observer has presence here.
-                pa.tableVisual.SetFogged(!observerHasPresence);
-                pa.SetStatsFogged(!observerHasPresence);
-            }
-        }
-
         if (nbc != null)
         {
             nbc.SetEnemyBasesFogged(enemy, !observerHasPresence);
@@ -141,6 +118,31 @@ public class FogOfWarManager : MonoBehaviour
 
             buildingGO.SetActive(b.owner == observer || observerHasPresence);
         }
+
+        // Ne mettre à jour les visuels que si l'état du fog ou l'observateur a changé.
+        // Évite des SetActive et Image.color inutiles (Canvas rebuild, GPU resource churn).
+        if (!stateChanged && !observerChanged)
+            return;
+
+        foreach (PlayerArea pa in zone.subZones)
+        {
+            if (pa.tableVisual == null) continue;
+
+            if (pa.owner == observerAreaPos)
+            {
+                // The observer always sees their own board.
+                pa.tableVisual.SetFogged(false);
+                pa.SetStatsFogged(false);
+            }
+            else if (pa.owner == enemyAreaPos)
+            {
+                // Enemy board is visible only if observer has presence here.
+                pa.tableVisual.SetFogged(!observerHasPresence);
+                pa.SetStatsFogged(!observerHasPresence);
+            }
+        }
+
+
         // --- Bases joueur (fog comme les bases neutres) ---
         // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV)
         if (observer.MainPArea != null
