@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(-200)]
 public class MapManager : MonoBehaviour
 {
     [Header("Camera")]
@@ -20,6 +21,11 @@ public class MapManager : MonoBehaviour
     void Awake()
     {
         Current = this;
+
+        NeutralBaseVisual[] neutralBaseVisuals = GetComponentsInChildren<NeutralBaseVisual>(true);
+        Debug.Log($"[MapManager] {neutralBaseVisuals.Length} NeutralBaseVisual(s) trouvés");
+        for (int i = 0; i < neutralBaseVisuals.Length; i++)
+            neutralBaseVisuals[i].SetId(i);
 
         NeutralBases = GetComponentsInChildren<NeutralZoneController>();
 

@@ -9,6 +9,8 @@ using Unity.Netcode;
 /// </summary>
 public class TurnManager : MonoBehaviour
 {
+    public static event System.Action OnRoundStart;
+
     public int initdraw = 5;
     [SerializeField] private float effectSequenceDelay = 1.5f;
     public float EffectSequenceDelay => effectSequenceDelay;
@@ -306,7 +308,7 @@ public class TurnManager : MonoBehaviour
                 {
                     foreach (Player p in Player.Players)
                         p.GetComponent<TurnMaker>().OnTurnEnd();
-                    // currentRound++;
+                    currentRound++;
                 }
                 EnterPhase(next);
             }
@@ -362,6 +364,7 @@ public class TurnManager : MonoBehaviour
         {
             case TurnPhases.Regroup:
                 // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
+                OnRoundStart?.Invoke(); 
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnRegroupPhaseStart();
                 StartCoroutine(AutoAdvanceFromRegroup());
