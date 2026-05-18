@@ -429,7 +429,7 @@ public class GameNetworkManager : NetworkBehaviour
         gs.localPlayer = localPlayer;
         FogOfWarManager.Refresh();
         gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
-        localPlayer.MainPArea.handVisual = gs.localPlayerHand;
+        localPlayer.handVisual = gs.localPlayerHand;
         
         gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 

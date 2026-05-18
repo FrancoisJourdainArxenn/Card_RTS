@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Solo_BattleScene.unity
     guid: a8cf8dffba2cf0e41887162dc98ec148
+  - enabled: 1
+    path: Assets/Scenes/MapTest.unity
+    guid: 5d1f28ef5263d6b45a7204470f3707e0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

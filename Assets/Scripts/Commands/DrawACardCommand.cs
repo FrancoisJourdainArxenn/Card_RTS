@@ -28,14 +28,14 @@ public class DrawACardCommand : Command {
         {
             if (visualData?.vfxPrefab != null)
             {
-                Vector3 spawnPos = p.MainPArea.handVisual.OtherCardDrawSourceTransform.position;
+                Vector3 spawnPos = p.handVisual.OtherCardDrawSourceTransform.position;
                 GameObject vfx = Object.Instantiate(visualData.vfxPrefab, spawnPos, Quaternion.identity);
                 Object.Destroy(vfx, 3f);
-                DOVirtual.DelayedCall(0.9f, () => p.MainPArea.handVisual.GivePlayerACard(p, cl.ca, cl.UniqueCardID, false, fromDeck));
+                DOVirtual.DelayedCall(0.9f, () => p.handVisual.GivePlayerACard(p, cl.ca, cl.UniqueCardID, false, fromDeck));
             }
             else
             {
-                p.MainPArea.handVisual.GivePlayerACard(p, cl.ca, cl.UniqueCardID, fast, fromDeck);
+                p.handVisual.GivePlayerACard(p, cl.ca, cl.UniqueCardID, fast, fromDeck);
             }
         }
         else

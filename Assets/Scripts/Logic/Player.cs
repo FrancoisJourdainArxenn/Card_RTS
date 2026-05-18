@@ -16,9 +16,10 @@ public class Player : MonoBehaviour, ILivable
 
     public List<BaseLogic> controlledBases => BaseLogic.BasesCreatedThisGame.Values.Where(b => b.owner == this).ToList();
     // a script with references to all the visual game objects for this player
-    public PlayerArea[] PAreas;
-    public PlayerArea MainPArea = null;
-    public MainBaseVisual baseVisual;
+    [HideInInspector] public PlayerArea[] PAreas;
+    [HideInInspector] public PlayerArea MainPArea = null;
+    [HideInInspector] public MainBaseVisual baseVisual;
+    public HandVisual handVisual;
     public Color playerColor;
 
     public int mainRessourceTotal;
@@ -32,6 +33,8 @@ public class Player : MonoBehaviour, ILivable
     public Deck deck;
     public Hand hand;
     public PlayedCards playedCards;
+
+
 
     // a static array that will store both players, should always have 2 players
     public static Player[] Players;
@@ -192,7 +195,6 @@ public class Player : MonoBehaviour, ILivable
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
         controlledBaseAssets.Add(baseAsset);
-        CalculatePlayerIncome();
     }
 
     public void InitBaseIDs()
@@ -272,7 +274,7 @@ public class Player : MonoBehaviour, ILivable
     {
         if (deck.cards.Count > 0)
         {
-            if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
+            if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
                 CardAsset cardDrawn = NetworkSessionData.IsNetworkSession
                     ? deck.cards.SelectRandomCardFromSeed(finalSeed)
@@ -300,7 +302,7 @@ public class Player : MonoBehaviour, ILivable
     // get card NOT from deck (a token or a coin)
     public void GetACardNotFromDeck(CardAsset cardAsset, int networkID = -1, EffectVisualData visualData = null)
     {
-        if (hand.CardsInHand.Count < MainPArea.handVisual.slots.Children.Length)
+        if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
         {
             CardLogic newCard = new CardLogic(cardAsset, networkID);
             newCard.owner = this;
@@ -412,7 +414,7 @@ public class Player : MonoBehaviour, ILivable
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
         if (cardGO != null)
         {
-            MainPArea.handVisual.RemoveCard(cardGO);
+            handVisual.RemoveCard(cardGO);
             GameObject.Destroy(cardGO);
         }
 
