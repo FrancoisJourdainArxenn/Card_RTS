@@ -18,7 +18,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     public GameObject Glow;
     public Transform baseParent;
 
-    public Transform BaseApparitionPosition;
+    [HideInInspector] public Transform BaseApparitionPosition;
     public Transform BasePosition;
     public GameObject BaseCardPrefab;
     private bool canBuild = true;
@@ -37,6 +37,11 @@ public class NeutralBaseVisual : MonoBehaviour {
 			ApplyLookFromAsset();
         canBuild = true;
 	}
+    void Start()
+    {
+        if (BaseApparitionPosition == null)
+            BaseApparitionPosition = GlobalSettings.Instance.baseApparitionPoint.transform;
+    }
 
     void OnDestroy()
     {

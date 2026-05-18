@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(xxd)",
-      "Bash(xxd Assets/Scripts/Commands/Command.cs)"
+      "Bash(xxd Assets/Scripts/Commands/Command.cs)",
+      "Bash(awk '/fileID: 5554277563708777250/{found=1} found && /m_Color/{print NR\": \"$0; found=0}' \"Assets/Prefab/Zone/Zone_Empty.prefab\")"
     ]
   }
 }

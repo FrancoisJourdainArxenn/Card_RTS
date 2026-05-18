@@ -42,9 +42,10 @@ public class GlobalSettings : MonoBehaviour
     public GameObject ExplosionPrefab;
     public GameObject NeutralBasePrefab;
     public GameObject BuildingPrefab;
+    
     [Header("Other")]
     public Button ConfirmTargetingButton;
-
+    public GameObject baseApparitionPoint;
     public GameObject GameOverPanel;
     public TMP_Text localPlayerDebugText;
 
@@ -56,13 +57,13 @@ public class GlobalSettings : MonoBehaviour
     {
         Players.Add(AreaPosition.Top, TopPlayer);
         Players.Add(AreaPosition.Low, LowPlayer);
+        TopPlayer.playerColor = TopColor;
+        LowPlayer.playerColor = LowColor;
         Instance = this;
         InitFromMap();
     }
     void Start()
     {
-        TopPlayer.playerColor = TopColor;
-        LowPlayer.playerColor = LowColor;
         LowPlayer.tag = "LowPlayer";
         TopPlayer.tag = "TopPlayer";
 
