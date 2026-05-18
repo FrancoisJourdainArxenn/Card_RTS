@@ -135,6 +135,7 @@ public class GlobalSettings : MonoBehaviour
             localPlayer = localPlayer == TopPlayer ? LowPlayer : TopPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;
             FogOfWarManager.Refresh();
+            PathVisual.RefreshAll();
             RefreshEndPhaseButtons();
         }
     }

@@ -48,7 +48,7 @@ public class NetworkMenu : MonoBehaviour
         {
             NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
             NetworkSessionData.IsNetworkSession = true;
-            NetworkManager.Singleton.SceneManager.LoadScene("BattleScene",
+            NetworkManager.Singleton.SceneManager.LoadScene("MapTest",
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }

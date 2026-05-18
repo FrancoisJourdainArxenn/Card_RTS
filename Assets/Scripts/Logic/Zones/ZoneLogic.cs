@@ -5,7 +5,7 @@ public class ZoneLogic : IIdentifiable
 {
     public int ID { get; }
     public string DisplayName { get; }
-    public List<ZoneLogic> AdjacentZones { get; private set; } = new List<ZoneLogic>();
+    public List<ZonePathLogic> AdjacentPaths { get; } = new List<ZonePathLogic>();
     private readonly Func<List<int>> _getSubZoneIDs;
     public List<int> SubZoneIDs => _getSubZoneIDs();
 
@@ -16,7 +16,15 @@ public class ZoneLogic : IIdentifiable
         _getSubZoneIDs = getSubZoneIDs;
     }
 
-    internal void SetAdjacentZones(List<ZoneLogic> zones) => AdjacentZones = zones;
+    public void AddPath(ZonePathLogic path) => AdjacentPaths.Add(path);
+    public void RemovePath(ZonePathLogic path) => AdjacentPaths.Remove(path);
 
-    public bool IsAdjacentTo(ZoneLogic other) => AdjacentZones.Contains(other);
+    public bool IsAdjacentTo(ZoneLogic other)
+        => AdjacentPaths.Exists(p => p.ConnectsTo(other));
+
+    public bool CanMoveTo(ZoneLogic other, Player player)
+    {
+        ZonePathLogic path = AdjacentPaths.Find(p => p.ConnectsTo(other));
+        return path != null && path.CanTraverse(player, this);
+    }
 }
