@@ -31,7 +31,6 @@ public class DragCreatureOnTable : DraggingActions {
 
     public override void OnStartDrag()
     {
-        Debug.Log("Start dragging creature");
         savedHandSlot = whereIsCard.Slot;
         tempState = whereIsCard.VisualState;
         whereIsCard.VisualState = VisualStates.Dragging;

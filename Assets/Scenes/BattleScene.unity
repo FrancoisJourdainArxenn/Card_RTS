@@ -2130,7 +2130,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   defaultMapPrefab: {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
-  environnement: {fileID: 593479459}
+  mapPrefabs:
+  - {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
+  - {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
 --- !u!1 &620230357
 GameObject:
   m_ObjectHideFlags: 0
@@ -3842,7 +3844,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameNetworkManager
   ShowTopMostFoldoutHeaderGroup: 1
-  mapPrefabs: []
 --- !u!1 &1110240073
 GameObject:
   m_ObjectHideFlags: 0

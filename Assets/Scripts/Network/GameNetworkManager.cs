@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
+[DefaultExecutionOrder(-200)]
+
 /// <summary>
 /// Chef d'orchestre réseau dans la BattleScene.
 /// Attend que les deux clients soient prêts, puis lance la partie.
@@ -11,7 +13,6 @@ using UnityEngine;
 public class GameNetworkManager : NetworkBehaviour
 {
     public static GameNetworkManager Instance { get; private set; }
-    [SerializeField] GameObject[] mapPrefabs;
     NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
 
@@ -380,10 +381,13 @@ public class GameNetworkManager : NetworkBehaviour
 
     void LoadMap(int index)
     {
-        Transform env = GameObject.Find("Environnement").transform;
-        Instantiate(mapPrefabs[index], env.position, env.rotation, env);
+        Transform env = MapLoader.EnvironnementTransform;
+        if (env == null) { Debug.LogError("EnvironnementTransform est null"); return; }
+        Instantiate(MapLoader.Instance.GetMapPrefab(index), env.position, env.rotation, env);
+        if (GlobalSettings.Instance != null) GlobalSettings.Instance.InitFromMap();
         if (FogMapOverlay.Instance != null) FogMapOverlay.Instance.ComputeMapBounds();
     }
+
     /// <summary>
     /// Envoyé par chaque client au serveur pour signaler qu'il est prêt.
     /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.

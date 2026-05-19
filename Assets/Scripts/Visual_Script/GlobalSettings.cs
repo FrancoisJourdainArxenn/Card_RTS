@@ -80,7 +80,7 @@ public class GlobalSettings : MonoBehaviour
         FogOfWarManager.Refresh();
     }
 
-    void InitFromMap()
+    public void InitFromMap()
     {
         if (MapManager.Current == null)
         {

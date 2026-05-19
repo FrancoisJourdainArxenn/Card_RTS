@@ -280,7 +280,7 @@ public class Player : MonoBehaviour, ILivable
                     ? deck.cards.SelectRandomCardFromSeed(finalSeed)
                     : deck.cards.SelectRandomCard();
 
-                Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
+                // Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
 
                 CardLogic newCard = new CardLogic(cardDrawn, netWorkID);
                 newCard.owner = this;
