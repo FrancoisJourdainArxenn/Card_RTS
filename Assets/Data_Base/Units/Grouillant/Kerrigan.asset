@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Kerrigan
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
+  tier: 2
   Description: Frenzy
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 4
@@ -53,8 +55,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 1
-      AttackDuration: 0
-      showAmount: 1
-      textColor: {r: 0, g: 0.40392157, b: 1, a: 0}
+      OverrideOverlayDuration: 0

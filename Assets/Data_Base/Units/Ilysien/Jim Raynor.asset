@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Jim Raynor
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
+  tier: 3
   Description: 'Play : Create 2 Marines in my Zone, then give +1/+0 to other units.'
   CardImage: {fileID: 21300000, guid: 4a7059cd19de40e4d95b4789019eb400, type: 3}
   MainCost: 6
@@ -48,11 +50,7 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 0
-      AttackDuration: 0
-      showAmount: 0
-      textColor: {r: 0, g: 0, b: 0, a: 0}
+      OverrideOverlayDuration: 0
   - EffectName: Captain's Buff
     Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
     Trigger: 0
@@ -80,8 +78,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 1
-      AttackDuration: 0
-      showAmount: 1
-      textColor: {r: 0, g: 0.3529412, b: 1, a: 0}
+      OverrideOverlayDuration: 0

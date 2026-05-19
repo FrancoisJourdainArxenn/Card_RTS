@@ -9,7 +9,8 @@
       "Bash(Sort-Object)",
       "Bash(Get-Unique)",
       "Bash(xargs grep -l \"hostButton\\\\|clientButton\\\\|StartHost\\\\|StartClient\")",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "Bash(xargs grep -l \"Rarity\\\\|Tier\")"
     ]
   }
 }

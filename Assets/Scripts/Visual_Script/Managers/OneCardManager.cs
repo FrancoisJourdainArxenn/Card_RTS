@@ -58,7 +58,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void ReadCardFromAsset()
     {
-        NameText.text = cardAsset.name;
+        NameText.text = string.IsNullOrEmpty(cardAsset.Name) ? cardAsset.name : cardAsset.Name;
         MainCostText.text = cardAsset.MainCost.ToString();
         SecondCostText.text = cardAsset.SecondCost.ToString();
         subType.text = cardAsset.subType.ToString();
