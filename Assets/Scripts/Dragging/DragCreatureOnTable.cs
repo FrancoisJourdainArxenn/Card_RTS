@@ -31,7 +31,6 @@ public class DragCreatureOnTable : DraggingActions {
 
     public override void OnStartDrag()
     {
-        Debug.Log("Start dragging creature");
         savedHandSlot = whereIsCard.Slot;
         tempState = whereIsCard.VisualState;
         whereIsCard.VisualState = VisualStates.Dragging;
@@ -106,7 +105,7 @@ public class DragCreatureOnTable : DraggingActions {
         whereIsCard.SetHandSortingOrder();
         whereIsCard.VisualState = tempState;
         // Move this card back to its slot position
-        HandVisual PlayerHand = playerOwner.MainPArea.handVisual;
+        HandVisual PlayerHand = playerOwner.handVisual;
         Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
         transform.DOLocalMove(oldCardPos, 1f);
     }

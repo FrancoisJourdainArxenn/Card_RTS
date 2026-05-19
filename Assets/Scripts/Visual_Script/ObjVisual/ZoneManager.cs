@@ -6,14 +6,13 @@ using System.Linq;
 
 public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandler
 {
-    [Header("Adjacent Zones")]
-    public List<ZoneManager> adjacentZones;
-
     [Header("Targeting")]
     [SerializeField] private Image _targetableOverlay;
 
     [HideInInspector]
     public List<PlayerArea> subZones = new List<PlayerArea>();
+
+    private readonly List<ZonePath> _registeredPaths = new();
 
     public ZoneLogic Logic { get; private set; }
 
@@ -40,12 +39,27 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
         AllZones.Remove(this);
     }
 
-    void Start()
+    public void RegisterPath(ZonePath path)
     {
-        Logic.SetAdjacentZones(adjacentZones.ConvertAll(z => z.Logic));
+        if (!_registeredPaths.Contains(path))
+        {
+            _registeredPaths.Add(path);
+            Logic.AddPath(path.Logic);
+        }
     }
 
-    public bool IsAdjacentTo(ZoneManager other) => Logic.IsAdjacentTo(other.Logic);
+    public void UnregisterPath(ZonePath path)
+    {
+        _registeredPaths.Remove(path);
+        Logic.RemovePath(path.Logic);
+    }
+
+    public ZonePath GetPathTo(ZoneManager other)
+        => _registeredPaths.Find(p =>
+            (p.ZoneA == this && p.ZoneB == other) ||
+            (p.ZoneA == other && p.ZoneB == this));
+
+    public bool IsAdjacentTo(ZoneManager other) => GetPathTo(other) != null;
 
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)
     {

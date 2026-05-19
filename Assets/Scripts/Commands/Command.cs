@@ -32,6 +32,7 @@ public class Command
             TurnManager.RefreshAllPlayableHighlights();
         EffectSelectionController.RefreshCurrentHighlights();
         ZoneEnemyIndicator.RefreshAll();
+        PathVisual.RefreshAll();
     }
 
     public static void PlayFirstCommandFromQueue()

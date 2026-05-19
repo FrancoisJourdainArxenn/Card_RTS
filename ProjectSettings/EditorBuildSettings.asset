@@ -10,13 +10,7 @@ EditorBuildSettings:
     guid: 00047c52bab551145a67880529957153
   - enabled: 1
     path: Assets/Scenes/BattleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 0
-    path: Assets/Scenes/DragTestScene.unity
-    guid: 1fdb368995e945a40a876721bbab2770
-  - enabled: 0
-    path: Assets/Scenes/Solo_BattleScene.unity
-    guid: a8cf8dffba2cf0e41887162dc98ec148
+    guid: 5d1f28ef5263d6b45a7204470f3707e0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

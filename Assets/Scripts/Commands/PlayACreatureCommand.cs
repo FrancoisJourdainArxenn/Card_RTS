@@ -23,7 +23,7 @@ public class PlayACreatureCommand : Command
         GameObject card = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
         if (card != null)
         {
-            p.MainPArea.handVisual.RemoveCard(card);
+            p.handVisual.RemoveCard(card);
             GameObject.Destroy(card);
         }
         HoverPreview.PreviewsAllowed = true;

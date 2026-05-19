@@ -142,7 +142,6 @@ public class FogOfWarManager : MonoBehaviour
             }
         }
 
-
         // --- Bases joueur (fog comme les bases neutres) ---
         // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV)
         if (observer.MainPArea != null

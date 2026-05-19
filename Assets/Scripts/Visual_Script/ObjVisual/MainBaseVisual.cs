@@ -14,13 +14,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     public Image fogOverlay;
     [HideInInspector] public bool hasBeenSeen = false;
     private bool currentlyVisible = true;
-    
-    void Awake()
-	{
-		if(baseManager != null)
-			ApplyLookFromAsset();
-	}
-	
+    	
 	public void ApplyLookFromAsset()
     {
         if (!currentlyVisible)

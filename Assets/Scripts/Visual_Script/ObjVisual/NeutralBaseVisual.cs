@@ -18,25 +18,32 @@ public class NeutralBaseVisual : MonoBehaviour {
     public GameObject Glow;
     public Transform baseParent;
 
-    public Transform BaseApparitionPosition;
+    [HideInInspector] public Transform BaseApparitionPosition;
     public Transform BasePosition;
     public GameObject BaseCardPrefab;
     private bool canBuild = true;
     private Player localPlayer;
 
 
-    [SerializeField] private int neutralBaseId;
+    private int neutralBaseId;
     public int NeutralBaseId { get; private set; }
+    public void SetId(int id) => neutralBaseId = id;
 
     void Awake()
 	{
-        NeutralBaseId = neutralBaseId;
-        Registry[NeutralBaseId] = this;
-
 		if(baseAsset != null)
 			ApplyLookFromAsset();
         canBuild = true;
 	}
+    void Start()
+    {
+        NeutralBaseId = neutralBaseId;
+        Registry[NeutralBaseId] = this;
+        // Debug.Log($"[NeutralBaseVisual] {gameObject.name} — NeutralBaseId = {NeutralBaseId}");
+
+        if (BaseApparitionPosition == null)
+            BaseApparitionPosition = GlobalSettings.Instance.baseApparitionPoint.transform;
+    }
 
     void OnDestroy()
     {

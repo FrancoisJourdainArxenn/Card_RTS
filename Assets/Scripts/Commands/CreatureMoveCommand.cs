@@ -20,14 +20,12 @@ public class CreatureMoveCommand : Command
         // movingUnit.GetComponent<CreatureMoveVisual>().Move(TargetZoneID, tablePos);
         if (movingUnit == null)
         {
-            Debug.LogError($"[CreatureMoveCommand] Visuel introuvable pour créature id={SelectedUnitID}. La logique a déjà été mise à jour (BaseID/fog), seul le visuel manque.");
             Command.CommandExecutionComplete();
             return;
         }
         CreatureMoveVisual moveVisual = movingUnit.GetComponent<CreatureMoveVisual>();
         if (moveVisual == null)
         {
-            Debug.LogError($"[CreatureMoveCommand] Composant CreatureMoveVisual manquant sur créature id={SelectedUnitID}.");
             Command.CommandExecutionComplete();
             return;
         }

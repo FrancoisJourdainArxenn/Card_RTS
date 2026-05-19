@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(xxd)",
-      "Bash(xxd Assets/Scripts/Commands/Command.cs)"
+      "Bash(xxd Assets/Scripts/Commands/Command.cs)",
+      "Bash(awk '/fileID: 5554277563708777250/{found=1} found && /m_Color/{print NR\": \"$0; found=0}' \"Assets/Prefab/Zone/Zone_Empty.prefab\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Francois\\\\Card_RTS\\\\Assets\\\\Scripts\" -Recurse -Filter \"*.cs\")",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(Sort-Object)",
+      "Bash(Get-Unique)",
+      "Bash(xargs grep -l \"hostButton\\\\|clientButton\\\\|StartHost\\\\|StartClient\")",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

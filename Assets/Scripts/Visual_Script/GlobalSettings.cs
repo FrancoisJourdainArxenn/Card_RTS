@@ -42,9 +42,10 @@ public class GlobalSettings : MonoBehaviour
     public GameObject ExplosionPrefab;
     public GameObject NeutralBasePrefab;
     public GameObject BuildingPrefab;
+    
     [Header("Other")]
     public Button ConfirmTargetingButton;
-
+    public GameObject baseApparitionPoint;
     public GameObject GameOverPanel;
     public TMP_Text localPlayerDebugText;
 
@@ -56,18 +57,13 @@ public class GlobalSettings : MonoBehaviour
     {
         Players.Add(AreaPosition.Top, TopPlayer);
         Players.Add(AreaPosition.Low, LowPlayer);
+        TopPlayer.playerColor = TopColor;
+        LowPlayer.playerColor = LowColor;
         Instance = this;
-
-        foreach (NeutralZoneController neutralBase in NeutralBases)
-        {
-            neutralBase.owner = AreaPosition.Neutral;
-            neutralBase.SetOwnerColor(NeutralColor);
-        }
+        InitFromMap();
     }
     void Start()
     {
-        TopPlayer.playerColor = TopColor;
-        LowPlayer.playerColor = LowColor;
         LowPlayer.tag = "LowPlayer";
         TopPlayer.tag = "TopPlayer";
 
@@ -80,8 +76,57 @@ public class GlobalSettings : MonoBehaviour
             localPlayer = LowPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;    
         }
+        UiPlayerVisual?.RefreshUI();
         FogOfWarManager.Refresh();
     }
+
+    public void InitFromMap()
+    {
+        if (MapManager.Current == null)
+        {
+            //Debug.LogError("Aucun MapManager dans la scène !");
+            return;
+        }
+
+        NeutralBases = MapManager.Current.NeutralBases;
+        foreach (NeutralZoneController n in NeutralBases)
+        {
+            n.owner = AreaPosition.Neutral;
+            n.SetOwnerColor(NeutralColor);
+        }
+
+        TopPlayer.PAreas = MapManager.Current.TopPlayerAreas;
+        LowPlayer.PAreas = MapManager.Current.LowPlayerAreas;
+
+        ZoneManager topZone = MapManager.Current.TopPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
+        TopPlayer.MainPArea = topZone?.subZones.Find(pa => pa.owner == AreaPosition.Top);
+
+        ZoneManager lowZone = MapManager.Current.LowPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
+        LowPlayer.MainPArea = lowZone?.subZones.Find(pa => pa.owner == AreaPosition.Low);
+
+        SpawnMainBase(TopPlayer, MapManager.Current.TopPlayerBaseSpawn);
+        SpawnMainBase(LowPlayer, MapManager.Current.LowPlayerBaseSpawn);
+    }
+
+    void SpawnMainBase(Player player, Transform spawnPoint)
+    {
+        if (player.baseVisual != null) return;
+
+        GameObject go = Instantiate(MapManager.Current.MainBasePrefab, spawnPoint.position, spawnPoint.rotation);
+        go.tag = player.tag;
+        MainBaseVisual visual = go.GetComponent<MainBaseVisual>();
+        visual.player = player;
+        player.baseVisual = visual;
+
+        if (visual.baseManager != null)
+            visual.baseManager.ResetValues(player.baseAsset);
+
+        IDHolder id = go.GetComponent<IDHolder>() ?? go.AddComponent<IDHolder>();
+        id.UniqueID = player.PlayerID;
+
+        player.CalculatePlayerIncome();
+    }
+
 
     void Update()
     {
@@ -90,6 +135,7 @@ public class GlobalSettings : MonoBehaviour
             localPlayer = localPlayer == TopPlayer ? LowPlayer : TopPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;
             FogOfWarManager.Refresh();
+            PathVisual.RefreshAll();
             RefreshEndPhaseButtons();
         }
     }

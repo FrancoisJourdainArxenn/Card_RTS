@@ -125,10 +125,16 @@ public class DragCreatureActions : DraggingActions {
 
         ZoneManager currentZone = originArea.parentZone;
         ZoneManager targetZone = targetPlayerArea.parentZone;
-        if (currentZone != targetZone && !currentZone.IsAdjacentTo(targetZone))
+        Debug.Log($"[Move] current={currentZone?.name ?? "NULL"}, target={targetZone?.name ?? "NULL"}, path={currentZone?.GetPathTo(targetZone)?.Logic?.DisplayName ?? "NULL"}");
+
+        if (currentZone != targetZone)
         {
-            new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
-            return false;
+            ZonePath path = currentZone.GetPathTo(targetZone);
+            if (path == null || !path.Logic.CanTraverse(playerOwner, currentZone.Logic))
+            {
+                new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
+                return false;
+            }
         }
 
         IDHolder moverIdHolder = GetComponentInParent<IDHolder>();
@@ -309,6 +315,8 @@ public class DragCreatureActions : DraggingActions {
 
     private void HighlightReachableAreas()
     {
+        Debug.Log($"[Highlight] Phase={TurnManager.Instance.CurrentPhase}, originArea={originArea?.name ?? "NULL"}, parentZone={originArea?.parentZone?.name ?? "NULL"}, PAreas={playerOwner.PAreas?.Length}");
+
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
             return;
     
@@ -320,7 +328,8 @@ public class DragCreatureActions : DraggingActions {
         {
             if (pa == originArea) continue;
             if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
-            if (pa.parentZone == currentZone || currentZone.IsAdjacentTo(pa.parentZone))
+            ZonePath highlightPath = currentZone.GetPathTo(pa.parentZone);
+            if (pa.parentZone == currentZone || (highlightPath != null && highlightPath.Logic.CanTraverse(playerOwner, currentZone.Logic)))
                 pa.tableVisual.SetHighlight(true);
         }
     }

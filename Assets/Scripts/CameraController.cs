@@ -5,8 +5,8 @@ using UnityEngine.Serialization;
 
 public class CameraController : MonoBehaviour
 {
-    public float panBorderThicknessVertical = 50f;
-    public float panBorderThicknessHorizontal = 50f;
+    public float panBorderThicknessVertical;
+    public float panBorderThicknessHorizontal;
 
     [Header("Zone lock")]
     [Range(0f, 2f)]
@@ -33,8 +33,15 @@ public class CameraController : MonoBehaviour
     //         GlobalSettings.Instance.localPlayer.MainPArea != null);
 
     //     Vector3 basePos = GlobalSettings.Instance.localPlayer.MainPArea.transform.position;
-    //     transform.position = new Vector3(basePos.x, 50f, basePos.z);
+    //     transform.position = new Vector3(basePos.x, mapManager.cameraHeight, basePos.z);
     // }
+
+    void Start()
+    {
+        var pos = transform.position;
+        transform.position = new Vector3(pos.x, MapManager.Current.cameraHeight, pos.z);
+    }
+
 
     void Update()
     {
@@ -93,7 +100,7 @@ public class CameraController : MonoBehaviour
             var anchor = ZoneCameraAnchor.FindClosestTo(GetMouseWorldPosition());
             if (anchor != null)
             {
-                _savedOverheadPosition = transform.position;
+                _savedOverheadPosition = new Vector3(transform.position.x, MapManager.Current.cameraHeight, transform.position.z);
                 _savedOverheadRotation = transform.rotation;
                 _hoveredAnchor?.SetHighlighted(false);
                 _hoveredAnchor = null;

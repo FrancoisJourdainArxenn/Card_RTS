@@ -9,6 +9,8 @@ using Unity.Netcode;
 /// </summary>
 public class TurnManager : MonoBehaviour
 {
+    public static event System.Action OnRoundStart;
+
     public int initdraw = 5;
     [SerializeField] private float effectSequenceDelay = 1.5f;
     public float EffectSequenceDelay => effectSequenceDelay;
@@ -67,10 +69,10 @@ public class TurnManager : MonoBehaviour
             {
                 Player p = Player.Players[idx];
                 p.deck.cards.ShuffleWithSeed(seed.Value + idx);
-                if (p.deck.cards.Count >= 2)
-                    Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
+                // if (p.deck.cards.Count >= 2)
+                //     Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
             }
-            Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
+            // Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
 
         }
         else //Shuffle Local
@@ -306,7 +308,7 @@ public class TurnManager : MonoBehaviour
                 {
                     foreach (Player p in Player.Players)
                         p.GetComponent<TurnMaker>().OnTurnEnd();
-                    // currentRound++;
+                    currentRound++;
                 }
                 EnterPhase(next);
             }
@@ -362,6 +364,7 @@ public class TurnManager : MonoBehaviour
         {
             case TurnPhases.Regroup:
                 // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
+                OnRoundStart?.Invoke(); 
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnRegroupPhaseStart();
                 StartCoroutine(AutoAdvanceFromRegroup());

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
+[DefaultExecutionOrder(-200)]
+
 /// <summary>
 /// Chef d'orchestre réseau dans la BattleScene.
 /// Attend que les deux clients soient prêts, puis lance la partie.
@@ -11,6 +13,9 @@ using UnityEngine;
 public class GameNetworkManager : NetworkBehaviour
 {
     public static GameNetworkManager Instance { get; private set; }
+    NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
 
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
@@ -364,9 +369,23 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     public override void OnNetworkSpawn()
     {
-        // LocalClientId n'est fiable qu'après OnNetworkSpawn, pas dans Awake
+        if (IsServer)
+            mapIndex.Value = NetworkSessionData.SelectedMapIndex;
+
+        LoadMap(mapIndex.Value);
+
         NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
         PlayerReadyServerRpc();
+    }
+
+
+    void LoadMap(int index)
+    {
+        Transform env = MapLoader.EnvironnementTransform;
+        if (env == null) { Debug.LogError("EnvironnementTransform est null"); return; }
+        Instantiate(MapLoader.Instance.GetMapPrefab(index), env.position, env.rotation, env);
+        if (GlobalSettings.Instance != null) GlobalSettings.Instance.InitFromMap();
+        if (FogMapOverlay.Instance != null) FogMapOverlay.Instance.ComputeMapBounds();
     }
 
     /// <summary>
@@ -429,7 +448,7 @@ public class GameNetworkManager : NetworkBehaviour
         gs.localPlayer = localPlayer;
         FogOfWarManager.Refresh();
         gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
-        localPlayer.MainPArea.handVisual = gs.localPlayerHand;
+        localPlayer.handVisual = gs.localPlayerHand;
         
         gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 
