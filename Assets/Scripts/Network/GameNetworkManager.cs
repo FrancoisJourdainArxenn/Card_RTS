@@ -11,6 +11,10 @@ using UnityEngine;
 public class GameNetworkManager : NetworkBehaviour
 {
     public static GameNetworkManager Instance { get; private set; }
+    [SerializeField] GameObject[] mapPrefabs;
+    NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+
 
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
@@ -364,11 +368,22 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     public override void OnNetworkSpawn()
     {
-        // LocalClientId n'est fiable qu'après OnNetworkSpawn, pas dans Awake
+        if (IsServer)
+            mapIndex.Value = NetworkSessionData.SelectedMapIndex;
+
+        LoadMap(mapIndex.Value);
+
         NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
         PlayerReadyServerRpc();
     }
 
+
+    void LoadMap(int index)
+    {
+        Transform env = GameObject.Find("Environnement").transform;
+        Instantiate(mapPrefabs[index], env.position, env.rotation, env);
+        if (FogMapOverlay.Instance != null) FogMapOverlay.Instance.ComputeMapBounds();
+    }
     /// <summary>
     /// Envoyé par chaque client au serveur pour signaler qu'il est prêt.
     /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.

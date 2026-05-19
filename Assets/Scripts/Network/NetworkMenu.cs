@@ -14,6 +14,12 @@ public class NetworkMenu : MonoBehaviour
     public TMP_InputField ipInputField;
     public TMP_Text statusText;
 
+    [Header("Map")]
+    [SerializeField] TMP_Dropdown mapDropdown;
+    [SerializeField] GameObject[] mapPrefabs;
+
+
+
     private const ushort Port = 7777;
 
     void Start()
@@ -21,6 +27,13 @@ public class NetworkMenu : MonoBehaviour
         NetworkManager.Singleton.OnServerStarted             += OnServerStarted;
         NetworkManager.Singleton.OnClientConnectedCallback   += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback  += OnClientDisconnected;
+    
+        var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData> { new("Aléatoire") };
+        foreach (var prefab in mapPrefabs)
+            options.Add(new(prefab.name));
+        mapDropdown.ClearOptions();
+        mapDropdown.AddOptions(options);
+
     }
 
     public void StartHost()
@@ -36,6 +49,8 @@ public class NetworkMenu : MonoBehaviour
         statusText.text = $"Connexion vers {ip}...";
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
         NetworkManager.Singleton.StartClient();
+        mapDropdown.gameObject.SetActive(false);
+
     }
 
     void OnServerStarted() =>
@@ -48,7 +63,13 @@ public class NetworkMenu : MonoBehaviour
         {
             NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
             NetworkSessionData.IsNetworkSession = true;
-            NetworkManager.Singleton.SceneManager.LoadScene("MapTest",
+            
+            int idx = mapDropdown.value;
+            NetworkSessionData.SelectedMapIndex = idx == 0
+                ? Random.Range(0, mapPrefabs.Length)
+                : idx - 1;
+
+            NetworkManager.Singleton.SceneManager.LoadScene("BattleScene",
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }

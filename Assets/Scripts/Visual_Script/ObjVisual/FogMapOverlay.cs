@@ -39,6 +39,10 @@ public class FogMapOverlay : MonoBehaviour
 
         mat = GetComponent<MeshRenderer>().material;
         mat.SetTexture("_FogTex", fogTex);
+    }
+
+    void Start()
+    {
         ComputeMapBounds();
     }
 
@@ -81,7 +85,7 @@ public class FogMapOverlay : MonoBehaviour
 
     // ─── Internals ───────────────────────────────────────────────────────────
 
-    private void ComputeMapBounds()
+    public void ComputeMapBounds()
     {
         ZoneManager[] allZones = FindObjectsByType<ZoneManager>(FindObjectsSortMode.None);
         if (allZones.Length == 0) return;

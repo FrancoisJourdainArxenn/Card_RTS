@@ -1,3 +1,5 @@
+using UnityEngine;
+
 /// <summary>
 /// Données réseau persistantes entre les scènes.
 /// Rempli dans NetworkMenu avant le chargement de la BattleScene.
@@ -13,4 +15,11 @@ public static class NetworkSessionData
     /// Vrai si une session réseau est active (par opposition au jeu local).
     /// </summary>
     public static bool IsNetworkSession { get; set; }
+
+    /// <summary>
+    /// Prefab de la map sélectionnée pour la partie, assigné dans NetworkMenu.
+    /// </summary>
+    public static int SelectedMapIndex { get; set; } = 0;
+
+
 }
