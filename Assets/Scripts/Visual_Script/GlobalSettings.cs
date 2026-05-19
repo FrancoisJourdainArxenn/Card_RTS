@@ -84,7 +84,7 @@ public class GlobalSettings : MonoBehaviour
     {
         if (MapManager.Current == null)
         {
-            Debug.LogError("Aucun MapManager dans la scène !");
+            //Debug.LogError("Aucun MapManager dans la scène !");
             return;
         }
 

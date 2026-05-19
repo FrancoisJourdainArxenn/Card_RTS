@@ -54,7 +54,6 @@ public class BuildSpotVisual : MonoBehaviour
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
         {
             new ShowMessageCommand("You can't build now.", 1.5f).AddToQueue();
-            Debug.Log("Coucou");
             return;
         }
         Player localP = GlobalSettings.Instance.localPlayer;

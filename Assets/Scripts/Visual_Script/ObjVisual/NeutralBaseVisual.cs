@@ -39,7 +39,7 @@ public class NeutralBaseVisual : MonoBehaviour {
     {
         NeutralBaseId = neutralBaseId;
         Registry[NeutralBaseId] = this;
-        Debug.Log($"[NeutralBaseVisual] {gameObject.name} — NeutralBaseId = {NeutralBaseId}");
+        // Debug.Log($"[NeutralBaseVisual] {gameObject.name} — NeutralBaseId = {NeutralBaseId}");
 
         if (BaseApparitionPosition == null)
             BaseApparitionPosition = GlobalSettings.Instance.baseApparitionPoint.transform;

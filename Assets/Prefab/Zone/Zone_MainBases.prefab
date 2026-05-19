@@ -1394,6 +1394,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 577160384440938829}
+  - component: {fileID: 2647912987916383005}
   m_Layer: 0
   m_Name: PathAnchor_Bottom
   m_TagString: Untagged
@@ -1416,6 +1417,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 457933957826942812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2647912987916383005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2740908513141316674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e1891eecbabd8d44b6589b4b7623ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZonePathAnchor
 --- !u!1 &2750413673446634978
 GameObject:
   m_ObjectHideFlags: 0
@@ -1425,6 +1438,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8994266026093790786}
+  - component: {fileID: 8084158562730070051}
   m_Layer: 0
   m_Name: PathAnchor_Right
   m_TagString: Untagged
@@ -1447,6 +1461,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 457933957826942812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8084158562730070051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2750413673446634978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e1891eecbabd8d44b6589b4b7623ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZonePathAnchor
 --- !u!1 &2899236334283346740
 GameObject:
   m_ObjectHideFlags: 0
@@ -1593,6 +1619,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 615284184786697230}
+  - component: {fileID: 1447515978241068819}
   m_Layer: 0
   m_Name: PathAnchor_Top
   m_TagString: Untagged
@@ -1615,6 +1642,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 457933957826942812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1447515978241068819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3038060627458654454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e1891eecbabd8d44b6589b4b7623ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZonePathAnchor
 --- !u!1 &3455261481331912847
 GameObject:
   m_ObjectHideFlags: 0
@@ -3874,6 +3913,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3888467381501907409}
+  - component: {fileID: 5846278105093474580}
   m_Layer: 0
   m_Name: PathAnchor_Left
   m_TagString: Untagged
@@ -3896,6 +3936,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 457933957826942812}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5846278105093474580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8145955474691474046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e1891eecbabd8d44b6589b4b7623ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZonePathAnchor
 --- !u!1 &8203046359192161172
 GameObject:
   m_ObjectHideFlags: 0

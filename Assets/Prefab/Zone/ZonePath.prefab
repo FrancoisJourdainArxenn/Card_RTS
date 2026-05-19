@@ -62,7 +62,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PathVisual
   _resolution: 20
-  _curveOffset: 1.5
+  _curveOffset: 0
   _openColor: {r: 0, g: 0, b: 1, a: 1}
   _blockedColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!120 &1053678456044556114
@@ -125,7 +125,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.80768603
+        value: 1
         inSlope: 0
         outSlope: 0
         tangentMode: 0

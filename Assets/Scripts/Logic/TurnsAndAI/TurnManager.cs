@@ -69,10 +69,10 @@ public class TurnManager : MonoBehaviour
             {
                 Player p = Player.Players[idx];
                 p.deck.cards.ShuffleWithSeed(seed.Value + idx);
-                if (p.deck.cards.Count >= 2)
-                    Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
+                // if (p.deck.cards.Count >= 2)
+                //     Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
             }
-            Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
+            // Debug.Log($"TurnManager: Deck shuffled with seed {seed.Value}");
 
         }
         else //Shuffle Local

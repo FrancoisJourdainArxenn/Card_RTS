@@ -99,7 +99,7 @@ public class FogMapOverlay : MonoBehaviour
 
         mat.SetVector("_MapMin",  new Vector4(mapWorldMin.x,  mapWorldMin.y,  0, 0));
         mat.SetVector("_MapSize", new Vector4(mapWorldSize.x, mapWorldSize.y, 0, 0));
-        Debug.Log($"MapMin={mapWorldMin} MapSize={mapWorldSize}");
+        // Debug.Log($"MapMin={mapWorldMin} MapSize={mapWorldSize}");
     }
     
     // Conversion position monde → pixel dans la texture

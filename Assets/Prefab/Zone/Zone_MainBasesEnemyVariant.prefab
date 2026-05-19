@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_TagString
       value: TopPlayer
       objectReference: {fileID: 0}
+    - target: {fileID: 577160384440938829, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.46
+      objectReference: {fileID: 0}
+    - target: {fileID: 615284184786697230, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 6.11
+      objectReference: {fileID: 0}
     - target: {fileID: 1023280944671842946, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: pendingSlots
       value: 
