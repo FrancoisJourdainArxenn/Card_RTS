@@ -7,7 +7,7 @@ public enum CardType
 {
     Unit,
     Building,
-    Spell
+    Order,
 }
 
 public enum SubType
@@ -30,17 +30,27 @@ public enum TargetingOptions
     YourCharacters
 }
 
-public class CardAsset : ScriptableObject 
+public enum CardTier
+{
+    [InspectorName("1")] T1 = 1,
+    [InspectorName("2")] T2 = 2,
+    [InspectorName("3")] T3 = 3
+}
+
+public class CardAsset : ScriptableObject
 {
     // this object will hold the info about the most general card
     [Header("General info")]
+    public string Name;
     public FactionAsset Faction;  // if this is null, it`s a neutral card
     public CardType Type;
     public SubType subType;
+    public CardTier tier = CardTier.T1;
     [TextArea(2,3)]
     public string Description;  // Description for spell or character
 	public Sprite CardImage;
     public int MainCost, SecondCost;
+
 
     [Header("Attack and Health info")]
     public int Attack;

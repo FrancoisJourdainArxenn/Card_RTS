@@ -151,7 +151,6 @@ public class CreatureLogic: ILivable
     {
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
-        Debug.Log("Movements Left This Turn: " + MovementsLeftThisTurn);
     }
 
     public void ApplyBuff(int attackDelta, int healthDelta)

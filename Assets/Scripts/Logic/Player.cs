@@ -277,8 +277,9 @@ public class Player : MonoBehaviour, ILivable
             if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
                 CardAsset cardDrawn = NetworkSessionData.IsNetworkSession
-                    ? deck.cards.SelectRandomCardFromSeed(finalSeed)
-                    : deck.cards.SelectRandomCard();
+                    ? deck.DrawWeightedCard(finalSeed, playerMainIncome, playerSecondIncome, gameObject.name)
+                    : deck.DrawWeightedCard(UnityEngine.Random.Range(int.MinValue, int.MaxValue),
+                                            playerMainIncome, playerSecondIncome, gameObject.name);
 
                 // Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
 
