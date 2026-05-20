@@ -87,6 +87,13 @@ public class TokenGenerationSO : EffectSO
             PlayerArea sourceArea = context.Caster.GetPlayerAreaByID(sourceCreature.BaseID);
             if (sourceArea != null) target = sourceArea;
         }
+        else if (context.Source is BuildingLogic sourceBuilding)
+        {
+            PlayerArea sourceArea = System.Array.Find(
+                context.Caster.PAreas,
+                a => a.parentZone?.Logic == sourceBuilding.Zone);
+            if (sourceArea != null) target = sourceArea;
+        }
         return target;
     }
 
@@ -104,26 +111,23 @@ public class TokenGenerationSO : EffectSO
             return;
         }
 
+        CardLogic tokenCard = new CardLogic(tokenAsset);
+        tokenCard.owner = caster;
+
+        CreatureLogic newCreature = new CreatureLogic(caster, tokenAsset, targetArea.baseID);
+        int tablePos = targetArea.tableVisual.CreaturesOnTable.Count;
+        caster.playedCards.Creatures.Insert(tablePos, newCreature);
+        FogOfWarManager.Refresh();
+
         if (visualData?.vfxPrefab != null)
         {
             int newCount = currentCount + 1;
             int firstSlot = (maxSlots - newCount) / 2;
             int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
             Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
-            GameObject vfx = Object.Instantiate(visualData.vfxPrefab, spawnPos, Quaternion.identity);
-            Object.Destroy(vfx, 3f);
-        }
-
-        CardLogic tokenCard = new CardLogic(tokenAsset);
-        tokenCard.owner = caster;
-
-        CreatureLogic newCreature = new CreatureLogic(caster, tokenAsset, targetArea.baseID);
-        int tablePos = targetArea.tableVisual.CreaturesOnTable.Count; // était: caster.playedCards.Creatures.Count
-        caster.playedCards.Creatures.Insert(tablePos, newCreature);
-        FogOfWarManager.Refresh();
-
-        if (visualData?.vfxPrefab != null)
+            new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
+        }
 
         new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
 

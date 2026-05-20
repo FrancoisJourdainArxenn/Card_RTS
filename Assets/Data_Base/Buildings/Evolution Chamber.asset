@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Evolution Chamber
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 1
   subType: 4
-  Description: 'Command: Gives +1/+0 to a unit in my Zone.'
+  tier: 1
+  Description: <b>Command:</b> Gives +1/+0 to a unit in my Zone.
   CardImage: {fileID: 21300000, guid: 60f981c19c73ee94e9ad5894628c7136, type: 3}
   MainCost: 2
   SecondCost: 1
@@ -55,8 +57,4 @@ MonoBehaviour:
     VisualData:
       vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 1
-      AttackDuration: 0
-      showAmount: 1
-      textColor: {r: 0, g: 0.21176471, b: 1, a: 0}
+      OverrideOverlayDuration: 0
