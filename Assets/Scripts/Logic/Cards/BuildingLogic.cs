@@ -13,8 +13,14 @@ public class BuildingLogic : ILivable
     public string DisplayName => ca.name;
     public ZoneLogic Zone => OriginSpot.Zone.Logic;
 
-    private int baseHealth;
-    public int MaxHealth => baseHealth;
+    private readonly int baseHealth;
+    private int permMaxHealthBonus;
+    private int tempMaxHealthBonus;
+    public int MaxHealth
+    {
+        get => baseHealth + permMaxHealthBonus + tempMaxHealthBonus;
+        set => permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+    }
 
     private int health;
     public int Health
@@ -31,8 +37,14 @@ public class BuildingLogic : ILivable
         }
     }
 
-    private int baseAttack;
-    public int Attack { get; set; }
+    private readonly int baseAttack;
+    private int permAttackBonus;
+    private int tempAttackBonus;
+    public int Attack
+    {
+        get => baseAttack + permAttackBonus + tempAttackBonus;
+        set => permAttackBonus = value - baseAttack - tempAttackBonus;
+    }
 
     private int attacksForOneTurn = 0;
     private int activationForOneTurn = 0;

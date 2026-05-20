@@ -10,7 +10,7 @@ public interface ITargetableVisual
 public interface ILivable: IIdentifiable
 {
     int Health { get; set; }
-    int MaxHealth { get; }
+    int MaxHealth { get; set; }
     ZoneLogic Zone { get; }
 
     public bool IsDamaged => Health < MaxHealth;

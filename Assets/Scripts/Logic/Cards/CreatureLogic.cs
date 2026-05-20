@@ -16,10 +16,14 @@ public class CreatureLogic: ILivable
     public string DisplayName => ca.name;
 
     public int BaseID {get; private set;}
-    // the basic health that we have in CardAsset
-    private int baseHealth;
-    // health with all the current buffs taken into account
-    public int MaxHealth => baseHealth;
+    private readonly int baseHealth;
+    private int permMaxHealthBonus;
+    private int tempMaxHealthBonus;
+    public int MaxHealth
+    {
+        get => baseHealth + permMaxHealthBonus + tempMaxHealthBonus;
+        set => permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+    }
 
     // current health of this creature
     private int health;
@@ -84,9 +88,14 @@ public class CreatureLogic: ILivable
         }
     }
 
-    // property for Attack
-    private int baseAttack;
-    public int Attack { get; set; }
+    private readonly int baseAttack;
+    private int permAttackBonus;
+    private int tempAttackBonus;
+    public int Attack
+    {
+        get => baseAttack + permAttackBonus + tempAttackBonus;
+        set => permAttackBonus = value - baseAttack - tempAttackBonus;
+    }
      
     // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
     private int attacksForOneTurn = 1;
@@ -155,8 +164,8 @@ public class CreatureLogic: ILivable
 
     public void ApplyBuff(int attackDelta, int healthDelta)
     {
-        baseAttack += attackDelta;
-        baseHealth += healthDelta;
+        permAttackBonus += attackDelta;
+        permMaxHealthBonus += healthDelta;
         if (healthDelta > 0) health += healthDelta;
     }
 

@@ -17,7 +17,7 @@ public class VfxManager : MonoBehaviour
             effectOverlayImage = effectOverlay.GetComponent<Image>();
     }
 
-    public void Play(EffectVisualData data, int amount)
+    public void Play(EffectVisualData data, int amount, Vector3 offset = default)
     {
         if (data == null) return;
 
@@ -28,10 +28,11 @@ public class VfxManager : MonoBehaviour
         {
             if (data.vfxPrefab != null)
             {
-                GameObject vfx = Instantiate(data.vfxPrefab, transform.position, Quaternion.identity);
+                Vector3 position = transform.position + offset;
+                GameObject vfx = Instantiate(data.vfxPrefab, position, Quaternion.identity);
                 var config = vfx.GetComponent<VfxAmountConfig>();
                 if (config != null)
-                    VisualFeedbackEffect.CreateTextEffect(transform.position, amount, config.textColor, config.prefix);
+                    VisualFeedbackEffect.CreateTextEffect(position, amount, config.textColor, config.prefix);
                 Destroy(vfx, GetParticleLifetime(vfx));
             }
         }
@@ -42,8 +43,23 @@ public class VfxManager : MonoBehaviour
                 effectOverlayImage.material = data.overlayMaterial;
             float duration = data.OverrideOverlayDuration != 0 ? data.OverrideOverlayDuration : 1.5f;
             StartCoroutine(ShowOverlay(duration));
-
         }
+    }
+
+    public void PlaySecond(EffectVisualData data, int amount)
+    {
+        if (data == null || data.vfxPrefab == null) return;
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null || !FogOfWarManager.Instance.IsZoneFogged(zone);
+
+        if (!isVisible) return;
+
+        GameObject vfx = Instantiate(data.vfxPrefab, transform.position, Quaternion.identity);
+        var config = vfx.GetComponent<VfxAmountConfig>();
+        if (config != null)
+            VisualFeedbackEffect.CreateTextEffect(transform.position + config.secondTextOffset, amount, config.textColor, config.prefix);
+        Destroy(vfx, GetParticleLifetime(vfx));
     }
 
     private float GetParticleLifetime(GameObject vfx)

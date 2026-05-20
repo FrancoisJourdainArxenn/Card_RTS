@@ -83,6 +83,7 @@ public class Player : MonoBehaviour, ILivable
     public int MaxHealth
     {
         get { return baseAsset.MaxHealth;}
+        set { }
     }
 
     // TODO clean this

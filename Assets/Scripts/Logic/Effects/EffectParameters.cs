@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public struct EffectParameters
 {
     public int Amount;
+    public int SecondAmount;
     public CardAsset TokenToSummon;
     public TokenPlacement Placement;
 }

@@ -287,8 +287,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 3
-      minScalar: 2
+      scalar: 2
+      minScalar: 1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1366,8 +1366,8 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0, g: 0.39195395, b: 1, a: 0}
-        key1: {r: 0, g: 1, b: 1, a: 1}
+        key0: {r: 1, g: 0.1857836, b: 0, a: 0}
+        key1: {r: 0.4056604, g: 0.09376113, b: 0.37228677, a: 1}
         key2: {r: 0, g: 0, b: 0, a: 1}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1659,8 +1659,8 @@ ParticleSystem:
     z:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.05
-      minScalar: 0.2
+      scalar: -0.2
+      minScalar: -0.4
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -5181,8 +5181,8 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 3
-      minScalar: 2
+      scalar: 2
+      minScalar: 1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -5446,7 +5446,7 @@ ParticleSystem:
     startRotation:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 3.1415925
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -6278,8 +6278,8 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0, g: 0.39195395, b: 1, a: 0}
-        key1: {r: 0, g: 1, b: 1, a: 1}
+        key0: {r: 1, g: 0.1857836, b: 0, a: 0}
+        key1: {r: 0.4056604, g: 0.09376113, b: 0.37228677, a: 1}
         key2: {r: 0, g: 0, b: 0, a: 1}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -6571,8 +6571,8 @@ ParticleSystem:
     z:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.05
-      minScalar: 0.2
+      scalar: -0.2
+      minScalar: -0.4
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -9817,7 +9817,7 @@ GameObject:
   - component: {fileID: 2346290791694936920}
   - component: {fileID: -8864369479151681387}
   m_Layer: 0
-  m_Name: vfx_Buff_Effect
+  m_Name: vfx_Debuff_Effect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9852,6 +9852,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44208a8f235d82042b8999d44e93cb4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VfxAmountConfig
-  textColor: {r: 0, g: 0.6156863, b: 1, a: 1}
-  prefix: +
+  textColor: {r: 0.9150943, g: 0, b: 0.23141089, a: 1}
+  prefix: 
   secondTextOffset: {x: 1, y: 0, z: 0}

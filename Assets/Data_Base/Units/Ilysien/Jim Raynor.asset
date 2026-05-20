@@ -43,6 +43,7 @@ MonoBehaviour:
       repartition: 0
     Parameters:
       Amount: 1
+      SecondAmount: 0
       TokenToSummon: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
       Placement: 2
     VisualData:
@@ -71,9 +72,10 @@ MonoBehaviour:
       repartition: 0
     Parameters:
       Amount: 1
+      SecondAmount: 0
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:
-      vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+      vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
       overlayMaterial: {fileID: 0}
       OverrideOverlayDuration: 0
