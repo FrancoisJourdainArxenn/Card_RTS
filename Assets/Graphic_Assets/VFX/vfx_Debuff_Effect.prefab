@@ -9853,5 +9853,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VfxAmountConfig
   textColor: {r: 0.9150943, g: 0, b: 0.23141089, a: 1}
-  prefix: '-'
+  prefix: 
   secondTextOffset: {x: 1, y: 0, z: 0}

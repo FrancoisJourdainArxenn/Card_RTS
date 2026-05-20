@@ -35,11 +35,14 @@ public class ModifyStatsSO : EffectSO
 
         new ModifyStatsCommand(target.ID, amount, newAttack, _currentSecondAmount, newHealth, visualData).AddToQueue();
 
-        if (amount > 0) target.Attack += amount;
-        if (_currentSecondAmount > 0)
+        if (amount != 0) target.Attack += amount;
+        if (_currentSecondAmount != 0)
         {
             target.MaxHealth += _currentSecondAmount;
-            target.Health += _currentSecondAmount;
+            if (_currentSecondAmount > 0)
+                target.Health += _currentSecondAmount;
+            else if (target.Health > target.MaxHealth)
+                target.Health = target.MaxHealth;
         }
     }
 
