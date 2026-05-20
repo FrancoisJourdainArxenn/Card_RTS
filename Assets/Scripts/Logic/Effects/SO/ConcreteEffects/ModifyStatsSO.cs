@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Effects/BuffStatsSO")]
-public class BuffStatsSO : EffectSO
+[CreateAssetMenu(menuName = "Effects/ModifyStatsSO")]
+public class ModifyStatsSO : EffectSO
 {
     private int _currentSecondAmount;
 
@@ -33,7 +33,7 @@ public class BuffStatsSO : EffectSO
         int newAttack = target.Attack + amount;
         int newHealth = target.MaxHealth + _currentSecondAmount;
 
-        new BuffStatsCommand(target.ID, amount, newAttack, _currentSecondAmount, newHealth, visualData).AddToQueue();
+        new ModifyStatsCommand(target.ID, amount, newAttack, _currentSecondAmount, newHealth, visualData).AddToQueue();
 
         if (amount > 0) target.Attack += amount;
         if (_currentSecondAmount > 0)

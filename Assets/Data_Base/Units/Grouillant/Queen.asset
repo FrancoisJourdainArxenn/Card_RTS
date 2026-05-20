@@ -16,24 +16,24 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  tier: 2
+  tier: 1
   Description: <b>Regroup:</b> an Ally in my zone gets +1/+0.
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
-  MainCost: 2
-  SecondCost: 3
+  MainCost: 0
+  SecondCost: 0
   Attack: 2
   MaxHealth: 5
   AttacksForOneTurn: 1
   melee: 0
-  MoveSpeed: 1
-  Celerity: 0
+  MoveSpeed: 2
+  Celerity: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 0}
   Effects:
-  - EffectName: Adrenaline Boost
+  - EffectName: Moral Instability
     Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
-    Trigger: 2
+    Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -41,10 +41,10 @@ MonoBehaviour:
         includesSource: 0
         onlySource: 0
         queries:
-        - team: 1
+        - team: 2
           statusFilter: 0
           zoneFilter: 1
-        requiresPlayerSelection: 0
+        requiresPlayerSelection: 1
       affectedElements:
       - affectedElementType: 1
         includesTarget: 1
@@ -52,7 +52,8 @@ MonoBehaviour:
         queries: []
       repartition: 0
     Parameters:
-      Amount: 1
+      Amount: -1
+      SecondAmount: -1
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:

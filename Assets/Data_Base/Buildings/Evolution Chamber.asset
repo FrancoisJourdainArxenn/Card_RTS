@@ -56,6 +56,6 @@ MonoBehaviour:
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:
-      vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+      vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
       overlayMaterial: {fileID: 0}
       OverrideOverlayDuration: 0

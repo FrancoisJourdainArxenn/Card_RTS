@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class BuffStatsCommand : Command {
+public class ModifyStatsCommand : Command {
 
     private readonly int targetID;
     private readonly int attackAmount;
@@ -10,7 +10,7 @@ public class BuffStatsCommand : Command {
     private readonly int healthAfter;
     private readonly EffectVisualData visualData;
 
-    public BuffStatsCommand(int targetID, int attackAmount, int attackAfter, int secondAmount, int healthAfter, EffectVisualData visualData = null)
+    public ModifyStatsCommand(int targetID, int attackAmount, int attackAfter, int secondAmount, int healthAfter, EffectVisualData visualData = null)
     {
         this.targetID = targetID;
         this.attackAmount = attackAmount;
@@ -31,7 +31,10 @@ public class BuffStatsCommand : Command {
         if (target.TryGetComponent(out OneLivableManager livable))
             livable.BuffStats(attackAmount, secondAmount, attackAfter, healthAfter);
         if (target.TryGetComponent(out VfxManager vfx))
-            vfx.Play(visualData, attackAmount + secondAmount);
+        {
+            if (attackAmount != 0) vfx.Play(visualData, attackAmount);
+            if (secondAmount != 0) vfx.PlaySecond(visualData, secondAmount);
+        }
         CommandExecutionComplete();
     }
 }
