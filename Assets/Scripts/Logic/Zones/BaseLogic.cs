@@ -18,7 +18,11 @@ public class BaseLogic: ILivable
     public ZoneLogic Zone => IsHomeBase ? _homeZone : neutralBaseController?.zone?.Logic;
 
     private int baseHealth;
-    public int MaxHealth => baseHealth;
+    public int MaxHealth
+    {
+        get => baseHealth;
+        set => baseHealth = value;
+    }
     
     // TODO clean this
     public int Attack {

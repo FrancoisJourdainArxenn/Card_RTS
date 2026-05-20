@@ -5,6 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/BuffStatsSO")]
 public class BuffStatsSO : EffectSO
 {
+    private int _currentSecondAmount;
+
     public override void Execute(
         string EffectName,
         EffectContext context,
@@ -21,15 +23,33 @@ public class BuffStatsSO : EffectSO
             return;
         }
 
-        Log($"{EffectName}: {parameters.Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
+        _currentSecondAmount = parameters.SecondAmount;
+        Log($"{EffectName}: +{parameters.Amount} ATK / +{parameters.SecondAmount} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
         ApplyEffect(effectInfo, affectedElements, parameters, visualData);
     }
 
     protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData)
     {
-        new BuffStatsCommand(target.ID, amount, target.Attack + amount, visualData).AddToQueue();
-        target.Attack += amount;
+        int newAttack = target.Attack + amount;
+        int newHealth = target.MaxHealth + _currentSecondAmount;
+
+        new BuffStatsCommand(target.ID, amount, newAttack, _currentSecondAmount, newHealth, visualData).AddToQueue();
+
+        if (amount > 0) target.Attack += amount;
+        if (_currentSecondAmount > 0)
+        {
+            target.MaxHealth += _currentSecondAmount;
+            target.Health += _currentSecondAmount;
+        }
     }
+
     protected override bool IsTargetSaturated(EffectTarget target) => false;
-    public override string GetDescription(EffectParameters parameters) => $"Ajoute {parameters.Amount} Attack";
+
+    public override string GetDescription(EffectParameters parameters)
+    {
+        var parts = new List<string>();
+        if (parameters.Amount > 0) parts.Add($"+{parameters.Amount} Attaque");
+        if (parameters.SecondAmount > 0) parts.Add($"+{parameters.SecondAmount} Vie");
+        return string.Join(" / ", parts);
+    }
 }

@@ -14,7 +14,11 @@ public class BuildingLogic : ILivable
     public ZoneLogic Zone => OriginSpot.Zone.Logic;
 
     private int baseHealth;
-    public int MaxHealth => baseHealth;
+    public int MaxHealth
+    {
+        get => baseHealth;
+        set => baseHealth = value;
+    }
 
     private int health;
     public int Health

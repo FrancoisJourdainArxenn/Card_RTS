@@ -83,15 +83,21 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
-    public void BuffAttack(int amount, int attackAfter)
+    public void BuffStats(int attackAmount, int secondAmount, int attackAfter, int healthAfter)
     {
-        if (amount <= 0)
-            return;
-
         EnsureColorsCached();
-        Debug.Log($"{cardAsset.name} gains {amount} attack. {attackAfter} attack now.");
-        AttackText.text = attackAfter.ToString();
-        ApplyStatColor(AttackText, attackAfter, cardAsset.Attack, _originalAttackColor);
+        if (attackAmount > 0)
+        {
+            Debug.Log($"{cardAsset.name} gains {attackAmount} attack. {attackAfter} attack now.");
+            AttackText.text = attackAfter.ToString();
+            ApplyStatColor(AttackText, attackAfter, cardAsset.Attack, _originalAttackColor);
+        }
+        if (secondAmount > 0)
+        {
+            Debug.Log($"{cardAsset.name} gains {secondAmount} health. {healthAfter} health now.");
+            HealthText.text = healthAfter.ToString();
+            ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
+        }
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 

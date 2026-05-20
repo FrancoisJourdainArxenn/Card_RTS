@@ -19,7 +19,11 @@ public class CreatureLogic: ILivable
     // the basic health that we have in CardAsset
     private int baseHealth;
     // health with all the current buffs taken into account
-    public int MaxHealth => baseHealth;
+    public int MaxHealth
+    {
+        get => baseHealth;
+        set => baseHealth = value;
+    }
 
     // current health of this creature
     private int health;
