@@ -26,10 +26,14 @@ public static class PhaseEffectPipeline
     // État réseau
     private static bool _hasSubmitted;
 
+    // Compteur de génération : protège contre les appels onComplete périmés après ResetForNewPhase.
+    private static int _generation = 0;
+
     // ── Cycle de phase ────────────────────────────────────────────────────────
 
     public static void ResetForNewPhase()
     {
+        _generation++;
         List<PendingEffectSelection> stale = EffectStack.GetAllEffects();
         if (stale.Count > 0)
             Debug.Log($"[Pipeline] ResetForNewPhase — stack non vide avant reset ({stale.Count} effet(s)): {string.Join(", ", stale.Select(e => $"{e.Data.EffectName}({e.Data.Trigger})"))}");
@@ -361,12 +365,28 @@ public static class PhaseEffectPipeline
 
     /// <summary>Appelé par GameNetworkManager sur tous les clients avec la résolution canonique du serveur.</summary>
     public static void ApplyCanonicalResolution(
-        int[] sourceEntityIDs, int[] effectIndexes, int[] selectedTargetIDs, int effectSeed)
+        int[] sourceEntityIDs, int[] effectIndexes, int[] selectedTargetIDs, int effectSeed,
+        bool isLocalPlayer = true)
     {
         System.Random masterRng = new System.Random(effectSeed);
         int[] subSeeds = new int[sourceEntityIDs.Length];
         for (int i = 0; i < subSeeds.Length; i++)
             subSeeds[i] = masterRng.Next();
+
+        if (!isLocalPlayer)
+        {
+            // Mise à jour de l'état de jeu serveur uniquement : pas de visuels, pas de _isComplete.
+            for (int i = 0; i < sourceEntityIDs.Length; i++)
+            {
+                CardEffectData data = ResolveEffectData(sourceEntityIDs[i], effectIndexes[i], out EffectContext ctx);
+                if (data == null || ctx == null) continue;
+                ctx.SelectedTarget = ResolveEntityByID(selectedTargetIDs[i]);
+                EffectSO.SetNetworkRng(new System.Random(subSeeds[i]));
+                EffectRegistry.Execute(data, ctx);
+                EffectSO.ClearNetworkRng();
+            }
+            return;
+        }
 
         TargetingVisualEvents.RaiseEffectsExecuting();
 
@@ -417,36 +437,41 @@ public static class PhaseEffectPipeline
 
     private static void RunEffectsSequentially(List<Action> callbacks, List<bool> hasVisuals, Action onComplete)
     {
-        // Game-state changes execute immediately so the board is up-to-date before the next
-        // StartSession runs (which can happen synchronously in the same network message frame).
-        foreach (Action cb in callbacks)
-            cb?.Invoke();
-
-        // onComplete fires synchronously here so it always runs against the current phase's
-        // pipeline state. If deferred to the visual coroutine it would fire after a phase
-        // transition and corrupt the new phase's _isComplete / highlight state.
-        onComplete?.Invoke();
-
+        int gen = _generation;
         if (TurnManager.Instance != null)
-            TurnManager.Instance.StartCoroutine(EffectSequenceCoroutine(callbacks.Count, hasVisuals));
+            TurnManager.Instance.StartCoroutine(EffectSequenceCoroutine(callbacks, hasVisuals, onComplete, gen));
+        else
+        {
+            foreach (Action cb in callbacks)
+                cb?.Invoke();
+            onComplete?.Invoke();
+        }
     }
 
-    private static IEnumerator EffectSequenceCoroutine(int count, List<bool> hasVisuals)
+    private static IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete, int generation)
     {
         float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
         yield return new UnityEngine.WaitForSeconds(stackDelay);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < callbacks.Count; i++)
         {
-            if (hasVisuals != null && i < hasVisuals.Count && hasVisuals[i])
+            bool showVisual = hasVisuals != null && i < hasVisuals.Count && hasVisuals[i];
+            if (showVisual)
             {
                 float delay = TurnManager.Instance != null ? TurnManager.Instance.EffectSequenceDelay : 1.5f;
                 yield return new UnityEngine.WaitForSeconds(delay);
-                TargetingVisualEvents.RaiseEffectResolved();
             }
+            callbacks[i]?.Invoke();
+            if (showVisual)
+                TargetingVisualEvents.RaiseEffectResolved();
         }
 
         TargetingVisualEvents.RaiseEffectsBatchComplete();
+
+        // N'appelle onComplete que si cette coroutine appartient encore à la phase courante.
+        // ResetForNewPhase incrémente _generation, ce qui invalide les coroutines périmées.
+        if (_generation == generation)
+            onComplete?.Invoke();
     }
 
     private static void OnAllEffectsComplete()

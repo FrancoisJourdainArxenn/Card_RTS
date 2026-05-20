@@ -19,6 +19,7 @@ public class GameNetworkManager : NetworkBehaviour
 
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
     private int readyCount = 0;
+    private Dictionary<TurnManager.TurnPhases, HashSet<int>> _pendingEndPhase = new();
 
     public int DeckSeed => deckSeed.Value;
     private NetworkVariable<int> deckSeed = new NetworkVariable<int>(
@@ -152,45 +153,71 @@ public class GameNetworkManager : NetworkBehaviour
         TurnManager.TurnPhases forPhase,
         int[] sourceEntityIDs,
         int[] effectIndexes,
-        int[] selectedTargetIDs)
+        int[] selectedTargetIDs,
+        RpcParams rpcParams = default)
     {
-        if (TurnManager.Instance.CurrentPhase != forPhase)
+        bool isIndependent = forPhase == TurnManager.TurnPhases.Regroup
+                          || forPhase == TurnManager.TurnPhases.Command;
+
+        if (isIndependent)
         {
-            Debug.Log($"[GameNetworkManager] SubmitEffectTargets ignoré : requête pour {forPhase}, phase actuelle {TurnManager.Instance.CurrentPhase}");
-            return;
+            int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+
+            // Si le client soumettant est distant (pas le host), le serveur met à jour son état
+            // de jeu localement sans déclencher de visuels ni _isComplete.
+            bool isSenderHost = rpcParams.Receive.SenderClientId == NetworkManager.ServerClientId;
+            if (!isSenderHost)
+                PhaseEffectPipeline.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, isLocalPlayer: false);
+
+            // Feedback visuel ciblé au seul joueur qui soumet.
+            ClientRpcParams targetParams = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { rpcParams.Receive.SenderClientId }
+                }
+            };
+            Debug.Log($"[GameNetworkManager] SubmitEffectTargets indépendant — joueur {playerIndex}, phase {forPhase}");
+            ApplyCanonicalEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, targetParams);
         }
-
-        _effectSubmissions[playerIndex] = new EffectTargetSubmission
+        else
         {
-            SourceEntityIDs   = sourceEntityIDs,
-            EffectIndexes     = effectIndexes,
-            SelectedTargetIDs = selectedTargetIDs
-        };
+            _effectSubmissions[playerIndex] = new EffectTargetSubmission
+            {
+                SourceEntityIDs   = sourceEntityIDs,
+                EffectIndexes     = effectIndexes,
+                SelectedTargetIDs = selectedTargetIDs
+            };
 
-        if (_effectSubmissions.Count < Player.Players.Length)
-            return; // On attend encore l'autre joueur
+            if (_effectSubmissions.Count < Player.Players.Length)
+                return; // On attend encore l'autre joueur
 
-        EffectTargetSubmission submission0 = _effectSubmissions[0];
-        EffectTargetSubmission submission1 = _effectSubmissions[1];
-        _effectSubmissions.Clear();
+            EffectTargetSubmission submission0 = _effectSubmissions[0];
+            EffectTargetSubmission submission1 = _effectSubmissions[1];
+            _effectSubmissions.Clear();
 
-        int effectSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-        ApplyCanonicalEffectResolutionClientRpc(
-            ConcatArrays(submission0.SourceEntityIDs,   submission1.SourceEntityIDs),
-            ConcatArrays(submission0.EffectIndexes,     submission1.EffectIndexes),
-            ConcatArrays(submission0.SelectedTargetIDs, submission1.SelectedTargetIDs),
-            effectSeed);
+            int effectSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            Debug.Log($"[GameNetworkManager] SubmitEffectTargets synchronisé — phase {forPhase}, les deux joueurs prêts");
+            ApplyCanonicalEffectResolutionClientRpc(
+                ConcatArrays(submission0.SourceEntityIDs,   submission1.SourceEntityIDs),
+                ConcatArrays(submission0.EffectIndexes,     submission1.EffectIndexes),
+                ConcatArrays(submission0.SelectedTargetIDs, submission1.SelectedTargetIDs),
+                effectSeed);
+        }
     }
 
     /// <summary>
-    /// Reçu par TOUS les clients : exécute les effets de la phase avec les targets choisies par chaque joueur.
+    /// Reçu par les clients ciblés : exécute les effets avec les targets choisies.
+    /// En mode indépendant (Regroup/Command) : ciblé au joueur soumettant uniquement.
+    /// En mode synchronisé : broadcast à tous les clients.
     /// </summary>
     [ClientRpc]
     void ApplyCanonicalEffectResolutionClientRpc(
         int[] sourceEntityIDs,
         int[] effectIndexes,
         int[] selectedTargetIDs,
-        int effectSeed)
+        int effectSeed,
+        ClientRpcParams clientRpcParams = default)
     {
         PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
@@ -544,15 +571,31 @@ public class GameNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void RegisterEndPhaseServerRpc(int playerIndex, TurnManager.TurnPhases forPhase)
     {
-        if (TurnManager.Instance.CurrentPhase != forPhase)
+        if (TurnManager.Instance.CurrentPhase == forPhase)
         {
-            Debug.Log($"[GameNetworkManager] RegisterEndPhase ignoré : requête pour {forPhase}, phase actuelle {TurnManager.Instance.CurrentPhase}");
-            return;
+            Debug.Log($"[GameNetworkManager] RegisterEndPhase reçu — joueur {playerIndex}, phase {forPhase}");
+            // ForceRegisterEndPhase bypasse le check AllowedToControlThisPlayer, qui n'a de sens
+            // que côté client (pour décider d'envoyer le RPC), pas côté serveur (qui traite la requête).
+            TurnManager.Instance.ForceRegisterEndPhase(playerIndex);
         }
-        Debug.Log($"[GameNetworkManager] RegisterEndPhase reçu pour joueur index {playerIndex} (phase {forPhase})");
-        // ForceRegisterEndPhase bypasse le check AllowedToControlThisPlayer, qui n'a de sens
-        // que côté client (pour décider d'envoyer le RPC), pas côté serveur (qui traite la requête).
-        TurnManager.Instance.ForceRegisterEndPhase(playerIndex);
+        else
+        {
+            if (!_pendingEndPhase.ContainsKey(forPhase))
+                _pendingEndPhase[forPhase] = new HashSet<int>();
+            _pendingEndPhase[forPhase].Add(playerIndex);
+            Debug.Log($"[GameNetworkManager] RegisterEndPhase stocké — joueur {playerIndex}, phase {forPhase} (actuelle: {TurnManager.Instance.CurrentPhase})");
+        }
+    }
+
+    void FlushPendingEndPhase(TurnManager.TurnPhases phase)
+    {
+        if (!_pendingEndPhase.TryGetValue(phase, out var pending)) return;
+        _pendingEndPhase.Remove(phase);
+        foreach (int idx in pending)
+        {
+            Debug.Log($"[GameNetworkManager] Flush RegisterEndPhase — joueur {idx}, phase {phase}");
+            TurnManager.Instance.ForceRegisterEndPhase(idx);
+        }
     }
 
     /// <summary>
@@ -588,18 +631,31 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
 
+        // Guard: si le client est déjà dans cette phase (auto-advance), on ne re-entre pas.
+        if (TurnManager.Instance.CurrentPhase == nextPhase)
+        {
+            Debug.Log($"[GameNetworkManager] PhaseTransitionClientRpc ignorée — déjà en {nextPhase}");
+            return;
+        }
+
         TurnManager.Instance.EnterPhase(nextPhase);
 
-        // Après la End phase, les dégâts de bataille ont été appliqués (OnBattlePhaseEnd vient d'être appelé).
-        // Le serveur diffuse l'état complet pour corriger tout désync résiduel côté client.
-        if (nextPhase == TurnManager.TurnPhases.End && IsServer)
+        if (IsServer)
+        {
+            FlushPendingEndPhase(nextPhase);
             BroadcastFullGameState();
+        }
     }
 
     IEnumerator DrainThenEnterPhase(TurnManager.TurnPhases nextPhase)
     {
         yield return StartCoroutine(TurnManager.Instance.DrainPendingDeaths());
         TurnManager.Instance.EnterPhase(nextPhase);
+        if (IsServer)
+        {
+            FlushPendingEndPhase(nextPhase);
+            BroadcastFullGameState();
+        }
     }
 
     private int _drawSeedOffset = 0;

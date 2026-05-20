@@ -45,7 +45,11 @@ MonoBehaviour:
           statusFilter: 4
           zoneFilter: 1
         requiresPlayerSelection: 1
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 1
+        includesSource: 0
+        queries: []
       repartition: 0
     Parameters:
       Amount: 1
