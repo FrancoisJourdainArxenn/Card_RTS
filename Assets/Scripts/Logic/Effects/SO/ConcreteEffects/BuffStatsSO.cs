@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Effects/BuffAttackSO")]
-public class BuffAttackSO : EffectSO
+[CreateAssetMenu(menuName = "Effects/BuffStatsSO")]
+public class BuffStatsSO : EffectSO
 {
     public override void Execute(
         string EffectName,
@@ -27,7 +27,7 @@ public class BuffAttackSO : EffectSO
 
     protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData)
     {
-        new BuffAttackCommand(target.ID, amount, target.Attack + amount, visualData).AddToQueue();
+        new BuffStatsCommand(target.ID, amount, target.Attack + amount, visualData).AddToQueue();
         target.Attack += amount;
     }
     protected override bool IsTargetSaturated(EffectTarget target) => false;

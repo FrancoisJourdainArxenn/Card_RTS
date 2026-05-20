@@ -312,7 +312,7 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
-    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID)
+    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, EffectVisualData visualData = null)
     {
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) { Debug.LogError($"[Token] PlayerArea introuvable baseID={baseID}"); return; }
@@ -323,6 +323,18 @@ public class Player : MonoBehaviour, ILivable
         CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
         playedCards.Creatures.Insert(tablePos, newCreature);
         FogOfWarManager.Refresh();
+
+        if (visualData?.vfxPrefab != null)
+        {
+            int maxSlots = targetArea.tableVisual.slots.Children.Length;
+            int currentCount = targetArea.tableVisual.CreaturesOnTable.Count;
+            int newCount = currentCount + 1;
+            int firstSlot = (maxSlots - newCount) / 2;
+            int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
+            Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
+            new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
+            new DelayCommand(0.9f).AddToQueue();
+        }
 
         new PlayACreatureCommand(tokenCard, this, tablePos, creatureID, targetArea).AddToQueue();
         EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });

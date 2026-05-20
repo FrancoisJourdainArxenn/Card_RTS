@@ -856,7 +856,8 @@ public class GameNetworkManager : NetworkBehaviour
     {
         CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
-        Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID);
+        EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
+        Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID, visualData);
     }
 
     public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID)
@@ -872,7 +873,8 @@ public class GameNetworkManager : NetworkBehaviour
     {
         CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
-        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID);
+        EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
+        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID, visualData);
     }
 
 
