@@ -17,7 +17,10 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 3
-  Description: 'Play : Create 2 Marines in my Zone, then give +1/+0 to other units.'
+  Description: '<b>Regroup:</b> Create a Marine in my Zone.
+
+    <b>Command:</b>
+    Target ally gains +1/+0.'
   CardImage: {fileID: 21300000, guid: 4a7059cd19de40e4d95b4789019eb400, type: 3}
   MainCost: 6
   SecondCost: 3
@@ -32,44 +35,39 @@ MonoBehaviour:
   Effects:
   - EffectName: Captain's Call
     Effect: {fileID: 11400000, guid: 6997254306650b84a97bc1e413d3c30d, type: 2}
-    Trigger: 0
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries: []
-        requiresPlayerSelection: 0
+      effectTargets: []
       affectedElements: []
       repartition: 0
     Parameters:
-      Amount: 2
+      Amount: 1
       TokenToSummon: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
       Placement: 2
     VisualData:
-      vfxPrefab: {fileID: 0}
+      vfxPrefab: {fileID: 5965768918663700131, guid: 12d57b414b4a77245aac755b80b15b26, type: 3}
       overlayMaterial: {fileID: 0}
       OverrideOverlayDuration: 0
   - EffectName: Captain's Buff
     Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
-    Trigger: 0
+    Trigger: 3
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 0
+      - targetType: 1
         includesSource: 0
         onlySource: 0
-        queries: []
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 1
-        includesTarget: 0
-        includesSource: 0
         queries:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
+        requiresPlayerSelection: 1
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 1
+        includesSource: 0
+        queries: []
       repartition: 0
     Parameters:
       Amount: 1

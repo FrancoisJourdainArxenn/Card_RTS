@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class BuffAttackCommand : Command {
+public class BuffStatsCommand : Command {
 
     private int targetID;
     private int amount;
@@ -9,7 +9,7 @@ public class BuffAttackCommand : Command {
     private EffectVisualData visualData;
 
 
-    public BuffAttackCommand( int targetID, int amount, int attackAfter, EffectVisualData visualData = null)
+    public BuffStatsCommand( int targetID, int amount, int attackAfter, EffectVisualData visualData = null)
     {
         this.targetID = targetID;
         this.amount = amount;

@@ -196,6 +196,19 @@ public static class EffectRegistry
         return null;
     }
 
+    public static EffectVisualData GetTokenVisualData(int sourceEntityID, int effectIndex)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
+            if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
+                return creature.ca.Effects[effectIndex].VisualData;
+
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
+            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
+                return building.ca.Effects[effectIndex].VisualData;
+
+        return null;
+    }
+
     // ── Privé ─────────────────────────────────────────────────────────────────
 
     /// <summary>Exécute tous les listeners enregistrés pour ce trigger qui passent le filtre.</summary>

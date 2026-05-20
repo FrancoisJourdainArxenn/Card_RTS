@@ -76,7 +76,9 @@ public class NeutralZoneController : MonoBehaviour
         baseManager.ResetValues(ba);
         baseManager.Spawner = nBaseVisual.gameObject;
         baseCard.tag = player.tag;
-        SetBuildingSpotTag(player.tag);
+        string playerTag = (player == GlobalSettings.Instance.LowPlayer) ? "LowPlayer" : "TopPlayer";
+        SetBuildingSpotTag(playerTag);
+
 
         IDHolder idHolder = baseCard.GetComponent<IDHolder>();
         idHolder.UniqueID = baseUniqueID;
@@ -150,13 +152,13 @@ public class NeutralZoneController : MonoBehaviour
 
     public void SetBuildingSpotTag(string playerTag)
     {
-        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>())
+        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>(true))
             spot.TakePlayerTag(playerTag);
     }
 
     public void ResetBuildingSpotTag()
     {
-        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>())
+        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>(true))
             spot.ResetTag();
     }
 

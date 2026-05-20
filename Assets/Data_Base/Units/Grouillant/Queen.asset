@@ -17,23 +17,23 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: 'Battle Start : 1 '
+  Description: <b>Regroup:</b> an Ally in my zone gets +1/+0.
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
-  MainCost: 1
-  SecondCost: 2
-  Attack: 1
-  MaxHealth: 3
+  MainCost: 2
+  SecondCost: 3
+  Attack: 2
+  MaxHealth: 5
   AttacksForOneTurn: 1
   melee: 0
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
   Keywords:
-  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
+  - {fileID: 0}
   Effects:
-  - EffectName: Transfuse
-    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
-    Trigger: 5
+  - EffectName: Adrenaline Boost
+    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -42,7 +42,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 4
+          statusFilter: 0
           zoneFilter: 1
         requiresPlayerSelection: 0
       affectedElements:
@@ -56,6 +56,6 @@ MonoBehaviour:
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:
-      vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
-      overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
+      vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+      overlayMaterial: {fileID: 0}
       OverrideOverlayDuration: 0

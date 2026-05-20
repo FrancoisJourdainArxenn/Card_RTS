@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Spawning Pool
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 1
   subType: 4
-  Description: 'Command: Create a Zergling 1/1 with Melee in my Zone.'
+  tier: 1
+  Description: <b>Regroup :</b> Creates a Zergling here.
   CardImage: {fileID: 21300000, guid: 1e2f7f6343c40dc4fa89f2eccbae0d04, type: 3}
   MainCost: 2
   SecondCost: 2
@@ -30,7 +32,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Zergling
     Effect: {fileID: 11400000, guid: 6997254306650b84a97bc1e413d3c30d, type: 2}
-    Trigger: 3
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
@@ -41,10 +43,6 @@ MonoBehaviour:
       TokenToSummon: {fileID: 11400000, guid: d1149232ec4d3034d9410f25cacc35c7, type: 2}
       Placement: 2
     VisualData:
-      vfxPrefab: {fileID: 0}
+      vfxPrefab: {fileID: 5965768918663700131, guid: 12d57b414b4a77245aac755b80b15b26, type: 3}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 0
-      AttackDuration: 0
-      showAmount: 0
-      textColor: {r: 0, g: 0, b: 0, a: 0}
+      OverrideOverlayDuration: 0

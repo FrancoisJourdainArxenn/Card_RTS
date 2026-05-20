@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
-  m_Name: BuffAttackSO
+  m_Name: BuffStatsSO
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
   Description: 
   visualData:
