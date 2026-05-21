@@ -390,6 +390,8 @@ public class TurnManager : MonoBehaviour
                 }
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseStart();
+                if (!NetworkSessionData.IsNetworkSession)
+                    StartCoroutine(AutoAdvanceFromBattleAfterCombat());
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -520,6 +522,14 @@ public class TurnManager : MonoBehaviour
     {
         yield return new WaitForSeconds(1.5f);
         if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
+            AdvancePhaseWhenAllReady();
+    }
+
+    IEnumerator AutoAdvanceFromBattleAfterCombat()
+    {
+        yield return null; // one frame so the queue can start
+        yield return new WaitWhile(() => Command.playingQueue);
+        if (currentPhase == TurnPhases.Battle)
             AdvancePhaseWhenAllReady();
     }
 

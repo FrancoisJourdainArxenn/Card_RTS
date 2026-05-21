@@ -62,10 +62,11 @@ public class GameNetworkManager : NetworkBehaviour
 
     /// <summary>
     /// Reçu par le serveur quand un joueur termine la Battle phase.
-    /// Stocke son attribution de dégâts. Quand les deux joueurs ont soumis :
-    ///   1. Merge les deux attributions (union sans conflit, chaque joueur contrôle ses propres attaques)
+    /// Stocke la soumission pour compter les deux joueurs. Quand les deux ont soumis :
+    ///   1. Sérialise l'état calculé par le serveur (BuildAutoBattleSequence déjà exécuté dans OnBattlePhaseStart)
     ///   2. Diffuse l'état canonique via ApplyCanonicalBattleAssignmentClientRpc
     ///   3. Déclenche la transition de phase via ForceRegisterEndPhase
+    /// Les données soumises par les clients sont ignorées — le serveur est la source de vérité.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SubmitBattleAssignmentServerRpc(
@@ -84,43 +85,39 @@ public class GameNetworkManager : NetworkBehaviour
         };
 
         if (_battleSubmissions.Count < 2)
-            return; // On attend encore l'autre joueur
+            return;
 
-        BattleSubmission s0 = _battleSubmissions[0];
-        BattleSubmission s1 = _battleSubmissions[1];
-
-        // Union simple : chaque joueur a soumis les dégâts qu'IL inflige (pas de conflit possible)
-        ApplyCanonicalBattleAssignmentClientRpc(
-            ConcatArrays(s0.CreatureIDs,     s1.CreatureIDs),
-            ConcatArrays(s0.CreatureDamages, s1.CreatureDamages),
-            ConcatArrays(s0.BaseIDs,         s1.BaseIDs),
-            ConcatArrays(s0.BaseDamages,     s1.BaseDamages),
-            ConcatArrays(s0.TargetPlayerIDs, s1.TargetPlayerIDs),
-            ConcatArrays(s0.PlayerDamages,   s1.PlayerDamages),
-            ConcatArrays(s0.BuildingIDs,     s1.BuildingIDs),
-            ConcatArrays(s0.BuildingDamages, s1.BuildingDamages)
-        );
         _battleSubmissions.Clear();
 
-        // Déclenche la transition de phase maintenant que les deux joueurs ont soumis
+        ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
+        ApplyCanonicalBattleAssignmentClientRpc(
+            canonical.CreatureIDs,     canonical.CreatureDamages,
+            canonical.BaseIDs,         canonical.BaseDamages,
+            canonical.TargetPlayerIDs, canonical.PlayerDamages,
+            canonical.BuildingIDs,     canonical.BuildingDamages,
+            canonical.ResolverP1Pools, canonical.ResolverP2Pools
+        );
+
         TurnManager.Instance.ForceRegisterEndPhase(0);
         TurnManager.Instance.ForceRegisterEndPhase(1);
     }
 
     /// <summary>
-    /// Reçu par TOUS les clients : remplace les dictionnaires pendingDamage locaux
-    /// par l'état canonique du serveur, avant que OnBattlePhaseEnd() ne les lise.
+    /// Reçu par TOUS les clients : remplace les dictionnaires pendingDamage locaux et les
+    /// valeurs d'overflow (freePool) par l'état canonique du serveur, avant que OnBattlePhaseEnd() ne les lise.
     /// </summary>
     [ClientRpc]
     void ApplyCanonicalBattleAssignmentClientRpc(
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages,
-        int[] buildingIDs,     int[] buildingDamages)
+        int[] buildingIDs,     int[] buildingDamages,
+        int[] p1Pools,         int[] p2Pools)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
             targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
+        ZoneCombatResolver.ApplyCanonicalPools(p1Pools, p2Pools);
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)

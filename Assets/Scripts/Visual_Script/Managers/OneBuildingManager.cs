@@ -33,12 +33,12 @@ public class OneBuildingManager : OneLivableManager
                 return; // consumed by targeting
             // Not eligible — fall through
         }
-        if (TurnManager.Instance.IsBattlePhase)
-        {
-            ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
-            if (resolver != null)
-                resolver.TryRedirectDamageFromBuilding(BuildingLogic);
-        }
+        // if (TurnManager.Instance.IsBattlePhase)
+        // {
+        //     ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
+        //     if (resolver != null)
+        //         resolver.TryRedirectDamageFromBuilding(BuildingLogic);
+        // }
     }
 
     public void ReadBuidingFromAsset()

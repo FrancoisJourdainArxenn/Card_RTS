@@ -63,7 +63,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             resolver = p?.MainPArea?.parentZone?.GetComponent<ZoneCombatResolver>();
         }
 
-        resolver?.TryRedirectDamageFromBase(id);
+        // resolver?.TryRedirectDamageFromBase(id);
     }
 
     private IIdentifiable ResolveEntity(int id)

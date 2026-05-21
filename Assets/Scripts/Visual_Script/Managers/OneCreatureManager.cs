@@ -114,7 +114,7 @@ public class OneCreatureManager : OneLivableManager
 
         ZoneCombatResolver resolver = ZoneCombatResolver.FindForBase(BaseID);
         // Debug.Log($"[Click] Resolver={resolver}");
-        resolver?.TryRedirectDamageFrom(battleCreature);
+        // resolver?.TryRedirectDamageFrom(battleCreature);
     }
 
     public void ClearPendingDamageIndicator()

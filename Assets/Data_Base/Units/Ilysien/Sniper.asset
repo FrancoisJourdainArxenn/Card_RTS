@@ -17,12 +17,11 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 2
-  Description: 'Battle Start : Deal 1 to a Unit.'
+  Description: '<b>Battle Start</b> : Deal 1 to a Unit.'
   CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
-  MainCost: 3
-  SecondCost: 3
+  MainCost: 2
   Attack: 1
-  MaxHealth: 3
+  MaxHealth: 2
   AttacksForOneTurn: 1
   melee: 0
   MoveSpeed: 1
@@ -52,6 +51,7 @@ MonoBehaviour:
       repartition: 0
     Parameters:
       Amount: 1
+      SecondAmount: 0
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:

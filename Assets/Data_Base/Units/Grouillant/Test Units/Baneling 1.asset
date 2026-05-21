@@ -10,40 +10,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Blazer Test
+  m_Name: Baneling 1
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Name: 
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 0
-  Description: 'Melee.
+  subType: 1
+  tier: 1
+  Description: '<b>Melee</b>
 
-    At the beginning of combat, deal 1 to all enemy Melee
-    Units.'
-  CardImage: {fileID: 21300000, guid: 4a3cbf0af05f742499b46d55ff6c1055, type: 3}
+    Death : Deals 3 Damage randomly.'
+  CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 0
-  SecondCost: 0
   Attack: 0
-  MaxHealth: 4
+  MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
-  MoveSpeed: 2
+  MoveSpeed: 10
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  - {fileID: 11400000, guid: 6aeb78b8cd35d9842aea0894ce569823, type: 2}
   Effects:
-  - EffectName: Burn Baby Burn
+  - EffectName: Acid Explosion
     Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
-    Trigger: 4
+    Trigger: 1
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 1
+      - targetType: 0
         includesSource: 0
         onlySource: 0
-        queries:
-        - team: 2
-          statusFilter: 3
-          zoneFilter: 1
+        queries: []
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 1
@@ -53,16 +52,17 @@ MonoBehaviour:
         - team: 2
           statusFilter: 0
           zoneFilter: 1
-      repartition: 1
+      - affectedElementType: 2
+        includesTarget: 0
+        includesSource: 0
+        queries: []
+      repartition: 0
     Parameters:
-      Amount: 3
+      Amount: 1
+      SecondAmount: 0
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:
       vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
-      overlayDuration: 0
-      vfxLifetime: 0
-      AttackDuration: 0.1
-      showAmount: 1
-      textColor: {r: 1, g: 0, b: 0, a: 1}
+      OverrideOverlayDuration: 0

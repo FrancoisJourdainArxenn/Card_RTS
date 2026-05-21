@@ -170,13 +170,22 @@ public class CreatureLogic: ILivable
     }
 
     public void Die()
-    {   
-        owner.playedCards.Creatures.Remove(this);
-        
-        // cause Deathrattle Effect
+    {
+        bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDied(this, owner);
-        
         FogOfWarManager.Refresh();
+        if (wasInList)
+            new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+    }
+
+    // During Battle: queues the visual die command immediately so the creature disappears
+    // during the attack animation. Deathrattle fires later via DrainPendingDeaths at End phase.
+    public void ScheduleBattleDeath()
+    {
+        if (IsPendingDeath) return;
+        health = 0;
+        IsPendingDeath = true;
+        PendingDeathList.Add(this);
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }
 
