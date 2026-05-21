@@ -52,11 +52,8 @@ public class OneCreatureManager : OneLivableManager
 
     public void UpdateGlow()
     {
-        if (CanAttackNow)
-            glow.color = Color.red;
-        else if (CanMoveNow)
-            glow.color = Color.green;
-        glow.enabled = CanAttackNow || CanMoveNow;
+        glow.color = Color.green;
+        glow.enabled = CanMoveNow;
     }
 
     public void SetGray(bool gray)
@@ -65,18 +62,9 @@ public class OneCreatureManager : OneLivableManager
         frame.color = gray ? Color.gray : Color.white;
     }
 
-    public void ShowPendingDamage(int damage, int currentHealth)
+    public void SetPending(bool pending)
     {
-        bool dies = damage >= currentHealth;
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
-        if (WillBeDamagedIndicator != null) 
-        {
-            WillBeDamagedIndicator.SetActive(!dies);
-            if (!dies)
-            {
-                if (pendingDamageText != null) pendingDamageText.text = damage.ToString();
-            }
-        }
+        art.color = pending ? new Color(0.3f, 0.3f, 0.3f) : Color.white;
     }
 
     public void OnCreatureClicked()
@@ -115,12 +103,6 @@ public class OneCreatureManager : OneLivableManager
         ZoneCombatResolver resolver = ZoneCombatResolver.FindForBase(BaseID);
         // Debug.Log($"[Click] Resolver={resolver}");
         // resolver?.TryRedirectDamageFrom(battleCreature);
-    }
-
-    public void ClearPendingDamageIndicator()
-    {
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
-        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
     public void ShowPendingMoveArrow(Vector3 targetWorldPos)

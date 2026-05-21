@@ -502,7 +502,7 @@ public class GameNetworkManager : NetworkBehaviour
                 param3 = tablePos,
                 param4 = baseID
             });
-            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, baseID);
+            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
         }
     }
 
@@ -511,10 +511,10 @@ public class GameNetworkManager : NetworkBehaviour
     /// avec les mêmes identifiants sur toutes les machines.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int baseID)
+    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, baseID);
+        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
     }
 
     [ClientRpc]

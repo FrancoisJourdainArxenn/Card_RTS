@@ -51,15 +51,14 @@ public class DragCreatureOnTable : DraggingActions {
         if (DragSuccessful())
         {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
+            bool isMelee = manager.cardAsset.melee; // vérifie que OneCardManager expose cardAsset
             int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(
-                Camera.main.ScreenToWorldPoint(
-                    new Vector3(
-                        Input.mousePosition.x,
-                        Input.mousePosition.y,
-                        transform.position.z - Camera.main.transform.position.z
-                    )
-                ).x
+                Camera.main.ScreenToWorldPoint(new Vector3(
+                    Input.mousePosition.x, Input.mousePosition.y,
+                    transform.position.z - Camera.main.transform.position.z)).x,
+                isMelee
             );
+
 
             if (NetworkSessionData.IsNetworkSession)
             {
@@ -90,7 +89,7 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
             return false;
         }
-        bool TableNotFull = (selectedPArea.tableVisual.CreaturesOnTable.Count < maxCreatureOnBoard);
+        bool TableNotFull = (selectedPArea.tableVisual.TotalCreatureCount < maxCreatureOnBoard);
         if (!TableNotFull)
         {
             new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();

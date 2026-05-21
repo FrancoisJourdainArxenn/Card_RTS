@@ -31,7 +31,8 @@ public class CreatureDieCommand : Command
                 if (area == null || area.tableVisual == null)
                     continue;
 
-                if (area.tableVisual.CreaturesOnTable.Contains(creatureToRemove))
+                if (area.tableVisual.MeleeCreaturesOnTable.Contains(creatureToRemove) ||
+                    area.tableVisual.RangedCreaturesOnTable.Contains(creatureToRemove))
                 {
                     // RemoveCreatureWithID calls CommandExecutionComplete internally via its tween OnComplete.
                     area.tableVisual.RemoveCreatureWithID(DeadCreatureID);

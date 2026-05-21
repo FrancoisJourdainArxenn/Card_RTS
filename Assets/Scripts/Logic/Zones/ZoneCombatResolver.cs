@@ -427,45 +427,10 @@ public class ZoneCombatResolver : MonoBehaviour
 
 
 
-    void ShowIndicator(CreatureLogic creature, int damage)
-    {
-        if (GlobalSettings.Instance.localPlayer.playedCards.Creatures.Contains(creature)) return;
-        GameObject go = IDHolder.GetGameObjectWithID(creature.UniqueCreatureID);
-        go?.GetComponent<OneCreatureManager>()?.ShowPendingDamage(damage, creature.Health);
-    }
-
-    void ShowBaseIndicator(int id, int damage, int health)
-    {
-        Player local = GlobalSettings.Instance.localPlayer;
-        if (id == local.PlayerID) return;
-        if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic bl) && bl.owner == local) return;
-        IDHolder.GetGameObjectWithID(id)?.GetComponent<OneBaseManager>()?.ShowPendingDamage(damage, health);
-    }
-
-    void ShowBuildingIndicator(BuildingLogic building, int damage)
-    {
-        GameObject go = IDHolder.GetGameObjectWithID(building.UniqueBuildingID);
-        go?.GetComponent<OneBuildingManager>()?.ShowPendingDamage(damage, building.Health);
-    }
     void ClearAllIndicators()
     {
         p1FreePool = 0;
         p2FreePool = 0;
-        foreach (CreatureLogic c in CreatureLogic.CreaturesCreatedThisGame.Values)
-        {
-            GameObject go = IDHolder.GetGameObjectWithID(c.UniqueCreatureID);
-            go?.GetComponent<OneCreatureManager>()?.ClearPendingDamageIndicator();
-        }
-        foreach (var bl in BaseLogic.BasesCreatedThisGame.Values)
-        {
-            GameObject go = IDHolder.GetGameObjectWithID(bl.ID);
-            go?.GetComponent<OneBaseManager>()?.ClearPendingDamageIndicator();
-        }
-        foreach (var bl in BuildingLogic.BuildingsCreatedThisGame.Values)
-        {
-            GameObject go = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
-            go?.GetComponent<OneBuildingManager>()?.ClearPendingDamageIndicator();
-        }
         pendingBuildingDamage.Clear();
     }
 
@@ -577,13 +542,6 @@ public class ZoneCombatResolver : MonoBehaviour
         RefreshAllAreaStats();
     }
     */
-
-    AreaPosition GetCreatureSide(CreatureLogic creature)
-    {
-        foreach (PlayerArea pa in zoneView.subZones)
-            if (pa.baseID == creature.BaseID) return pa.owner;
-        return AreaPosition.Neutral;
-    }
 
     Player GetOwnerPlayer(CreatureLogic creature)
     {

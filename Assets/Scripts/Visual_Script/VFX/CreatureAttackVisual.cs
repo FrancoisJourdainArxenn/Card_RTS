@@ -58,7 +58,6 @@ public class CreatureAttackVisual : MonoBehaviour
             return;
         }
 
-        manager.CanAttackNow = false;
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {

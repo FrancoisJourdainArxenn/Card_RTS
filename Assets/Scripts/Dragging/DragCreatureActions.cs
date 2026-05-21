@@ -149,15 +149,14 @@ public class DragCreatureActions : DraggingActions {
             Debug.Log("mover not found");
             return false;
         }
+        bool isMelee = CreatureLogic.CreaturesCreatedThisGame[moverIdHolder.UniqueID].IsMelee;
         int tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(
-            Camera.main.ScreenToWorldPoint(
-                new Vector3(
-                    Input.mousePosition.x,
-                    Input.mousePosition.y,
-                    transform.position.z - Camera.main.transform.position.z
-                )
-            ).x
+            Camera.main.ScreenToWorldPoint(new Vector3(
+                Input.mousePosition.x, Input.mousePosition.y,
+                transform.position.z - Camera.main.transform.position.z)).x,
+            isMelee
         );
+
         if (NetworkSessionData.IsNetworkSession)
         {
             GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);

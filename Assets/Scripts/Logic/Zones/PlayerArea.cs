@@ -68,7 +68,7 @@ public class PlayerArea : MonoBehaviour
             AreaHealthText.text = GetTotalHealth().ToString();
     }
 
-    Player GetOwnerPlayer()
+    public Player GetOwnerPlayer()
     {
         if (GlobalSettings.Instance == null) return null;
         return owner == AreaPosition.Low
@@ -79,7 +79,7 @@ public class PlayerArea : MonoBehaviour
     int GetTotalATK()
     {
         int total = 0;
-        foreach (GameObject creature in tableVisual.CreaturesOnTable)
+        foreach (GameObject creature in tableVisual.AllCreaturesOnTable)
         {
             OneCreatureManager ocm = creature.GetComponent<OneCreatureManager>();
             if (ocm != null && int.TryParse(ocm.AttackText.text, out int atk)) total += atk;
@@ -95,7 +95,7 @@ public class PlayerArea : MonoBehaviour
     int GetTotalHealth()
     {
         int total = 0;
-        foreach (GameObject creature in tableVisual.CreaturesOnTable)
+        foreach (GameObject creature in tableVisual.AllCreaturesOnTable)
         {
             OneCreatureManager ocm = creature.GetComponent<OneCreatureManager>();
             if (ocm != null && int.TryParse(ocm.HealthText.text, out int hp)) total += hp;

@@ -284,23 +284,30 @@ public class Player : MonoBehaviour, ILivable
         CardLogic tokenCard = new CardLogic(tokenAsset, cardID);
         tokenCard.owner = this;
 
+        bool tokenIsMelee = tokenAsset.melee;
+        int rowLocalPos   = tablePos; // position dans la rangée, envoyée par le serveur
+        int logicalIndex  = GetLogicalInsertIndex(tokenAsset.melee, baseID, rowLocalPos);
+
         CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
         if (visualData?.vfxPrefab != null)
         {
-            int maxSlots = targetArea.tableVisual.slots.Children.Length;
-            int currentCount = targetArea.tableVisual.CreaturesOnTable.Count;
-            int newCount = currentCount + 1;
-            int firstSlot = (maxSlots - newCount) / 2;
-            int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
-            Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
+            SameDistanceChildren rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                ? targetArea.tableVisual.meleeSlots
+                : targetArea.tableVisual.rangedSlots;
+            int slotCount = rowSlots.Children.Length;
+            int newCount  = rowLocalPos + 1;
+            int firstSlot = (slotCount - newCount) / 2;
+            int lastSlot  = firstSlot + newCount - 1;
+            int finalSlot = Mathf.Clamp(lastSlot - rowLocalPos, 0, slotCount - 1);
+            Vector3 spawnPos = rowSlots.Children[finalSlot].transform.position;
             new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
         }
 
-        new PlayACreatureCommand(tokenCard, this, tablePos, creatureID, targetArea).AddToQueue();
+        new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
         EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
     }
 
@@ -354,30 +361,68 @@ public class Player : MonoBehaviour, ILivable
     }
 
     // 2nd overload - by logic units
-    public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
+    public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        int baseID = selectedPArea.baseID;
+        int baseID       = selectedPArea.baseID;
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
+
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
-        // 
-        new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
-        // cause battlecry Effect
-        EffectRegistry.ETB(playedCard.ca, new EffectContext
-        {
-            Caster = this,
-            Target = null,
-            Source = newCreature
-        });
-        // remove this card from hand
+
+        new PlayACreatureCommand(playedCard, this, rowLocalPos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature });
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
     }
 
+    // Index d'insertion dans playedCards.Creatures pour maintenir [melee G→D, ranged G→D]
+    public int GetLogicalInsertIndex(bool isMelee, int baseID, int rowLocalPos)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < playedCards.Creatures.Count; i++)
+        {
+            var c = playedCards.Creatures[i];
+            if (c.BaseID == baseID && c.IsMelee == isMelee)
+            {
+                if (matchCount == rowLocalPos) return i;
+                matchCount++;
+            }
+        }
+        // Append — pour ranged, s'assurer d'être après tous les melee de cette area
+        if (!isMelee)
+        {
+            for (int i = playedCards.Creatures.Count - 1; i >= 0; i--)
+            {
+                if (playedCards.Creatures[i].BaseID == baseID && playedCards.Creatures[i].IsMelee)
+                    return i + 1;
+            }
+        }
+        return playedCards.Creatures.Count;
+    }
 
+    // Resync l'ordre logique après un repositionnement visuel
+    public void ResyncCreatureOrderForArea(int baseID, List<GameObject> meleeGOs, List<GameObject> rangedGOs)
+    {
+        var ordered = new List<CreatureLogic>();
+        foreach (var go in meleeGOs)
+        {
+            IDHolder id = go?.GetComponent<IDHolder>();
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+                ordered.Add(cl);
+        }
+        foreach (var go in rangedGOs)
+        {
+            IDHolder id = go?.GetComponent<IDHolder>();
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+                ordered.Add(cl);
+        }
+        playedCards.Creatures.RemoveAll(c => c.BaseID == baseID);
+        playedCards.Creatures.AddRange(ordered);
+    }
 
-    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int baseID)
+    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
@@ -398,8 +443,10 @@ public class Player : MonoBehaviour, ILivable
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) return;
 
-        if (!playedCard.ca.Celerity)
-            targetArea.tableVisual.AddCreatureToPendingZone(playedCard.ca, creatureUniqueID, baseID);
+        targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
+        GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
+        if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+            ocm.SetPending(true);
     }
 
     public void NetworkFlushPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
@@ -417,7 +464,9 @@ public class Player : MonoBehaviour, ILivable
         }
 
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
+
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -445,7 +494,8 @@ public class Player : MonoBehaviour, ILivable
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -488,19 +538,19 @@ public class Player : MonoBehaviour, ILivable
             cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
-        bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
 
         foreach (CreatureLogic crl in playedCards.Creatures)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
+            if (g == null) continue; // Détruit (mort en auto-battle), cas attendu
+            
             OneCreatureManager creatureManager = CheckCreatureManager(g);
             if (creatureManager == null)
             {
                 Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
                 continue;
             }
-            creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
         }
@@ -511,8 +561,6 @@ public class Player : MonoBehaviour, ILivable
             if (g == null) continue;
             OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
             if (bm == null) continue;
-            bm.CanAttackNow = canAttack && (bl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-            bm.UpdateGlow();
         }
 
     }
@@ -677,7 +725,7 @@ public class Player : MonoBehaviour, ILivable
         {
             if (table.tag == this.tag)
             {
-                if (table.CreaturesOnTable.Count <= 0)
+                if (table.MeleeCreaturesOnTable.Count <= 0 || table.RangedCreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
                     return false;

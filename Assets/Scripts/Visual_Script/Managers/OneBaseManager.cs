@@ -19,11 +19,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     public Image CardFaceGlowImage;
     public GameObject Spawner;
 
-    [Header("Damage Indicators")]
-    public GameObject MarkedForDeathIndicator;
-    public GameObject WillBeDamagedIndicator;
-    public TMP_Text pendingDamageText;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
         if (baseAsset != null)
@@ -149,24 +144,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             return GlobalSettings.Instance.LowPlayer;
 
         return null;
-    }
-
-    public void ShowPendingDamage(int damage, int currentHealth)
-    {
-        bool dies = damage >= currentHealth;
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
-        if (WillBeDamagedIndicator != null)
-        {
-            WillBeDamagedIndicator.SetActive(!dies);
-            if (!dies && pendingDamageText != null)
-                pendingDamageText.text = damage.ToString();
-        }
-    }
-
-    public void ClearPendingDamageIndicator()
-    {
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
-        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
     public void RemoveBaseWithID(int baseUniqueID)

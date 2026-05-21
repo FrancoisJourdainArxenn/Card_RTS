@@ -1474,9 +1474,6 @@ MonoBehaviour:
   FrameImage: {fileID: 6335098370175170885}
   CardFaceGlowImage: {fileID: 2299680080893522801}
   Spawner: {fileID: 0}
-  MarkedForDeathIndicator: {fileID: 6831454558169782916}
-  WillBeDamagedIndicator: {fileID: 4358839601193840516}
-  pendingDamageText: {fileID: 6598662252289984941}
 --- !u!114 &5938939194421709501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1555,7 +1552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EffectVisualHandler
   effectOverlay: {fileID: 6406302029300316302}
-  deathPendingMaterial: {fileID: 0}
+  deathPendingMaterial: {fileID: 2100000, guid: 560a6521f09a02d47b099bed265a99ec, type: 2}
   deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
 --- !u!1 &8597402261057766994
 GameObject:
