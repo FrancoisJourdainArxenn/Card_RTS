@@ -3,6 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/HealDamageSO")]
 public class HealDamageSO : HealthEffectSO
 {
+    public override EffectPriority Priority => EffectPriority.HealDamage;
     protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData)
     {
         new HealDamageCommand(target.ID, amount, target.Health + amount, visualData).AddToQueue();

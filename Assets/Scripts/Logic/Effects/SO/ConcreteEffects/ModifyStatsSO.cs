@@ -6,6 +6,7 @@ using UnityEngine;
 public class ModifyStatsSO : EffectSO
 {
     private int _currentSecondAmount;
+    public override EffectPriority Priority => EffectPriority.ModifyStats;
 
     public override void Execute(
         string EffectName,

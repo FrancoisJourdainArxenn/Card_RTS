@@ -6,7 +6,7 @@ public abstract class EffectSO : ScriptableObject
 {
     public string Description = "";
     protected int _sourceID = -1;
-
+    virtual public EffectPriority Priority => EffectPriority.DrawCards;
     private static System.Random _networkRng;
     internal static void SetNetworkRng(System.Random rng) => _networkRng = rng;
     internal static void ClearNetworkRng() => _networkRng = null;
@@ -39,13 +39,11 @@ public abstract class EffectSO : ScriptableObject
 
         if (eligibleAffectedElements.Count == 0)
         {
-            bool targetTypeIsNone = effectInfo.effectTargets.Count == 1
-                && effectInfo.effectTargets[0].targetType == EffectObjectType.None;
-            if (!targetTypeIsNone)
-                return affectedElements;
-            return context.GetSingleTargetAffectedElements(
-                null, effectInfo.affectedElements
-            );
+            return effectInfo.effectTargets.Count == 0
+                ? context.GetSingleTargetAffectedElements(
+                    null, effectInfo.affectedElements
+                )
+                : affectedElements;
         }
 
         foreach (IIdentifiable target in eligibleAffectedElements)

@@ -35,6 +35,13 @@ public static class EffectStack
         foreach (List<PendingEffectSelection> list in _byPlayer.Values)
             all.AddRange(list);
 
+        if (all.Count >= 1)
+            SortEffectsByPriority(all);
         return all;
+    }
+
+    public static void SortEffectsByPriority(List<PendingEffectSelection> effects)
+    {
+        effects.Sort((a, b) => ((int)a.Data.Effect.Priority).CompareTo((int)b.Data.Effect.Priority));
     }
 }

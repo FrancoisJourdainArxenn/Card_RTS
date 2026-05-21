@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/TokenGenerationSO")]
 public class TokenGenerationSO : EffectSO
 {
+    public override EffectPriority Priority => EffectPriority.TokenGeneration;
     public override void Execute(
         string EffectName,
         EffectContext context,
