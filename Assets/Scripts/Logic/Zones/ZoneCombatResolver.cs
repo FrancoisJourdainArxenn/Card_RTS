@@ -236,6 +236,11 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
+            if (!attacker.isBuilding)
+            {
+                pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                pendingDamage[attacker.id] = attackerExisting + t.Attack;
+            }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwner = defender });
         }
         foreach (var b in buildings)
@@ -252,6 +257,11 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
+            if (!attacker.isBuilding)
+            {
+                pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                pendingDamage[attacker.id] = attackerExisting + t.Attack;
+            }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwner = defender });
         }
         foreach (var b in buildings)
@@ -290,14 +300,23 @@ public class ZoneCombatResolver : MonoBehaviour
                 {
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out var target)) continue;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
+                    int counterDamage = step.attackerIsBuilding ? 0 : target.Attack;
+                    int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
                     if (!step.attackerIsBuilding)
-                        new CreatureAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
+                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
                     else
                         new BuildingAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
                     else
                         target.Health = targetHealthAfter;
+                    if (!step.attackerIsBuilding && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out var attackerCreature))
+                    {
+                        if (attackerHealthAfter <= 0)
+                            attackerCreature.ScheduleBattleDeath();
+                        else
+                            attackerCreature.Health = attackerHealthAfter;
+                    }
                     break;
                 }
                 case TargetKind.Building:

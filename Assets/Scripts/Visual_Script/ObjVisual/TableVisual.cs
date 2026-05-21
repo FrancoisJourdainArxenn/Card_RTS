@@ -201,7 +201,13 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
         ownerArea?.RefreshAreaStats();
         // FogOfWarManager.Refresh();
-        Command.CommandExecutionComplete();
+
+        // Wait for the repositioning tween to finish before unblocking the command queue,
+        // so the next attack targets the creature's final position.
+        if (CreaturesOnTable.Count > 0)
+            DOVirtual.DelayedCall(0.3f, Command.CommandExecutionComplete).SetLink(gameObject);
+        else
+            Command.CommandExecutionComplete();
     }
 
     /// <summary>
