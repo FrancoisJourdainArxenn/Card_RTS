@@ -18,7 +18,6 @@ public enum EffectRepartition
 
 public enum EffectObjectType
 {
-    None,
     Creature,
     Building,
     Base,

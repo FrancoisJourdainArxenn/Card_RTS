@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/DrawCardsSO")]
 public class DrawCardsSO : EffectSO
 {
+    public override EffectPriority Priority => EffectPriority.DrawCards;
     public override void Execute(
         string EffectName,
         EffectContext context,

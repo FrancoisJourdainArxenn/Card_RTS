@@ -3,6 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/DealDamageSO")]
 public class DealDamageSO : HealthEffectSO
 {
+    public override EffectPriority Priority => EffectPriority.DealDamage;
     public override void Execute(
         string EffectName,
         EffectContext context,
