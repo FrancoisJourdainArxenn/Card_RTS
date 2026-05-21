@@ -10,18 +10,21 @@ public class DragCreatureOnTable : DraggingActions {
     private VisualStates tempState;
     private OneCardManager manager;
     public int maxCreatureOnBoard = 7;
+    private bool _isReturning = false;
+
+
+    [SerializeField] private float dragScale = 0.3f;
+    private Vector3 _originalScale;
+    private TableVisual _previewTable;
 
     public override bool CanDrag
     {
         get
         { 
-            // TEST LINE: this is just to test playing creatures before the game is complete 
-            //return true;
-
-            // TODO : include full field check
-            return base.CanDrag && manager.CanBePlayedNow;
+            return base.CanDrag && manager.CanBePlayedNow && !_isReturning;
         }
     }
+
 
     void Awake()
     {
@@ -35,27 +38,30 @@ public class DragCreatureOnTable : DraggingActions {
         tempState = whereIsCard.VisualState;
         whereIsCard.VisualState = VisualStates.Dragging;
         whereIsCard.BringToFront();
+        _originalScale = transform.localScale;
+        transform.DOScale(_originalScale * dragScale, 0.0f).SetEase(Ease.OutQuad);
         HighlightValidAreas();
-
     }
 
     public override void OnDraggingInUpdate()
     {
-
+        UpdateInsertPreview();
     }
 
     public override void OnEndDrag()
     {
+        ClearInsertPreview();
+        transform.localScale = _originalScale;
         ResetAreaHighlights();
         // 1) Check if we are holding a card over the table
         if (DragSuccessful())
         {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
-            bool isMelee = manager.cardAsset.melee; // vérifie que OneCardManager expose cardAsset
+            bool isMelee = manager.cardAsset.melee;
+            float dropDepth = selectedPArea.tableVisual.GetRowWorldZ(isMelee) - Camera.main.transform.position.z;
             int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(
                 Camera.main.ScreenToWorldPoint(new Vector3(
-                    Input.mousePosition.x, Input.mousePosition.y,
-                    transform.position.z - Camera.main.transform.position.z)).x,
+                    Input.mousePosition.x, Input.mousePosition.y, dropDepth)).x,
                 isMelee
             );
 
@@ -100,13 +106,50 @@ public class DragCreatureOnTable : DraggingActions {
 
     private void DragFailed()
     {
-        // Set old sorting order 
+        StartCoroutine(ReturnToHand());
+    }
+
+    private IEnumerator ReturnToHand()
+    {
+        _isReturning = true;
         whereIsCard.SetHandSortingOrder();
         whereIsCard.VisualState = tempState;
-        // Move this card back to its slot position
         HandVisual PlayerHand = playerOwner.handVisual;
         Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
-        transform.DOLocalMove(oldCardPos, 1f);
+        transform.DOLocalMove(oldCardPos, 0.3f);
+        transform.DOScale(_originalScale, 0.3f).SetEase(Ease.OutQuad);
+        yield return new WaitForSeconds(0.3f);
+        _isReturning = false;
+    }
+
+    private void UpdateInsertPreview()
+    {
+        PlayerArea selectedPArea = playerOwner.SelectedPArea();
+        if (selectedPArea == null || !TableVisual.CursorOverSomeTable
+            || !playerOwner.CanPlayCreatureInArea(selectedPArea))
+        {
+            ClearInsertPreview();
+            return;
+        }
+
+        bool isMelee = manager.cardAsset.melee;
+        float depth = selectedPArea.tableVisual.GetRowWorldZ(isMelee) - Camera.main.transform.position.z;
+        float worldX = Camera.main.ScreenToWorldPoint(new Vector3(
+            Input.mousePosition.x, Input.mousePosition.y, depth)).x;
+        int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(worldX, isMelee);
+
+        if (_previewTable != selectedPArea.tableVisual)
+        {
+            ClearInsertPreview();
+            _previewTable = selectedPArea.tableVisual;
+        }
+        _previewTable.ShowInsertPreview(tablePos, isMelee);
+    }
+
+    private void ClearInsertPreview()
+    {
+        _previewTable?.ClearInsertPreview();
+        _previewTable = null;
     }
     
     private void HighlightValidAreas()

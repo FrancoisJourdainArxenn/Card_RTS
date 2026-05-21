@@ -23,6 +23,8 @@ public class TableVisual : MonoBehaviour
     private bool cursorOverThisTable = false;
     private bool isFogged = false;
     private BoxCollider col;
+    private int _previewIndex = -1;
+    private bool _previewIsMelee;
 
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
@@ -145,25 +147,25 @@ public class TableVisual : MonoBehaviour
     private int RowPosForMouse(float mouseX, int count, SameDistanceChildren rowSlots)
     {
         if (count == 0) return 0;
-        int slotCount    = rowSlots.Children.Length;
-        int firstSlot    = (slotCount - count) / 2;
-        int lastSlot     = firstSlot + count - 1;
-        // slot[lastSlot]  = créature la plus à gauche (list[0])
-        // slot[firstSlot] = créature la plus à droite (list[count-1])
-        float leftmostX  = rowSlots.Children[lastSlot].transform.position.x;
-        float rightmostX = rowSlots.Children[firstSlot].transform.position.x;
+        int slotCount = rowSlots.Children.Length;
+        int firstSlot = (slotCount - count) / 2;
+        int lastSlot  = firstSlot + count - 1;
+        // Slots are left-to-right: Children[firstSlot]=leftmost, Children[lastSlot]=rightmost
+        // list[0] is at Children[lastSlot] (rightmost), list[count-1] at Children[firstSlot] (leftmost)
+        float leftmostX  = rowSlots.Children[firstSlot].transform.position.x;
+        float rightmostX = rowSlots.Children[lastSlot].transform.position.x;
 
-        if (mouseX < leftmostX)  return 0;     // insérer à gauche de tout
-        if (mouseX > rightmostX) return count; // insérer à droite de tout
+        if (mouseX <= leftmostX)  return count;  // left of all  → insert at leftmost (list end)
+        if (mouseX >= rightmostX) return 0;       // right of all → insert at rightmost (list start)
 
-        // list[j] est au slot (lastSlot - j)
         for (int j = 0; j < count - 1; j++)
         {
-            float leftX  = rowSlots.Children[lastSlot - j].transform.position.x;
-            float rightX = rowSlots.Children[lastSlot - j - 1].transform.position.x;
-            if (mouseX >= leftX && mouseX <= rightX) return j + 1;
+            float leftX  = rowSlots.Children[lastSlot - j - 1].transform.position.x;
+            float rightX = rowSlots.Children[lastSlot - j].transform.position.x;
+            if (mouseX >= leftX && mouseX <= rightX)
+                return j + 1;
         }
-        return count;
+        return 0;
     }
 
     public void MoveCreatureAway(GameObject creature)
@@ -196,28 +198,49 @@ public class TableVisual : MonoBehaviour
 
     void PlaceCreaturesOnNewSlots()
     {
-        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true));
-        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots);
+        int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
+        int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;
+        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap);
+        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap);
     }
 
-    void PlaceRowOnSlots(List<GameObject> group, SameDistanceChildren rowSlots)
+    void PlaceRowOnSlots(List<GameObject> group, SameDistanceChildren rowSlots, int gapIndex = -1)
     {
         int count     = group.Count;
         int slotCount = rowSlots.Children.Length;
         if (count == 0 || slotCount == 0) return;
 
-        // list[0] = leftmost → slot le plus haut (slot[0] est le plus à droite)
-        int firstSlot = (slotCount - count) / 2;
-        int lastSlot  = firstSlot + count - 1;
+        bool hasGap      = gapIndex >= 0 && gapIndex <= count;
+        int virtualCount = hasGap ? count + 1 : count;
+        int firstSlot    = (slotCount - virtualCount) / 2;
+        int lastSlot     = firstSlot + virtualCount - 1;
 
         for (int i = 0; i < count; i++)
         {
-            int targetSlot = Mathf.Clamp(lastSlot - i, 0, slotCount - 1);
-            Vector3 targetLocalPos = rowSlots.Children[targetSlot].transform.localPosition;
+            int virtualIndex = (hasGap && i >= gapIndex) ? i + 1 : i;
+            int targetSlot   = Mathf.Clamp(lastSlot - virtualIndex, 0, slotCount - 1);
             group[i].transform.DOKill();
-            group[i].transform.DOLocalMove(targetLocalPos, 0.3f).SetEase(Ease.OutQuad);
+            group[i].transform.DOLocalMove(rowSlots.Children[targetSlot].transform.localPosition, 0.3f)
+                .SetEase(Ease.OutQuad);
         }
     }
+
+    public void ShowInsertPreview(int rowLocalPos, bool isMelee)
+    {
+        _previewIndex   = rowLocalPos;
+        _previewIsMelee = isMelee;
+        PlaceCreaturesOnNewSlots();
+    }
+
+    public void ClearInsertPreview()
+    {
+        if (_previewIndex < 0) return;
+        _previewIndex = -1;
+        PlaceCreaturesOnNewSlots();
+    }
+
+    public float GetRowWorldZ(bool isMelee) =>
+        GetRowSlots(isMelee).Children[0].transform.position.z;
 
     public void AddCreatureToPendingZone(CardAsset ca, int uniqueID, int baseID)
     {

@@ -1155,6 +1155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragCreatureOnTable
   maxCreatureOnBoard: 10
+  dragScale: 0.4
 --- !u!114 &4338421819388494301
 MonoBehaviour:
   m_ObjectHideFlags: 0
