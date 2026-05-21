@@ -29,8 +29,7 @@ public class BuildingShopVisual : MonoBehaviour
             manager.hoverZoomEnabled = true;
             manager.ReadCardFromAsset();
 
-            bool playable = localPlayer.MainRessourceAvailable >= building.MainCost
-                        && localPlayer.SecondRessourceAvailable >= building.SecondCost;
+            bool playable = localPlayer.MainRessourceAvailable >= building.MainCost;
             manager.CanBePlayedNow = playable;
         }
 

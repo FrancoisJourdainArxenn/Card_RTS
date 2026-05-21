@@ -24,10 +24,7 @@ public class Player : MonoBehaviour, ILivable
 
     public int mainRessourceTotal;
     public int mainRessourceAvailable;
-    public int secondRessourceTotal;
-    public int secondRessourceAvailable;
     public int playerMainIncome;
-    public int playerSecondIncome;
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -41,7 +38,6 @@ public class Player : MonoBehaviour, ILivable
 
     // this value used exclusively for our coin spell
     private int bonusMainRessource = 0;
-    private int bonusSecondRessource = 0;
 
     // PROPERTIES
     // this property is a part of interface ILivable
@@ -109,7 +105,7 @@ public class Player : MonoBehaviour, ILivable
                 mainRessourceAvailable = value;
             
             //PArea.ManaBar.AvailableCrystals = manaLeft;
-            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
+            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
             TurnManager.RefreshAllPlayableHighlights();
         }
@@ -150,31 +146,7 @@ public class Player : MonoBehaviour, ILivable
         InitBaseIDs();
         new BaseLogic(this, MainPArea?.parentZone?.Logic);
     }
-    //private int secondRessourceTotal;
-    public int SecondRessourceTotal
-    {
-        get{ return secondRessourceTotal;}
-        set{ secondRessourceTotal = value;}
-    }
 
-    public int SecondRessourceAvailable
-    {
-        get { return secondRessourceAvailable; }
-        set
-        {
-            if (value < 0)
-                secondRessourceAvailable = 0;
-            else if (value > secondRessourceTotal)
-                secondRessourceAvailable = secondRessourceTotal;
-            else
-                secondRessourceAvailable = value;
-
-            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
-
-            TurnManager.RefreshAllPlayableHighlights();
-        }
-    }
-    
     // CODE FOR EVENTS TO LET CREATURES KNOW WHEN TO CAUSE EFFECTS
     public delegate void VoidWithNoArguments();
     //public event VoidWithNoArguments CreaturePlayedEvent;
@@ -220,14 +192,7 @@ public class Player : MonoBehaviour, ILivable
         {
             mainRessourceAvailable += playerMainIncome;
         }
-        if (secondRessourceAvailable >= secondRessourceTotal)
-            secondRessourceAvailable = secondRessourceTotal;
-        else
-        {
-            secondRessourceAvailable += playerSecondIncome;
-        }
 
-        
         // Refresh UI + playable state.
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
@@ -253,13 +218,11 @@ public class Player : MonoBehaviour, ILivable
 
     // STUFF THAT OUR PLAYER CAN DO
 
-    // get mana from coin or other spells 
-    public void GetBonusRessources(int mainRessourceAmount, int secondRessourceAmount)
+    // get mana from coin or other spells
+    public void GetBonusRessources(int mainRessourceAmount)
     {
         bonusMainRessource += mainRessourceAmount;
         MainRessourceAvailable += mainRessourceAmount;
-        bonusSecondRessource += secondRessourceAmount;
-        SecondRessourceAvailable += secondRessourceAmount;
     }
 
     // FOR TESTING ONLY
@@ -278,9 +241,9 @@ public class Player : MonoBehaviour, ILivable
             if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
                 CardAsset cardDrawn = NetworkSessionData.IsNetworkSession
-                    ? deck.DrawWeightedCard(finalSeed, playerMainIncome, playerSecondIncome, gameObject.name)
+                    ? deck.DrawWeightedCard(finalSeed, playerMainIncome, gameObject.name)
                     : deck.DrawWeightedCard(UnityEngine.Random.Range(int.MinValue, int.MaxValue),
-                                            playerMainIncome, playerSecondIncome, gameObject.name);
+                                            playerMainIncome, gameObject.name);
 
                 // Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
 
@@ -370,7 +333,6 @@ public class Player : MonoBehaviour, ILivable
     public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
 
         EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
@@ -395,7 +357,6 @@ public class Player : MonoBehaviour, ILivable
     public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
         int baseID = selectedPArea.baseID;
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
         playedCards.Creatures.Insert(tablePos, newCreature);
@@ -421,7 +382,6 @@ public class Player : MonoBehaviour, ILivable
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -482,7 +442,6 @@ public class Player : MonoBehaviour, ILivable
         }
 
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
@@ -505,7 +464,7 @@ public class Player : MonoBehaviour, ILivable
         // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
-        TurnManager.Instance.StopTheTimer();
+        // TurnManager.Instance.StopTheTimer();
         new GameOverCommand(this).AddToQueue();
     }
 
@@ -525,7 +484,7 @@ public class Player : MonoBehaviour, ILivable
                 Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
                 continue;
             }
-            bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
+            bool affordable = (cl.MainCost <= mainRessourceAvailable);
             cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
@@ -693,11 +652,9 @@ public class Player : MonoBehaviour, ILivable
     public void CalculatePlayerIncome()
     {
         playerMainIncome = 0;
-        playerSecondIncome = 0;
         foreach (BaseAsset baseAsset in controlledBaseAssets)
         {
             playerMainIncome += baseAsset.mainRessourceIncome;
-            playerSecondIncome += baseAsset.secondRessourceIncome;
         }
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
@@ -727,8 +684,7 @@ public class Player : MonoBehaviour, ILivable
                 }
             }
         }
-        if (MainRessourceAvailable < baseAsset.mainRessourceBaseCost || 
-        SecondRessourceAvailable < baseAsset.secondRessourceBaseCost)
+        if (MainRessourceAvailable < baseAsset.mainRessourceBaseCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
             return false;
@@ -762,7 +718,6 @@ public class Player : MonoBehaviour, ILivable
         if (NetworkSessionData.IsNetworkSession)
         {
             MainRessourceAvailable -= building.MainCost;
-            SecondRessourceAvailable -= building.SecondCost;
             spot.SpawnPendingBuilding(building, this);
             GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.buildings.IndexOf(building), spot.SpotID);
         }

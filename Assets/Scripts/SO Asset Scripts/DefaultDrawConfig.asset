@@ -12,13 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c2384aec7cfe9b4a801aa06c2d4de36, type: 3}
   m_Name: DefaultDrawConfig
   m_EditorClassIdentifier: Assembly-CSharp::WeightedDrawConfig
-  multiplicateur: 1.75
-  I_min: 8
-  I_max: 13
+  I_min: 1
+  I_max: 4
   T1_early: 0.6
   T2_early: 0.3
   T3_early: 0.1
   T1_late: 0.25
   T2_late: 0.35
   T3_late: 0.4
-  reDrawMultiplicator: 1
+  reDrawMultiplicator: 1.25

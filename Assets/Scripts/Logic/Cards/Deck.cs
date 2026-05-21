@@ -32,7 +32,7 @@ public class Deck : MonoBehaviour {
         Debug.Log($"[Deck] Pool — T1:{_n1}  T2:{_n2}  T3:{_n3}  Total:{cards.Count}");
     }
 
-    public CardAsset DrawWeightedCard(int seed, int mainIncome, int secondIncome, string playerTag = "?")
+    public CardAsset DrawWeightedCard(int seed, int mainIncome, string playerTag = "?")
     {
         if (drawConfig == null)
         {
@@ -42,7 +42,7 @@ public class Deck : MonoBehaviour {
 
         CardAsset drawn = WeightedDraw.Draw(
             cards, timesDrawn, _n1, _n2, _n3,
-            mainIncome, secondIncome, seed, drawConfig, playerTag);
+            mainIncome, seed, drawConfig, playerTag);
 
         if (drawn != null)
             timesDrawn[drawn] = (timesDrawn.TryGetValue(drawn, out int v) ? v : 0) + 1;

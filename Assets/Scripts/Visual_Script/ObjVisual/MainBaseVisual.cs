@@ -10,7 +10,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     public Player player;
     public OneBaseManager baseManager;
     public AreaPosition owner;
-    public TMP_Text HealthText, MainRessourceText, SecondRessourceText;
+    public TMP_Text HealthText, MainRessourceText;
     public Image fogOverlay;
     [HideInInspector] public bool hasBeenSeen = false;
     private bool currentlyVisible = true;
@@ -22,7 +22,6 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
         HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
-        SecondRessourceText.text = player.secondRessourceAvailable.ToString();
     }
 
     public void TakeDamage(int amount, int healthAfter)

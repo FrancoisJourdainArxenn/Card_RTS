@@ -11,7 +11,7 @@ public class TurnManager : MonoBehaviour
 {
     public static event System.Action OnRoundStart;
 
-    public int initdraw = 5;
+    public int initdraw = 4;
     [SerializeField] private float effectSequenceDelay = 1.5f;
     public float EffectSequenceDelay => effectSequenceDelay;
 
@@ -21,7 +21,7 @@ public class TurnManager : MonoBehaviour
 
     public TMP_Text phaseText;
 
-    private RopeTimer timer;
+    // private RopeTimer timer;
     private TurnPhases currentPhase = TurnPhases.Command;
     private int currentRound = 1;
     private bool[] phaseReady;
@@ -35,7 +35,7 @@ public class TurnManager : MonoBehaviour
     {
         Instance = this;
         UpdatePhaseText();
-        timer = GetComponent<RopeTimer>();
+        // timer = GetComponent<RopeTimer>();
 
     }
 
@@ -131,11 +131,11 @@ public class TurnManager : MonoBehaviour
             RegisterEndPhase(i);
     }
 
-    public void StopTheTimer()
-    {
-        if (timer != null)
-            timer.StopTimer();
-    }
+    // public void StopTheTimer()
+    // {
+    //     if (timer != null)
+    //         timer.StopTimer();
+    // }
 
     public bool HasPlayerRegisteredEndPhase(int participantIndex)
     {
@@ -270,8 +270,8 @@ public class TurnManager : MonoBehaviour
 
     void AdvancePhaseWhenAllReady()
     {
-        if (timer != null)
-            timer.StopTimer();
+        // if (timer != null)
+        //     timer.StopTimer();
 
         bool roundEnded = currentPhase == TurnPhases.Battle;
 
@@ -353,13 +353,13 @@ public class TurnManager : MonoBehaviour
 
         UpdatePhaseText();
 
-        if (timer != null)
-        {
-            timer.StopTimer();
-            bool timerPhase = phase == TurnPhases.Command || phase == TurnPhases.Battle;
-            if (timerPhase)
-                timer.StartTimer();
-        }
+        // if (timer != null)
+        // {
+        //     timer.StopTimer();
+        //     bool timerPhase = phase == TurnPhases.Command || phase == TurnPhases.Battle;
+        //     if (timerPhase)
+        //         timer.StartTimer();
+        // }
 
 
         switch (phase)

@@ -14,7 +14,6 @@ public class NeutralBaseVisual : MonoBehaviour {
     public AreaPosition owner;
     public TMP_Text BaseCostText;
     public TMP_Text MainRessourceIncomeText;
-    public TMP_Text SecondRessourceIncomeText;
     public GameObject Glow;
     public Transform baseParent;
 
@@ -54,14 +53,13 @@ public class NeutralBaseVisual : MonoBehaviour {
     {
         BaseCostText.text = baseAsset.mainRessourceBaseCost.ToString();
         MainRessourceIncomeText.text = baseAsset.mainRessourceIncome.ToString();
-        SecondRessourceIncomeText.text = baseAsset.secondRessourceIncome.ToString();
     }
 
     void OnMouseEnter()
     {
         if (BuildingShopVisual.IsOpen) return;
         localPlayer = GlobalSettings.Instance.localPlayer;
-        bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost && localPlayer.SecondRessourceAvailable >= baseAsset.secondRessourceBaseCost;
+        bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
         Glow.SetActive(true);
     }

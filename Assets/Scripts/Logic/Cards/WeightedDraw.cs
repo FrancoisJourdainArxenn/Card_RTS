@@ -9,7 +9,6 @@ public static class WeightedDraw
         Dictionary<CardAsset, int> timesDrawn,
         int cachedN1, int cachedN2, int cachedN3,
         int mainIncome,
-        int secondIncome,
         int seed,
         WeightedDrawConfig config,
         string playerTag = "?")
@@ -18,7 +17,7 @@ public static class WeightedDraw
         System.Random rng = new System.Random(seed);
 
         // Phase 1 — Sélection du tier
-        float I = mainIncome + secondIncome * config.multiplicateur;
+        float I = mainIncome;
         float ratio = Mathf.Clamp01((I - config.I_min) / (float)(config.I_max - config.I_min));
         int nTotal = pool.Count;
 
@@ -42,7 +41,7 @@ public static class WeightedDraw
         //    $"[WeightedDraw|{playerTag}] seed={seed}\n" +
         //    $"  Config early T1/T2/T3={config.T1_early:F2}/{config.T2_early:F2}/{config.T3_early:F2}  " +
         //    $"late T1/T2/T3={config.T1_late:F2}/{config.T2_late:F2}/{config.T3_late:F2}\n" +
-        //    $"  Income: I={mainIncome}+({secondIncome}×{config.multiplicateur})={I:F1} | " +
+        //    $"  Income: I={mainIncome}={I:F1} | " +
         //    $"ratio={ratio:F2} (I_min={config.I_min} I_max={config.I_max})\n" +
         //    $"  Pool: N1={cachedN1} N2={cachedN2} N3={cachedN3} NTotal={nTotal}\n" +
         //    $"  Poids bruts: T1={wT1:F3} T2={wT2:F3} T3={wT3:F3} Σ={totalTier:F3}\n" +

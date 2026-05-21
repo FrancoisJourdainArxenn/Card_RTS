@@ -26,7 +26,6 @@ public class CardLogic: IIdentifiable
     }
 
     public int MainCost{ get; set; }
-    public int SecondCost{ get; set; }       
     public bool CanBePlayed
     {
         get
@@ -40,7 +39,7 @@ public class CardLogic: IIdentifiable
             /*if (ca.MaxHealth > 0)
                 fieldNotFull = (owner.table.CreaturesOnTable.Count < 7);*/
             //Debug.Log("Card: " + ca.name + " has params: ownersTurn=" + ownersTurn + "fieldNotFull=" + fieldNotFull + " hasMana=" + (CurrentManaCost <= owner.ManaLeft));
-            return ownersTurn && fieldNotFull && (MainCost <= owner.MainRessourceAvailable) && (SecondCost <= owner.SecondRessourceAvailable);
+            return ownersTurn && fieldNotFull && (MainCost <= owner.MainRessourceAvailable);
         }
     }
 
@@ -53,7 +52,6 @@ public class CardLogic: IIdentifiable
         UniqueCardID = networkID != -1 ? networkID : IDFactory.GetUniqueID();
         //UniqueCardID = IDFactory.GetUniqueID();
         MainCost = ca.MainCost;
-        SecondCost = ca.SecondCost;
         // if (ca.Effects != null && ca.Effects.Count > 0)
         //     EffectProcessor.RegisterCreatureEffects(this, ca);
         // add this card to a dictionary with its ID as a key
@@ -64,7 +62,6 @@ public class CardLogic: IIdentifiable
     public void ResetCosts()
     {
         MainCost = ca.MainCost;
-        SecondCost = ca.SecondCost;
     }
 
 }

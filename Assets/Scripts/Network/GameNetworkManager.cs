@@ -262,20 +262,18 @@ public class GameNetworkManager : NetworkBehaviour
         int playerCount = Player.Players.Length;
         int[] playerHealths   = new int[playerCount];
         int[] playerMainRes   = new int[playerCount];
-        int[] playerSecondRes = new int[playerCount];
 
         for (int i = 0; i < playerCount; i++)
         {
             playerHealths[i]   = Player.Players[i].Health;
             playerMainRes[i]   = Player.Players[i].mainRessourceAvailable;
-            playerSecondRes[i] = Player.Players[i].secondRessourceAvailable;
         }
 
         SyncFullGameStateClientRpc(
             creatureIDList.ToArray(), creatureHealthList.ToArray(),
             creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
             baseIDList.ToArray(), baseHealthList.ToArray(),
-            playerHealths, playerMainRes, playerSecondRes);
+            playerHealths, playerMainRes);
     }
 
     /// <summary>
@@ -289,7 +287,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
         int[] baseIDs,       int[] baseHealths,
-        int[] playerHealths, int[] playerMainRes,   int[] playerSecondRes)
+        int[] playerHealths, int[] playerMainRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
 
@@ -340,11 +338,6 @@ public class GameNetworkManager : NetworkBehaviour
             {
                 Debug.LogError($"[Desync] Joueur {i} : ressource principale locale={player.mainRessourceAvailable}, serveur={playerMainRes[i]}. Correction appliquée.");
                 player.mainRessourceAvailable = playerMainRes[i];
-            }
-            if (player.secondRessourceAvailable != playerSecondRes[i])
-            {
-                Debug.LogError($"[Desync] Joueur {i} : ressource secondaire locale={player.secondRessourceAvailable}, serveur={playerSecondRes[i]}. Correction appliquée.");
-                player.secondRessourceAvailable = playerSecondRes[i];
             }
         }
     }

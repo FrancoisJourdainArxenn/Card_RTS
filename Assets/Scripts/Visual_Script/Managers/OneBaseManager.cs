@@ -10,7 +10,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     [Header("Text Component References")]
 
     public TMP_Text MainRessourceIncome;
-    public TMP_Text SecondRessourceIncome;
     public TMP_Text HealthText;
 
     [Header("Image References")]
@@ -94,7 +93,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         CurrentHealth = baseAsset.MaxHealth;
         HealthText.text = CurrentHealth.ToString();
         MainRessourceIncome.text = "+ " + baseAsset.mainRessourceIncome.ToString();
-        SecondRessourceIncome.text = "+ " + baseAsset.secondRessourceIncome.ToString();
         ArtImage.sprite = baseAsset.BaseImage;
     }
 

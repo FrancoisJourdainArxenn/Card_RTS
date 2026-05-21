@@ -15,7 +15,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public TMP_Text NameText;
     public TMP_Text subType;
     public TMP_Text MainCostText;
-    public TMP_Text SecondCostText;
     public TMP_Text DescriptionText;
     public TMP_Text HealthText;
     public TMP_Text AttackText;
@@ -60,7 +59,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         NameText.text = string.IsNullOrEmpty(cardAsset.Name) ? cardAsset.name : cardAsset.Name;
         MainCostText.text = cardAsset.MainCost.ToString();
-        SecondCostText.text = cardAsset.SecondCost.ToString();
         subType.text = cardAsset.subType.ToString();
         // 4) add description
         DescriptionText.text = cardAsset.Description.ToString();
