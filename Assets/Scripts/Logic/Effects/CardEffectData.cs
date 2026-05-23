@@ -9,8 +9,6 @@ public class CardEffectData
     public TriggerType Trigger;
     public ConditionSO Condition;
     public EffectInfo Effectinfo;
-    public EffectParameters Parameters;
-    public EffectVisualData VisualData;
 
     public bool RequiresPlayerInput
     {

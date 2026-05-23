@@ -8,7 +8,6 @@ public abstract class HealthEffectSO : EffectSO
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters,
         EffectVisualData visualData
     )
     {
@@ -20,7 +19,7 @@ public abstract class HealthEffectSO : EffectSO
             return;
         }
 
-        Log($"{EffectName}: {parameters.Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
-        ApplyEffect(effectInfo, affectedElements, parameters, visualData);
+        Log($"{EffectName}: {Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
+        ApplyEffect(effectInfo, affectedElements, visualData);
     }
 }
