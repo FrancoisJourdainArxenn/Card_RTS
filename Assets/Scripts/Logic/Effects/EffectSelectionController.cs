@@ -109,7 +109,7 @@ public static class EffectSelectionController
 
             bool eligible = sel.EligibleTargets.Contains(player)
                          || (homeBase != null && sel.EligibleTargets.Contains(homeBase));
-            bool selected = sel.SelectedTarget == player
+            bool selected = (UnityEngine.Object)sel.SelectedTarget == player
                          || (homeBase != null && sel.SelectedTarget == homeBase);
 
             IDHolder.GetGameObjectWithID(player.ID)

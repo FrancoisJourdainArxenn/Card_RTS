@@ -294,15 +294,13 @@ public class Player : MonoBehaviour, ILivable
 
         if (visualData?.vfxPrefab != null)
         {
-            SameDistanceChildren rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
                 ? targetArea.tableVisual.meleeSlots
                 : targetArea.tableVisual.rangedSlots;
-            int slotCount = rowSlots.Children.Length;
-            int newCount  = rowLocalPos + 1;
-            int firstSlot = (slotCount - newCount) / 2;
-            int lastSlot  = firstSlot + newCount - 1;
-            int finalSlot = Mathf.Clamp(lastSlot - rowLocalPos, 0, slotCount - 1);
-            Vector3 spawnPos = rowSlots.Children[finalSlot].transform.position;
+            int currentCount = tokenIsMelee
+                ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+            Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
             new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
         }
