@@ -10,14 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
-  m_Name: ModifyStatsSO
+  m_Name: Temp-1-1
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: 
-  visualData:
+  Description: Gives -1/-1 until end of turn
+  EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
     overlayMaterial: {fileID: 0}
-    overlayDuration: 0
-    vfxLifetime: 1
-    AttackDuration: 0.3
-    showAmount: 1
-    textColor: {r: 0.4625756, g: 0.79275066, b: 0.990566, a: 1}
+    OverrideOverlayDuration: 0
+  AttackBonus: 1
+  HealthBonus: 1
+  IsTempEffect: 1
+  RevertVisual:
+    vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0

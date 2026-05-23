@@ -10,14 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ba65a4c06dcef6840ae87ed7521aa844, type: 3}
-  m_Name: DealDamageSO
+  m_Name: Deal2Damage
   m_EditorClassIdentifier: Assembly-CSharp::DealDamageSO
-  Description: 
-  visualData:
-    vfxPrefab: {fileID: 0}
+  Description: Deal 2 Damage
+  EffectVisual:
+    vfxPrefab: {fileID: 8646957825748758392, guid: afc8478b569702e45ab4a99deae60d06, type: 3}
     overlayMaterial: {fileID: 0}
-    overlayDuration: 0
-    vfxLifetime: 0
-    AttackDuration: 0.1
-    showAmount: 1
-    textColor: {r: 1, g: 0, b: 0, a: 1}
+    OverrideOverlayDuration: 0
+  Damage: 2

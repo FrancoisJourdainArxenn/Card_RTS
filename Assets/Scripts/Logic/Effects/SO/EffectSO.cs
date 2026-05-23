@@ -5,8 +5,10 @@ using UnityEngine;
 public abstract class EffectSO : ScriptableObject
 {
     public string Description = "";
+    public EffectVisualData EffectVisual;
     protected int _sourceID = -1;
     virtual public EffectPriority Priority => EffectPriority.DrawCards;
+    protected virtual int Amount => 0;
     private static System.Random _networkRng;
     internal static void SetNetworkRng(System.Random rng) => _networkRng = rng;
     internal static void ClearNetworkRng() => _networkRng = null;
@@ -25,10 +27,9 @@ public abstract class EffectSO : ScriptableObject
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters,
         EffectVisualData visualData
     );
-    
+
     public List<IIdentifiable> GetAffectedElements(EffectContext context, EffectInfo effectInfo)
     {
         List<IIdentifiable> eligibleAffectedElements = new();
@@ -56,19 +57,26 @@ public abstract class EffectSO : ScriptableObject
         return affectedElements.Distinct().ToList();
     }
 
-    public void ApplyEffect(EffectInfo effectInfo, List<IIdentifiable> affectedElements, EffectParameters parameters, EffectVisualData visualData)
+    public void ApplyEffect(EffectInfo effectInfo, List<IIdentifiable> affectedElements, EffectVisualData visualData)
     {
         switch (effectInfo.repartition)
         {
             case EffectRepartition.Uniform:
                 foreach (ILivable target in affectedElements.Cast<ILivable>())
-                    ApplyToTarget(target, parameters.Amount, visualData);
+                {
+                    ApplyToTarget(target, visualData);
+                    if (this is IRevertable r && r.IsTemporary)
+                    {
+                        ILivable t = target;
+                        TempEffectTracker.Register(t.ID, () => r.Revert(t));
+                    }
+                }
                 break;
 
             case EffectRepartition.Random:
             {
                 List<EffectTarget> repartition = BuildTargets(affectedElements);
-                DistributeRandomly(parameters.Amount, repartition, new());
+                DistributeRandomly(Amount, repartition, new());
                 Log($"Random repartition — {string.Join(", ", repartition.Select(t => string.Join(" : ", t.target.DisplayName, t.amount)))}");
                 ApplyAll(repartition, visualData);
                 break;
@@ -80,14 +88,15 @@ public abstract class EffectSO : ScriptableObject
                 List<EffectTarget> meleePool = repartition.Where(dt => dt.target.IsMelee).ToList();
                 List<EffectTarget> primaryPool = meleePool.Count > 0 ? meleePool : repartition;
                 List<EffectTarget> fallbackPool = meleePool.Count > 0 ? repartition.Except(meleePool).ToList() : new();
-                DistributeRandomly(parameters.Amount, primaryPool, fallbackPool);
+                DistributeRandomly(Amount, primaryPool, fallbackPool);
                 Log($"RandomMeleeFirst repartition — {string.Join(", ", repartition.Select(t => string.Join(" : ", t.target.DisplayName, t.amount)))}");
                 ApplyAll(repartition, visualData);
                 break;
             }
         }
     }
-    protected abstract void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData);
+
+    protected abstract void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null);
     protected abstract bool IsTargetSaturated(EffectTarget target);
 
     List<EffectTarget> BuildTargets(List<IIdentifiable> elements) =>
@@ -116,14 +125,20 @@ public abstract class EffectSO : ScriptableObject
 
     void ApplyAll(List<EffectTarget> repartition, EffectVisualData visualData)
     {
-        foreach (EffectTarget dt in repartition)
+        foreach (EffectTarget et in repartition)
         {
-            if (dt.amount == 0) continue;
-            ApplyToTarget(dt.target, dt.amount, visualData);
+            if (et.amount == 0) continue;
+            ApplyToTarget(et.target, visualData, et.amount);
+            if (this is IRevertable r && r.IsTemporary)
+            {
+                ILivable t = et.target;
+                int amt = et.amount;
+                TempEffectTracker.Register(t.ID, () => r.Revert(t, amt));
+            }
         }
     }
 
-    public virtual string GetDescription(EffectParameters parameters) => Description;
+    public virtual string GetDescription() => Description;
 
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
