@@ -309,7 +309,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void HighlightReachableAreas()
     {
-        Debug.Log($"[Highlight] Phase={TurnManager.Instance.CurrentPhase}, originArea={originArea?.name ?? "NULL"}, parentZone={originArea?.parentZone?.name ?? "NULL"}, PAreas={playerOwner.PAreas?.Length}");
+        // Debug.Log($"[Highlight] Phase={TurnManager.Instance.CurrentPhase}, originArea={originArea?.name ?? "NULL"}, parentZone={originArea?.parentZone?.name ?? "NULL"}, PAreas={playerOwner.PAreas?.Length}");
 
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
             return;

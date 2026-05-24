@@ -53,7 +53,7 @@ public class TurnManager : MonoBehaviour
         EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
         {
-            Debug.LogError("TurnManager: need at least 2 Player instances.");
+            // Debug.LogError("TurnManager: need at least 2 Player instances.");
             return;
         }
 
@@ -84,7 +84,7 @@ public class TurnManager : MonoBehaviour
                 p.deck.cards.Shuffle();
                 p.deck.ResetTimesDrawn();
             }
-            Debug.Log("TurnManager: Deck shuffled with random seed");
+            // Debug.Log("TurnManager: Deck shuffled with random seed");
         }
 
         CardLogic.CardsCreatedThisGame.Clear();
@@ -168,7 +168,7 @@ public class TurnManager : MonoBehaviour
             (player == null || PhaseEffectPipeline.IsPlayerTargetingComplete(player));
         bool routeToConfirm = currentPhase == TurnPhases.BeginCombat || (!PhaseEffectPipeline.IsComplete && !playerTargetingDone);
 
-        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
+        // Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
 
         if (routeToConfirm)
         {
@@ -287,7 +287,7 @@ public class TurnManager : MonoBehaviour
 
 
         int newRound = roundEnded ? currentRound + 1 : currentRound;
-        Debug.Log($"[TurnMgr] AdvancePhaseWhenAllReady — {currentPhase} → {next} (round {currentRound} → {newRound})");
+        // Debug.Log($"[TurnMgr] AdvancePhaseWhenAllReady — {currentPhase} → {next} (round {currentRound} → {newRound})");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -345,7 +345,7 @@ public class TurnManager : MonoBehaviour
 
     public void EnterPhase(TurnPhases phase)
     {
-        Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
+        // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();

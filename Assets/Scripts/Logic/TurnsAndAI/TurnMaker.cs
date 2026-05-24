@@ -25,7 +25,7 @@ public abstract class TurnMaker : MonoBehaviour {
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
 
-        Debug.Log($"[TurnMaker] OnRegroupPhaseStart — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
+        // Debug.Log($"[TurnMaker] OnRegroupPhaseStart — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
 
         // StartSession before the draw: on the host, BroadCastDrawCard calls DrawAcardClientRpc
         // synchronously, so effects must be collected and submitted before the draw could
@@ -53,7 +53,7 @@ public abstract class TurnMaker : MonoBehaviour {
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
 
-        Debug.Log($"[TurnMaker] OnCommandPhaseEntered — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
+        // Debug.Log($"[TurnMaker] OnCommandPhaseEntered — joueur: {p.name} | isLocalPlayer: {isLocalPlayer} | StartSession: {isLocalPlayer}");
 
         if (isLocalPlayer)
             PhaseEffectPipeline.StartSession(p, TriggerType.OnCommand);

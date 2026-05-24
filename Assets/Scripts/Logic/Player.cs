@@ -529,7 +529,7 @@ public class Player : MonoBehaviour, ILivable
             OneCardManager cardManager = CheckCardManager(g);
             if (cardManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
                 continue;
             }
             bool affordable = (cl.MainCost <= mainRessourceAvailable);
@@ -546,7 +546,7 @@ public class Player : MonoBehaviour, ILivable
             OneCreatureManager creatureManager = CheckCreatureManager(g);
             if (creatureManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
                 continue;
             }
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
@@ -755,7 +755,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void ShowBuildings(BuildSpotVisual spot)
     {
-        Debug.Log("Show Buildings for player " + PlayerID);
+        // Debug.Log("Show Buildings for player " + PlayerID);
         GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
     }
 

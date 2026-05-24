@@ -38,7 +38,8 @@ public class Command
     public static void PlayFirstCommandFromQueue()
     {
         playingQueue = true;
-        CommandQueue.Dequeue().StartCommandExecution();
+        Command next = CommandQueue.Dequeue();
+        next.StartCommandExecution();
     }
 
     public static bool CardDrawPending()
