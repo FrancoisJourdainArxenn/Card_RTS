@@ -1669,10 +1669,10 @@ MonoBehaviour:
   buildingShop: {fileID: 2037853854}
   TopColor:
     serializedVersion: 2
-    rgba: 4294135039
+    rgba: 435375359
   LowColor:
     serializedVersion: 2
-    rgba: 4294952782
+    rgba: 436193102
   NeutralColor:
     serializedVersion: 2
     rgba: 4287993237

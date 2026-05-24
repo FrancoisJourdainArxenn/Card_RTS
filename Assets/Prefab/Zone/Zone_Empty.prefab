@@ -58,15 +58,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.29699183, g: 0.67248446, b: 0.8867924, a: 0.392}
-  m_RaycastTarget: 1
+  m_Color: {r: 0.29699183, g: 0.67248446, b: 0.8867924, a: 0.09803922}
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1071940056, guid: 393433a301be3cf4baf59187b119fcc6, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: ff7d2a31a9a2fb644bb74af739a9de39, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -980,7 +980,6 @@ Transform:
   - {fileID: 187037439730835140}
   - {fileID: 4024336697706251302}
   - {fileID: 6616173186055545929}
-  - {fileID: 5257466129479817021}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5661353428602942678
@@ -1012,7 +1011,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4db468991de345b4e944a029fa9aa7d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZoneView
-  _targetableOverlay: {fileID: 8511046435742224383}
+  _targetableOverlay: {fileID: 0}
   subZones: []
 --- !u!114 &6620596188412820809
 MonoBehaviour:
@@ -1149,15 +1148,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6907912, g: 0.29803923, b: 0.8862745, a: 0.392}
-  m_RaycastTarget: 1
+  m_Color: {r: 0.6907912, g: 0.29803923, b: 0.8862745, a: 0.09803922}
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1071940056, guid: 393433a301be3cf4baf59187b119fcc6, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: ff7d2a31a9a2fb644bb74af739a9de39, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2607,126 +2606,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bea996202a20f944baf68538b8aeaa89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZoneCameraAnchor
-  _highlightRoot: {fileID: 9069000663028659898}
---- !u!1001 &7532455997902404471
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 3499865976678205738}
-    m_Modifications:
-    - target: {fileID: 1536634432094555597, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_Name
-      value: _hightlighCanvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 1536634432094555597, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 8.0258
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 5.4837
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.457
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: -0.633
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0.01
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
---- !u!224 &5257466129479817021 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 2341569735334915146, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-  m_PrefabInstance: {fileID: 7532455997902404471}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &8511046435742224383 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2203922067407942792, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-  m_PrefabInstance: {fileID: 7532455997902404471}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!1 &9069000663028659898 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1536634432094555597, guid: 2a6946f73ca572a42b6f93e1457d7ddc, type: 3}
-  m_PrefabInstance: {fileID: 7532455997902404471}
-  m_PrefabAsset: {fileID: 0}
+  _highlightRoot: {fileID: 0}

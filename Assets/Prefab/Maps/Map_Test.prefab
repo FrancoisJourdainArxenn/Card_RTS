@@ -124,7 +124,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.y
@@ -453,7 +453,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1387655209847121475, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -1.07
       objectReference: {fileID: 0}
     - target: {fileID: 1387655209847121475, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: m_LocalPosition.y
@@ -552,10 +552,6 @@ PrefabInstance:
       value: 0.00000023776033
       objectReference: {fileID: 0}
     - target: {fileID: 6540294979739961604, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
-      propertyPath: _targetableOverlay
-      value: 
-      objectReference: {fileID: 6658715697409552684}
-    - target: {fileID: 6540294979739961604, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: adjacentZones.Array.size
       value: 3
       objectReference: {fileID: 0}
@@ -627,17 +623,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1387655209847121475, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
   m_PrefabInstance: {fileID: 3455879226832064794}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6658715697409552684 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8330882494825226294, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
-  m_PrefabInstance: {fileID: 3455879226832064794}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!114 &8446066214560716830 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6540294979739961604, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
@@ -866,7 +851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3380216749849222320, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -1.03
       objectReference: {fileID: 0}
     - target: {fileID: 3380216749849222320, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1246,7 +1231,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 18.85
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1494,7 +1479,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -16.27
+      value: -17
       objectReference: {fileID: 0}
     - target: {fileID: 1887390295257745736, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.y
