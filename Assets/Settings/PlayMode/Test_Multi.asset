@@ -23,30 +23,19 @@ MonoBehaviour:
     m_Role: 3
     m_PlayerTag: 
     m_InitialScene: {fileID: 102900000, guid: 00047c52bab551145a67880529957153, type: 3}
-  m_EditorInstances: []
-  m_LocalInstances:
-  - Name: Player2
-    <CorrespondingNodeId>k__BackingField: Player2 - Run
+  m_EditorInstances:
+  - Name: Player 2
+    <CorrespondingNodeId>k__BackingField: Player 2|1_run
     m_Nodes:
-    - Player2 - Build
-    - Player2 - Run
-    m_BuildProfile: {fileID: 11400000, guid: 1ab8125d39d26544cb3c0d549d7498c4, type: 2}
-    m_ServerSettings:
-      DeployMode: 0
-      SimulatorSettings:
-        AutoAllocate: 1
-      CliSettings:
-        UseDefaultArguments: 1
-        Port: 7777
-        QueryProtocol: 0
-        QueryPort: 20000
-    advancedConfiguration:
-      m_StreamLogsToMainEditor: 1
-      m_LogsColor: {r: 0.3643, g: 0.581, b: 0.8679, a: 1}
-      m_LocalArguments: -screen-fullscreen 0 -screen-width 1024 -screen-height 720
-      m_SimulatedArguments: 
-      m_DeviceID: 
-      m_DeviceName: 
+    - Player 2|1_run
+    - Player 2|1_deploy
+    m_Role: 1
+    m_PlayerTag: 
+    m_InitialScene: {fileID: 0}
+    m_AdvancedConfiguration:
+      StreamLogsToMainEditor: 0
+      LogsColor: {r: 0.3643, g: 0.581, b: 0.8679, a: 1}
+  m_LocalInstances: []
   m_RemoteInstances: []
   m_MainEditorInstanceObsolete:
     rid: -2
