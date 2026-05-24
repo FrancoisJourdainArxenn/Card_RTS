@@ -373,6 +373,7 @@ public class TurnManager : MonoBehaviour
                 break;
             case TurnPhases.Command:
                 // new ShowMessageCommand("Command", 1.5f).AddToQueue();
+                CommandMoveTracker.Clear();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;

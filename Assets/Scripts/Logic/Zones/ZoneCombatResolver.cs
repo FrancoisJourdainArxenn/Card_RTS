@@ -234,7 +234,7 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             if (!t.IsMelee || IsEffectivelyDead(t)) continue;
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
-            int assign = Mathf.Min(dmg, t.Health - existing);
+            int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
             if (!attacker.isBuilding)
             {
@@ -255,7 +255,7 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             if (t.IsMelee || IsEffectivelyDead(t)) continue;
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
-            int assign = Mathf.Min(dmg, t.Health - existing);
+            int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
             if (!attacker.isBuilding)
             {
@@ -299,23 +299,36 @@ public class ZoneCombatResolver : MonoBehaviour
                 case TargetKind.Creature:
                 {
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out var target)) continue;
-                    int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
+                    CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out var attackerCreature);
+
+                    int shieldAbsorbed = Mathf.Min(step.damage, target.ShieldValue);
+                    int effectiveDamage = step.damage - shieldAbsorbed;
+                    int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
+                    Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield: {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
+
                     int counterDamage = step.attackerIsBuilding ? 0 : target.Attack;
-                    int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
+                    int attackerShieldAbsorbed = (!step.attackerIsBuilding && attackerCreature != null)
+                        ? Mathf.Min(counterDamage, attackerCreature.ShieldValue) : 0;
+                    int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
+                    int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
+                    Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
+
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
                     else
                         new BuildingAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
+
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
                     else
-                        target.Health = targetHealthAfter;
-                    if (!step.attackerIsBuilding && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out var attackerCreature))
+                        target.Health -= step.damage;
+
+                    if (!step.attackerIsBuilding && attackerCreature != null)
                     {
                         if (attackerHealthAfter <= 0)
                             attackerCreature.ScheduleBattleDeath();
                         else
-                            attackerCreature.Health = attackerHealthAfter;
+                            attackerCreature.Health -= counterDamage;
                     }
                     break;
                 }
@@ -384,7 +397,9 @@ public class ZoneCombatResolver : MonoBehaviour
     bool IsEffectivelyDead(CreatureLogic c)
     {
         if (c.IsPendingDeath) return true;
-        return pendingDamage.TryGetValue(c.UniqueCreatureID, out int d) && d >= c.Health;
+        if (!pendingDamage.TryGetValue(c.UniqueCreatureID, out int d)) return false;
+        int effectiveDamage = Mathf.Max(0, d - c.ShieldValue);
+        return effectiveDamage >= c.Health;
     }
 
     bool IsEffectivelyDeadBuilding(BuildingLogic b)
@@ -441,11 +456,14 @@ public class ZoneCombatResolver : MonoBehaviour
 
     public static bool WouldSurvive(CreatureLogic creature)
     {
-        if (creature.IsPendingDeath) 
+        if (creature.IsPendingDeath)
             return false;
         foreach (ZoneCombatResolver r in allResolvers)
             if (r.pendingDamage.TryGetValue(creature.UniqueCreatureID, out int dmg))
-                return dmg < creature.Health;
+            {
+                int effectiveDamage = Mathf.Max(0, dmg - creature.ShieldValue);
+                return effectiveDamage < creature.Health;
+            }
         return true; // no pending damage → survives
     }
     public int GetRemainingPool(AreaPosition attackerSide)

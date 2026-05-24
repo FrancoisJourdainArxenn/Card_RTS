@@ -14,7 +14,17 @@ public class Player : MonoBehaviour, ILivable
     public BaseAsset baseAsset;
     public List<BaseAsset> controlledBaseAssets = new List<BaseAsset>();
 
-    public List<BaseLogic> controlledBases => BaseLogic.BasesCreatedThisGame.Values.Where(b => b.owner == this).ToList();
+    private readonly List<BaseLogic> _controlledBasesCache = new List<BaseLogic>();
+    public List<BaseLogic> controlledBases
+    {
+        get
+        {
+            _controlledBasesCache.Clear();
+            foreach (BaseLogic b in BaseLogic.BasesCreatedThisGame.Values)
+                if (b.owner == this) _controlledBasesCache.Add(b);
+            return _controlledBasesCache;
+        }
+    }
     // a script with references to all the visual game objects for this player
     [HideInInspector] public PlayerArea[] PAreas;
     [HideInInspector] public PlayerArea MainPArea = null;

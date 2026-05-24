@@ -54,6 +54,8 @@ Build.zip
 
 # Packed Addressables
 [Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+Packages/com.unity.shadergraph/
+
 
 # Temporary auto-generated Android assets
 [Aa]ssets/[Ss]treamingAssets/aa.meta
