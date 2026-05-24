@@ -2498,7 +2498,6 @@ MonoBehaviour:
   - {fileID: 81255659}
   - {fileID: 978454958}
   - {fileID: 1507902514}
-  distanceModifier: 1
 --- !u!1 &675442733
 GameObject:
   m_ObjectHideFlags: 0
@@ -4417,7 +4416,6 @@ MonoBehaviour:
   - {fileID: 620230358}
   - {fileID: 1840644942}
   - {fileID: 1927632671}
-  distanceModifier: 1.5
 --- !u!114 &1438455306
 MonoBehaviour:
   m_ObjectHideFlags: 0

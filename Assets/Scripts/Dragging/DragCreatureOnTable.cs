@@ -58,12 +58,7 @@ public class DragCreatureOnTable : DraggingActions {
         {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool isMelee = manager.cardAsset.melee;
-            float dropDepth = selectedPArea.tableVisual.GetRowWorldZ(isMelee) - Camera.main.transform.position.z;
-            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(
-                Camera.main.ScreenToWorldPoint(new Vector3(
-                    Input.mousePosition.x, Input.mousePosition.y, dropDepth)).x,
-                isMelee
-            );
+            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
 
 
             if (NetworkSessionData.IsNetworkSession)
@@ -133,10 +128,7 @@ public class DragCreatureOnTable : DraggingActions {
         }
 
         bool isMelee = manager.cardAsset.melee;
-        float depth = selectedPArea.tableVisual.GetRowWorldZ(isMelee) - Camera.main.transform.position.z;
-        float worldX = Camera.main.ScreenToWorldPoint(new Vector3(
-            Input.mousePosition.x, Input.mousePosition.y, depth)).x;
-        int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(worldX, isMelee);
+        int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
 
         if (_previewTable != selectedPArea.tableVisual)
         {

@@ -45,10 +45,10 @@ public class TokenGenerationSO : EffectSO
             int baseTablePos = tokenIsMelee
                 ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
                 : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-            SameDistanceChildren rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
                 ? targetArea.tableVisual.meleeSlots
                 : targetArea.tableVisual.rangedSlots;
-            int maxSlots = rowSlots.Children.Length;
+            int maxSlots = rowSlots.MaxCreatures;
 
             for (int i = 0; i < parameters.Amount; i++)
             {
@@ -114,10 +114,10 @@ public class TokenGenerationSO : EffectSO
         int currentCount  = tokenIsMelee
             ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
             : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-        SameDistanceChildren rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+        CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
             ? targetArea.tableVisual.meleeSlots
             : targetArea.tableVisual.rangedSlots;
-        int maxSlots = rowSlots.Children.Length;
+        int maxSlots = rowSlots.MaxCreatures;
         if (currentCount >= maxSlots)
         {
             Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{maxSlots}), token annulé.");
@@ -137,10 +137,7 @@ public class TokenGenerationSO : EffectSO
         if (visualData?.vfxPrefab != null)
         {
             int newCount     = currentCount + 1;
-            int firstSlot    = (maxSlots - newCount) / 2;
-            int lastSlot     = firstSlot + newCount - 1;
-            int finalSlot    = Mathf.Clamp(lastSlot - currentCount, 0, maxSlots - 1);
-            Vector3 spawnPos = rowSlots.Children[finalSlot].transform.position;
+            Vector3 spawnPos = rowSlots.GetSlotPosition(currentCount, newCount);
             new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
         }
