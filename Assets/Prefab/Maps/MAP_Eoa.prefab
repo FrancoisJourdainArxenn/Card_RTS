@@ -96,7 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eebbe3945ec0d2646a07f29eb7c1ba71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  cameraHeight: 80
+  cameraHeight: 125
   TopPlayerBaseSpawn: {fileID: 7067249552659723688}
   LowPlayerBaseSpawn: {fileID: 4856724553749249042}
   NeutralBases: []

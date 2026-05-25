@@ -2273,7 +2273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfc4e325c203faa45a8983bbb2dab8e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  defaultMapPrefab: {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
+  defaultMapPrefab: {fileID: 7898641444668022876, guid: 89d18ee66ddbde540b058b33279adc8b, type: 3}
   mapPrefabs:
   - {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
   - {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
@@ -3672,7 +3672,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4197838224
+  GlobalObjectIdHash: 3322999580
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1

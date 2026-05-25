@@ -197,6 +197,11 @@ public class ZoneCombatResolver : MonoBehaviour
                 pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
                 pendingDamage[attacker.id] = attackerExisting + t.Attack;
             }
+            else
+            {
+                pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
+            }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
         foreach (var b in buildings)
@@ -217,6 +222,11 @@ public class ZoneCombatResolver : MonoBehaviour
             {
                 pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
                 pendingDamage[attacker.id] = attackerExisting + t.Attack;
+            }
+            else
+            {
+                pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
@@ -264,7 +274,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
                     // Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield: {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
 
-                    int counterDamage = step.attackerIsBuilding ? 0 : target.Attack;
+                    int counterDamage = target.Attack;
                     int attackerShieldAbsorbed = (!step.attackerIsBuilding && attackerCreature != null)
                         ? Mathf.Min(counterDamage, attackerCreature.ShieldValue) : 0;
                     int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
@@ -274,7 +284,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
                     else
-                        new BuildingAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
+                        new BuildingAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
 
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
@@ -287,6 +297,17 @@ public class ZoneCombatResolver : MonoBehaviour
                             attackerCreature.ScheduleBattleDeath();
                         else
                             attackerCreature.Health -= counterDamage;
+                    }
+                    else if (step.attackerIsBuilding)
+                    {
+                        BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out var attackerBuilding);
+                        if (attackerBuilding != null)
+                        {
+                            if (attackerHealthAfter <= 0)
+                                attackerBuilding.Die();
+                            else
+                                attackerBuilding.Health = attackerHealthAfter;
+                        }
                     }
                     break;
                 }

@@ -49,6 +49,9 @@ public class GlobalSettings : MonoBehaviour
     public GameObject GameOverPanel;
     public TMP_Text localPlayerDebugText;
 
+    [Header("Debug")]
+    public bool UseDeferredMovesInSolo = false;
+
     public Dictionary<AreaPosition, Player> Players = new Dictionary<AreaPosition, Player>();
 
     public static GlobalSettings Instance;

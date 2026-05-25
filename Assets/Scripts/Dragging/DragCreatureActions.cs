@@ -41,6 +41,12 @@ public class DragCreatureActions : DraggingActions {
             if (idHolder != null)
                 GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
         }
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+        {
+            IDHolder idHolder = GetComponentInParent<IDHolder>();
+            if (idHolder != null)
+                TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
+        }
         manager.ClearPendingMoveArrow();
 
         originArea = playerOwner.SelectedPArea();
@@ -119,6 +125,11 @@ public class DragCreatureActions : DraggingActions {
         if (NetworkSessionData.IsNetworkSession)
         {
             GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
+            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+        }
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+        {
+            TurnManager.Instance.EnqueueSoloMove(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
         }
         else

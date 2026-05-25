@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eebbe3945ec0d2646a07f29eb7c1ba71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
-  cameraHeight: 50
+  cameraHeight: 60
   TopPlayerBaseSpawn: {fileID: 1987451544608039768}
   LowPlayerBaseSpawn: {fileID: 4574680140402810285}
   NeutralBases: []
@@ -173,6 +173,14 @@ PrefabInstance:
     - target: {fileID: 2799841252398099391, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3383772333042381237, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 3870124385662646789, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.76
       objectReference: {fileID: 0}
     - target: {fileID: 4400523747067436361, guid: b7aba7018a0df0e489db77a84bda0350, type: 3}
       propertyPath: m_LocalScale.x
@@ -461,7 +469,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1387655209847121475, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 14.97
+      value: 15.53
       objectReference: {fileID: 0}
     - target: {fileID: 1387655209847121475, guid: 7437d9c9e10fbb94698a84010218319d, type: 3}
       propertyPath: m_LocalRotation.w

@@ -1,4 +1,5 @@
 using UnityEngine;
+using DG.Tweening;
 
 public class BuildingAttackCommand : Command
 {
@@ -24,13 +25,32 @@ public class BuildingAttackCommand : Command
         GameObject attackerGO = IDHolder.GetGameObjectWithID(attackerID);
         GameObject targetGO = IDHolder.GetGameObjectWithID(targetID);
 
+        if (attackerGO == null || targetGO == null)
+        {
+            ApplyEffects(attackerGO, targetGO);
+            CommandExecutionComplete();
+            return;
+        }
+
+        attackerGO.transform.DOMove(targetGO.transform.position, 0.3f)
+            .SetLoops(2, LoopType.Yoyo)
+            .SetEase(Ease.InBack)
+            .SetLink(attackerGO)
+            .OnComplete(() =>
+            {
+                ApplyEffects(attackerGO, targetGO);
+                CommandExecutionComplete();
+            });
+    }
+
+    void ApplyEffects(GameObject attackerGO, GameObject targetGO)
+    {
         if (attackerGO != null)
         {
             if (damageTakenByAttacker > 0)
                 VisualFeedbackEffect.CreateDamageEffect(attackerGO.transform.position, damageTakenByAttacker);
-            OneBuildingManager attackerManager = attackerGO.GetComponent<OneBuildingManager>();
-            if (attackerManager != null)
-                attackerManager.HealthText.text = attackerHealthAfter.ToString();
+            if (attackerGO.GetComponent<OneBuildingManager>() is OneBuildingManager am)
+                am.HealthText.text = attackerHealthAfter.ToString();
         }
 
         if (targetGO != null)
@@ -39,13 +59,27 @@ public class BuildingAttackCommand : Command
                 VisualFeedbackEffect.CreateDamageEffect(targetGO.transform.position, damageTakenByTarget);
 
             if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID))
-                targetGO.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
+            {
+                if (targetGO.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
+                    bm.HealthText.text = targetHealthAfter.ToString();
+            }
             else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetID))
-                targetGO.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
+            {
+                if (targetGO.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
+                    cm.HealthText.text = targetHealthAfter.ToString();
+            }
             else if (BaseLogic.BasesCreatedThisGame.ContainsKey(targetID))
-                targetGO.GetComponent<OneBaseManager>().HealthText.text = targetHealthAfter.ToString();
+            {
+                if (targetGO.GetComponent<OneBaseManager>() is OneBaseManager om)
+                    om.HealthText.text = targetHealthAfter.ToString();
+            }
+            else
+            {
+                if (targetGO.GetComponent<MainBaseVisual>() is MainBaseVisual mbv)
+                    mbv.HealthText.text = targetHealthAfter.ToString();
+                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+            }
         }
-
-        CommandExecutionComplete();
     }
+
 }

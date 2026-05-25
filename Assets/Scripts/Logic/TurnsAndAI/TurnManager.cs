@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
@@ -25,6 +26,7 @@ public class TurnManager : MonoBehaviour
     private TurnPhases currentPhase = TurnPhases.Command;
     private int currentRound = 1;
     private bool[] phaseReady;
+    private readonly List<(int creatureUniqueID, int targetBaseID, int tablePos)> _soloMoveBuffer = new();
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -298,6 +300,8 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
+            if (currentPhase == TurnPhases.Command)
+                FlushSoloMoveBuffer();
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle;
             if (isCombatPhase)
@@ -555,6 +559,29 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         yield return StartCoroutine(DrainPendingDeaths());
         EnterPhase(TurnPhases.Regroup);
+    }
+
+    public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
+    {
+        _soloMoveBuffer.Add((creatureUniqueID, targetBaseID, tablePos));
+    }
+
+    public void CancelSoloMove(int creatureUniqueID)
+    {
+        _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
+    }
+
+    private void FlushSoloMoveBuffer()
+    {
+        foreach (var (id, baseID, pos) in _soloMoveBuffer)
+        {
+            GameObject creatureGO = IDHolder.GetGameObjectWithID(id);
+            if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+                ocm.ClearPendingMoveArrow();
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
+                creature.Move(baseID, pos);
+        }
+        _soloMoveBuffer.Clear();
     }
 
     IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)
