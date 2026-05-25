@@ -39,7 +39,7 @@ public class CreatureLogic: ILivable
                 int absorbed = Mathf.Min(damage, ShieldValue);
                 ShieldValue -= absorbed;
                 value = health - (damage - absorbed);
-                Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {damage} | Absorbés: {absorbed} | Shield restant: {ShieldValue} | PV: {health} → {value}");
+                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {damage} | Absorbés: {absorbed} | Shield restant: {ShieldValue} | PV: {health} → {value}");
                 var shieldVfx = IDHolder.GetGameObjectWithID(UniqueCreatureID)?.GetComponent<VfxManager>();
                 if (ShieldValue == 0)
                     shieldVfx?.HideShieldVfx();
@@ -48,7 +48,7 @@ public class CreatureLogic: ILivable
             }
             else if (value < health)
             {
-                Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {health - value} | Pas de shield | PV: {health} → {value}");
+                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {health - value} | Pas de shield | PV: {health} → {value}");
             }
 
             if (value > MaxHealth)
@@ -257,12 +257,13 @@ public class CreatureLogic: ILivable
 
     public void Move(int baseID, int tablePos)
     {
-        int sourceBaseID = BaseID;
+        ZoneLogic sourceZone = owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
         MovementsLeftThisTurn--;
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
-        CommandMoveTracker.RegisterMove(sourceBaseID, baseID, owner);
+        ZoneLogic destZone = owner.GetPlayerAreaByID(baseID)?.parentZone.Logic;
+        CommandMoveTracker.RegisterMove(sourceZone, destZone, owner);
     }
 
     public static void ProcessPendingDeaths()

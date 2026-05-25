@@ -1026,6 +1026,9 @@ MonoBehaviour:
   mapPrefabs:
   - {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
   - {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
+  - {fileID: 7898641444668022876, guid: 4ca2dc2bdb204e24d8ac5a3d663df506, type: 3}
+  - {fileID: 7898641444668022876, guid: 89d18ee66ddbde540b058b33279adc8b, type: 3}
+  battleSceneName: BattleTest
 --- !u!4 &528601033
 Transform:
   m_ObjectHideFlags: 0
@@ -3245,10 +3248,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3

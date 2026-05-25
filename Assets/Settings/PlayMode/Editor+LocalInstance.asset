@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 15024, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: TrueGame
+  m_Name: Editor+LocalInstance
   m_EditorClassIdentifier: UnityEditor.MultiplayerModule.dll::Unity.Multiplayer.PlayMode.Editor.ScenarioConfig
-  m_Description: Player 1 is Host
+  m_Description: 
   m_EnableEditors: 1
   m_MainEditorInstance:
     Name: Main Editor
@@ -30,7 +30,7 @@ MonoBehaviour:
     m_Nodes:
     - Instance - Build
     - Instance - Run
-    m_BuildProfile: {fileID: 11400000, guid: 859a69ffb78425b4a812a78dbf4fe822, type: 2}
+    m_BuildProfile: {fileID: 11400000, guid: adcb1718d88976f4fadcf794f003d6c2, type: 2}
     m_ServerSettings:
       DeployMode: 0
       SimulatorSettings:

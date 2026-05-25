@@ -25,6 +25,7 @@ public class CreatureAttackCommand : Command
     public override void StartCommandExecution()
     {
         GameObject attacker = IDHolder.GetGameObjectWithID(AttackerUniqueID);
+        Debug.Log($"[AttackCmd] {attacker?.name} attaque ID:{TargetUniqueID}");
         attacker.GetComponent<CreatureAttackVisual>().AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter);
     }
 }

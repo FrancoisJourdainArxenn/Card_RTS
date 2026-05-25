@@ -75,25 +75,15 @@ public class BuildSpotVisual : MonoBehaviour
 
     private bool PlayerHasUnitsInZone(Player player, ZoneManager zone)
     {
-        PlayerArea playerAreaInZone = null;
         foreach (PlayerArea pa in player.PAreas)
         {
-            if (pa.parentZone == zone)
-            {
-                playerAreaInZone = pa;
-                break;
-            }
-        }
-
-        if (playerAreaInZone == null) return false;
-
-        foreach (CreatureLogic c in player.playedCards.Creatures)
-        {
-            if (c.BaseID == playerAreaInZone.baseID)
-                return true;
+            if (pa.parentZone != zone) continue;
+            foreach (CreatureLogic c in player.playedCards.Creatures)
+                if (c.BaseID == pa.baseID) return true;
         }
         return false;
     }
+    
     public void SpawnPendingBuilding(CardAsset building, Player owner)
     {
         GameObject buildingGO = Instantiate(GlobalSettings.Instance.BuildingPrefab, spawner.transform.position, Quaternion.identity);

@@ -393,6 +393,8 @@ public class TurnManager : MonoBehaviour
                     r.OnBattlePhaseStart();
                 if (!NetworkSessionData.IsNetworkSession)
                     StartCoroutine(AutoAdvanceFromBattleAfterCombat());
+                else
+                    AutoSubmitBattleAssignment();
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -532,6 +534,20 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => Command.playingQueue);
         if (currentPhase == TurnPhases.Battle)
             AdvancePhaseWhenAllReady();
+    }
+
+    void AutoSubmitBattleAssignment()
+    {
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (localIndex < 0) return;
+        ZoneCombatResolver.BattleAssignment assignment =
+            ZoneCombatResolver.SerializeMyAttackAssignments(localIndex);
+        GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
+            localIndex,
+            assignment.CreatureIDs,     assignment.CreatureDamages,
+            assignment.BaseIDs,         assignment.BaseDamages,
+            assignment.TargetPlayerIDs, assignment.PlayerDamages,
+            assignment.BuildingIDs,     assignment.BuildingDamages);
     }
 
     IEnumerator AutoAdvanceFromEnd()

@@ -733,7 +733,7 @@ public class Player : MonoBehaviour, ILivable
         {
             if (table.tag == this.tag)
             {
-                if (table.MeleeCreaturesOnTable.Count <= 0 || table.RangedCreaturesOnTable.Count <= 0)
+                if (table.MeleeCreaturesOnTable.Count <= 0 && table.RangedCreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
                     return false;

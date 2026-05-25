@@ -5,8 +5,8 @@ public static class CommandMoveTracker
 {
     private struct MoveRecord
     {
-        public int fromBase;
-        public int toBase;
+        public ZoneLogic fromZone;
+        public ZoneLogic toZone;
         public Player player;
     }
 
@@ -17,15 +17,17 @@ public static class CommandMoveTracker
         moves.Clear();
     }
 
-    public static void RegisterMove(int fromBase, int toBase, Player player)
+    public static void RegisterMove(ZoneLogic fromZone, ZoneLogic toZone, Player player)
     {
+        if (fromZone == null || toZone == null) return;
+
         foreach (var move in moves)
         {
-            if (move.fromBase == toBase && move.toBase == fromBase && move.player != player)
+            if (move.fromZone == toZone && move.toZone == fromZone && move.player != player)
             {
-                Debug.Log($"[Crossing] {player} moves {fromBase}→{toBase} crosses {move.player} moving {move.fromBase}→{move.toBase}");
+                // Debug.Log($"[Crossing] {player} moves {fromZone.DisplayName}→{toZone.DisplayName} crosses {move.player} moving {move.fromZone.DisplayName}→{move.toZone.DisplayName}");
             }
         }
-        moves.Add(new MoveRecord { fromBase = fromBase, toBase = toBase, player = player });
+        moves.Add(new MoveRecord { fromZone = fromZone, toZone = toZone, player = player });
     }
 }

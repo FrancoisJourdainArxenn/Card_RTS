@@ -96,48 +96,48 @@ public class BuildingLogic : ILivable
         new BuildingDieCommand(UniqueBuildingID).AddToQueue();
     }
 
-    public void AttackCreature(CreatureLogic target)
-    {
-        AttacksLeftThisTurn--;
-        int targetHealthAfter = target.Health - Attack;
-        int attackerHealthAfter = Health - target.Attack;
-        new BuildingAttackCommand(target.UniqueCreatureID, UniqueBuildingID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
-        target.Health -= Attack;
-        Health -= target.Attack;
-    }
+    // public void AttackCreature(CreatureLogic target)
+    // {
+    //     AttacksLeftThisTurn--;
+    //     int targetHealthAfter = target.Health - Attack;
+    //     int attackerHealthAfter = Health - target.Attack;
+    //     new BuildingAttackCommand(target.UniqueCreatureID, UniqueBuildingID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
+    //     target.Health -= Attack;
+    //     Health -= target.Attack;
+    // }
 
-    public void AttackCreatureWithID(int uniqueCreatureID)
-    {
-        AttackCreature(CreatureLogic.CreaturesCreatedThisGame[uniqueCreatureID]);
-    }
+    // public void AttackCreatureWithID(int uniqueCreatureID)
+    // {
+    //     AttackCreature(CreatureLogic.CreaturesCreatedThisGame[uniqueCreatureID]);
+    // }
 
-    public void AttackBase(BaseLogic target)
-    {
-        AttacksLeftThisTurn--;
-        int targetHealthAfter = target.Health - Attack;
-        new BuildingAttackCommand(target.ID, UniqueBuildingID, 0, Attack, Health, targetHealthAfter).AddToQueue();
-        target.Health -= Attack;
-    }
+    // public void AttackBase(BaseLogic target)
+    // {
+    //     AttacksLeftThisTurn--;
+    //     int targetHealthAfter = target.Health - Attack;
+    //     new BuildingAttackCommand(target.ID, UniqueBuildingID, 0, Attack, Health, targetHealthAfter).AddToQueue();
+    //     target.Health -= Attack;
+    // }
 
-    public void AttackBaseWithID(int uniqueBaseID)
-    {
-        AttackBase(BaseLogic.BasesCreatedThisGame[uniqueBaseID]);
-    }
+    // public void AttackBaseWithID(int uniqueBaseID)
+    // {
+    //     AttackBase(BaseLogic.BasesCreatedThisGame[uniqueBaseID]);
+    // }
 
-    public void AttackBuilding(BuildingLogic target)
-    {
-        AttacksLeftThisTurn--;
-        int targetHealthAfter = target.Health - Attack;
-        int attackerHealthAfter = Health - target.Attack;
-        new BuildingAttackCommand(target.UniqueBuildingID, UniqueBuildingID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
-        target.Health -= Attack;
-        Health -= target.Attack;
-    }
+    // public void AttackBuilding(BuildingLogic target)
+    // {
+    //     AttacksLeftThisTurn--;
+    //     int targetHealthAfter = target.Health - Attack;
+    //     int attackerHealthAfter = Health - target.Attack;
+    //     new BuildingAttackCommand(target.UniqueBuildingID, UniqueBuildingID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
+    //     target.Health -= Attack;
+    //     Health -= target.Attack;
+    // }
 
-    public void AttackBuildingWithID(int uniqueBuildingID)
-    {
-        AttackBuilding(BuildingsCreatedThisGame[uniqueBuildingID]);
-    }
+    // public void AttackBuildingWithID(int uniqueBuildingID)
+    // {
+    //     AttackBuilding(BuildingsCreatedThisGame[uniqueBuildingID]);
+    // }
 
     public static Dictionary<int, BuildingLogic> BuildingsCreatedThisGame = new Dictionary<int, BuildingLogic>();
 }
