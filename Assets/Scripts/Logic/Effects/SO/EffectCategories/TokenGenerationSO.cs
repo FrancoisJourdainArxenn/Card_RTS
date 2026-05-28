@@ -4,21 +4,26 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Effects/TokenGenerationSO")]
 public class TokenGenerationSO : EffectSO
 {
+    [Header("Parameters")]
+    public int TokenCount;
+    public CardAsset TokenToSummon;
+    public TokenPlacement Placement;
+    public override EffectPriority Priority => EffectPriority.TokenGeneration;
+
     public override void Execute(
         string EffectName,
         EffectContext context,
         EffectInfo effectInfo,
-        EffectParameters parameters,
         EffectVisualData visualData
     )
     {
-        if (context.Caster == null || parameters.TokenToSummon == null)
+        if (context.Caster == null || TokenToSummon == null)
         {
             Log($"{EffectName}: missing caster or token asset, cancelled.");
             return;
         }
 
-        Log($"{EffectName}: {context.Caster.name} creates {parameters.Amount}x {parameters.TokenToSummon.name} — {parameters.Placement}");
+        Log($"{EffectName}: {context.Caster.name} creates {TokenCount}x {TokenToSummon.name} — {Placement}");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -50,9 +55,9 @@ public class TokenGenerationSO : EffectSO
                 : targetArea.tableVisual.rangedSlots;
             int maxSlots = rowSlots.MaxCreatures;
 
-            for (int i = 0; i < parameters.Amount; i++)
+            for (int i = 0; i < TokenCount; i++)
             {
-                switch (parameters.Placement)
+                switch (Placement)
                 {
                     case TokenPlacement.ToHand:
                         GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
@@ -72,15 +77,15 @@ public class TokenGenerationSO : EffectSO
         }
         else
         {
-            for (int i = 0; i < parameters.Amount; i++)
+            for (int i = 0; i < TokenCount; i++)
             {
-                switch (parameters.Placement)
+                switch (Placement)
                 {
                     case TokenPlacement.ToHand:
-                        context.Caster.GetACardNotFromDeck(parameters.TokenToSummon, visualData: visualData);
+                        context.Caster.GetACardNotFromDeck(TokenToSummon, visualData: visualData);
                         break;
                     case TokenPlacement.ToZone:
-                        SpawnToZone(context, parameters.TokenToSummon, visualData);
+                        SpawnToZone(context, visualData);
                         break;
                 }
             }
@@ -105,12 +110,12 @@ public class TokenGenerationSO : EffectSO
         return target;
     }
 
-    private void SpawnToZone(EffectContext context, CardAsset tokenAsset, EffectVisualData visualData)
+    private void SpawnToZone(EffectContext context, EffectVisualData visualData)
     {
         Player caster = context.Caster;
         PlayerArea targetArea = ResolveTargetArea(context);
 
-        bool tokenIsMelee = tokenAsset.melee;
+         bool tokenIsMelee = tokenAsset.melee;
         int currentCount  = tokenIsMelee
             ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
             : targetArea.tableVisual.RangedCreaturesOnTable.Count;
@@ -118,6 +123,7 @@ public class TokenGenerationSO : EffectSO
             ? targetArea.tableVisual.meleeSlots
             : targetArea.tableVisual.rangedSlots;
         int maxSlots = rowSlots.MaxCreatures;
+
         if (currentCount >= maxSlots)
         {
             Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{maxSlots}), token annulé.");
@@ -125,10 +131,10 @@ public class TokenGenerationSO : EffectSO
             return;
         }
 
-        CardLogic tokenCard = new CardLogic(tokenAsset);
+        CardLogic tokenCard = new CardLogic(TokenToSummon);
         tokenCard.owner = caster;
 
-        CreatureLogic newCreature = new CreatureLogic(caster, tokenAsset, targetArea.baseID);
+        CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID);
         int tablePos     = currentCount; // position row-locale : on ajoute à la fin de la rangée
         int logicalIndex = caster.GetLogicalInsertIndex(tokenAsset.melee, targetArea.baseID, tablePos);
         caster.playedCards.Creatures.Insert(logicalIndex, newCreature);
@@ -144,18 +150,18 @@ public class TokenGenerationSO : EffectSO
 
         new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
 
-        EffectRegistry.ETB(tokenAsset, new EffectContext
+        EffectRegistry.ETB(TokenToSummon, new EffectContext
         {
             Caster = caster,
             Source = newCreature
         });
     }
 
-    protected override void ApplyToTarget(ILivable target, int amount, EffectVisualData visualData) { }
+    protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null) { }
     protected override bool IsTargetSaturated(EffectTarget target) => false;
 
-    public override string GetDescription(EffectParameters parameters) =>
-        parameters.TokenToSummon == null
+    public override string GetDescription() =>
+        TokenToSummon == null
             ? "Crée un token"
-            : $"Crée {parameters.Amount}x {parameters.TokenToSummon.name}";
+            : $"Crée {TokenCount}x {TokenToSummon.name}";
 }

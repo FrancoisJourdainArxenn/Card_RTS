@@ -70,10 +70,9 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             return;
 
         EnsureColorsCached();
-        int currentHealth = Mathf.Min(cardAsset.MaxHealth, healthAfter);
-        Debug.Log($"{cardAsset.name} heal {amount} damage. {currentHealth} left afterwards.");
-        HealthText.text = currentHealth.ToString();
-        ApplyStatColor(HealthText, currentHealth, cardAsset.MaxHealth, _originalHealthColor);
+        Debug.Log($"{cardAsset.name} heal {amount} damage. {healthAfter} left afterwards.");
+        HealthText.text = healthAfter.ToString();
+        ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 

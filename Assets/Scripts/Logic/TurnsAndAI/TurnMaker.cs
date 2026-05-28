@@ -20,6 +20,7 @@ public abstract class TurnMaker : MonoBehaviour {
     /// <summary>Round upkeep: resources and one draw for this player (both players in Regroup).</summary>
     public virtual void OnRegroupPhaseStart()
     {
+        TempEffectTracker.RevertAll();
         p.OnTurnStart();
 
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession

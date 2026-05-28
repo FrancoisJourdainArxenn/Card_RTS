@@ -23,7 +23,11 @@ public static class EffectRegistry
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-    public static void Reset() => _listeners.Clear();
+    public static void Reset()
+    {
+        _listeners.Clear();
+        TempEffectTracker.Reset();
+    }
 
     // ── Enregistrement ────────────────────────────────────────────────────────
 
@@ -98,6 +102,7 @@ public static class EffectRegistry
         FireListeners(TriggerType.OnEnemyCreatureDies, eventCtx,
             re => re.ContextFactory().Caster != dyingOwner);
 
+        TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
     }
 
@@ -175,7 +180,7 @@ public static class EffectRegistry
             return;
         }
 
-        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Parameters, data.VisualData);
+        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
 
         if (!data.RequiresPlayerInput)
             TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
@@ -187,11 +192,17 @@ public static class EffectRegistry
     {
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
             if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
-                return creature.ca.Effects[effectIndex].Parameters.TokenToSummon;
+            {
+                TokenGenerationSO tokenSO = creature.ca.Effects[effectIndex].Effect as TokenGenerationSO;
+                return tokenSO != null ? tokenSO.TokenToSummon : null;
+            }
 
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-                return building.ca.Effects[effectIndex].Parameters.TokenToSummon;
+            {
+                TokenGenerationSO tokenSO = building.ca.Effects[effectIndex].Effect as TokenGenerationSO;
+                return tokenSO != null ? tokenSO.TokenToSummon : null;
+            }
 
         return null;
     }
@@ -200,11 +211,11 @@ public static class EffectRegistry
     {
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
             if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
-                return creature.ca.Effects[effectIndex].VisualData;
+                return creature.ca.Effects[effectIndex].Effect.EffectVisual;
 
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-                return building.ca.Effects[effectIndex].VisualData;
+                return building.ca.Effects[effectIndex].Effect.EffectVisual;
 
         return null;
     }

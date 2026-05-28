@@ -10,14 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 064c001bf9214ef41b45207ebe5af8d6, type: 3}
-  m_Name: DrawCardSO
+  m_Name: DrawACard
   m_EditorClassIdentifier: Assembly-CSharp::DrawCardsSO
-  Description: 
-  visualData:
+  Description: Draw a Card
+  EffectVisual:
     vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}
-    overlayDuration: 1.5
-    vfxLifetime: 3
-    AttackDuration: 0.3
-    showAmount: 1
-    textColor: {r: 1, g: 1, b: 1, a: 1}
+    OverrideOverlayDuration: 0
+  CardCount: 1

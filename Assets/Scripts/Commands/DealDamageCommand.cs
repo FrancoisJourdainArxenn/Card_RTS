@@ -30,7 +30,7 @@ public class DealDamageCommand : Command
             return;
         }
 
-        if (sourceID != -1)
+        if (sourceID != -1 && sourceID != targetID)
         {
             GameObject source = IDHolder.GetGameObjectWithID(sourceID);
             CreatureAttackVisual attackVisual = source?.GetComponent<CreatureAttackVisual>();
