@@ -57,12 +57,6 @@ public class BaseLogic: ILivable
         get{ return baseMainRessourceIncome; }
     }
     
-    private int baseSecondRessourceIncome;
-    public int SecondRessourceIncome
-    {
-        get{ return baseSecondRessourceIncome; }
-    }
-
     public int BaseID {get; private set;}
     
     public void Die()
@@ -83,7 +77,6 @@ public class BaseLogic: ILivable
         baseHealth = ba.MaxHealth;
         health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;
-        baseSecondRessourceIncome = ba.secondRessourceIncome;
         this.owner = owner;
         uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BasesCreatedThisGame.Add(uniqueBaseID, this);
@@ -99,7 +92,6 @@ public class BaseLogic: ILivable
         baseHealth = ba.MaxHealth;
         health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;
-        baseSecondRessourceIncome = ba.secondRessourceIncome;
         this.owner = owner;
         uniqueBaseID = owner.PlayerID;
         BasesCreatedThisGame[uniqueBaseID] = this;

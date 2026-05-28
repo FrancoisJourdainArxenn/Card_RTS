@@ -19,9 +19,8 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Battle Start</b> : Deal 1 Damage Randomly.'
   CardImage: {fileID: 21300000, guid: 4a3cbf0af05f742499b46d55ff6c1055, type: 3}
-  MainCost: 2
-  SecondCost: 2
-  Attack: 1
+  MainCost: 1
+  Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 1
   melee: 1

@@ -1,100 +1,66 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine.UI;
 
-public class TableVisual : MonoBehaviour 
+public class TableVisual : MonoBehaviour
 {
-    // PUBLIC FIELDS
-
-    // an enum that mark to whish caracter this table belongs. The alues are - Top or Low
     public AreaPosition owner;
-    // a referense to a game object that marks positions where we should put new Creatures
-    public SameDistanceChildren slots;
+    public CenteredSlots rangedSlots;
+    public CenteredSlots meleeSlots;
     public SameDistanceChildren pendingSlots;
     public GameObject glow;
     public Color ownerColor;
-    [SerializeField] public LayerMask tableRaycastMask; // ex: layer "Table"
-    [SerializeField] public List<GameObject> CreaturesOnTable = new List<GameObject>();
+    [SerializeField] public LayerMask tableRaycastMask;
+    [SerializeField] public List<GameObject> MeleeCreaturesOnTable  = new List<GameObject>();
+    [SerializeField] public List<GameObject> RangedCreaturesOnTable = new List<GameObject>();
     [SerializeField] public List<GameObject> PendingCreaturesOnTable = new List<GameObject>();
     [HideInInspector] public PlayerArea ownerArea;
 
-    // PRIVATE FIELDS
-
-    // initial local X position of the slots container in the scene
-    private float initialSlotsLocalPosX;
-    // are we hovering over this table`s collider with a mouse
     private bool cursorOverThisTable = false;
     private bool isFogged = false;
-    // A 3D collider attached to this game object
     private BoxCollider col;
+    private int _previewIndex = -1;
+    private bool _previewIsMelee;
 
-    // PROPERTIES
+    // list[0] = leftmost = attaque en premier
+    public IEnumerable<GameObject> AllCreaturesOnTable =>
+        MeleeCreaturesOnTable.Concat(RangedCreaturesOnTable);
+    public int TotalCreatureCount =>
+        MeleeCreaturesOnTable.Count + RangedCreaturesOnTable.Count;
 
-    // returns true if we are hovering over any player`s table collider
-    public static bool CursorOverSomeTable //Va devoir changer parce qu'il y aura plusieurs tables.
+    public static bool CursorOverSomeTable
     {
         get
         {
-            TableVisual[] allTables = GameObject.FindObjectsByType<TableVisual>(FindObjectsSortMode.None);
-            foreach (TableVisual table in allTables)
-            {
-                if (table.CursorOverThisTable)
-                {                    
-                    return true;
-                }
-
-            }
+            foreach (TableVisual t in GameObject.FindObjectsByType<TableVisual>(FindObjectsSortMode.None))
+                if (t.CursorOverThisTable) return true;
             return false;
         }
     }
+    public bool CursorOverThisTable => cursorOverThisTable;
 
-    // returns true only if we are hovering over this table`s collider
-    public bool CursorOverThisTable
-    {
-        get{ return cursorOverThisTable; }
-    }
-
-    // METHODS
-
-    // MONOBEHAVIOUR METHODS (mouse over collider detection)
     void Awake()
     {
         col = GetComponent<BoxCollider>();
-        // remember where the designer placed the slots object,
-        // so our centering logic is applied as an offset instead of snapping everything to the origin
-        if (slots != null)
-            initialSlotsLocalPosX = slots.transform.localPosition.x;
     }
 
-    public void RefreshSlotsPositions()
-    {
-        PlaceCreaturesOnNewSlots();
-    }
+    public void RefreshSlotsPositions() => PlaceCreaturesOnNewSlots();
 
     private static readonly RaycastHit[] _raycastBuffer = new RaycastHit[8];
-
-    // CURSOR/MOUSE DETECTION
     void Update()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         int count = Physics.RaycastNonAlloc(ray, _raycastBuffer, 300f, tableRaycastMask, QueryTriggerInteraction.Ignore);
         cursorOverThisTable = false;
         for (int i = 0; i < count; i++)
-        {
-            if (_raycastBuffer[i].collider == col)
-            {
-                cursorOverThisTable = true;
-                break;
-            }
-        }
+            if (_raycastBuffer[i].collider == col) { cursorOverThisTable = true; break; }
     }
 
     public void SetHighlight(bool active)
     {
         if (BuildingShopVisual.IsOpen) active = false;
-
         if (glow == null) return;
         glow.GetComponent<Image>().color = ownerColor;
         glow.SetActive(active);
@@ -103,163 +69,181 @@ public class TableVisual : MonoBehaviour
     public void SetFogged(bool fogged)
     {
         isFogged = fogged;
-        // Show or hide every creature currently on this table.
-        foreach (GameObject creature in CreaturesOnTable)
-        {
-            if (creature != null)
-                creature.SetActive(!fogged);
-        }
+        foreach (GameObject c in MeleeCreaturesOnTable)  if (c != null) c.SetActive(!fogged);
+        foreach (GameObject c in RangedCreaturesOnTable) if (c != null) c.SetActive(!fogged);
     }
-    // method to create a new creature and add it to the table
-    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int index, int baseID)
+
+    // rowLocalPos : 0 = le plus à gauche dans la rangée
+    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int rowLocalPos, int baseID, bool completeCommand = true)
     {
-        int newCount = CreaturesOnTable.Count + 1;
-        int listIndex = Mathf.Min(index, CreaturesOnTable.Count);
-        int firstSlot = (slots.Children.Length - newCount) / 2;
-        int finalSlotIndex = Mathf.Clamp(firstSlot + listIndex, 0, slots.Children.Length - 1);
-        Vector3 spawnPos = slots.Children[finalSlotIndex].transform.position;
+        bool isMelee = ca.melee;
+        CenteredSlots rowSlots      = GetRowSlots(isMelee);
+        List<GameObject> targetList = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+
+        int listIndex = Mathf.Min(rowLocalPos, targetList.Count);
+        int newCount  = targetList.Count + 1;
+        Vector3 spawnPos = rowSlots.GetSlotPosition(listIndex, newCount);
 
         GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
-
-        creature.transform.SetParent(slots.transform);
-        CreaturesOnTable.Insert(listIndex, creature);
+        creature.transform.SetParent(rowSlots.transform);
+        targetList.Insert(listIndex, creature);
+        // Debug.Log($"[Add] {ca.name} à l'index {listIndex} — liste : [{string.Join(", ", targetList.ConvertAll(g => { var ocm = g.GetComponent<OneCreatureManager>(); return (ocm != null && ocm.cardAsset != null) ? ocm.cardAsset.name : "?"; }))}]");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
-        w.Slot = index;
+        w.Slot = rowLocalPos;
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
-        ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
 
         if (isFogged) creature.SetActive(false);
         ownerArea?.RefreshAreaStats();
-
-        Command.CommandExecutionComplete();
+        if (completeCommand) Command.CommandExecutionComplete();
     }
 
+    // rowLocalPos : 0 = le plus à gauche dans la rangée
+    public void MoveCreatureToIndex(GameObject creature, int UniqueID, int rowLocalPos, int baseID)
+    {
+        var ocm      = creature.GetComponent<OneCreatureManager>();
+        bool isMelee = ocm != null && ocm.cardAsset != null && ocm.cardAsset.melee;
+        CenteredSlots rowSlots  = GetRowSlots(isMelee);
+        List<GameObject> targetList = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
 
-    public void MoveCreatureToIndex(GameObject creature, int UniqueID, int index, int baseID)
-    {     
-        // parent a new creature gameObject to table slots
-        creature.transform.SetParent(slots.transform);
+        if (rowSlots == null)
+        {
+            Debug.LogError($"[TableVisual] MoveCreatureToIndex: rowSlots est null (isMelee={isMelee}). Vérifie que rangedSlots/meleeSlots sont assignés dans l'Inspecteur sur {gameObject.name}.");
+            Command.CommandExecutionComplete();
+            return;
+        }
+        creature.transform.SetParent(rowSlots.transform);
+        targetList.Insert(Mathf.Min(rowLocalPos, targetList.Count), creature);
 
-        // add a new creature to the list
-        CreaturesOnTable.Insert(Mathf.Min(index, CreaturesOnTable.Count), creature);
-
-        // let this creature know about its position
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
-        w.Slot = index;
-        if (owner == AreaPosition.Low)
-            w.VisualState = VisualStates.LowTable;
-        else
-            w.VisualState = VisualStates.TopTable;
+        w.Slot = rowLocalPos;
+        w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
-        ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
-        
+
         creature.SetActive(!isFogged);
         ownerArea?.RefreshAreaStats();
-        // end command execution
+
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+
         Command.CommandExecutionComplete();
     }
 
-    // returns an index for a new creature based on mousePosition
-    // included for placing a new creature to any positon on the table
-    public int TablePosForNewCreature(float MouseX)
+    // Retourne la position dans la rangée (0 = le plus à gauche)
+    public int TablePosForNewCreature(bool isMelee)
     {
-        // if there are no creatures or if we are pointing to the right of all creatures with a mouse.
-        // right - because the table slots are flipped and 0 is on the right side.
-        if (CreaturesOnTable.Count == 0 || MouseX > slots.Children[0].transform.position.x)
-            return 0;
-        else if (MouseX < slots.Children[CreaturesOnTable.Count - 1].transform.position.x) // cursor on the left relative to all creatures on the table
-            return CreaturesOnTable.Count;
-        for (int i = 0; i < CreaturesOnTable.Count; i++)
+        CenteredSlots rowSlots = GetRowSlots(isMelee);
+        int count = isMelee ? MeleeCreaturesOnTable.Count : RangedCreaturesOnTable.Count;
+        int rowPos = RowPosForMouse(count, rowSlots);
+        return rowPos;
+    }
+
+    private int RowPosForMouse(int count, CenteredSlots rowSlots)
+    {
+        if (count == 0) return 0;
+
+        float leftmostX  = Camera.main.WorldToScreenPoint(rowSlots.GetSlotPosition(0,         count)).x;
+        float rightmostX = Camera.main.WorldToScreenPoint(rowSlots.GetSlotPosition(count - 1, count)).x;
+
+        float mouseX = Input.mousePosition.x;
+        if (mouseX <= leftmostX)  return 0;
+        if (mouseX >= rightmostX) return count;
+
+        for (int j = 0; j < count - 1; j++)
         {
-            if (MouseX < slots.Children[i].transform.position.x && MouseX > slots.Children[i + 1].transform.position.x)
-                return i + 1;
+            float leftX  = Camera.main.WorldToScreenPoint(rowSlots.GetSlotPosition(j,     count)).x;
+            float rightX = Camera.main.WorldToScreenPoint(rowSlots.GetSlotPosition(j + 1, count)).x;
+            if (mouseX >= leftX && mouseX <= rightX)
+                return j + 1;
         }
-        Debug.Log("Suspicious behavior. Reached end of TablePosForNewCreature method. Returning 0");
-        return 0;
+
+        Debug.LogWarning($"[RowPosForMouse] cas non couvert : mouseX={mouseX:F3}");
+        return count;
     }
 
     public void MoveCreatureAway(GameObject creature)
     {
-        CreaturesOnTable.Remove(creature);
+        if (!MeleeCreaturesOnTable.Remove(creature))
+            RangedCreaturesOnTable.Remove(creature);
         ownerArea?.RefreshAreaStats();
-
         PlaceCreaturesOnNewSlots();
     }
-    
-    // Destroy a creature
+
     public void RemoveCreatureWithID(int IDToRemove)
     {
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
-        CreaturesOnTable.Remove(creatureToRemove);
+        if (!MeleeCreaturesOnTable.Remove(creatureToRemove))
+            RangedCreaturesOnTable.Remove(creatureToRemove);
         Destroy(creatureToRemove);
 
-        ShiftSlotsGameObjectAccordingToNumberOfCreatures();
         PlaceCreaturesOnNewSlots();
         ownerArea?.RefreshAreaStats();
-        // FogOfWarManager.Refresh();
         Command.CommandExecutionComplete();
     }
 
-    /// <summary>
-    /// Shifts the slots game object according to number of creatures.
-    /// </summary>
-    void ShiftSlotsGameObjectAccordingToNumberOfCreatures()
-    {
-        // On laisse l'objet slots à la position définie dans la scène
-        // et on ne le recentre plus : seul l'affectation des créatures
-        // aux slots sera recalculée dans PlaceCreaturesOnNewSlots.
-        slots.gameObject.transform.DOLocalMoveX(initialSlotsLocalPosX, 0.0f);
-    }
-
-    /// <summary>
-    /// After a new creature is added or an old creature dies, this method
-    /// shifts all the creatures and places the creatures on new slots.
-    /// </summary>
     void PlaceCreaturesOnNewSlots()
     {
-        int creatureCount = CreaturesOnTable.Count;
-        int slotCount = slots.Children.Length;
-        if (creatureCount == 0 || slotCount == 0)
-            return;
+        int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
+        int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;
 
-        // On répartit les créatures sur une bande de slots CENTRÉE.
-        // Exemple : 10 slots, 3 créatures -> elles utilisent les slots 3,4,5
-        int firstSlotIndex = (slotCount - creatureCount) / 2;
+        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap);
+        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap);
+    }
 
-        for (int i = 0; i < creatureCount; i++)
+    void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1)
+    {
+        int count = group.Count;
+        if (count == 0) return;
+
+        bool hasGap = gapIndex >= 0 && gapIndex <= count;
+        int virtualCount = count + (hasGap ? 1 : 0);
+
+        for (int i = 0; i < count; i++)
         {
-            GameObject g = CreaturesOnTable[i];
-            int targetSlotIndex = firstSlotIndex + i;
-            targetSlotIndex = Mathf.Clamp(targetSlotIndex, 0, slotCount - 1);
-            Vector3 targetLocalPos = slots.Children[targetSlotIndex].transform.localPosition;
-            g.transform.DOKill();
-            g.transform.DOLocalMove(targetLocalPos, 0.3f).SetEase(Ease.OutQuad);
-            // apply correct sorting order and HandSlot value for later 
-            // TODO: figure out if I need to do something here:
-            // g.GetComponent<WhereIsTheCardOrCreature>().SetTableSortingOrder() = CreaturesOnTable.IndexOf(g);
+            int virtualIndex = (hasGap && i >= gapIndex) ? i + 1 : i;
+            Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
+            group[i].transform.DOKill();
+            group[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
         }
     }
 
+    public void ShowInsertPreview(int rowLocalPos, bool isMelee)
+    {
+        _previewIndex   = rowLocalPos;
+        _previewIsMelee = isMelee;
+        PlaceCreaturesOnNewSlots();
+    }
+
+    public void ClearInsertPreview()
+    {
+        if (_previewIndex < 0) return;
+        _previewIndex = -1;
+        PlaceCreaturesOnNewSlots();
+    }
+
+    public float GetRowWorldZ(bool isMelee) =>
+        GetRowSlots(isMelee).transform.position.z;
+
     public void AddCreatureToPendingZone(CardAsset ca, int uniqueID, int baseID)
     {
-        int startIndex = pendingSlots.Children.Length /2;
-        int index = startIndex + PendingCreaturesOnTable.Count;
+        int index = pendingSlots.Children.Length / 2 + PendingCreaturesOnTable.Count;
         GameObject creature = CreateCreatureGO(ca, uniqueID, baseID, pendingSlots.Children[index].transform.position);
         creature.transform.SetParent(pendingSlots.transform);
         PendingCreaturesOnTable.Add(creature);
-        OneCreatureManager gray = creature.GetComponent<OneCreatureManager>();
-        gray.SetGray(true);
+        creature.GetComponent<OneCreatureManager>().SetGray(true);
     }
+
+    private CenteredSlots GetRowSlots(bool isMelee) =>
+        (isMelee && meleeSlots != null) ? meleeSlots : rangedSlots;
 
     private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position)
     {
         GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
-        manager.BaseID = baseID;
+        manager.BaseID   = baseID;
         manager.cardAsset = ca;
         manager.ReadCreatureFromAsset();
         foreach (Transform t in creature.GetComponentsInChildren<Transform>())
@@ -269,8 +253,5 @@ public class TableVisual : MonoBehaviour
         return creature;
     }
 
-    public void SetOwnerColor(Color color)
-    {
-        glow.GetComponent<Image>().color = color;
-    }
+    public void SetOwnerColor(Color color) => glow.GetComponent<Image>().color = color;
 }

@@ -62,10 +62,11 @@ public class GameNetworkManager : NetworkBehaviour
 
     /// <summary>
     /// Reçu par le serveur quand un joueur termine la Battle phase.
-    /// Stocke son attribution de dégâts. Quand les deux joueurs ont soumis :
-    ///   1. Merge les deux attributions (union sans conflit, chaque joueur contrôle ses propres attaques)
+    /// Stocke la soumission pour compter les deux joueurs. Quand les deux ont soumis :
+    ///   1. Sérialise l'état calculé par le serveur (BuildAutoBattleSequence déjà exécuté dans OnBattlePhaseStart)
     ///   2. Diffuse l'état canonique via ApplyCanonicalBattleAssignmentClientRpc
     ///   3. Déclenche la transition de phase via ForceRegisterEndPhase
+    /// Les données soumises par les clients sont ignorées — le serveur est la source de vérité.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SubmitBattleAssignmentServerRpc(
@@ -84,43 +85,65 @@ public class GameNetworkManager : NetworkBehaviour
         };
 
         if (_battleSubmissions.Count < 2)
-            return; // On attend encore l'autre joueur
+            return;
 
-        BattleSubmission s0 = _battleSubmissions[0];
-        BattleSubmission s1 = _battleSubmissions[1];
-
-        // Union simple : chaque joueur a soumis les dégâts qu'IL inflige (pas de conflit possible)
-        ApplyCanonicalBattleAssignmentClientRpc(
-            ConcatArrays(s0.CreatureIDs,     s1.CreatureIDs),
-            ConcatArrays(s0.CreatureDamages, s1.CreatureDamages),
-            ConcatArrays(s0.BaseIDs,         s1.BaseIDs),
-            ConcatArrays(s0.BaseDamages,     s1.BaseDamages),
-            ConcatArrays(s0.TargetPlayerIDs, s1.TargetPlayerIDs),
-            ConcatArrays(s0.PlayerDamages,   s1.PlayerDamages),
-            ConcatArrays(s0.BuildingIDs,     s1.BuildingIDs),
-            ConcatArrays(s0.BuildingDamages, s1.BuildingDamages)
-        );
         _battleSubmissions.Clear();
 
-        // Déclenche la transition de phase maintenant que les deux joueurs ont soumis
+        ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
+        ApplyCanonicalBattleAssignmentClientRpc(
+            canonical.CreatureIDs,     canonical.CreatureDamages,
+            canonical.BaseIDs,         canonical.BaseDamages,
+            canonical.TargetPlayerIDs, canonical.PlayerDamages,
+            canonical.BuildingIDs,     canonical.BuildingDamages,
+            canonical.ResolverP1Pools, canonical.ResolverP2Pools
+        );
+
+        ZoneCombatResolver.SerializeAllBattleSteps(
+            out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
+            out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
+            out int[] stepOwnerPlayerIDs);
+        BroadcastBattleStepsClientRpc(
+            stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
+            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs);
+
         TurnManager.Instance.ForceRegisterEndPhase(0);
         TurnManager.Instance.ForceRegisterEndPhase(1);
     }
 
     /// <summary>
-    /// Reçu par TOUS les clients : remplace les dictionnaires pendingDamage locaux
-    /// par l'état canonique du serveur, avant que OnBattlePhaseEnd() ne les lise.
+    /// Reçu par TOUS les clients : reconstruit la séquence de combat et enqueue les commandes
+    /// d'animation step-by-step (ZoneClashMove puis CreatureAttackCommand / BuildingAttackCommand).
+    /// Doit être reçu après ApplyCanonicalBattleAssignmentClientRpc pour que pendingDamage soit set.
+    /// </summary>
+    [ClientRpc]
+    void BroadcastBattleStepsClientRpc(
+        int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
+        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
+    {
+        Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus");
+        for (int i = 0; i < targetKinds.Length; i++)
+            if (targetKinds[i] >= 2) // Base=2, Player=3
+                Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+        ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
+            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : remplace les dictionnaires pendingDamage locaux et les
+    /// valeurs d'overflow (freePool) par l'état canonique du serveur, avant que OnBattlePhaseEnd() ne les lise.
     /// </summary>
     [ClientRpc]
     void ApplyCanonicalBattleAssignmentClientRpc(
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages,
-        int[] buildingIDs,     int[] buildingDamages)
+        int[] buildingIDs,     int[] buildingDamages,
+        int[] p1Pools,         int[] p2Pools)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
             targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
+        ZoneCombatResolver.ApplyCanonicalPools(p1Pools, p2Pools);
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)
@@ -262,20 +285,18 @@ public class GameNetworkManager : NetworkBehaviour
         int playerCount = Player.Players.Length;
         int[] playerHealths   = new int[playerCount];
         int[] playerMainRes   = new int[playerCount];
-        int[] playerSecondRes = new int[playerCount];
 
         for (int i = 0; i < playerCount; i++)
         {
             playerHealths[i]   = Player.Players[i].Health;
             playerMainRes[i]   = Player.Players[i].mainRessourceAvailable;
-            playerSecondRes[i] = Player.Players[i].secondRessourceAvailable;
         }
 
         SyncFullGameStateClientRpc(
             creatureIDList.ToArray(), creatureHealthList.ToArray(),
             creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
             baseIDList.ToArray(), baseHealthList.ToArray(),
-            playerHealths, playerMainRes, playerSecondRes);
+            playerHealths, playerMainRes);
     }
 
     /// <summary>
@@ -289,7 +310,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
         int[] baseIDs,       int[] baseHealths,
-        int[] playerHealths, int[] playerMainRes,   int[] playerSecondRes)
+        int[] playerHealths, int[] playerMainRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
 
@@ -340,11 +361,6 @@ public class GameNetworkManager : NetworkBehaviour
             {
                 Debug.LogError($"[Desync] Joueur {i} : ressource principale locale={player.mainRessourceAvailable}, serveur={playerMainRes[i]}. Correction appliquée.");
                 player.mainRessourceAvailable = playerMainRes[i];
-            }
-            if (player.secondRessourceAvailable != playerSecondRes[i])
-            {
-                Debug.LogError($"[Desync] Joueur {i} : ressource secondaire locale={player.secondRessourceAvailable}, serveur={playerSecondRes[i]}. Correction appliquée.");
-                player.secondRessourceAvailable = playerSecondRes[i];
             }
         }
     }
@@ -512,7 +528,7 @@ public class GameNetworkManager : NetworkBehaviour
                 param3 = tablePos,
                 param4 = baseID
             });
-            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, baseID);
+            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
         }
     }
 
@@ -521,10 +537,10 @@ public class GameNetworkManager : NetworkBehaviour
     /// avec les mêmes identifiants sur toutes les machines.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int baseID)
+    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, baseID);
+        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
     }
 
     [ClientRpc]
@@ -729,40 +745,40 @@ public class GameNetworkManager : NetworkBehaviour
         creature.Move(targetBaseID, tablePos);
     }
 
-    //Attacking Units
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
-    {
-        AttackCreatureClientRpc(attackerID, targetCreatureID);
-    }
+    // //Attacking Units
+    // [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    // public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
+    // {
+    //     AttackCreatureClientRpc(attackerID, targetCreatureID);
+    // }
 
-    [ClientRpc]
-    void AttackCreatureClientRpc(int attackerID, int targetCreatureID)
-    {
-        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
-        {
-            Debug.LogError($"[GameNetworkManager] AttackCreature: attaquant introuvable id={attackerID}");
-            return;
-        }
-        attacker.AttackCreatureWithID(targetCreatureID);
-    }
+    // [ClientRpc]
+    // void AttackCreatureClientRpc(int attackerID, int targetCreatureID)
+    // {
+    //     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+    //     {
+    //         Debug.LogError($"[GameNetworkManager] AttackCreature: attaquant introuvable id={attackerID}");
+    //         return;
+    //     }
+    //     attacker.AttackCreatureWithID(targetCreatureID);
+    // }
 
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void AttackBaseServerRpc(int attackerID, int targetBaseID)
-    {
-        AttackBaseClientRpc(attackerID, targetBaseID);
-    }
+    // [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    // public void AttackBaseServerRpc(int attackerID, int targetBaseID)
+    // {
+    //     AttackBaseClientRpc(attackerID, targetBaseID);
+    // }
 
-    [ClientRpc]
-    void AttackBaseClientRpc(int attackerID, int targetBaseID)
-    {
-        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
-        {
-            Debug.LogError($"[GameNetworkManager] AttackBase: attaquant introuvable id={attackerID}");
-            return;
-        }
-        attacker.AttackBaseWithID(targetBaseID);
-    }
+    // [ClientRpc]
+    // void AttackBaseClientRpc(int attackerID, int targetBaseID)
+    // {
+    //     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+    //     {
+    //         Debug.LogError($"[GameNetworkManager] AttackBase: attaquant introuvable id={attackerID}");
+    //         return;
+    //     }
+    //     attacker.AttackBaseWithID(targetBaseID);
+    // }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void GoFaceServerRpc(int attackerID)

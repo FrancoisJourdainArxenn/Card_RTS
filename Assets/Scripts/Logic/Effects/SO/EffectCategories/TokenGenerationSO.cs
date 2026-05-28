@@ -45,8 +45,15 @@ public class TokenGenerationSO : EffectSO
             }
 
             PlayerArea targetArea = ResolveTargetArea(context);
-            int baseTablePos = targetArea.tableVisual.CreaturesOnTable.Count;
-            int maxSlots = targetArea.tableVisual.slots.Children.Length;
+            bool tokenIsMelee = TokenToSummon.melee;
+            // Position de départ dans la rangée concernée (melee ou ranged)
+            int baseTablePos = tokenIsMelee
+                ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                ? targetArea.tableVisual.meleeSlots
+                : targetArea.tableVisual.rangedSlots;
+            int maxSlots = rowSlots.MaxCreatures;
 
             for (int i = 0; i < TokenCount; i++)
             {
@@ -62,6 +69,7 @@ public class TokenGenerationSO : EffectSO
                             new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
                             continue;
                         }
+                        // On envoie la position row-locale (index dans la rangée melee ou ranged)
                         GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, baseTablePos + i, targetArea.baseID);
                         break;
                 }
@@ -107,8 +115,15 @@ public class TokenGenerationSO : EffectSO
         Player caster = context.Caster;
         PlayerArea targetArea = ResolveTargetArea(context);
 
-        int currentCount = targetArea.tableVisual.CreaturesOnTable.Count;
-        int maxSlots = targetArea.tableVisual.slots.Children.Length;
+        bool tokenIsMelee = TokenToSummon.melee;
+        int currentCount  = tokenIsMelee
+            ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+            : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+        CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+            ? targetArea.tableVisual.meleeSlots
+            : targetArea.tableVisual.rangedSlots;
+        int maxSlots = rowSlots.MaxCreatures;
+
         if (currentCount >= maxSlots)
         {
             Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{maxSlots}), token annulé.");
@@ -120,16 +135,15 @@ public class TokenGenerationSO : EffectSO
         tokenCard.owner = caster;
 
         CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID);
-        int tablePos = targetArea.tableVisual.CreaturesOnTable.Count;
-        caster.playedCards.Creatures.Insert(tablePos, newCreature);
+        int tablePos     = currentCount; // position row-locale : on ajoute à la fin de la rangée
+        int logicalIndex = caster.GetLogicalInsertIndex(TokenToSummon.melee, targetArea.baseID, tablePos);
+        caster.playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
         if (visualData?.vfxPrefab != null)
         {
-            int newCount = currentCount + 1;
-            int firstSlot = (maxSlots - newCount) / 2;
-            int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
-            Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
+            int newCount     = currentCount + 1;
+            Vector3 spawnPos = rowSlots.GetSlotPosition(currentCount, newCount);
             new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
         }

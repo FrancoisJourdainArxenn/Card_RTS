@@ -21,8 +21,7 @@ public class BuildNeutralBaseCommand : Command
 
         BaseAsset ba = spawner.baseAsset;
         player.MainRessourceAvailable -= ba.mainRessourceBaseCost;
-        player.SecondRessourceAvailable -= ba.secondRessourceBaseCost;
-        new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable, player.secondRessourceTotal, player.SecondRessourceAvailable).AddToQueue();
+        new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable).AddToQueue();
         spawner.neutralBaseController.AddBase(ba, baseUniqueID, player, spawner);
         CommandExecutionComplete();
     }

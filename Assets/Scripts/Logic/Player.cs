@@ -14,7 +14,17 @@ public class Player : MonoBehaviour, ILivable
     public BaseAsset baseAsset;
     public List<BaseAsset> controlledBaseAssets = new List<BaseAsset>();
 
-    public List<BaseLogic> controlledBases => BaseLogic.BasesCreatedThisGame.Values.Where(b => b.owner == this).ToList();
+    private readonly List<BaseLogic> _controlledBasesCache = new List<BaseLogic>();
+    public List<BaseLogic> controlledBases
+    {
+        get
+        {
+            _controlledBasesCache.Clear();
+            foreach (BaseLogic b in BaseLogic.BasesCreatedThisGame.Values)
+                if (b.owner == this) _controlledBasesCache.Add(b);
+            return _controlledBasesCache;
+        }
+    }
     // a script with references to all the visual game objects for this player
     [HideInInspector] public PlayerArea[] PAreas;
     [HideInInspector] public PlayerArea MainPArea = null;
@@ -24,10 +34,7 @@ public class Player : MonoBehaviour, ILivable
 
     public int mainRessourceTotal;
     public int mainRessourceAvailable;
-    public int secondRessourceTotal;
-    public int secondRessourceAvailable;
     public int playerMainIncome;
-    public int playerSecondIncome;
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -41,7 +48,6 @@ public class Player : MonoBehaviour, ILivable
 
     // this value used exclusively for our coin spell
     private int bonusMainRessource = 0;
-    private int bonusSecondRessource = 0;
 
     // PROPERTIES
     // this property is a part of interface ILivable
@@ -109,7 +115,7 @@ public class Player : MonoBehaviour, ILivable
                 mainRessourceAvailable = value;
             
             //PArea.ManaBar.AvailableCrystals = manaLeft;
-            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
+            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
             TurnManager.RefreshAllPlayableHighlights();
         }
@@ -150,31 +156,7 @@ public class Player : MonoBehaviour, ILivable
         InitBaseIDs();
         new BaseLogic(this, MainPArea?.parentZone?.Logic);
     }
-    //private int secondRessourceTotal;
-    public int SecondRessourceTotal
-    {
-        get{ return secondRessourceTotal;}
-        set{ secondRessourceTotal = value;}
-    }
 
-    public int SecondRessourceAvailable
-    {
-        get { return secondRessourceAvailable; }
-        set
-        {
-            if (value < 0)
-                secondRessourceAvailable = 0;
-            else if (value > secondRessourceTotal)
-                secondRessourceAvailable = secondRessourceTotal;
-            else
-                secondRessourceAvailable = value;
-
-            new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable, secondRessourceTotal, secondRessourceAvailable).AddToQueue();
-
-            TurnManager.RefreshAllPlayableHighlights();
-        }
-    }
-    
     // CODE FOR EVENTS TO LET CREATURES KNOW WHEN TO CAUSE EFFECTS
     public delegate void VoidWithNoArguments();
     //public event VoidWithNoArguments CreaturePlayedEvent;
@@ -220,14 +202,7 @@ public class Player : MonoBehaviour, ILivable
         {
             mainRessourceAvailable += playerMainIncome;
         }
-        if (secondRessourceAvailable >= secondRessourceTotal)
-            secondRessourceAvailable = secondRessourceTotal;
-        else
-        {
-            secondRessourceAvailable += playerSecondIncome;
-        }
 
-        
         // Refresh UI + playable state.
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
@@ -253,13 +228,11 @@ public class Player : MonoBehaviour, ILivable
 
     // STUFF THAT OUR PLAYER CAN DO
 
-    // get mana from coin or other spells 
-    public void GetBonusRessources(int mainRessourceAmount, int secondRessourceAmount)
+    // get mana from coin or other spells
+    public void GetBonusRessources(int mainRessourceAmount)
     {
         bonusMainRessource += mainRessourceAmount;
         MainRessourceAvailable += mainRessourceAmount;
-        bonusSecondRessource += secondRessourceAmount;
-        SecondRessourceAvailable += secondRessourceAmount;
     }
 
     // FOR TESTING ONLY
@@ -278,9 +251,9 @@ public class Player : MonoBehaviour, ILivable
             if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
                 CardAsset cardDrawn = NetworkSessionData.IsNetworkSession
-                    ? deck.DrawWeightedCard(finalSeed, playerMainIncome, playerSecondIncome, gameObject.name)
+                    ? deck.DrawWeightedCard(finalSeed, playerMainIncome, gameObject.name)
                     : deck.DrawWeightedCard(UnityEngine.Random.Range(int.MinValue, int.MaxValue),
-                                            playerMainIncome, playerSecondIncome, gameObject.name);
+                                            playerMainIncome, gameObject.name);
 
                 // Debug.Log($"[DrawACard] Player {PlayerID} | finalSeed={finalSeed} → {cardDrawn.name} | netID={netWorkID}");
 
@@ -321,23 +294,28 @@ public class Player : MonoBehaviour, ILivable
         CardLogic tokenCard = new CardLogic(tokenAsset, cardID);
         tokenCard.owner = this;
 
+        bool tokenIsMelee = tokenAsset.melee;
+        int rowLocalPos   = tablePos; // position dans la rangée, envoyée par le serveur
+        int logicalIndex  = GetLogicalInsertIndex(tokenAsset.melee, baseID, rowLocalPos);
+
         CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
         if (visualData?.vfxPrefab != null)
         {
-            int maxSlots = targetArea.tableVisual.slots.Children.Length;
-            int currentCount = targetArea.tableVisual.CreaturesOnTable.Count;
-            int newCount = currentCount + 1;
-            int firstSlot = (maxSlots - newCount) / 2;
-            int finalSlotIndex = Mathf.Clamp(firstSlot + currentCount, 0, maxSlots - 1);
-            Vector3 spawnPos = targetArea.tableVisual.slots.Children[finalSlotIndex].transform.position;
+            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                ? targetArea.tableVisual.meleeSlots
+                : targetArea.tableVisual.rangedSlots;
+            int currentCount = tokenIsMelee
+                ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+            Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
             new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
             new DelayCommand(0.9f).AddToQueue();
         }
 
-        new PlayACreatureCommand(tokenCard, this, tablePos, creatureID, targetArea).AddToQueue();
+        new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
         EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
     }
 
@@ -370,7 +348,6 @@ public class Player : MonoBehaviour, ILivable
     public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
 
         EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
@@ -392,36 +369,72 @@ public class Player : MonoBehaviour, ILivable
     }
 
     // 2nd overload - by logic units
-    public void PlayACreatureFromHand(CardLogic playedCard, int tablePos, PlayerArea selectedPArea)
+    public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
-        int baseID = selectedPArea.baseID;
+        int baseID       = selectedPArea.baseID;
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
+
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
-        // 
-        new PlayACreatureCommand(playedCard, this, tablePos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
-        // cause battlecry Effect
-        EffectRegistry.ETB(playedCard.ca, new EffectContext
-        {
-            Caster = this,
-            Target = null,
-            Source = newCreature
-        });
-        // remove this card from hand
+
+        new PlayACreatureCommand(playedCard, this, rowLocalPos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature });
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
     }
 
+    // Index d'insertion dans playedCards.Creatures pour maintenir [melee G→D, ranged G→D]
+    public int GetLogicalInsertIndex(bool isMelee, int baseID, int rowLocalPos)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < playedCards.Creatures.Count; i++)
+        {
+            var c = playedCards.Creatures[i];
+            if (c.BaseID == baseID && c.IsMelee == isMelee)
+            {
+                if (matchCount == rowLocalPos) return i;
+                matchCount++;
+            }
+        }
+        // Append — pour ranged, s'assurer d'être après tous les melee de cette area
+        if (!isMelee)
+        {
+            for (int i = playedCards.Creatures.Count - 1; i >= 0; i--)
+            {
+                if (playedCards.Creatures[i].BaseID == baseID && playedCards.Creatures[i].IsMelee)
+                    return i + 1;
+            }
+        }
+        return playedCards.Creatures.Count;
+    }
 
+    // Resync l'ordre logique après un repositionnement visuel
+    public void ResyncCreatureOrderForArea(int baseID, List<GameObject> meleeGOs, List<GameObject> rangedGOs)
+    {
+        var ordered = new List<CreatureLogic>();
+        foreach (var go in meleeGOs)
+        {
+            IDHolder id = go?.GetComponent<IDHolder>();
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+                ordered.Add(cl);
+        }
+        foreach (var go in rangedGOs)
+        {
+            IDHolder id = go?.GetComponent<IDHolder>();
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+                ordered.Add(cl);
+        }
+        playedCards.Creatures.RemoveAll(c => c.BaseID == baseID);
+        playedCards.Creatures.AddRange(ordered);
+    }
 
-    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int baseID)
+    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -438,8 +451,10 @@ public class Player : MonoBehaviour, ILivable
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) return;
 
-        if (!playedCard.ca.Celerity)
-            targetArea.tableVisual.AddCreatureToPendingZone(playedCard.ca, creatureUniqueID, baseID);
+        targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
+        GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
+        if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+            ocm.SetPending(true);
     }
 
     public void NetworkFlushPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
@@ -457,7 +472,9 @@ public class Player : MonoBehaviour, ILivable
         }
 
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
+
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -482,11 +499,11 @@ public class Player : MonoBehaviour, ILivable
         }
 
         MainRessourceAvailable -= playedCard.MainCost;
-        SecondRessourceAvailable -= playedCard.SecondCost;
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        playedCards.Creatures.Insert(tablePos, newCreature);
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
@@ -505,7 +522,7 @@ public class Player : MonoBehaviour, ILivable
         // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
-        TurnManager.Instance.StopTheTimer();
+        // TurnManager.Instance.StopTheTimer();
         new GameOverCommand(this).AddToQueue();
     }
 
@@ -522,26 +539,26 @@ public class Player : MonoBehaviour, ILivable
             OneCardManager cardManager = CheckCardManager(g);
             if (cardManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
                 continue;
             }
-            bool affordable = (cl.MainCost <= mainRessourceAvailable) && (cl.SecondCost <= secondRessourceAvailable);
+            bool affordable = (cl.MainCost <= mainRessourceAvailable);
             cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
-        bool canAttack = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
 
         foreach (CreatureLogic crl in playedCards.Creatures)
         {
             GameObject g = IDHolder.GetGameObjectWithID(crl.UniqueCreatureID);
+            if (g == null) continue; // Détruit (mort en auto-battle), cas attendu
+            
             OneCreatureManager creatureManager = CheckCreatureManager(g);
             if (creatureManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
                 continue;
             }
-            creatureManager.CanAttackNow = canAttack && (crl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
         }
@@ -552,8 +569,6 @@ public class Player : MonoBehaviour, ILivable
             if (g == null) continue;
             OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
             if (bm == null) continue;
-            bm.CanAttackNow = canAttack && (bl.AttacksLeftThisTurn > 0) && !removeAllHighlights;
-            bm.UpdateGlow();
         }
 
     }
@@ -693,11 +708,9 @@ public class Player : MonoBehaviour, ILivable
     public void CalculatePlayerIncome()
     {
         playerMainIncome = 0;
-        playerSecondIncome = 0;
         foreach (BaseAsset baseAsset in controlledBaseAssets)
         {
             playerMainIncome += baseAsset.mainRessourceIncome;
-            playerSecondIncome += baseAsset.secondRessourceIncome;
         }
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
@@ -720,15 +733,14 @@ public class Player : MonoBehaviour, ILivable
         {
             if (table.tag == this.tag)
             {
-                if (table.CreaturesOnTable.Count <= 0)
+                if (table.MeleeCreaturesOnTable.Count <= 0 && table.RangedCreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
                     return false;
                 }
             }
         }
-        if (MainRessourceAvailable < baseAsset.mainRessourceBaseCost || 
-        SecondRessourceAvailable < baseAsset.secondRessourceBaseCost)
+        if (MainRessourceAvailable < baseAsset.mainRessourceBaseCost)
         {
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
             return false;
@@ -753,7 +765,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void ShowBuildings(BuildSpotVisual spot)
     {
-        Debug.Log("Show Buildings for player " + PlayerID);
+        // Debug.Log("Show Buildings for player " + PlayerID);
         GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
     }
 
@@ -762,7 +774,6 @@ public class Player : MonoBehaviour, ILivable
         if (NetworkSessionData.IsNetworkSession)
         {
             MainRessourceAvailable -= building.MainCost;
-            SecondRessourceAvailable -= building.SecondCost;
             spot.SpawnPendingBuilding(building, this);
             GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.buildings.IndexOf(building), spot.SpotID);
         }

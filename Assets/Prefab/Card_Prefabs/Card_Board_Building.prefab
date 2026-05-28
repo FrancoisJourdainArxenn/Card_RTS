@@ -58,9 +58,6 @@ MonoBehaviour:
   frame: {fileID: 3193365811603967444}
   glow: {fileID: 7368865151671539246}
   MeleeImage: {fileID: 5506920404441326065}
-  MarkedForDeathIndicator: {fileID: 7879191156817823205}
-  WillBeDamagedIndicator: {fileID: 7434925307814962791}
-  pendingDamageText: {fileID: 7100037047781139803}
   PendingIcon: {fileID: 3687173302525234179}
   AttackDamageBG: {fileID: 6026808317233062867}
 --- !u!114 &7802661973951423628
@@ -100,6 +97,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EffectVisualHandler
   effectOverlay: {fileID: 4867467468453085196}
+  deathPendingMaterial: {fileID: 2100000, guid: 560a6521f09a02d47b099bed265a99ec, type: 2}
   deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
 --- !u!1 &1025744701815881091
 GameObject:
@@ -1225,7 +1223,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -1921341487
-  m_SortingLayer: 5
+  m_SortingLayer: 6
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 0}

@@ -58,7 +58,6 @@ public class CreatureAttackVisual : MonoBehaviour
             return;
         }
 
-        manager.CanAttackNow = false;
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
@@ -121,7 +120,7 @@ public class CreatureAttackVisual : MonoBehaviour
 
                 manager.HealthText.text = attackerHealthAfter.ToString();
                 Sequence s = DOTween.Sequence();
-                s.AppendInterval(1f);
+                s.AppendInterval(0.3f);
                 s.SetLink(gameObject);
                 s.OnComplete(Command.CommandExecutionComplete);
             }));

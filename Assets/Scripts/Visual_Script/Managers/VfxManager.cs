@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using TMPro;
 
 public class VfxManager : MonoBehaviour
 {
@@ -79,6 +80,43 @@ public class VfxManager : MonoBehaviour
         effectOverlay.SetActive(true);
         yield return new WaitForSeconds(duration);
         effectOverlay.SetActive(false);
+    }
+
+    private GameObject shieldVfxInstance;
+
+    public void ShowShieldVfx(GameObject prefab, int amount)
+    {
+        if (prefab == null) return;
+        HideShieldVfx();
+        shieldVfxInstance = Instantiate(prefab, transform);
+        SetShieldText(amount);
+    }
+
+    public void UpdateShieldVfx(int remainingAmount)
+    {
+        if (shieldVfxInstance == null) return;
+        SetShieldText(remainingAmount);
+    }
+
+    private void SetShieldText(int amount)
+    {
+        if (shieldVfxInstance == null) return;
+        var config = shieldVfxInstance.GetComponent<VfxAmountConfig>();
+        var label = shieldVfxInstance.GetComponentInChildren<TMP_Text>();
+        if (label != null && config != null)
+        {
+            label.color = config.textColor;
+            label.text = config.prefix + amount;
+        }
+    }
+
+    public void HideShieldVfx()
+    {
+        if (shieldVfxInstance != null)
+        {
+            Destroy(shieldVfxInstance);
+            shieldVfxInstance = null;
+        }
     }
 
     public void ShowDeathPending()

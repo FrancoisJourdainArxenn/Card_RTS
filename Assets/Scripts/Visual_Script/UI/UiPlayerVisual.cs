@@ -5,8 +5,8 @@ public class UiPlayerVisual : MonoBehaviour
 {
     [Tooltip("Texte au centre de l’icône (ex. le « X » de maquette).")]
     [SerializeField] TMP_Text countText;
-    public TMP_Text mainRessourceText,secondRessourceText;
-    public TMP_Text MainRessourceIncomeText,SecondRessourceIncomeText;
+    public TMP_Text mainRessourceText;
+    public TMP_Text MainRessourceIncomeText;
 
     [Tooltip("Si renseigné, prend la priorité sur owner.")]
     [SerializeField] Player player;
@@ -56,12 +56,8 @@ public class UiPlayerVisual : MonoBehaviour
 
         if (mainRessourceText != null)
             mainRessourceText.text = player.mainRessourceAvailable.ToString();
-        if (secondRessourceText != null)
-            secondRessourceText.text = player.secondRessourceAvailable.ToString();
         if (MainRessourceIncomeText != null)
             MainRessourceIncomeText.text = player.playerMainIncome.ToString();
-        if (SecondRessourceIncomeText != null)
-            SecondRessourceIncomeText.text = player.playerSecondIncome.ToString();
     }
 
 }

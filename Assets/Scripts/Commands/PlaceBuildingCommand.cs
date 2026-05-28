@@ -26,8 +26,7 @@ public class PlaceBuildingCommand : Command
         if (!alreadyPaid)
         {
             player.MainRessourceAvailable -= building.MainCost;
-            player.SecondRessourceAvailable -= building.SecondCost;
-            new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable, player.secondRessourceTotal, player.SecondRessourceAvailable).AddToQueue();
+            new UpdateRessourcesCommand(player, player.mainRessourceTotal, player.MainRessourceAvailable).AddToQueue();
         }
 
         BuildingLogic buildingLogic = new BuildingLogic(player, building, spot, buildingUniqueID);

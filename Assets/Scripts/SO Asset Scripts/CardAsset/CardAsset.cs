@@ -49,7 +49,7 @@ public class CardAsset : ScriptableObject
     [TextArea(2,3)]
     public string Description;  // Description for spell or character
 	public Sprite CardImage;
-    public int MainCost, SecondCost;
+    public int MainCost;
 
 
     [Header("Attack and Health info")]

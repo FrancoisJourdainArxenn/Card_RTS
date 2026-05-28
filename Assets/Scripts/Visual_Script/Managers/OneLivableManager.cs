@@ -17,10 +17,10 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     public Image glow;
     public Image MeleeImage;
 
-    [Header("Combat Indicators")]
-    public GameObject MarkedForDeathIndicator;
-    public GameObject WillBeDamagedIndicator;
-    public TMP_Text pendingDamageText;
+    // [Header("Combat Indicators")]
+    // public GameObject MarkedForDeathIndicator;
+    // public GameObject WillBeDamagedIndicator;
+    // public TMP_Text pendingDamageText;
 
     private Color _originalAttackColor;
     private Color _originalHealthColor;
@@ -42,12 +42,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
                    : originalColor;
     }
 
-    private bool canAttackNow = false;
-    public bool CanAttackNow
-    {
-        get { return canAttackNow; }
-        set { canAttackNow = value; }
-    }
     private bool canMoveNow = false;
     public bool CanMoveNow
     {

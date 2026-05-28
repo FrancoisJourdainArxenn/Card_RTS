@@ -17,10 +17,9 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>Battle Start:</b> an Enemy in my zone gets -1/-1.
+  Description: <b>Battle Start:</b> an Enemy in my zone gets -1/-1 until end of turn.
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
   MainCost: 2
-  SecondCost: 4
   Attack: 1
   MaxHealth: 5
   AttacksForOneTurn: 1
@@ -32,12 +31,12 @@ MonoBehaviour:
   - {fileID: 0}
   Effects:
   - EffectName: Moral Instability
-    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Effect: {fileID: 11400000, guid: e8d2bd0daeeb30b4cb433af3f3b5e32d, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
-      - targetType: 1
+      - targetType: 0
         includesSource: 0
         onlySource: 0
         queries:
@@ -52,11 +51,11 @@ MonoBehaviour:
         queries: []
       repartition: 0
     Parameters:
-      Amount: -1
-      SecondAmount: -1
+      Amount: 0
+      SecondAmount: 0
       TokenToSummon: {fileID: 0}
       Placement: 0
     VisualData:
-      vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+      vfxPrefab: {fileID: 0}
       overlayMaterial: {fileID: 0}
       OverrideOverlayDuration: 0

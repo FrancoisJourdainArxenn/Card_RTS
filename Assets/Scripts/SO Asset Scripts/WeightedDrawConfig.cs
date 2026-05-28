@@ -4,7 +4,6 @@ using UnityEngine;
 public class WeightedDrawConfig : ScriptableObject
 {
     [Header("Income")]
-    public float multiplicateur = 1f;
     public int   I_min = 8;
     public int   I_max = 15;
 

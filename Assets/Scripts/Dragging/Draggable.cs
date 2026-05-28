@@ -47,12 +47,8 @@ public class Draggable : MonoBehaviour {
             _draggingThis = this;
             da.OnStartDrag();
             //zDisplacement = -Camera.main.transform.position.z + transform.position.z;
-            Vector3 mousePos = MouseInWorldCoords();
-            pointerDisplacement = new Vector3(
-                mousePos.x - transform.position.x,
-                0f,
-                mousePos.z - transform.position.z
-            );
+            pointerDisplacement = Vector3.zero;
+
         }
     }
 

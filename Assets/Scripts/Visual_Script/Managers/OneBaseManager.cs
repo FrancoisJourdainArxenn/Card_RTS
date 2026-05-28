@@ -10,7 +10,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     [Header("Text Component References")]
 
     public TMP_Text MainRessourceIncome;
-    public TMP_Text SecondRessourceIncome;
     public TMP_Text HealthText;
 
     [Header("Image References")]
@@ -20,11 +19,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     public Image CardFaceGlowImage;
     public GameObject Spawner;
 
-    [Header("Damage Indicators")]
-    public GameObject MarkedForDeathIndicator;
-    public GameObject WillBeDamagedIndicator;
-    public TMP_Text pendingDamageText;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
         if (baseAsset != null)
@@ -64,7 +58,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             resolver = p?.MainPArea?.parentZone?.GetComponent<ZoneCombatResolver>();
         }
 
-        resolver?.TryRedirectDamageFromBase(id);
+        // resolver?.TryRedirectDamageFromBase(id);
     }
 
     private IIdentifiable ResolveEntity(int id)
@@ -94,7 +88,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         CurrentHealth = baseAsset.MaxHealth;
         HealthText.text = CurrentHealth.ToString();
         MainRessourceIncome.text = "+ " + baseAsset.mainRessourceIncome.ToString();
-        SecondRessourceIncome.text = "+ " + baseAsset.secondRessourceIncome.ToString();
         ArtImage.sprite = baseAsset.BaseImage;
     }
 
@@ -151,24 +144,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
             return GlobalSettings.Instance.LowPlayer;
 
         return null;
-    }
-
-    public void ShowPendingDamage(int damage, int currentHealth)
-    {
-        bool dies = damage >= currentHealth;
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
-        if (WillBeDamagedIndicator != null)
-        {
-            WillBeDamagedIndicator.SetActive(!dies);
-            if (!dies && pendingDamageText != null)
-                pendingDamageText.text = damage.ToString();
-        }
-    }
-
-    public void ClearPendingDamageIndicator()
-    {
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
-        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
     public void RemoveBaseWithID(int baseUniqueID)

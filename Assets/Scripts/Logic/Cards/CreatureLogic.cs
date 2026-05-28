@@ -33,6 +33,24 @@ public class CreatureLogic: ILivable
 
         set
         {
+            if (value < health && ShieldValue > 0)
+            {
+                int damage = health - value;
+                int absorbed = Mathf.Min(damage, ShieldValue);
+                ShieldValue -= absorbed;
+                value = health - (damage - absorbed);
+                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {damage} | Absorbés: {absorbed} | Shield restant: {ShieldValue} | PV: {health} → {value}");
+                var shieldVfx = IDHolder.GetGameObjectWithID(UniqueCreatureID)?.GetComponent<VfxManager>();
+                if (ShieldValue == 0)
+                    shieldVfx?.HideShieldVfx();
+                else
+                    shieldVfx?.UpdateShieldVfx(ShieldValue);
+            }
+            else if (value < health)
+            {
+                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {health - value} | Pas de shield | PV: {health} → {value}");
+            }
+
             if (value > MaxHealth)
                 health = MaxHealth;
             else if (value <= 0)
@@ -65,6 +83,13 @@ public class CreatureLogic: ILivable
 
     public bool IsPendingDeath { get; private set; }
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
+
+    public int ShieldValue { get; private set; } = 0;
+
+    public void ApplyShield(int value)
+    {
+        ShieldValue = Mathf.Max(ShieldValue, value);
+    }
 
     // returns true if we can attack with this creature now
     public bool CanAttack
@@ -170,13 +195,22 @@ public class CreatureLogic: ILivable
     }
 
     public void Die()
-    {   
-        owner.playedCards.Creatures.Remove(this);
-        
-        // cause Deathrattle Effect
+    {
+        bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDied(this, owner);
-        
         FogOfWarManager.Refresh();
+        if (wasInList)
+            new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+    }
+
+    // During Battle: queues the visual die command immediately so the creature disappears
+    // during the attack animation. Deathrattle fires later via DrainPendingDeaths at End phase.
+    public void ScheduleBattleDeath()
+    {
+        if (IsPendingDeath) return;
+        health = 0;
+        IsPendingDeath = true;
+        PendingDeathList.Add(this);
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }
 
@@ -223,10 +257,13 @@ public class CreatureLogic: ILivable
 
     public void Move(int baseID, int tablePos)
     {
+        ZoneLogic sourceZone = owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
         MovementsLeftThisTurn--;
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
+        ZoneLogic destZone = owner.GetPlayerAreaByID(baseID)?.parentZone.Logic;
+        CommandMoveTracker.RegisterMove(sourceZone, destZone, owner);
     }
 
     public static void ProcessPendingDeaths()

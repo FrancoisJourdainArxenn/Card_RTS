@@ -33,12 +33,6 @@ public class OneBuildingManager : OneLivableManager
                 return; // consumed by targeting
             // Not eligible — fall through
         }
-        if (TurnManager.Instance.IsBattlePhase)
-        {
-            ZoneCombatResolver resolver = ZoneCombatResolver.FindForBuilding(BuildingLogic);
-            if (resolver != null)
-                resolver.TryRedirectDamageFromBuilding(BuildingLogic);
-        }
     }
 
     public void ReadBuidingFromAsset()
@@ -63,33 +57,6 @@ public class OneBuildingManager : OneLivableManager
             PreviewManager.ReadCardFromAsset();
         }
         
-    }
-
-    public void UpdateGlow()
-    {
-        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle)
-            glow.color = Color.red;
-        if(TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Command)
-            glow.color = Color.green;
-        glow.enabled = CanAttackNow;
-    }
-
-    public void ShowPendingDamage(int damage, int currentHealth)
-    {
-        bool dies = damage >= currentHealth;
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(dies);
-        if (WillBeDamagedIndicator != null)
-        {
-            WillBeDamagedIndicator.SetActive(!dies);
-            if (!dies && pendingDamageText != null)
-                pendingDamageText.text = damage.ToString();
-        }
-    }
-
-    public void ClearPendingDamageIndicator()
-    {
-        if (MarkedForDeathIndicator != null) MarkedForDeathIndicator.SetActive(false);
-        if (WillBeDamagedIndicator != null)  WillBeDamagedIndicator.SetActive(false);
     }
 
     public void SetPending(bool isPending)

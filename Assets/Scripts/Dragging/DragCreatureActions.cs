@@ -41,6 +41,12 @@ public class DragCreatureActions : DraggingActions {
             if (idHolder != null)
                 GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
         }
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+        {
+            IDHolder idHolder = GetComponentInParent<IDHolder>();
+            if (idHolder != null)
+                TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
+        }
         manager.ClearPendingMoveArrow();
 
         originArea = playerOwner.SelectedPArea();
@@ -61,12 +67,6 @@ public class DragCreatureActions : DraggingActions {
     {
         TurnManager turnmanager = TurnManager.Instance;
         
-        /*if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Battle) {
-            SelectTarget();
-            bool targetValid = AttackTarget();
-            if (!targetValid)
-                OnDragFailed();
-        }*/
         if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Command) {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool moveValid = Move(selectedPArea);  
@@ -77,36 +77,6 @@ public class DragCreatureActions : DraggingActions {
         
         // return target and arrow to original position
         ResetDragElements();
-    }
-    private void SelectTarget()
-    {
-        target = null;
-        RaycastHit[] hits;
-        // TODO: raycast here anyway, store the results in
-        hits = Physics.RaycastAll(origin: Camera.main.transform.position, 
-            direction: (-Camera.main.transform.position + this.transform.position).normalized, 
-            maxDistance: 30f);
-
-        foreach (RaycastHit h in hits)
-        {
-            if ((h.transform.tag == "TopPlayer" && this.tag == "LowCreature") ||
-                (h.transform.tag == "LowPlayer" && this.tag == "TopCreature"))
-            {
-                // go face
-                IDHolder hitIdHolder = h.transform.GetComponentInParent<IDHolder>();
-                if (hitIdHolder != null)
-                    target = hitIdHolder.gameObject;
-            }
-            else if ((h.transform.tag == "TopCreature" && this.tag == "LowCreature") ||
-                    (h.transform.tag == "LowCreature" && this.tag == "TopCreature"))
-            {
-                // hit a creature, resolve to the object that actually carries the ID
-                IDHolder hitIdHolder = h.transform.GetComponentInParent<IDHolder>();
-                if (hitIdHolder != null)
-                    target = hitIdHolder.gameObject;
-            }
-            
-        }
     }
 
     private bool Move(PlayerArea targetPlayerArea)
@@ -140,27 +110,26 @@ public class DragCreatureActions : DraggingActions {
         IDHolder moverIdHolder = GetComponentInParent<IDHolder>();
         if (moverIdHolder == null)
         {
-            Debug.Log("pas d'ID pour le mover");
+            // Debug.Log("pas d'ID pour le mover");
             return false;
         }
 
         if (!CreatureLogic.CreaturesCreatedThisGame.ContainsKey(moverIdHolder.UniqueID))
         {
-            Debug.Log("mover not found");
+            // Debug.Log("mover not found");
             return false;
         }
-        int tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(
-            Camera.main.ScreenToWorldPoint(
-                new Vector3(
-                    Input.mousePosition.x,
-                    Input.mousePosition.y,
-                    transform.position.z - Camera.main.transform.position.z
-                )
-            ).x
-        );
+        bool isMelee = CreatureLogic.CreaturesCreatedThisGame[moverIdHolder.UniqueID].IsMelee;
+        int tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(isMelee);
+
         if (NetworkSessionData.IsNetworkSession)
         {
             GameNetworkManager.Instance.MoveCreatureServerRpc(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
+            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+        }
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+        {
+            TurnManager.Instance.EnqueueSoloMove(moverIdHolder.UniqueID, targetPlayerArea.baseID, tablePos);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
         }
         else
@@ -169,103 +138,6 @@ public class DragCreatureActions : DraggingActions {
         }
         return true;
 
-    }
-    
-    private bool AttackTarget()
-    {
-        if(target == null)
-        {
-            Debug.Log("target null");
-            return false;
-        }
-   
-        IDHolder targetIdHolder = target.GetComponent<IDHolder>();
-        if (targetIdHolder == null)
-            targetIdHolder = target.GetComponentInParent<IDHolder>();
-
-        IDHolder attackerIdHolder = GetComponentInParent<IDHolder>();
-        if (targetIdHolder == null || attackerIdHolder == null)
-        {
-            Debug.Log("ID holder de target or attacker is null");
-            return false;
-        }
-               
-        int targetID = targetIdHolder.UniqueID;
-        int attackerID = attackerIdHolder.UniqueID;
-
-        if (targetID == attackerID)
-        {
-            Debug.Log("target or attacker ID null");
-            return false;
-        }
-
-        if (!CreatureLogic.CreaturesCreatedThisGame.ContainsKey(attackerID))
-        {
-            Debug.Log("Attacker not found");
-            return false;
-        }
-
-        if (targetID == GlobalSettings.Instance.LowPlayer.PlayerID || targetID == GlobalSettings.Instance.TopPlayer.PlayerID)
-        {
-            Player targetPlayer = (targetID == GlobalSettings.Instance.LowPlayer.PlayerID)
-                ? GlobalSettings.Instance.LowPlayer
-                : GlobalSettings.Instance.TopPlayer;
-            if (targetPlayer.MainPArea.parentZone != originArea.parentZone)
-            {
-                new ShowMessageCommand("Base not in range", 1f).AddToQueue();
-                return false;
-            }
-            Debug.Log("Attacking face" + target);
-            if (NetworkSessionData.IsNetworkSession)
-                GameNetworkManager.Instance.GoFaceServerRpc(attackerID);
-            else
-                CreatureLogic.CreaturesCreatedThisGame[attackerID].GoFace();
-            return true;
-        }
-        
-        if (BaseLogic.BasesCreatedThisGame.ContainsKey(targetID) &&
-            BaseLogic.BasesCreatedThisGame[targetID] != null)
-        {
-            BaseLogic bl = BaseLogic.BasesCreatedThisGame[targetID];
-            if (bl.neutralBaseController.zone != originArea.parentZone)
-            {
-                new ShowMessageCommand("Base not in range", 1f).AddToQueue();
-                return false;
-            }
-            if (NetworkSessionData.IsNetworkSession)
-                GameNetworkManager.Instance.AttackBaseServerRpc(attackerID, targetID);
-            else
-                CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackBaseWithID(targetID);
-            Debug.Log("Attacking base " + target);
-            return true;  
-
-        }
-        if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetID) &&
-            CreatureLogic.CreaturesCreatedThisGame[targetID] != null)
-        {
-            // if targeted creature is still alive, attack creature
-            CreatureLogic cl = CreatureLogic.CreaturesCreatedThisGame[targetID];
-            if (cl.Targetable)
-            {
-                PlayerArea targetArea = cl.owner.GetPlayerAreaByID(cl.BaseID);
-                if (targetArea.parentZone != originArea.parentZone)
-                {
-                    new ShowMessageCommand("Unit not in range", 1f).AddToQueue();
-                    return false;
-                }
-                if (NetworkSessionData.IsNetworkSession)
-                    GameNetworkManager.Instance.AttackCreatureServerRpc(attackerID, targetID);
-                else
-                    CreatureLogic.CreaturesCreatedThisGame[attackerID].AttackCreatureWithID(targetID);
-                Debug.Log("Attacking Creature " + target);
-                return true;                
-            }
-            new ShowMessageCommand("You can't target this unit", 2f).AddToQueue();
-            return false;
-        }            
-
-        Debug.Log("Unknown Error");
-        return false;
     }
 
     private void ResetDragElements()
@@ -315,7 +187,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void HighlightReachableAreas()
     {
-        Debug.Log($"[Highlight] Phase={TurnManager.Instance.CurrentPhase}, originArea={originArea?.name ?? "NULL"}, parentZone={originArea?.parentZone?.name ?? "NULL"}, PAreas={playerOwner.PAreas?.Length}");
+        // Debug.Log($"[Highlight] Phase={TurnManager.Instance.CurrentPhase}, originArea={originArea?.name ?? "NULL"}, parentZone={originArea?.parentZone?.name ?? "NULL"}, PAreas={playerOwner.PAreas?.Length}");
 
         if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
             return;

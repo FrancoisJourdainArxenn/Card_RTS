@@ -32,8 +32,10 @@ public class PlayACreatureCommand : Command
         if (existingCreature != null)
         {
             selectedPArea.tableVisual.PendingCreaturesOnTable.Remove(existingCreature);
+            selectedPArea.tableVisual.MeleeCreaturesOnTable.Remove(existingCreature);
+            selectedPArea.tableVisual.RangedCreaturesOnTable.Remove(existingCreature);
             selectedPArea.tableVisual.MoveCreatureToIndex(existingCreature, creatureID, tablePos, selectedPArea.baseID);
-            existingCreature.GetComponent<OneCreatureManager>().SetGray(false);
+            if (existingCreature.TryGetComponent(out OneCreatureManager ocm)) ocm.SetPending(false);
         }
         else
         {

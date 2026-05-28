@@ -6,23 +6,18 @@ public class UpdateRessourcesCommand : Command {
     private Player p;
     private int mainRessourceTotal;
     private int mainRessourceAvailable;
-    private int secondRessourceTotal;
-    private int secondRessourceAvailable;
 
-    public UpdateRessourcesCommand(Player p, int mainRessourceTotal, int mainRessourceAvailable, int secondRessourceTotal, int secondRessourceAvailable)
+    public UpdateRessourcesCommand(Player p, int mainRessourceTotal, int mainRessourceAvailable)
     {
         this.p = p;
         this.mainRessourceTotal = mainRessourceTotal;
         this.mainRessourceAvailable = mainRessourceAvailable;
-        this.secondRessourceTotal = secondRessourceTotal;
-        this.secondRessourceAvailable = secondRessourceAvailable;
     }
 
     public override void StartCommandExecution()
     {
         
         p.mainRessourceAvailable = mainRessourceAvailable;
-        p.secondRessourceAvailable = secondRessourceAvailable;
 
         if (p == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
         {
