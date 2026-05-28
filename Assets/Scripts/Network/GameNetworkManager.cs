@@ -98,8 +98,34 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.ResolverP1Pools, canonical.ResolverP2Pools
         );
 
+        ZoneCombatResolver.SerializeAllBattleSteps(
+            out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
+            out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
+            out int[] stepOwnerPlayerIDs);
+        BroadcastBattleStepsClientRpc(
+            stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
+            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs);
+
         TurnManager.Instance.ForceRegisterEndPhase(0);
         TurnManager.Instance.ForceRegisterEndPhase(1);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : reconstruit la séquence de combat et enqueue les commandes
+    /// d'animation step-by-step (ZoneClashMove puis CreatureAttackCommand / BuildingAttackCommand).
+    /// Doit être reçu après ApplyCanonicalBattleAssignmentClientRpc pour que pendingDamage soit set.
+    /// </summary>
+    [ClientRpc]
+    void BroadcastBattleStepsClientRpc(
+        int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
+        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
+    {
+        Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus");
+        for (int i = 0; i < targetKinds.Length; i++)
+            if (targetKinds[i] >= 2) // Base=2, Player=3
+                Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+        ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
+            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
     }
 
     /// <summary>
@@ -719,40 +745,40 @@ public class GameNetworkManager : NetworkBehaviour
         creature.Move(targetBaseID, tablePos);
     }
 
-    //Attacking Units
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
-    {
-        AttackCreatureClientRpc(attackerID, targetCreatureID);
-    }
+    // //Attacking Units
+    // [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    // public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
+    // {
+    //     AttackCreatureClientRpc(attackerID, targetCreatureID);
+    // }
 
-    [ClientRpc]
-    void AttackCreatureClientRpc(int attackerID, int targetCreatureID)
-    {
-        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
-        {
-            Debug.LogError($"[GameNetworkManager] AttackCreature: attaquant introuvable id={attackerID}");
-            return;
-        }
-        attacker.AttackCreatureWithID(targetCreatureID);
-    }
+    // [ClientRpc]
+    // void AttackCreatureClientRpc(int attackerID, int targetCreatureID)
+    // {
+    //     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+    //     {
+    //         Debug.LogError($"[GameNetworkManager] AttackCreature: attaquant introuvable id={attackerID}");
+    //         return;
+    //     }
+    //     attacker.AttackCreatureWithID(targetCreatureID);
+    // }
 
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void AttackBaseServerRpc(int attackerID, int targetBaseID)
-    {
-        AttackBaseClientRpc(attackerID, targetBaseID);
-    }
+    // [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    // public void AttackBaseServerRpc(int attackerID, int targetBaseID)
+    // {
+    //     AttackBaseClientRpc(attackerID, targetBaseID);
+    // }
 
-    [ClientRpc]
-    void AttackBaseClientRpc(int attackerID, int targetBaseID)
-    {
-        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
-        {
-            Debug.LogError($"[GameNetworkManager] AttackBase: attaquant introuvable id={attackerID}");
-            return;
-        }
-        attacker.AttackBaseWithID(targetBaseID);
-    }
+    // [ClientRpc]
+    // void AttackBaseClientRpc(int attackerID, int targetBaseID)
+    // {
+    //     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attacker))
+    //     {
+    //         Debug.LogError($"[GameNetworkManager] AttackBase: attaquant introuvable id={attackerID}");
+    //         return;
+    //     }
+    //     attacker.AttackBaseWithID(targetBaseID);
+    // }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void GoFaceServerRpc(int attackerID)

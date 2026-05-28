@@ -45,7 +45,7 @@ public class TokenGenerationSO : EffectSO
             }
 
             PlayerArea targetArea = ResolveTargetArea(context);
-            bool tokenIsMelee = parameters.TokenToSummon.melee;
+            bool tokenIsMelee = TokenToSummon.melee;
             // Position de départ dans la rangée concernée (melee ou ranged)
             int baseTablePos = tokenIsMelee
                 ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
@@ -115,7 +115,7 @@ public class TokenGenerationSO : EffectSO
         Player caster = context.Caster;
         PlayerArea targetArea = ResolveTargetArea(context);
 
-         bool tokenIsMelee = tokenAsset.melee;
+        bool tokenIsMelee = TokenToSummon.melee;
         int currentCount  = tokenIsMelee
             ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
             : targetArea.tableVisual.RangedCreaturesOnTable.Count;
@@ -136,7 +136,7 @@ public class TokenGenerationSO : EffectSO
 
         CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID);
         int tablePos     = currentCount; // position row-locale : on ajoute à la fin de la rangée
-        int logicalIndex = caster.GetLogicalInsertIndex(tokenAsset.melee, targetArea.baseID, tablePos);
+        int logicalIndex = caster.GetLogicalInsertIndex(TokenToSummon.melee, targetArea.baseID, tablePos);
         caster.playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 

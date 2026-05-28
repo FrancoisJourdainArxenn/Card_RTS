@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// Pile des effets en attente pour la phase en cours, par index de joueur.
@@ -23,9 +22,11 @@ public static class EffectStack
         if (!_byPlayer.TryGetValue(playerIndex, out List<PendingEffectSelection> effects))
             return new List<PendingEffectSelection>();
 
-        return effects
-            .Where(e => e.Data.RequiresPlayerInput && e.EligibleTargets.Count > 0)
-            .ToList();
+        List<PendingEffectSelection> result = new List<PendingEffectSelection>();
+        foreach (PendingEffectSelection e in effects)
+            if (e.Data.RequiresPlayerInput && e.EligibleTargets.Count > 0)
+                result.Add(e);
+        return result;
     }
 
     public static List<PendingEffectSelection> GetAllEffects()

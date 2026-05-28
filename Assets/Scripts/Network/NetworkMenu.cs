@@ -18,6 +18,9 @@ public class NetworkMenu : MonoBehaviour
     [SerializeField] TMP_Dropdown mapDropdown;
     [SerializeField] GameObject[] mapPrefabs;
 
+    [Header("Scene")]
+    [SerializeField] string battleSceneName = "BattleScene";
+
 
 
     private const ushort Port = 7777;
@@ -69,7 +72,7 @@ public class NetworkMenu : MonoBehaviour
                 ? Random.Range(0, mapPrefabs.Length)
                 : idx - 1;
 
-            NetworkManager.Singleton.SceneManager.LoadScene("BattleScene",
+            NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }

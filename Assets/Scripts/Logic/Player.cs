@@ -14,7 +14,17 @@ public class Player : MonoBehaviour, ILivable
     public BaseAsset baseAsset;
     public List<BaseAsset> controlledBaseAssets = new List<BaseAsset>();
 
-    public List<BaseLogic> controlledBases => BaseLogic.BasesCreatedThisGame.Values.Where(b => b.owner == this).ToList();
+    private readonly List<BaseLogic> _controlledBasesCache = new List<BaseLogic>();
+    public List<BaseLogic> controlledBases
+    {
+        get
+        {
+            _controlledBasesCache.Clear();
+            foreach (BaseLogic b in BaseLogic.BasesCreatedThisGame.Values)
+                if (b.owner == this) _controlledBasesCache.Add(b);
+            return _controlledBasesCache;
+        }
+    }
     // a script with references to all the visual game objects for this player
     [HideInInspector] public PlayerArea[] PAreas;
     [HideInInspector] public PlayerArea MainPArea = null;
@@ -529,7 +539,7 @@ public class Player : MonoBehaviour, ILivable
             OneCardManager cardManager = CheckCardManager(g);
             if (cardManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
                 continue;
             }
             bool affordable = (cl.MainCost <= mainRessourceAvailable);
@@ -546,7 +556,7 @@ public class Player : MonoBehaviour, ILivable
             OneCreatureManager creatureManager = CheckCreatureManager(g);
             if (creatureManager == null)
             {
-                Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
+                // Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
                 continue;
             }
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
@@ -723,7 +733,7 @@ public class Player : MonoBehaviour, ILivable
         {
             if (table.tag == this.tag)
             {
-                if (table.MeleeCreaturesOnTable.Count <= 0 || table.RangedCreaturesOnTable.Count <= 0)
+                if (table.MeleeCreaturesOnTable.Count <= 0 && table.RangedCreaturesOnTable.Count <= 0)
                 {
                     new ShowMessageCommand("You need to have at least one creature on the selected table to build a base", 2f).AddToQueue();
                     return false;
@@ -755,7 +765,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void ShowBuildings(BuildSpotVisual spot)
     {
-        Debug.Log("Show Buildings for player " + PlayerID);
+        // Debug.Log("Show Buildings for player " + PlayerID);
         GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
     }
 

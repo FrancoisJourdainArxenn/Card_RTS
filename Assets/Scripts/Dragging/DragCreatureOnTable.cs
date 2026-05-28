@@ -11,6 +11,7 @@ public class DragCreatureOnTable : DraggingActions {
     private OneCardManager manager;
     public int maxCreatureOnBoard = 7;
     private bool _isReturning = false;
+    private bool _isPlayed = false;
 
 
     [SerializeField] private float dragScale = 0.3f;
@@ -20,10 +21,11 @@ public class DragCreatureOnTable : DraggingActions {
     public override bool CanDrag
     {
         get
-        { 
-            return base.CanDrag && manager.CanBePlayedNow && !_isReturning;
+        {
+            return base.CanDrag && manager.CanBePlayedNow && !_isReturning && !_isPlayed;
         }
     }
+
 
 
     void Awake()
@@ -54,8 +56,10 @@ public class DragCreatureOnTable : DraggingActions {
         transform.localScale = _originalScale;
         ResetAreaHighlights();
         // 1) Check if we are holding a card over the table
-        if (DragSuccessful())
+        bool dragOk = DragSuccessful();
+        if (dragOk)
         {
+            _isPlayed = true;
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool isMelee = manager.cardAsset.melee;
             int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
@@ -75,6 +79,7 @@ public class DragCreatureOnTable : DraggingActions {
             {
                 playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
             }
+             GetComponent<Draggable>().enabled = false;
         }
         else
         {
@@ -84,6 +89,9 @@ public class DragCreatureOnTable : DraggingActions {
 
     protected override bool DragSuccessful()
     {
+        if (!TableVisual.CursorOverSomeTable)
+            return false;
+
         PlayerArea selectedPArea = playerOwner.SelectedPArea();
         if (!playerOwner.CanPlayCreatureInArea(selectedPArea))
         {
@@ -96,7 +104,7 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();
             return false;
         }
-        return TableVisual.CursorOverSomeTable && TableNotFull && selectedPArea != null;
+        return true;
     }
 
     private void DragFailed()

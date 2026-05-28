@@ -29,8 +29,6 @@ public class MessageManager : MonoBehaviour
 
         yield return new WaitForSeconds(Duration);
         MessageHolder.SetActive(false);
-
-        Command.CommandExecutionComplete();
     }
 
     // TEST PURPOSES ONLY

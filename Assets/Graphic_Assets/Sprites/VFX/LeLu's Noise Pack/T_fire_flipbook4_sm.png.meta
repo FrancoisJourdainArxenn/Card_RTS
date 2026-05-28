@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 512
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -114,9 +114,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 864
-        width: 216
-        height: 216
+        y: 410
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -125,7 +125,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 165a1bef75763f24b9ae8b3cc824b142
+      spriteID: 5121577b70f251e4489108dd13d92c5a
       internalID: -1675539623
       vertices: []
       indices: 
@@ -135,10 +135,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_1
       rect:
         serializedVersion: 2
-        x: 216
-        y: 864
-        width: 216
-        height: 216
+        x: 102
+        y: 410
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -147,7 +147,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e4b5e699fb911004fa64310fde742266
+      spriteID: d60999157208dd4439cfc891aaea5cd0
       internalID: 1186765887
       vertices: []
       indices: 
@@ -157,10 +157,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_2
       rect:
         serializedVersion: 2
-        x: 432
-        y: 864
-        width: 216
-        height: 216
+        x: 204
+        y: 410
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -169,7 +169,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3c9f38a284fb89044aff3747bfe643cd
+      spriteID: cd1e83426c0dcb34c8f309298b52fb1d
       internalID: 881132512
       vertices: []
       indices: 
@@ -179,10 +179,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_3
       rect:
         serializedVersion: 2
-        x: 648
-        y: 864
-        width: 216
-        height: 216
+        x: 306
+        y: 410
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -191,7 +191,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8fe3b8c459f165b41bb160a786ae1df2
+      spriteID: e4b3fe711121d574ea1bc44e9be5799d
       internalID: 414224336
       vertices: []
       indices: 
@@ -201,10 +201,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_4
       rect:
         serializedVersion: 2
-        x: 864
-        y: 864
-        width: 216
-        height: 216
+        x: 408
+        y: 410
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -213,7 +213,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7767d5d7bd3b5e0468f041a85c8fa967
+      spriteID: 8a07adb1a2f140349a021a7ee1ff3492
       internalID: -76707237
       vertices: []
       indices: 
@@ -224,9 +224,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 648
-        width: 216
-        height: 216
+        y: 308
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -235,7 +235,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8f775f3bb8c4d7943a1cf2adc59987ee
+      spriteID: cdb126ca30aa89f4db60946940203a3c
       internalID: 561181848
       vertices: []
       indices: 
@@ -245,10 +245,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_6
       rect:
         serializedVersion: 2
-        x: 216
-        y: 648
-        width: 216
-        height: 216
+        x: 102
+        y: 308
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -257,7 +257,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 91d3a67c944e1c84fb12e7acafed5b6a
+      spriteID: abca0be34adbe0148879354d6ba3343d
       internalID: 298868541
       vertices: []
       indices: 
@@ -267,10 +267,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_7
       rect:
         serializedVersion: 2
-        x: 432
-        y: 648
-        width: 216
-        height: 216
+        x: 204
+        y: 308
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -279,7 +279,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: dde99dcae064936418501a2ef492b754
+      spriteID: c3984323d5cbe2644b25a609108f9495
       internalID: 1696633741
       vertices: []
       indices: 
@@ -289,10 +289,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_8
       rect:
         serializedVersion: 2
-        x: 648
-        y: 648
-        width: 216
-        height: 216
+        x: 306
+        y: 308
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -301,7 +301,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e528e0dc433249746bd45c4da955cd3a
+      spriteID: 3c98d55417e8e8d42a44e3fda15efc9f
       internalID: -1283742378
       vertices: []
       indices: 
@@ -311,10 +311,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_9
       rect:
         serializedVersion: 2
-        x: 864
-        y: 648
-        width: 216
-        height: 216
+        x: 408
+        y: 308
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -323,7 +323,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c18c0162e39e93e478ce7393318b9778
+      spriteID: 90f282b229088b44aa18ab3def639330
       internalID: -1849967270
       vertices: []
       indices: 
@@ -334,9 +334,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 432
-        width: 216
-        height: 216
+        y: 206
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -345,7 +345,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fe59518707641584dabedeccfcea1b13
+      spriteID: a1ceac13ec9d87148a62afcb6b369c6c
       internalID: 202611485
       vertices: []
       indices: 
@@ -355,10 +355,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_11
       rect:
         serializedVersion: 2
-        x: 216
-        y: 432
-        width: 216
-        height: 216
+        x: 102
+        y: 206
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -367,7 +367,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: aa8abedb8e9909143ab1e2914a80f6a8
+      spriteID: 74f7f58018c1a64459dc4c5ec37916ab
       internalID: -2013319735
       vertices: []
       indices: 
@@ -377,10 +377,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_12
       rect:
         serializedVersion: 2
-        x: 432
-        y: 432
-        width: 216
-        height: 216
+        x: 204
+        y: 206
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -389,7 +389,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cba69e95017d44046a05f07adee0ab11
+      spriteID: 38bf745def8ef244a8c5a73be273593b
       internalID: 1135857455
       vertices: []
       indices: 
@@ -399,10 +399,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_13
       rect:
         serializedVersion: 2
-        x: 648
-        y: 432
-        width: 216
-        height: 216
+        x: 306
+        y: 206
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -411,7 +411,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5d5ba4d76e108eb4b92235d6e2c9a559
+      spriteID: 7a587c0cf8c10744a9e13ad973a50f1f
       internalID: 1354859326
       vertices: []
       indices: 
@@ -421,10 +421,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_14
       rect:
         serializedVersion: 2
-        x: 864
-        y: 432
-        width: 216
-        height: 216
+        x: 408
+        y: 206
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -433,7 +433,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f9a4d276e7b8fd045821f07294414f53
+      spriteID: 3ce1832f60ff6cf458564a924cdf2f21
       internalID: 1051296469
       vertices: []
       indices: 
@@ -444,9 +444,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 216
-        width: 216
-        height: 216
+        y: 104
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -455,7 +455,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6b9dd04a96390f34c867e1c9da8415cb
+      spriteID: 19e40b7f7738d4246b2a8ea739c103de
       internalID: -1715426538
       vertices: []
       indices: 
@@ -465,10 +465,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_16
       rect:
         serializedVersion: 2
-        x: 216
-        y: 216
-        width: 216
-        height: 216
+        x: 102
+        y: 104
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -477,7 +477,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2c2f4cd1652cddc4c84c50868e9ccdbe
+      spriteID: 12af0be05fc386044ab13d2b0bef2510
       internalID: -1645572680
       vertices: []
       indices: 
@@ -487,10 +487,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_17
       rect:
         serializedVersion: 2
-        x: 432
-        y: 216
-        width: 216
-        height: 216
+        x: 204
+        y: 104
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -499,7 +499,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e84d946a9d129e44ea68d18538b360d7
+      spriteID: 760a7ed554afce942a925f72d12f85c5
       internalID: -439287126
       vertices: []
       indices: 
@@ -509,10 +509,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_18
       rect:
         serializedVersion: 2
-        x: 648
-        y: 216
-        width: 216
-        height: 216
+        x: 306
+        y: 104
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -521,7 +521,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 66aa51109ba8cef4e85a8fbb888bb3e4
+      spriteID: 98c299335e3d94a42ac1129f66e72e9b
       internalID: -138949527
       vertices: []
       indices: 
@@ -531,10 +531,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_19
       rect:
         serializedVersion: 2
-        x: 864
-        y: 216
-        width: 216
-        height: 216
+        x: 408
+        y: 104
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -543,7 +543,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 787856aecb4d0914ea5914776bcfb518
+      spriteID: b92f760ef33400e4b8531eb550fadb2a
       internalID: -385865049
       vertices: []
       indices: 
@@ -554,9 +554,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 216
-        height: 216
+        y: 2
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -565,7 +565,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5a9e143cfdc01fe4c8fc71eb79886328
+      spriteID: dab1a29203b8e1546ab960a44b85213d
       internalID: -569951691
       vertices: []
       indices: 
@@ -575,10 +575,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_21
       rect:
         serializedVersion: 2
-        x: 216
-        y: 0
-        width: 216
-        height: 216
+        x: 102
+        y: 2
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -587,7 +587,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: afca96ab521b7a04bafee624eacff9ea
+      spriteID: a32fd42cad6a3de4ba3d9255e8197477
       internalID: -73583314
       vertices: []
       indices: 
@@ -597,10 +597,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_22
       rect:
         serializedVersion: 2
-        x: 432
-        y: 0
-        width: 216
-        height: 216
+        x: 204
+        y: 2
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -609,7 +609,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d91de2d1c4db8e34dbc54aa1cd59f330
+      spriteID: 7c4d5f4159053ac43acfa96d91ad3662
       internalID: -1544560192
       vertices: []
       indices: 
@@ -619,10 +619,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_23
       rect:
         serializedVersion: 2
-        x: 648
-        y: 0
-        width: 216
-        height: 216
+        x: 306
+        y: 2
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -631,7 +631,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c016092718b7a8044a64aaf2a77d598f
+      spriteID: d3c062cc667ba2b43954f6b106d4d500
       internalID: -1915311805
       vertices: []
       indices: 
@@ -641,10 +641,10 @@ TextureImporter:
       name: T_fire_flipbook4_sm_24
       rect:
         serializedVersion: 2
-        x: 864
-        y: 0
-        width: 216
-        height: 216
+        x: 408
+        y: 2
+        width: 102
+        height: 102
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -653,7 +653,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5238a07d2aa090c4a8cad5e6306e7d6d
+      spriteID: 7cf53ec06cd1f274b9f5558c400462dd
       internalID: -570057334
       vertices: []
       indices: 

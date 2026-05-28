@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Netcode;
@@ -25,6 +26,7 @@ public class TurnManager : MonoBehaviour
     private TurnPhases currentPhase = TurnPhases.Command;
     private int currentRound = 1;
     private bool[] phaseReady;
+    private readonly List<(int creatureUniqueID, int targetBaseID, int tablePos)> _soloMoveBuffer = new();
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -53,7 +55,7 @@ public class TurnManager : MonoBehaviour
         EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
         {
-            Debug.LogError("TurnManager: need at least 2 Player instances.");
+            // Debug.LogError("TurnManager: need at least 2 Player instances.");
             return;
         }
 
@@ -84,7 +86,7 @@ public class TurnManager : MonoBehaviour
                 p.deck.cards.Shuffle();
                 p.deck.ResetTimesDrawn();
             }
-            Debug.Log("TurnManager: Deck shuffled with random seed");
+            // Debug.Log("TurnManager: Deck shuffled with random seed");
         }
 
         CardLogic.CardsCreatedThisGame.Clear();
@@ -168,7 +170,7 @@ public class TurnManager : MonoBehaviour
             (player == null || PhaseEffectPipeline.IsPlayerTargetingComplete(player));
         bool routeToConfirm = currentPhase == TurnPhases.BeginCombat || (!PhaseEffectPipeline.IsComplete && !playerTargetingDone);
 
-        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
+        // Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
 
         if (routeToConfirm)
         {
@@ -287,7 +289,7 @@ public class TurnManager : MonoBehaviour
 
 
         int newRound = roundEnded ? currentRound + 1 : currentRound;
-        Debug.Log($"[TurnMgr] AdvancePhaseWhenAllReady — {currentPhase} → {next} (round {currentRound} → {newRound})");
+        // Debug.Log($"[TurnMgr] AdvancePhaseWhenAllReady — {currentPhase} → {next} (round {currentRound} → {newRound})");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -298,6 +300,8 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
+            if (currentPhase == TurnPhases.Command)
+                FlushSoloMoveBuffer();
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle;
             if (isCombatPhase)
@@ -345,7 +349,7 @@ public class TurnManager : MonoBehaviour
 
     public void EnterPhase(TurnPhases phase)
     {
-        Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
+        // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
@@ -373,6 +377,7 @@ public class TurnManager : MonoBehaviour
                 break;
             case TurnPhases.Command:
                 // new ShowMessageCommand("Command", 1.5f).AddToQueue();
+                CommandMoveTracker.Clear();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
@@ -392,6 +397,8 @@ public class TurnManager : MonoBehaviour
                     r.OnBattlePhaseStart();
                 if (!NetworkSessionData.IsNetworkSession)
                     StartCoroutine(AutoAdvanceFromBattleAfterCombat());
+                else
+                    AutoSubmitBattleAssignment();
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -533,11 +540,48 @@ public class TurnManager : MonoBehaviour
             AdvancePhaseWhenAllReady();
     }
 
+    void AutoSubmitBattleAssignment()
+    {
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (localIndex < 0) return;
+        ZoneCombatResolver.BattleAssignment assignment =
+            ZoneCombatResolver.SerializeMyAttackAssignments(localIndex);
+        GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
+            localIndex,
+            assignment.CreatureIDs,     assignment.CreatureDamages,
+            assignment.BaseIDs,         assignment.BaseDamages,
+            assignment.TargetPlayerIDs, assignment.PlayerDamages,
+            assignment.BuildingIDs,     assignment.BuildingDamages);
+    }
+
     IEnumerator AutoAdvanceFromEnd()
     {
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         yield return StartCoroutine(DrainPendingDeaths());
         EnterPhase(TurnPhases.Regroup);
+    }
+
+    public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
+    {
+        _soloMoveBuffer.Add((creatureUniqueID, targetBaseID, tablePos));
+    }
+
+    public void CancelSoloMove(int creatureUniqueID)
+    {
+        _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
+    }
+
+    private void FlushSoloMoveBuffer()
+    {
+        foreach (var (id, baseID, pos) in _soloMoveBuffer)
+        {
+            GameObject creatureGO = IDHolder.GetGameObjectWithID(id);
+            if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+                ocm.ClearPendingMoveArrow();
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
+                creature.Move(baseID, pos);
+        }
+        _soloMoveBuffer.Clear();
     }
 
     IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)

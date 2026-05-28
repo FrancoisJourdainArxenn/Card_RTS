@@ -29,14 +29,14 @@ public class Deck : MonoBehaviour {
             else if (t == 2) _n2++;
             else if (t == 3) _n3++;
         }
-        Debug.Log($"[Deck] Pool — T1:{_n1}  T2:{_n2}  T3:{_n3}  Total:{cards.Count}");
+        // Debug.Log($"[Deck] Pool — T1:{_n1}  T2:{_n2}  T3:{_n3}  Total:{cards.Count}");
     }
 
     public CardAsset DrawWeightedCard(int seed, int mainIncome, string playerTag = "?")
     {
         if (drawConfig == null)
         {
-            Debug.LogError("[Deck] drawConfig non assigné dans l'Inspector !");
+            // Debug.LogError("[Deck] drawConfig non assigné dans l'Inspector !");
             return null;
         }
 
