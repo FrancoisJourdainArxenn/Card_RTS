@@ -13,6 +13,7 @@ public enum EffectRepartition
     Uniform,
     Random,
     RandomMeleeFirst,
+    RandomSingleTarget,
     // Selection,
 }
 
