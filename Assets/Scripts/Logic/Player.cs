@@ -246,7 +246,7 @@ public class Player : MonoBehaviour, ILivable
     // draw a single card from the deck
     public void DrawACard(bool fast = false, int netWorkID = -1, int finalSeed = 0)
     {
-        if (deck.cards.Count > 0)
+        if (deck.playerDeck.cards.Count > 0)
         {
             if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
@@ -766,7 +766,7 @@ public class Player : MonoBehaviour, ILivable
     public void ShowBuildings(BuildSpotVisual spot)
     {
         // Debug.Log("Show Buildings for player " + PlayerID);
-        GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
+        GlobalSettings.Instance.buildingShop.Show(deck.playerDeck.buildings, spot);
     }
 
     public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
@@ -775,7 +775,7 @@ public class Player : MonoBehaviour, ILivable
         {
             MainRessourceAvailable -= building.MainCost;
             spot.SpawnPendingBuilding(building, this);
-            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.buildings.IndexOf(building), spot.SpotID);
+            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.playerDeck.buildings.IndexOf(building), spot.SpotID);
         }
         else
             ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());

@@ -1,186 +1,392 @@
-This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+Deck.cs
 
-Summary:
-1. Primary Request and Intent:
-   The user reported a network-specific bug (marked LOW priority) affecting Player 1 (LOW = host player) in Regroup phase. The symptom: `_hasSubmitted` is `true` when `SubmitToServer` is called from `StartSession` for an effect without target ("Spawn Zergling", `RequiresPlayerInput=false`, 0 eligible targets). This causes the auto-submission to be skipped, meaning the Regroup effects are never submitted to the server, likely deadlocking the game in that phase.
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
-   Logs provided:
-   ```
-   [Pipeline] StartSession — joueur 0 (Player1 - LOW) | 1 effet(s) dont 0 avec sélection | triggers: OnRegroup
-   [Pipeline]   effet: Spawn Zergling | Input [ ] | Cibles éligibles: 0
-   [Pipeline] StartSession (réseau) — aucune sélection requise, auto-soumission
-   [Pipeline] SubmitToServer — SKIP: déjà soumis
-   ```
-   All from `TurnManager/<AutoAdvanceFromEnd>d__47:MoveNext:522` → `EnterPhase(Regroup)` call stack.
+public class Deck : MonoBehaviour {
 
-2. Key Technical Concepts:
-   - Unity Netcode for GameObjects (NGO) — host/client architecture with ServerRpc and ClientRpc
-   - `PhaseEffectPipeline` — static C# class orchestrating effect targeting, submission, and resolution in both local and network modes
-   - `_hasSubmitted` — static bool guarding against double-submission in network mode; reset by `ResetForNewPhase()`
-   - `EffectStack` — static per-player effect storage; `IsEmpty` checks `_byPlayer.Count == 0`
-   - Auto-advance coroutines (`AutoAdvanceFromEnd`, `AutoAdvanceFromRegroup`) that independently call `EnterPhase` without going through `BroadcastPhaseTransition`
-   - `AdvancePhaseWhenAllReady` → `BroadcastPhaseTransition` → `PhaseTransitionClientRpc` → `EnterPhase` — server-controlled centralized phase transition path
-   - Dual phase-transition paths for End→Regroup and Regroup→Command (root cause of bug)
-   - `TriggerType.OnRegroup` — the trigger collected by `EffectRegistry.CollectPhaseEffects` during Regroup `StartSession`
-   - `SubmitEffectTargetsServerRpc` — collects both players' effect selections on server; broadcasts `ApplyCanonicalEffectResolutionClientRpc` when both submitted
-   - `_effectSubmissions` dictionary keyed by `playerIndex` — prevents duplicate-key deadlock from double-submit
+    public DeckSO playerDeck;
 
-3. Files and Code Sections:
-   - **`Assets/Scripts/Logic/Effects/PhaseEffectPipeline.cs`**
-     - Core pipeline; `_hasSubmitted` static field; `ResetForNewPhase()` resets it to `false`; `StartSession()` auto-submits when no selection effects in network mode; `SubmitToServer()` has guard at line 330
-     - Key snippet (the bug site):
-       ```csharp
-       else
-       {
-           Debug.Log($"[Pipeline] StartSession (réseau) — aucune sélection requise, auto-soumission");
-           SubmitToServer(player); // _hasSubmitted is already true here → SKIP
-       }
-       ```
-     - `SubmitToServer`:
-       ```csharp
-       private static void SubmitToServer(Player player)
-       {
-           if (_hasSubmitted)
-           {
-               Debug.Log("[Pipeline] SubmitToServer — SKIP: déjà soumis");
-               return;
-           }
-           _hasSubmitted = true;
-           ...
-           GameNetworkManager.Instance.SubmitEffectTargetsServerRpc(...);
-       }
-       ```
-     - `ResetForNewPhase()` (always called at start of `EnterPhase`):
-       ```csharp
-       public static void ResetForNewPhase()
-       {
-           EffectStack.Reset();
-           EffectSelectionController.Reset();
-           _confirmedPlayers.Clear();
-           _localPlayerQueue.Clear();
-           _currentLocalPlayerIndex = -1;
-           _hasSubmitted = false;
-           _isComplete = false;
-           Debug.Log("[Pipeline] ResetForNewPhase — tout l'état réinitialisé");
-       }
-       ```
-     - `BeginLocalSelectionSession()` (network mode): sets `_isComplete = true` only if `EffectStack.IsEmpty`
+    public WeightedDrawConfig drawConfig;
 
-   - **`Assets/Scripts/Logic/TurnsAndAI/TurnManager.cs`**
-     - `EnterPhase()` at line 349: always calls `ResetForNewPhase()` (line 355) before the foreach loop calling `OnRegroupPhaseStart()` (line 373)
-     - `AutoAdvanceFromEnd` (lines 517-523): waits for `IsComplete`, calls `ProcessPendingDeaths()`, then calls `EnterPhase(TurnPhases.Regroup)` directly — **no phase guard**
-     - `AutoAdvanceFromRegroup` (lines 496-500): waits for `IsComplete`, calls `EnterPhase(TurnPhases.Command)` directly — **no phase guard**
-     - `AdvancePhaseWhenAllReady()` (line 274): in network mode uses `BroadcastPhaseTransition` for ALL phases including End→Regroup and Regroup→Command
-     - Current problematic code:
-       ```csharp
-       IEnumerator AutoAdvanceFromEnd()
-       {
-           yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
-           CreatureLogic.ProcessPendingDeaths();
-           yield return new WaitWhile(() => Command.playingQueue);
-           EnterPhase(TurnPhases.Regroup); // line 522 — no phase guard
-       }
-       
-       IEnumerator AutoAdvanceFromRegroup()
-       {
-           yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
-           EnterPhase(TurnPhases.Command); // no phase guard
-       }
-       ```
+    public Dictionary<CardAsset, int> timesDrawn = new Dictionary<CardAsset, int>();
 
-   - **`Assets/Scripts/Logic/TurnsAndAI/TurnMaker.cs`**
-     - `OnRegroupPhaseStart()` (line 21): calls `p.OnTurnStart()`, broadcasts draw card, then calls `PhaseEffectPipeline.StartSession(p, TriggerType.OnRegroup)` only if `isLocalPlayer` (line 37)
-     - `isLocalPlayer = !NetworkSessionData.IsNetworkSession || p.MainPArea.AllowedToControlThisPlayer`
-     - In network mode on host: only LowPlayer (AllowedToControlThisPlayer=true) calls `StartSession`
+    private int _n1, _n2, _n3;
 
-   - **`Assets/Scripts/Logic/TurnsAndAI/PlayerTurnMaker.cs`**
-     - Trivial: just calls `base.OnRegroupPhaseStart()`
+    void Awake()
+    {
+        timesDrawn = new Dictionary<CardAsset, int>();
+        CacheTierCounts();
+    }
 
-   - **`Assets/Scripts/Logic/TurnsAndAI/AITurnMaker.cs`**
-     - Completely commented out; extends `TurnMaker` with no active overrides
+    public void LoadPreset(DeckSO preset)
+    {
+        if (preset == null) return;
+        playerDeck = preset;
+        timesDrawn.Clear();
+        CacheTierCounts();
+    }
 
-   - **`Assets/Scripts/Network/GameNetworkManager.cs`**
-     - `SubmitEffectTargetsServerRpc`: guard `if (TurnManager.Instance.CurrentPhase != forPhase) return;`; stores in `_effectSubmissions[playerIndex]`; when count reaches `Player.Players.Length` → `ApplyCanonicalEffectResolutionClientRpc`
-     - `BroadcastPhaseTransition` → `PhaseTransitionClientRpc` → calls `EnterPhase(nextPhase)` on ALL clients including host
-     - `AssignLocalPlayerControl`: host (clientId=0) → LowPlayer; client (clientId=1) → TopPlayer
-     - `PhaseTransitionClientRpc` handles all phase transitions including `End` and `Regroup` (via `AdvancePhaseWhenAllReady`)
+    private void CacheTierCounts()
+    {
+        _n1 = 0; _n2 = 0; _n3 = 0;
+        foreach (CardAsset card in playerDeck.cards)
+        {
+            int t = (int)card.tier;
+            if (t == 1)      _n1++;
+            else if (t == 2) _n2++;
+            else if (t == 3) _n3++;
+        }
+    }
 
-   - **`Assets/Scripts/Logic/Effects/EffectStack.cs`**
-     - `IsEmpty => _byPlayer.Count == 0`; `AddFor(playerIndex, effects)` stores even empty lists, making `IsEmpty = false` after any `StartSession`
+    public CardAsset DrawWeightedCard(int seed, int mainIncome, string playerTag = "?")
+    {
+        if (drawConfig == null)
+            return null;
 
-   - **`Assets/Scripts/Logic/Effects/EffectSelectionController.cs`**
-     - `Reset()` clears queue and calls `ClearHighlights()` — safe, no exceptions
+        CardAsset drawn = WeightedDraw.Draw(
+            playerDeck.cards, timesDrawn, _n1, _n2, _n3,
+            mainIncome, seed, drawConfig, playerTag);
 
-   - **`Assets/Scripts/Logic/RopeTimer.cs`**
-     - `StopTimer()` just sets `counting = false` — does NOT fire `OnRopeTimerExpired`; timer only fires in `Update()` when `timeTillZero <= 0` while counting
+        if (drawn != null)
+            timesDrawn[drawn] = (timesDrawn.TryGetValue(drawn, out int v) ? v : 0) + 1;
 
-4. Errors and fixes:
-   - **No code edits were made** (per memory instruction: never write directly into project files, guide and explain, let user copy-paste)
-   - The bug was analyzed in depth: `_hasSubmitted = true` when it should be `false` in Regroup `StartSession`
+        return drawn;
+    }
 
-5. Problem Solving:
-   **Root cause identified:** There are two competing code paths that can both trigger `EnterPhase(Regroup)` in network mode:
-   
-   **Path 1:** `AutoAdvanceFromEnd` coroutine fires when `_isComplete = true` → calls `EnterPhase(TurnPhases.Regroup)` directly (no network broadcast)
-   
-   **Path 2:** Both players click "End Phase" during End phase (the button becomes available after `_isComplete = true`) → `RegisterEndPhase` → `AdvancePhaseWhenAllReady` (with `currentPhase = End`) → `BroadcastPhaseTransition(Regroup)` → `PhaseTransitionClientRpc(Regroup)` → `EnterPhase(Regroup)`
-   
-   When both paths fire, `EnterPhase(Regroup)` is called twice. The first call succeeds (submits, `_hasSubmitted = true`). The second call's `ResetForNewPhase()` should reset it — but due to timing between Unity's network message processing (PreUpdate) and coroutine resumption (Update phase), there exists an ordering where the second `StartSession` sees `_hasSubmitted = true` from the first call before `ResetForNewPhase` can clear it, OR where a stale submission sits in `_effectSubmissions` causing a deadlock.
-   
-   Same dual-path problem exists for Regroup→Command.
+    public void ResetTimesDrawn() => timesDrawn.Clear();
 
-   **Proposed fix (code to copy-paste into TurnManager.cs):**
-   ```csharp
-   IEnumerator AutoAdvanceFromRegroup()
-   {
-       yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
-       if (currentPhase == TurnPhases.Regroup)   // ← garde ajoutée
-           EnterPhase(TurnPhases.Command);
-   }
-   
-   IEnumerator AutoAdvanceFromEnd()
-   {
-       yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
-       CreatureLogic.ProcessPendingDeaths();
-       yield return new WaitWhile(() => Command.playingQueue);
-       if (currentPhase == TurnPhases.End)       // ← garde ajoutée
-           EnterPhase(TurnPhases.Regroup);
-   }
-   ```
-   These guards prevent the auto-advance coroutine from calling `EnterPhase` if the phase has already changed via the other path (`PhaseTransitionClientRpc`).
+    public void ShuffleWithSeed(int seed)
+    {
+        playerDeck.cards.ShuffleWithSeed(seed);
+    }
 
-6. All user messages:
-   - **Message 1:** "J'ai un bug qui est présent en réseau spécifiquement pour le player 1 - LOW. il semblerait que _hasSubmitted soit à true dans le cas d'un effet sans cible en Regroup, alors que l'effet devrait pouvoir se résoudre correctement sans cible. Voici les logs : [4 log entries with full stack traces showing StartSession → SubmitToServer SKIP]"
+    public void SelectRandomCardFromSeed(int seed)
+    {
+        playerDeck.cards.SelectRandomCardFromSeed(seed);
+    }
 
-7. Pending Tasks:
-   - Implement the fix in `TurnManager.cs`: add `if (currentPhase == TurnPhases.Regroup)` guard in `AutoAdvanceFromRegroup` and `if (currentPhase == TurnPhases.End)` guard in `AutoAdvanceFromEnd`
-   - The fix has been proposed as code snippets for the user to copy-paste (per memory instruction not to edit files directly)
+    public CardAsset FindBuildingByIndex(int index)
+    {
+        if (index < 0 || index >= playerDeck.buildings.Count) return null;
+        return playerDeck.buildings[index];
+    }
+}
+NetworkSessionData.cs
 
-8. Current Work:
-   Investigating and diagnosing the network bug where `_hasSubmitted = true` during Regroup `StartSession` for the host (Player 1 - LOW). The analysis concluded with identifying the dual-path phase transition problem and proposing the phase-guard fix in `AutoAdvanceFromEnd` and `AutoAdvanceFromRegroup` in `TurnManager.cs`.
+using UnityEngine;
 
-   The proposed fix code is:
-   ```csharp
-   IEnumerator AutoAdvanceFromRegroup()
-   {
-       yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
-       if (currentPhase == TurnPhases.Regroup)
-           EnterPhase(TurnPhases.Command);
-   }
-   
-   IEnumerator AutoAdvanceFromEnd()
-   {
-       yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
-       CreatureLogic.ProcessPendingDeaths();
-       yield return new WaitWhile(() => Command.playingQueue);
-       if (currentPhase == TurnPhases.End)
-           EnterPhase(TurnPhases.Regroup);
-   }
-   ```
+/// <summary>
+/// Données réseau persistantes entre les scènes.
+/// Rempli dans NetworkMenu avant le chargement de la BattleScene.
+/// </summary>
+public static class NetworkSessionData
+{
+    /// <summary>ClientId Netcode du joueur local (0 = host, 1 = client).</summary>
+    public static ulong LocalClientId { get; set; }
 
-9. Optional Next Step:
-   The fix was proposed in the previous message. The next step would be for the user to apply these two phase guards in `TurnManager.cs` (lines 496-500 for `AutoAdvanceFromRegroup` and lines 517-523 for `AutoAdvanceFromEnd`) and test whether the Regroup auto-submission now works correctly in network mode.
+    /// <summary>Vrai si une session réseau est active (par opposition au jeu local).</summary>
+    public static bool IsNetworkSession { get; set; }
 
-   **Important constraint from memory:** Never write directly into project files — guide and explain, let user copy-paste code from chat. This must remain in effect.
+    /// <summary>Prefab de la map sélectionnée pour la partie, assigné dans NetworkMenu.</summary>
+    public static int SelectedMapIndex { get; set; } = 0;
 
-If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: C:\Users\Francois\.claude\projects\c--Users-Francois-Card-RTS\3fc9a5a7-d353-487d-a809-4d32f7c35030.jsonl
+    /// <summary>
+    /// Index dans MenuRegistry.decks du preset sélectionné.
+    /// -1 = utilise le playerDeck assigné dans la scène (défaut).
+    /// </summary>
+    public static int SelectedDeckPresetIndex { get; set; } = -1;
+
+    /// <summary>Preset sélectionné pour le jeu local (non réseau). Null = défaut de scène.</summary>
+    public static DeckSO SelectedDeckPreset { get; set; } = null;
+}
+MapLoader.cs
+
+using UnityEngine;
+
+[DefaultExecutionOrder(-100)]
+public class MapLoader : MonoBehaviour
+{
+    public static Transform EnvironnementTransform { get; private set; }
+    public static MapLoader Instance { get; private set; }
+
+    [SerializeField] GameObject defaultMapPrefab;
+    [SerializeField] MenuRegistry registry;
+
+    void Awake()
+    {
+        Instance = this;
+        EnvironnementTransform = transform;
+        if (!NetworkSessionData.IsNetworkSession)
+            Instantiate(defaultMapPrefab, transform.position, transform.rotation, transform);
+    }
+
+    public GameObject GetMapPrefab(int index) => registry.maps[index];
+}
+NetworkMenu.cs
+
+using UnityEngine;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using UnityEngine.UI;
+using TMPro;
+
+public class NetworkMenu : MonoBehaviour
+{
+    [Header("Boutons")]
+    public Button hostButton;
+    public Button clientButton;
+
+    [Header("UI")]
+    public TMP_InputField ipInputField;
+    public TMP_Text statusText;
+
+    [Header("Content")]
+    [SerializeField] MenuRegistry registry;
+
+    [Header("Map")]
+    [SerializeField] TMP_Dropdown mapDropdown;
+
+    [Header("Deck")]
+    [SerializeField] TMP_Dropdown deckDropdown;
+
+    [Header("Scene")]
+    [SerializeField] string battleSceneName = "BattleScene";
+
+    private const ushort Port = 7777;
+
+    void Start()
+    {
+        NetworkManager.Singleton.OnServerStarted            += OnServerStarted;
+        NetworkManager.Singleton.OnClientConnectedCallback  += OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
+        var mapOptions = new System.Collections.Generic.List<TMP_Dropdown.OptionData> { new("Aléatoire") };
+        foreach (var map in registry.maps)
+            mapOptions.Add(new(map.name));
+        mapDropdown.ClearOptions();
+        mapDropdown.AddOptions(mapOptions);
+
+        if (deckDropdown != null)
+        {
+            var deckOptions = new System.Collections.Generic.List<TMP_Dropdown.OptionData> { new("Défaut") };
+            foreach (var deck in registry.decks)
+                deckOptions.Add(new(deck.deckName));
+            deckDropdown.ClearOptions();
+            deckDropdown.AddOptions(deckOptions);
+        }
+    }
+
+    public void StartHost()
+    {
+        statusText.text = "Démarrage du serveur...";
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData("0.0.0.0", Port);
+        NetworkManager.Singleton.StartHost();
+    }
+
+    public void StartClient()
+    {
+        string ip = ipInputField.text.Trim();
+        statusText.text = $"Connexion vers {ip}...";
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
+
+        NetworkSessionData.SelectedDeckPresetIndex = (deckDropdown != null) ? deckDropdown.value - 1 : -1;
+
+        NetworkManager.Singleton.StartClient();
+        mapDropdown.gameObject.SetActive(false);
+        if (deckDropdown != null) deckDropdown.gameObject.SetActive(false);
+    }
+
+    void OnServerStarted() =>
+        statusText.text = "Serveur démarré. En attente d'un joueur...";
+
+    void OnClientConnected(ulong clientId)
+    {
+        statusText.text = $"Joueur connecté ! (ID: {clientId})";
+        if (NetworkManager.Singleton.IsServer && NetworkManager.Singleton.ConnectedClients.Count == 2)
+        {
+            NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
+            NetworkSessionData.IsNetworkSession = true;
+
+            int idx = mapDropdown.value;
+            NetworkSessionData.SelectedMapIndex = idx == 0
+                ? Random.Range(0, registry.maps.Length)
+                : idx - 1;
+
+            int deckIdx = (deckDropdown != null) ? deckDropdown.value - 1 : -1;
+            NetworkSessionData.SelectedDeckPresetIndex = deckIdx;
+            NetworkSessionData.SelectedDeckPreset = (deckIdx >= 0 && deckIdx < registry.decks.Length)
+                ? registry.decks[deckIdx]
+                : null;
+
+            NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
+                UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+    }
+
+    void OnClientDisconnected(ulong clientId) =>
+        statusText.text = "Déconnecté.";
+
+    void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnServerStarted            -= OnServerStarted;
+            NetworkManager.Singleton.OnClientConnectedCallback  -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+    }
+}
+TurnManager.cs
+Seulement OnGameStart change — voici la méthode complète à remplacer (ligne 53 à 120) :
+
+
+public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1)
+{
+    EffectRegistry.Reset();
+    if (Player.Players == null || Player.Players.Length < 2)
+    {
+        // Debug.LogError("TurnManager: need at least 2 Player instances.");
+        return;
+    }
+
+    foreach (Player p in Player.Players)
+    {
+        p.LoadCharacterInfoFromAsset();
+        p.TransmitInfoAboutPlayerToVisual();
+    }
+
+    if (NetworkSessionData.IsNetworkSession)
+    {
+        foreach (Player p in Player.Players)
+        {
+            bool isLow = p == GlobalSettings.Instance.LowPlayer;
+            DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
+            if (preset != null) p.deck.LoadPreset(preset);
+        }
+    }
+    else if (NetworkSessionData.SelectedDeckPreset != null)
+    {
+        foreach (Player p in Player.Players)
+            p.deck.LoadPreset(NetworkSessionData.SelectedDeckPreset);
+    }
+
+    if (seed.HasValue)
+    {
+        for (int idx = 0; idx < Player.Players.Length; idx++)
+        {
+            Player p = Player.Players[idx];
+            p.deck.playerDeck.cards.ShuffleWithSeed(seed.Value + idx);
+            p.deck.ResetTimesDrawn();
+        }
+    }
+    else
+    {
+        for (int idx = 0; idx < Player.Players.Length; idx++)
+        {
+            Player p = Player.Players[idx];
+            p.deck.playerDeck.cards.Shuffle();
+            p.deck.ResetTimesDrawn();
+        }
+    }
+
+    CardLogic.CardsCreatedThisGame.Clear();
+    CreatureLogic.CreaturesCreatedThisGame.Clear();
+    BuildingLogic.BuildingsCreatedThisGame.Clear();
+
+    EnsurePhaseReadyMatchesPlayers();
+    ResetPhaseReadyFlags();
+
+    int drawSeedOffset = 0;
+    int deckSeed = seed ?? 0;
+    for (int i = 0; i < initdraw; i++)
+    {
+        for (int j = 0; j < Player.Players.Length; j++)
+        {
+            Player p = Player.Players[j];
+            int cardInHandID = cardInHandIDs == null ? -1 : cardInHandIDs[j * initdraw + i];
+            p.DrawACard(true, cardInHandID, deckSeed + drawSeedOffset++);
+        }
+    }
+
+    if (NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer)
+        GameNetworkManager.Instance.InitDrawSeedOffset(drawSeedOffset);
+    foreach (Player p in Player.Players)
+        p.OnTurnStart();
+
+    EnterPhase(TurnPhases.Command);
+    StartCoroutine(HighlightAfterDraws());
+}
+GameNetworkManager.cs — 3 sections à modifier
+Section 1 — champs après Instance (remplace les lignes 15-22) :
+
+
+public static GameNetworkManager Instance { get; private set; }
+NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+[SerializeField] MenuRegistry registry;
+private readonly Dictionary<ulong, int> _deckChoices = new();
+
+// Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
+private int readyCount = 0;
+private Dictionary<TurnManager.TurnPhases, HashSet<int>> _pendingEndPhase = new();
+Section 2 — OnNetworkSpawn + GetDeckPresetForPlayer (remplace les lignes 413-432) :
+
+
+public override void OnNetworkSpawn()
+{
+    if (IsServer)
+        mapIndex.Value = NetworkSessionData.SelectedMapIndex;
+
+    LoadMap(mapIndex.Value);
+
+    NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
+    PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId, NetworkSessionData.SelectedDeckPresetIndex);
+}
+
+public DeckSO GetDeckPresetForPlayer(int idx)
+{
+    if (idx < 0 || registry == null || idx >= registry.decks.Length) return null;
+    return registry.decks[idx];
+}
+
+void LoadMap(int index)
+{
+    Transform env = MapLoader.EnvironnementTransform;
+    if (env == null) { Debug.LogError("EnvironnementTransform est null"); return; }
+    Instantiate(MapLoader.Instance.GetMapPrefab(index), env.position, env.rotation, env);
+    if (GlobalSettings.Instance != null) GlobalSettings.Instance.InitFromMap();
+    if (FogMapOverlay.Instance != null) FogMapOverlay.Instance.ComputeMapBounds();
+}
+Section 3 — PlayerReadyServerRpc + StartGameClientRpc (remplace les lignes 438-471) :
+
+
+[Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+void PlayerReadyServerRpc(ulong clientId = 0, int deckIndex = -1)
+{
+    _deckChoices[clientId] = deckIndex;
+    readyCount++;
+    Debug.Log($"[GameNetworkManager] Joueur prêt : {readyCount}/2");
+
+    if (readyCount >= 2)
+    {
+        int deckLow = _deckChoices.TryGetValue(0, out int dLow) ? dLow : -1;
+        int deckTop = _deckChoices.TryGetValue(1, out int dTop) ? dTop : -1;
+        deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        int[] cardInHandIDs = new int[TurnManager.Instance.initdraw * Player.Players.Length];
+        for (int i = 0; i < cardInHandIDs.Length; i++)
+            cardInHandIDs[i] = IDFactory.GetUniqueID();
+        Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
+        StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop);
+    }
+}
+
+/// <summary>Envoyé par le serveur à TOUS les clients pour démarrer la partie.</summary>
+[ClientRpc]
+void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1)
+{
+    AssignLocalPlayerControl();
+    TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop);
+    GlobalSettings.Instance.RefreshEndPhaseButtons();
+}
+Dans Unity : glisse ton asset MenuRegistry dans le champ Registry sur NetworkMenu (MenuScene), MapLoader (BattleScene) et GameNetworkManager (BattleScene).

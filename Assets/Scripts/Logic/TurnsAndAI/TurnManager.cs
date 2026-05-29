@@ -50,7 +50,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1)
     {
         EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
@@ -65,12 +65,22 @@ public class TurnManager : MonoBehaviour
             p.TransmitInfoAboutPlayerToVisual();
         }
 
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            foreach (Player p in Player.Players)
+            {
+                bool isLow = p == GlobalSettings.Instance.LowPlayer;
+                DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
+                if (preset != null) p.deck.LoadDeck(preset);
+            }
+        }
+
         if (seed.HasValue)
         {
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.cards.ShuffleWithSeed(seed.Value + idx);
+                p.deck.playerDeck.cards.ShuffleWithSeed(seed.Value + idx);
                 p.deck.ResetTimesDrawn();
                 // if (p.deck.cards.Count >= 2)
                 //     Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
@@ -83,7 +93,7 @@ public class TurnManager : MonoBehaviour
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.cards.Shuffle();
+                p.deck.playerDeck.cards.Shuffle();
                 p.deck.ResetTimesDrawn();
             }
             // Debug.Log("TurnManager: Deck shuffled with random seed");

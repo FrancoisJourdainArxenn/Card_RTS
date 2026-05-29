@@ -1698,6 +1698,7 @@ MonoBehaviour:
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
   localPlayerDebugText: {fileID: 43101763}
+  UseDeferredMovesInSolo: 0
 --- !u!4 &424799359
 Transform:
   m_ObjectHideFlags: 0
@@ -2274,11 +2275,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   defaultMapPrefab: {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
-  mapPrefabs:
-  - {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
-  - {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
-  - {fileID: 7898641444668022876, guid: 4ca2dc2bdb204e24d8ac5a3d663df506, type: 3}
-  - {fileID: 7898641444668022876, guid: 89d18ee66ddbde540b058b33279adc8b, type: 3}
+  registry: {fileID: 11400000, guid: 21f3b0131c441fc44a8ede70531fcee7, type: 2}
 --- !u!1 &620230357
 GameObject:
   m_ObjectHideFlags: 0
@@ -2354,14 +2351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  cards:
-  - {fileID: 11400000, guid: a5cb21c91c6cbbe47bc7bf5fb0228a4b, type: 2}
-  - {fileID: 11400000, guid: bea7df1aa71c5d742a9427c36658ddf4, type: 2}
-  buildings:
-  - {fileID: 11400000, guid: 4f050af837ad239499879d5e640d464a, type: 2}
-  - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
-  - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
-  - {fileID: 11400000, guid: a20021cb0d2a6d548a1bf9d4823cf453, type: 2}
+  playerDeck: {fileID: 0}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &636250719
 GameObject:
@@ -2407,14 +2397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  cards:
-  - {fileID: 11400000, guid: 76a5c8ec7d2faae4cb914f5720ac4e0d, type: 2}
-  - {fileID: 11400000, guid: b045c4806586211498af78e6bbe4c81b, type: 2}
-  buildings:
-  - {fileID: 11400000, guid: ce42aba611aca7c478b320fe2fa686cf, type: 2}
-  - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
-  - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
-  - {fileID: 11400000, guid: 92e6910a2c3c36b4b8df04ee090c8f5e, type: 2}
+  playerDeck: {fileID: 0}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &662666355
 GameObject:
@@ -2929,7 +2912,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2ec2f19044401f49a54c8de041fc1b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UiPlayerVisual
-  countText: {fileID: 0}
   mainRessourceText: {fileID: 484528862}
   MainRessourceIncomeText: {fileID: 484528861}
   player: {fileID: 1369297962}
@@ -3713,6 +3695,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameNetworkManager
   ShowTopMostFoldoutHeaderGroup: 1
+  registry: {fileID: 11400000, guid: 21f3b0131c441fc44a8ede70531fcee7, type: 2}
 --- !u!1 &1110240073
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,6 +3,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class NetworkMenu : MonoBehaviour
 {
@@ -14,9 +15,10 @@ public class NetworkMenu : MonoBehaviour
     public TMP_InputField ipInputField;
     public TMP_Text statusText;
 
-    [Header("Map")]
+    [Header("Selectable")]
+    [SerializeField] MenuRegistry menuRegistry;
     [SerializeField] TMP_Dropdown mapDropdown;
-    [SerializeField] GameObject[] mapPrefabs;
+    [SerializeField] TMP_Dropdown deckDropdown;
 
     [Header("Scene")]
     [SerializeField] string battleSceneName = "BattleScene";
@@ -31,11 +33,20 @@ public class NetworkMenu : MonoBehaviour
         NetworkManager.Singleton.OnClientConnectedCallback   += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback  += OnClientDisconnected;
     
-        var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData> { new("Aléatoire") };
-        foreach (var prefab in mapPrefabs)
+        List<TMP_Dropdown.OptionData> options = new List<TMP_Dropdown.OptionData> { new("Aléatoire") };
+        foreach (GameObject prefab in menuRegistry.maps)
             options.Add(new(prefab.name));
         mapDropdown.ClearOptions();
         mapDropdown.AddOptions(options);
+
+        if (deckDropdown != null)
+        {
+            List<TMP_Dropdown.OptionData> deckOptions = new List<TMP_Dropdown.OptionData>();
+            foreach (DeckSO deck in menuRegistry.decks)
+                deckOptions.Add(new(deck.deckName));
+            deckDropdown.ClearOptions();
+            deckDropdown.AddOptions(deckOptions);   
+        }
 
     }
 
@@ -51,6 +62,8 @@ public class NetworkMenu : MonoBehaviour
         string ip = ipInputField.text.Trim();
         statusText.text = $"Connexion vers {ip}...";
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
+        NetworkSessionData.SelectedDeckPresetIndex = (deckDropdown != null) ? deckDropdown.value : -1;
+
         NetworkManager.Singleton.StartClient();
         mapDropdown.gameObject.SetActive(false);
 
@@ -69,9 +82,11 @@ public class NetworkMenu : MonoBehaviour
             
             int idx = mapDropdown.value;
             NetworkSessionData.SelectedMapIndex = idx == 0
-                ? Random.Range(0, mapPrefabs.Length)
+                ? Random.Range(0, menuRegistry.maps.Length)
                 : idx - 1;
-
+            
+            int deckIdx = (deckDropdown != null) ? deckDropdown.value : -1;
+            NetworkSessionData.SelectedDeckPresetIndex = deckIdx;
             NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }

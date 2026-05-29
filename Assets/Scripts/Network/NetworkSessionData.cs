@@ -20,6 +20,11 @@ public static class NetworkSessionData
     /// Prefab de la map sélectionnée pour la partie, assigné dans NetworkMenu.
     /// </summary>
     public static int SelectedMapIndex { get; set; } = 0;
-
+    
+    /// <summary>
+    /// Index dans MenuRegistry.decks du preset sélectionné.
+    /// -1 = utilise le playerDeck assigné dans la scène (défaut).
+    /// </summary>
+    public static int SelectedDeckPresetIndex { get; set; } = -1;
 
 }
