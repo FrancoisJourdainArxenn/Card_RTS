@@ -44,6 +44,7 @@ public class BuildSpotVisual : MonoBehaviour
     void OnEnable()
     {
         TurnManager.OnPhaseEntered += RefreshBuildLabel;
+        if (_ZoneView != null) RefreshBuildLabel();
     }
 
     void OnDisable()

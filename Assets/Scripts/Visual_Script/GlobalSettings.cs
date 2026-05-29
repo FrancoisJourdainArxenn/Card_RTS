@@ -142,6 +142,7 @@ public class GlobalSettings : MonoBehaviour
             FogOfWarManager.Refresh();
             PathVisual.RefreshAll();
             RefreshEndPhaseButtons();
+            BuildSpotVisual.RefreshAll();
         }
     }
     
