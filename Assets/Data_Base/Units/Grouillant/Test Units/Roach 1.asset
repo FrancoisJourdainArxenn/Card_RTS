@@ -27,35 +27,5 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
-  Effects:
-  - EffectName: Regen
-    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
-    Trigger: 5
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 1
-        queries:
-        - team: 0
-          statusFilter: 4
-          zoneFilter: 0
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 1
-        includesTarget: 0
-        includesSource: 1
-        queries: []
-      repartition: 0
-    Parameters:
-      Amount: 1
-      SecondAmount: 0
-      TokenToSummon: {fileID: 0}
-      Placement: 0
-    VisualData:
-      vfxPrefab: {fileID: 1460341048999879763, guid: fe675716e85a13840a8eb76e71344943, type: 3}
-      overlayMaterial: {fileID: 2100000, guid: a62606eb6ad71cf4f93b08ba397cd334, type: 2}
-      OverrideOverlayDuration: 0
+  Keywords: []
+  Effects: []
