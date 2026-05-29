@@ -9,6 +9,7 @@ using System.Collections.Generic;
 public class FogOfWarManager : MonoBehaviour
 {
     public static FogOfWarManager Instance;
+    public static readonly HashSet<int> ForceRevealedZones = new HashSet<int>();
     private Dictionary<int, bool> zoneFogCache = new Dictionary<int, bool>();
     private ZoneManager[] cachedZones;
     private Dictionary<int, BuildSpotVisual[]> cachedBuildSpots = new Dictionary<int, BuildSpotVisual[]>();
@@ -77,7 +78,8 @@ public class FogOfWarManager : MonoBehaviour
         AreaPosition observerAreaPos = GetAreaPosition(observer);
         AreaPosition enemyAreaPos = GetAreaPosition(enemy);
 
-        bool observerHasPresence = HasPresenceInZone(observer, zone, nbc);
+        bool observerHasPresence = HasPresenceInZone(observer, zone, nbc)
+            || ForceRevealedZones.Contains(zone.Logic.ID);
         bool wasFogged = zoneFogCache.TryGetValue(zone.Logic.ID, out bool cached) ? cached : true;
         bool isFogged  = !observerHasPresence;
         bool stateChanged = wasFogged != isFogged;

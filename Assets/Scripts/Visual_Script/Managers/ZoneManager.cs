@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandler
+public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Targeting")]
     [SerializeField] private Image _targetableOverlay;
@@ -64,25 +64,62 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)
     {
         if (_targetableOverlay == null) return;
-        _targetableOverlay.gameObject.SetActive(targetable);
+        if (targetable)
+        {
+            _targetableOverlay.gameObject.SetActive(true);
+            Canvas parentCanvas = _targetableOverlay.GetComponentInParent<Canvas>(true);
+            if (parentCanvas != null) parentCanvas.gameObject.SetActive(true);
+        }
+        _targetableOverlay.enabled = targetable;
         _targetableOverlay.color = targeted
-            ? new Color(0f, 1f, 0f, 0.3f)
-            : new Color(1f, 1f, 0f, 0.15f);
+            ? new Color(0f, 1f, 0f, 1f)
+            : new Color(1f, 1f, 0f, 0.3f);
     }
 
     public void ClearTargetableVisual()
     {
         if (_targetableOverlay != null)
+        {
+            _targetableOverlay.enabled = false;
             _targetableOverlay.gameObject.SetActive(false);
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (ScanButton.HandleZoneClickIfActive(this)) return;
         if (TurnManager.Instance == null) return;
         if (PhaseEffectPipeline.IsComplete) return;
         PhaseEffectPipeline.OnEntityClicked(Logic);
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!ScanButton.IsActive) return;
+        if (_targetableOverlay == null) return;
+        bool noPresence = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
+        if (!noPresence) return;
+        _targetableOverlay.gameObject.SetActive(true);
+        _targetableOverlay.enabled = true;
+        _targetableOverlay.color = new Color(1f, 1f, 0f, 1f);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (!ScanButton.IsActive) return;
+        bool noPresence = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
+        if (!noPresence) return;
+        UpdateTargetableVisual(true);
+    }
+
+    void LateUpdate()
+    {
+        if (!ScanButton.IsActive) return;
+        if (_targetableOverlay == null) return;
+        bool shouldBeVisible = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
+        if (shouldBeVisible && !_targetableOverlay.enabled)
+            Debug.LogWarning($"{name}: overlay désactivé pendant le scan — canvas actif={_targetableOverlay.GetComponentInParent<Canvas>(true)?.gameObject.activeInHierarchy}", this);
+    }
     private static string GetHierarchyPath(Transform t)
     {
         string path = t.name;
