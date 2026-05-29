@@ -92,6 +92,15 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
+    public void SetVisible(bool visible)
+    {
+        if (art != null)        art.enabled        = visible;
+        if (frame != null)      frame.enabled      = visible;
+        if (MeleeImage != null) MeleeImage.enabled = visible;
+        if (AttackText != null) AttackText.enabled = visible;
+        if (HealthText != null) HealthText.enabled = visible;
+    }
+
     public virtual void UpgdateGlow() {}
     
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)

@@ -1698,6 +1698,7 @@ MonoBehaviour:
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
   localPlayerDebugText: {fileID: 43101763}
+  UseDeferredMovesInSolo: 0
 --- !u!4 &424799359
 Transform:
   m_ObjectHideFlags: 0
@@ -2409,7 +2410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Deck
   cards:
   - {fileID: 11400000, guid: 76a5c8ec7d2faae4cb914f5720ac4e0d, type: 2}
-  - {fileID: 11400000, guid: b045c4806586211498af78e6bbe4c81b, type: 2}
+  - {fileID: 11400000, guid: 61d1f0087ef829c4e83364fcef402e29, type: 2}
   buildings:
   - {fileID: 11400000, guid: ce42aba611aca7c478b320fe2fa686cf, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
