@@ -32,13 +32,6 @@ public class NeutralZoneController : MonoBehaviour
         if (zone == null) zone = GetComponent<ZoneManager>();
     }
 
-    public void SetTrueColor(Color color)
-    {
-        trueColor = color;
-        ownerColor = color;
-        FogOfWarManager.Refresh();
-    }
-
     public void ApplyColorForObserver(Player observer, bool hasVision)
     {
         bool isLow = observer == GlobalSettings.Instance.LowPlayer;
@@ -53,6 +46,10 @@ public class NeutralZoneController : MonoBehaviour
         {
             targetColor = isLow ? lastSeenColorLow : lastSeenColorTop;
         }
+
+        bool shouldShow = targetColor != (Color)GlobalSettings.Instance.NeutralColor;
+        if (background != null)
+            background.SetActive(shouldShow);
         if (backgroundImage != null && backgroundImage.color != targetColor)
             backgroundImage.color = targetColor;
     }
@@ -60,9 +57,9 @@ public class NeutralZoneController : MonoBehaviour
 
     public void SetOwnerColor(Color color)
     {
+        trueColor = color;
         ownerColor = color;
-        if (backgroundImage != null)
-            backgroundImage.color = ownerColor;
+        FogOfWarManager.Refresh();
     }
 
     public void AddBase(BaseAsset ba, int baseUniqueID, Player player, NeutralBaseVisual nBaseVisual)
@@ -85,7 +82,7 @@ public class NeutralZoneController : MonoBehaviour
         player.controlledBaseAssets.Add(ba);
         // nBaseVisual.BuildingZone.GetComponent<Image>().color = player.playerColor;
         capturedNBaseVisual = nBaseVisual;
-        SetTrueColor(player.playerColor); // triggers FogOfWarManager.Refresh() which will hide/show NeutralBaseVisual per observer
+        SetOwnerColor(player.playerColor); // triggers FogOfWarManager.Refresh() which will hide/show NeutralBaseVisual per observer
         player.CalculatePlayerIncome();
 
         // Animate scale (pop-in)

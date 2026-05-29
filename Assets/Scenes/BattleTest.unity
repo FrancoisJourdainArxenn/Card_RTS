@@ -1700,7 +1700,7 @@ MonoBehaviour:
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
   localPlayerDebugText: {fileID: 43101763}
-  UseDeferredMovesInSolo: 1
+  UseDeferredMovesInSolo: 0
 --- !u!4 &424799359
 Transform:
   m_ObjectHideFlags: 0
@@ -3470,6 +3470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
   initdraw: 5
   effectSequenceDelay: 1.5
+  combatSequenceDelay: 0.5
   phaseText: {fileID: 784732859}
 --- !u!1 &1028772377
 GameObject:

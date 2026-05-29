@@ -57,12 +57,3 @@ MonoBehaviour:
         includesSource: 0
         queries: []
       repartition: 0
-    Parameters:
-      Amount: 2
-      SecondAmount: 0
-      TokenToSummon: {fileID: 0}
-      Placement: 0
-    VisualData:
-      vfxPrefab: {fileID: 0}
-      overlayMaterial: {fileID: 0}
-      OverrideOverlayDuration: 0

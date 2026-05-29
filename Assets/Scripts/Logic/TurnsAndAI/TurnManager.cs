@@ -11,6 +11,8 @@ using Unity.Netcode;
 public class TurnManager : MonoBehaviour
 {
     public static event System.Action OnRoundStart;
+    public static event System.Action OnPhaseEntered;
+
 
     public int initdraw = 4;
     [SerializeField] private float effectSequenceDelay = 1.5f;
@@ -363,6 +365,7 @@ public class TurnManager : MonoBehaviour
     {
         // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
+        OnPhaseEntered?.Invoke();
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
         PhaseEffectPipeline.ResetForNewPhase();

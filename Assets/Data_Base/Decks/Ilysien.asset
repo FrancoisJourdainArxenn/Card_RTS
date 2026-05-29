@@ -14,14 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Ilysien Starter Deck
   cards:
-  - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
-  - {fileID: 11400000, guid: 883c9d07425573c42a7d6c0358d967bf, type: 2}
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
+  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   - {fileID: 11400000, guid: f94ed962b11bdfe4a9ccad30280ecc42, type: 2}
-  - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
-  - {fileID: 11400000, guid: c0696d4d5db064e48b77655d8691b3cb, type: 2}
   - {fileID: 11400000, guid: 44fdfb085f63d904d80fb87a514e61ce, type: 2}
+  - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
+  - {fileID: 11400000, guid: c0696d4d5db064e48b77655d8691b3cb, type: 2}
+  - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
   buildings:
   - {fileID: 11400000, guid: 92e6910a2c3c36b4b8df04ee090c8f5e, type: 2}
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}

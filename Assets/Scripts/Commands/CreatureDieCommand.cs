@@ -43,6 +43,7 @@ public class CreatureDieCommand : Command
 
         //Debug.LogWarning("CreatureDieCommand: créature " + DeadCreatureID + " introuvable sur les tables de ce joueur.");
         Object.Destroy(creatureToRemove);
+        BuildSpotVisual.RefreshAll();
         Command.CommandExecutionComplete();
     }
 }
