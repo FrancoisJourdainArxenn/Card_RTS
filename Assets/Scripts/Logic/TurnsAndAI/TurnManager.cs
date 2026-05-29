@@ -14,7 +14,9 @@ public class TurnManager : MonoBehaviour
 
     public int initdraw = 4;
     [SerializeField] private float effectSequenceDelay = 1.5f;
+    [SerializeField] private float combatSequenceDelay = .5f;
     public float EffectSequenceDelay => effectSequenceDelay;
+    public float CombatSequenceDelay => combatSequenceDelay;
 
     public static TurnManager Instance;
 
@@ -403,12 +405,7 @@ public class TurnManager : MonoBehaviour
                     StartCoroutine(AutoAdvanceFromBattle());
                     break;
                 }
-                foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
-                    r.OnBattlePhaseStart();
-                if (!NetworkSessionData.IsNetworkSession)
-                    StartCoroutine(AutoAdvanceFromBattleAfterCombat());
-                else
-                    AutoSubmitBattleAssignment();
+                StartCoroutine(DelayedBattleStart());
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -440,6 +437,16 @@ public class TurnManager : MonoBehaviour
             _ => ""
         };
         phaseText.text = label;
+    }
+    IEnumerator DelayedBattleStart()
+    {
+        yield return new WaitForSeconds(combatSequenceDelay);
+        foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
+            r.OnBattlePhaseStart();
+        if (!NetworkSessionData.IsNetworkSession)
+            StartCoroutine(AutoAdvanceFromBattleAfterCombat());
+        else
+            AutoSubmitBattleAssignment();
     }
 
     public static void RefreshAllPlayableHighlights()

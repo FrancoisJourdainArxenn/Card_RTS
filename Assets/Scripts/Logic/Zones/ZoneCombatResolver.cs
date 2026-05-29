@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ZoneCombatResolver : MonoBehaviour
@@ -37,7 +37,7 @@ public class ZoneCombatResolver : MonoBehaviour
         Player p1 = GlobalSettings.Instance.LowPlayer;
         Player p2 = GlobalSettings.Instance.TopPlayer;
         bool p1HasBuildingAtk = GetBuildingsInMyZone(p1, zoneView).Count > 0;
-        bool p2HasBuildingAtk = GetBuildingsInMyZone(p2, zoneView).Count > 0;       
+        bool p2HasBuildingAtk = GetBuildingsInMyZone(p2, zoneView).Count > 0;
         int p1CreatureCount = GetCreaturesInMyZone(p1, zoneView).Count;
         int p2CreatureCount = GetCreaturesInMyZone(p2, zoneView).Count;
 
@@ -74,7 +74,7 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         else
         {
-            var steps = BuildAutoBattleSequence(zoneView);
+            List<BattleStepRecord> steps = BuildAutoBattleSequence(zoneView);
             pendingDamage.Clear();
             pendingBaseDamage.Clear();
             pendingPlayerDamage.Clear();
@@ -104,12 +104,12 @@ public class ZoneCombatResolver : MonoBehaviour
 
     List<BattleStepRecord> BuildAutoBattleSequence(ZoneManager zone)
     {
-        var steps = new List<BattleStepRecord>();
+        List<BattleStepRecord> steps = new();
         Player p1 = GlobalSettings.Instance.LowPlayer;
         Player p2 = GlobalSettings.Instance.TopPlayer;
 
-        var queue1 = BuildAttackQueue(p1, zone);
-        var queue2 = BuildAttackQueue(p2, zone);
+        List<(int attack, bool isBuilding, int id)> queue1 = BuildAttackQueue(p1, zone);
+        List<(int attack, bool isBuilding, int id)> queue2 = BuildAttackQueue(p2, zone);
 
         bool p1Turn = UnityEngine.Random.value < 0.5f;
         Debug.Log($"[Sequence] Commence : {(p1Turn ? p1.name : p2.name)}");
@@ -129,17 +129,17 @@ public class ZoneCombatResolver : MonoBehaviour
 
             if (p1CanAct && (!p2CanAct || p1Turn))
             {
-                var attacker = queue1[i1++];
+                (int attack, bool isBuilding, int id) attacker = queue1[i1++];
                 // Debug.Log($"[Step {stepNum++}] {p1.name} — ID:{attacker.id} atk:{attacker.attack}");
-                var (overflow, step) = AssignSingleAttack(attacker, p2, zone);
+                (int overflow, BattleStepRecord? step) = AssignSingleAttack(attacker, p2, zone);
                 p1FreePool += overflow;
                 if (step.HasValue) steps.Add(step.Value);
             }
             else
             {
-                var attacker = queue2[i2++];
+                (int attack, bool isBuilding, int id) attacker = queue2[i2++];
                 // Debug.Log($"[Step {stepNum++}] {p2.name} — ID:{attacker.id} atk:{attacker.attack}");
-                var (overflow, step) = AssignSingleAttack(attacker, p1, zone);
+                (int overflow, BattleStepRecord? step) = AssignSingleAttack(attacker, p1, zone);
                 p2FreePool += overflow;
                 if (step.HasValue) steps.Add(step.Value);
             }
@@ -154,25 +154,25 @@ public class ZoneCombatResolver : MonoBehaviour
     // Ordre : mêlée créatures → non-mêlée créatures → mêlée bâtiments → non-mêlée bâtiments
     List<(int attack, bool isBuilding, int id)> BuildAttackQueue(Player player, ZoneManager zone)
     {
-        var result = new List<(int, bool, int)>();
-        var creatures = GetCreaturesInMyZone(player, zone);
+        List<(int, bool, int)> result = new();
+        List<CreatureLogic> creatures = GetCreaturesInMyZone(player, zone);
 
-        foreach (var c in creatures)
+        foreach (CreatureLogic c in creatures)
             if (c.IsMelee && c.Attack > 0) result.Add((c.Attack, false, c.UniqueCreatureID));
-        foreach (var c in creatures)
+        foreach (CreatureLogic c in creatures)
             if (!c.IsMelee && c.Attack > 0) result.Add((c.Attack, false, c.UniqueCreatureID));
 
-        var buildings = GetBuildingsInMyZone(player, zone);
-        foreach (var b in buildings)
+        List<BuildingLogic> buildings = GetBuildingsInMyZone(player, zone);
+        foreach (BuildingLogic b in buildings)
             if (b.IsMelee) result.Add((b.Attack, true, b.UniqueBuildingID));
-        foreach (var b in buildings)
+        foreach (BuildingLogic b in buildings)
             if (!b.IsMelee) result.Add((b.Attack, true, b.UniqueBuildingID));
 
-        foreach (var (atk, isBuilding, id) in result)
+        foreach ((int atk, bool isBuilding, int id) in result)
         {
             string name = isBuilding
-                ? (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out var bl) ? bl.DisplayName : id.ToString())
-                : (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out var cl) ? cl.DisplayName : id.ToString());
+                ? (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic bl) ? bl.DisplayName : id.ToString())
+                : (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic cl) ? cl.DisplayName : id.ToString());
         }
 
 
@@ -180,13 +180,35 @@ public class ZoneCombatResolver : MonoBehaviour
     }
 
     // Retourne le surplus de dégâts non placés (overflow) et la description de l'attaque pour animation
+    // Priorité : mêlée bâtiment → mêlée créature → ranged créature → ranged bâtiment → base → joueur
     (int, BattleStepRecord?) AssignSingleAttack((int attack, bool isBuilding, int id) attacker, Player defender, ZoneManager zone)
     {
         int dmg = attacker.attack;
-        var creatures = GetCreaturesInMyZone(defender, zone);
-        var buildings = GetAllBuildingsInMyZone(defender, zone);
+        List<CreatureLogic> creatures = GetCreaturesInMyZone(defender, zone);
+        List<BuildingLogic> buildings = GetAllBuildingsInMyZone(defender, zone);
 
-        foreach (var t in creatures)
+        foreach (BuildingLogic b in buildings)
+        {
+            if (!b.IsMelee || IsEffectivelyDeadBuilding(b)) continue;
+            pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
+            int assign = Mathf.Min(dmg, b.Health - existing);
+            pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
+            if (b.Attack > 0)
+            {
+                if (!attacker.isBuilding)
+                {
+                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingDamage[attacker.id] = attackerExisting + b.Attack;
+                }
+                else
+                {
+                    pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
+                }
+            }
+            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
+        }
+        foreach (CreatureLogic t in creatures)
         {
             if (!t.IsMelee || IsEffectivelyDead(t)) continue;
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
@@ -204,15 +226,7 @@ public class ZoneCombatResolver : MonoBehaviour
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
-        foreach (var b in buildings)
-        {
-            if (!b.IsMelee || IsEffectivelyDeadBuilding(b)) continue;
-            pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
-            int assign = Mathf.Min(dmg, b.Health - existing);
-            pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
-        }
-        foreach (var t in creatures)
+        foreach (CreatureLogic t in creatures)
         {
             if (t.IsMelee || IsEffectivelyDead(t)) continue;
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
@@ -230,12 +244,25 @@ public class ZoneCombatResolver : MonoBehaviour
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
-        foreach (var b in buildings)
+        foreach (BuildingLogic b in buildings)
         {
             if (b.IsMelee || IsEffectivelyDeadBuilding(b)) continue;
             pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
+            if (b.Attack > 0)
+            {
+                if (!attacker.isBuilding)
+                {
+                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingDamage[attacker.id] = attackerExisting + b.Attack;
+                }
+                else
+                {
+                    pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
+                }
+            }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
 
@@ -259,15 +286,15 @@ public class ZoneCombatResolver : MonoBehaviour
 
     void EnqueueBattleCommands(List<BattleStepRecord> steps)
     {
-        foreach (var step in steps)
+        foreach (BattleStepRecord step in steps)
         {
             int attackerHP = GetAttackerCurrentHP(step);
             switch (step.targetKind)
             {
                 case TargetKind.Creature:
                 {
-                    if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out var target)) continue;
-                    CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out var attackerCreature);
+                    if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out CreatureLogic target)) continue;
+                    CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature);
 
                     int shieldAbsorbed = Mathf.Min(step.damage, target.ShieldValue);
                     int effectiveDamage = step.damage - shieldAbsorbed;
@@ -300,7 +327,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     }
                     else if (step.attackerIsBuilding)
                     {
-                        BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out var attackerBuilding);
+                        BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out BuildingLogic attackerBuilding);
                         if (attackerBuilding != null)
                         {
                             if (attackerHealthAfter <= 0)
@@ -313,21 +340,43 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
                 case TargetKind.Building:
                 {
-                    if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.targetID, out var target)) continue;
+                    if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.targetID, out BuildingLogic target)) continue;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
+                    int counterDamage = target.Attack;
+                    int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
                     if (!step.attackerIsBuilding)
-                        new CreatureAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
+                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
                     else
-                        new BuildingAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
+                        new BuildingAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
                     if (targetHealthAfter > 0)
                         target.Health = targetHealthAfter;
                     else
                         target.Die();
+                    if (!step.attackerIsBuilding)
+                    {
+                        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature))
+                        {
+                            if (attackerHealthAfter <= 0)
+                                attackerCreature.ScheduleBattleDeath();
+                            else if (counterDamage > 0)
+                                attackerCreature.Health -= counterDamage;
+                        }
+                    }
+                    else
+                    {
+                        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out BuildingLogic attackerBuilding))
+                        {
+                            if (attackerHealthAfter <= 0)
+                                attackerBuilding.Die();
+                            else if (counterDamage > 0)
+                                attackerBuilding.Health = attackerHealthAfter;
+                        }
+                    }
                     break;
                 }
                 case TargetKind.Base:
                 {
-                    if (!BaseLogic.BasesCreatedThisGame.TryGetValue(step.targetID, out var target))
+                    if (!BaseLogic.BasesCreatedThisGame.TryGetValue(step.targetID, out BaseLogic target))
                     {
                         Debug.LogWarning($"[EnqueueBase] Base introuvable id={step.targetID} — step ignoré !");
                         continue;
@@ -345,7 +394,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
                 case TargetKind.Player:
                 {
-                    var target = step.targetOwnerPlayerID == GlobalSettings.Instance.LowPlayer.PlayerID
+                    Player target = step.targetOwnerPlayerID == GlobalSettings.Instance.LowPlayer.PlayerID
                         ? GlobalSettings.Instance.LowPlayer
                         : GlobalSettings.Instance.TopPlayer;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
@@ -365,11 +414,11 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         bool anyCombat = pendingDamage.Count > 0 || pendingBaseDamage.Count > 0
                       || pendingPlayerDamage.Count > 0 || pendingBuildingDamage.Count > 0;
-        var moves = new List<(int creatureID, Vector3 targetPos)>();
-        var allCreatures = new List<CreatureLogic>();
+        List<(int creatureID, Vector3 targetPos)> moves = new();
+        List<CreatureLogic> allCreatures = new();
         allCreatures.AddRange(GetCreaturesInMyZone(GlobalSettings.Instance.LowPlayer, zoneView));
         allCreatures.AddRange(GetCreaturesInMyZone(GlobalSettings.Instance.TopPlayer, zoneView));
-        foreach (var creature in allCreatures)
+        foreach (CreatureLogic creature in allCreatures)
         {
             PlayerArea area = FindAreaForCreature(creature);
             if (area?.BattlePos != null)
@@ -383,15 +432,15 @@ public class ZoneCombatResolver : MonoBehaviour
         out int[] resolverIdxs, out int[] attackerIDs, out int[] isBuilding,
         out int[] targetIDs, out int[] targetKinds, out int[] damages, out int[] ownerPlayerIDs)
     {
-        var ri = new List<int>(); var ai = new List<int>();
-        var ib = new List<int>(); var ti = new List<int>();
-        var tk = new List<int>(); var dg = new List<int>();
-        var op = new List<int>();
+        List<int> ri = new(); List<int> ai = new();
+        List<int> ib = new(); List<int> ti = new();
+        List<int> tk = new(); List<int> dg = new();
+        List<int> op = new();
 
         for (int i = 0; i < allResolvers.Count; i++)
         {
             if (allResolvers[i]._lastBattleSteps == null) continue;
-            foreach (var s in allResolvers[i]._lastBattleSteps)
+            foreach (BattleStepRecord s in allResolvers[i]._lastBattleSteps)
             {
                 ri.Add(i);  ai.Add(s.attackerID);
                 ib.Add(s.attackerIsBuilding ? 1 : 0);
@@ -411,7 +460,7 @@ public class ZoneCombatResolver : MonoBehaviour
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
     {
-        var stepsByResolver = new Dictionary<int, List<BattleStepRecord>>();
+        Dictionary<int, List<BattleStepRecord>> stepsByResolver = new();
         for (int i = 0; i < resolverIdxs.Length; i++)
         {
             int rIdx = resolverIdxs[i];
@@ -428,7 +477,7 @@ public class ZoneCombatResolver : MonoBehaviour
             });
         }
 
-        foreach (var kvp in stepsByResolver)
+        foreach (KeyValuePair<int, List<BattleStepRecord>> kvp in stepsByResolver)
         {
             if (kvp.Key < 0 || kvp.Key >= allResolvers.Count) continue;
             allResolvers[kvp.Key].EnqueueBattleCommands(kvp.Value);
@@ -438,8 +487,8 @@ public class ZoneCombatResolver : MonoBehaviour
     int GetAttackerCurrentHP(BattleStepRecord step)
     {
         if (!step.attackerIsBuilding)
-            return CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out var c) ? c.Health : 0;
-        return BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out var b) ? b.Health : 0;
+            return CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic c) ? c.Health : 0;
+        return BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out BuildingLogic b) ? b.Health : 0;
     }
 
     // Une unité qui a reçu des dégâts létaux en séquence ne peut plus attaquer
@@ -447,10 +496,10 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         if (!attacker.isBuilding)
         {
-            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attacker.id, out var c)) return true;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attacker.id, out CreatureLogic c)) return true;
             return IsEffectivelyDead(c);
         }
-        if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(attacker.id, out var b)) return true;
+        if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(attacker.id, out BuildingLogic b)) return true;
         return IsEffectivelyDeadBuilding(b);
     }
 
@@ -470,7 +519,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     List<CreatureLogic> GetCreaturesInMyZone(Player player, ZoneManager zone)
     {
-        var result = new List<CreatureLogic>();
+        List<CreatureLogic> result = new();
         foreach (PlayerArea pa in zone.subZones)
         {
             if (pa.owner == GetAreaPosition(player))
@@ -485,7 +534,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     List<BuildingLogic> GetAllBuildingsInMyZone(Player player, ZoneManager zone)
     {
-        var result = new List<BuildingLogic>();
+        List<BuildingLogic> result = new();
         foreach (BuildingLogic bl in player.playedCards.Buildings)
             if (bl.OriginSpot?.Zone == zone)
                 result.Add(bl);
@@ -494,7 +543,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     List<BuildingLogic> GetBuildingsInMyZone(Player player, ZoneManager zone)
     {
-        var result = new List<BuildingLogic>();
+        List<BuildingLogic> result = new();
         foreach (BuildingLogic bl in player.playedCards.Buildings)
             if (bl.Attack > 0 && bl.OriginSpot != null && bl.OriginSpot.Zone == zone)
                 result.Add(bl);
@@ -533,7 +582,7 @@ public class ZoneCombatResolver : MonoBehaviour
     }
     BaseLogic FindDefenderBaseInZone(Player defender)
     {
-        foreach (var _base in BaseLogic.BasesCreatedThisGame.Values)
+        foreach (BaseLogic _base in BaseLogic.BasesCreatedThisGame.Values)
         {
             if (_base.owner != defender) continue;
             if (_base.neutralBaseController != null && _base.neutralBaseController.zone == zoneView)
@@ -550,7 +599,7 @@ public class ZoneCombatResolver : MonoBehaviour
     // Called from OneCreatureManager click — finds which resolver owns a baseID
     public static ZoneCombatResolver FindForBase(int baseID)
     {
-        foreach (var r in allResolvers)
+        foreach (ZoneCombatResolver r in allResolvers)
             if (r.OwnsCreature(baseID)) return r;
         return null;
     }
@@ -671,17 +720,17 @@ public class ZoneCombatResolver : MonoBehaviour
     /// </summary>
     public static BattleAssignment SerializeAllAssignments()
     {
-        var cIDs  = new List<int>(); var cDmgs  = new List<int>();
-        var bIDs  = new List<int>(); var bDmgs  = new List<int>();
-        var pIDs  = new List<int>(); var pDmgs  = new List<int>();
-        var bdIDs = new List<int>(); var bdDmgs = new List<int>();
+        List<int> cIDs  = new(); List<int> cDmgs  = new();
+        List<int> bIDs  = new(); List<int> bDmgs  = new();
+        List<int> pIDs  = new(); List<int> pDmgs  = new();
+        List<int> bdIDs = new(); List<int> bdDmgs = new();
 
-        foreach (var r in allResolvers)
+        foreach (ZoneCombatResolver r in allResolvers)
         {
-            foreach (var kvp in r.pendingDamage)        { cIDs.Add(kvp.Key);  cDmgs.Add(kvp.Value);  }
-            foreach (var kvp in r.pendingBaseDamage)    { bIDs.Add(kvp.Key);  bDmgs.Add(kvp.Value);  }
-            foreach (var kvp in r.pendingPlayerDamage)  { pIDs.Add(kvp.Key);  pDmgs.Add(kvp.Value);  }
-            foreach (var kvp in r.pendingBuildingDamage){ bdIDs.Add(kvp.Key); bdDmgs.Add(kvp.Value); }
+            foreach (KeyValuePair<int, int> kvp in r.pendingDamage)        { cIDs.Add(kvp.Key);  cDmgs.Add(kvp.Value);  }
+            foreach (KeyValuePair<int, int> kvp in r.pendingBaseDamage)    { bIDs.Add(kvp.Key);  bDmgs.Add(kvp.Value);  }
+            foreach (KeyValuePair<int, int> kvp in r.pendingPlayerDamage)  { pIDs.Add(kvp.Key);  pDmgs.Add(kvp.Value);  }
+            foreach (KeyValuePair<int, int> kvp in r.pendingBuildingDamage){ bdIDs.Add(kvp.Key); bdDmgs.Add(kvp.Value); }
         }
 
         int[] p1Pools = new int[allResolvers.Count];
@@ -714,7 +763,7 @@ public class ZoneCombatResolver : MonoBehaviour
             allResolvers[i].p1FreePool = p1Pools[i];
             allResolvers[i].p2FreePool = p2Pools[i];
         }
-        foreach (var r in allResolvers)
+        foreach (ZoneCombatResolver r in allResolvers)
             r.RefreshAllAreaStats();
     }
 

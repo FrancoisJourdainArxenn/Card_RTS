@@ -15,6 +15,8 @@ public class CreatureAttackVisual : MonoBehaviour
 {
     private OneCreatureManager manager;
     private WhereIsTheCardOrCreature w;
+    float moveDuration = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackMoveDuration : 0.4f;
+    float postDelay    = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackPostDelay : 0.8f;
 
     void Awake()
     {
@@ -74,7 +76,7 @@ public class CreatureAttackVisual : MonoBehaviour
         w.VisualState = VisualStates.Transition;
         Vector3 originalPosition = transform.position;
         // SetLink tue automatiquement le tween si ce GameObject est détruit pendant l'animation
-        transform.DOMove(target.transform.position, 0.3f)
+        transform.DOMove(target.transform.position, moveDuration)
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InBack)
             .SetLink(gameObject)
@@ -120,7 +122,7 @@ public class CreatureAttackVisual : MonoBehaviour
 
                 manager.HealthText.text = attackerHealthAfter.ToString();
                 Sequence s = DOTween.Sequence();
-                s.AppendInterval(0.3f);
+                s.AppendInterval(postDelay);
                 s.SetLink(gameObject);
                 s.OnComplete(Command.CommandExecutionComplete);
             }));
