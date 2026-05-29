@@ -939,4 +939,19 @@ public class GameNetworkManager : NetworkBehaviour
         if (senderPlayerIndex == localIndex) return;
         TargetingVisualEvents.RaiseOpponentTargetingEnded();
     }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void NotifyZoneRevealServerRpc(int zoneID)
+    {
+        BroadcastZoneRevealClientRpc(zoneID);
+    }
+    [ClientRpc]
+    void BroadcastZoneRevealClientRpc(int zoneID)
+    {
+        ZoneManager zone = ZoneManager.AllZones.Find(z => z.Logic.ID == zoneID);
+        if (zone == null) return;
+        ScanButton.ReceiveRevealNotification(zone);
+    }
+
+
 }
