@@ -745,6 +745,16 @@ public class Player : MonoBehaviour, ILivable
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
             return false;
         }
+        // Block build if any enemy table in the zone has creatures
+        foreach (TableVisual table in neutralBaseController.tables)
+        {
+            if (table.tag != this.tag && (table.MeleeCreaturesOnTable.Count > 0 || table.RangedCreaturesOnTable.Count > 0))
+            {
+                new ShowMessageCommand("You can't build here while enemy units are present", 2f).AddToQueue();
+                return false;
+            }
+        }
+
         return true;    
     }
 
