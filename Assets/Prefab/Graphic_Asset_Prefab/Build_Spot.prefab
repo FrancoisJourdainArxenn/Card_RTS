@@ -49,6 +49,7 @@ MonoBehaviour:
   spotID: 0
   spawner: {fileID: 8293851731194428442}
   spotVisual: {fileID: 5507611060660791973}
+  buildTextObject: {fileID: 4925164752593318394}
 --- !u!1 &4925164752593318394
 GameObject:
   m_ObjectHideFlags: 0

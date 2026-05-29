@@ -3470,6 +3470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurnManager
   initdraw: 5
   effectSequenceDelay: 1.5
+  combatSequenceDelay: 0.5
   phaseText: {fileID: 784732859}
 --- !u!1 &1028772377
 GameObject:
