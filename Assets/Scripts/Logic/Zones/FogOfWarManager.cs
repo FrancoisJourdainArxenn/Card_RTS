@@ -15,6 +15,9 @@ public class FogOfWarManager : MonoBehaviour
     private Dictionary<int, BuildSpotVisual[]> cachedBuildSpots = new Dictionary<int, BuildSpotVisual[]>();
     private bool _refreshPending;
     private Player _lastObserver;
+    private Dictionary<int, (GameObject ghost, ZoneManager zone)> _buildingGhosts
+    = new Dictionary<int, (GameObject, ZoneManager)>();
+
 
     void Awake()
     {
