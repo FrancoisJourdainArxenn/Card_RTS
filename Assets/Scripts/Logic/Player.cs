@@ -26,9 +26,9 @@ public class Player : MonoBehaviour, ILivable
         }
     }
     // a script with references to all the visual game objects for this player
-    [HideInInspector] public PlayerArea[] PAreas;
-    [HideInInspector] public PlayerArea MainPArea = null;
-    [HideInInspector] public MainBaseVisual baseVisual;
+    public PlayerArea[] PAreas;
+    public PlayerArea MainPArea = null;
+    public MainBaseVisual baseVisual;
     public HandVisual handVisual;
     public Color playerColor;
 

@@ -13,6 +13,7 @@ public class NeutralZoneController : MonoBehaviour
     public TableVisual[] tables;
 
     private List<GameObject> bases = new List<GameObject>();
+    private Dictionary<GameObject, GameObject> _baseGhosts = new Dictionary<GameObject, GameObject>();
     private NeutralBaseVisual capturedNBaseVisual = null;
     private Color trueColor;
     private Color lastSeenColorLow;
@@ -131,10 +132,56 @@ public class NeutralZoneController : MonoBehaviour
 
     public void SetEnemyBasesFogged(Player enemy, bool fogged)
     {
+        if (!fogged)
+        {
+            List<GameObject> orphaned = null;
+            foreach (KeyValuePair<GameObject, GameObject> gKvp in _baseGhosts)
+            {
+                if (gKvp.Key == null)
+                {
+                    if (orphaned == null) orphaned = new List<GameObject>();
+                    orphaned.Add(gKvp.Key);
+                }
+            }
+            if (orphaned != null)
+                foreach (GameObject key in orphaned)
+                {
+                    if (_baseGhosts[key] != null) Destroy(_baseGhosts[key]);
+                    _baseGhosts.Remove(key);
+                }
+        }
+
         foreach (GameObject _base in bases)
         {
-            if (_base != null && _base.CompareTag(enemy.tag))
-                _base.SetActive(!fogged);
+            if (_base == null || !_base.CompareTag(enemy.tag)) continue;
+
+            OneBaseManager mgr = _base.GetComponent<OneBaseManager>();
+
+            if (!fogged)
+            {
+                mgr?.MarkSeen();
+                if (_baseGhosts.TryGetValue(_base, out GameObject existingGhost))
+                {
+                    if (existingGhost != null) Destroy(existingGhost);
+                    _baseGhosts.Remove(_base);
+                }
+                _base.SetActive(true);
+            }
+            else
+            {
+                _base.SetActive(false);
+
+                if (mgr != null && mgr.HasBeenSeen && !_baseGhosts.ContainsKey(_base))
+                {
+                    GameObject ghost = Instantiate(_base, _base.transform.parent);
+                    OneBaseManager ghostMgr = ghost.GetComponent<OneBaseManager>();
+                    ghostMgr.SetGray(true);
+                    IDHolder ghostId = ghost.GetComponent<IDHolder>();
+                    if (ghostId != null) Destroy(ghostId);
+                    ghost.SetActive(true);
+                    _baseGhosts[_base] = ghost;
+                }
+            }
         }
     }
 

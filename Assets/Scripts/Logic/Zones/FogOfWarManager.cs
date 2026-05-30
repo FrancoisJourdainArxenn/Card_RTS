@@ -154,8 +154,10 @@ public class FogOfWarManager : MonoBehaviour
 
                 if (buildingMgr != null && buildingMgr.HasBeenSeen && !_buildingGhosts.ContainsKey(b.UniqueBuildingID))
                 {
+                    Transform ghostParent = buildingGO.transform.parent?.parent ?? buildingGO.transform.parent;
                     GameObject ghost = Instantiate(buildingGO, buildingGO.transform.position,
-                        buildingGO.transform.rotation, buildingGO.transform.parent);
+                        buildingGO.transform.rotation, ghostParent);
+
                     OneBuildingManager ghostMgr = ghost.GetComponent<OneBuildingManager>();
                     ghostMgr.BuildingLogic = null;
                     ghostMgr.SetGray(true);
