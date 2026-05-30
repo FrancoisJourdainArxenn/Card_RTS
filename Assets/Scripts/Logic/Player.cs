@@ -454,7 +454,11 @@ public class Player : MonoBehaviour, ILivable
         targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
         GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
         if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+        {
             ocm.SetPending(true);
+            ocm.CanReorderNow = true;
+            ocm.UpdateGlow();
+        }
     }
 
     public void NetworkFlushPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
@@ -482,6 +486,14 @@ public class Player : MonoBehaviour, ILivable
 
         TurnManager.RefreshAllPlayableHighlights();
 
+    }
+
+    public void NetworkApplyCreatureOrder(int baseID, int[] meleeIDs, int[] rangedIDs)
+    {
+        PlayerArea area = GetPlayerAreaByID(baseID);
+        if (area == null)
+            return;
+        area.tableVisual.ApplyCreatureOrder(meleeIDs, rangedIDs);
     }
 
     public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
@@ -530,7 +542,6 @@ public class Player : MonoBehaviour, ILivable
     public void HighlightPlayableCards(bool removeAllHighlights = false)
     {
         bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
-        bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
         bool canPlayCards = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
 
         foreach (CardLogic cl in hand.CardsInHand)
@@ -542,7 +553,7 @@ public class Player : MonoBehaviour, ILivable
                 // Debug.LogError($"[HighlightPlayableCards] OneCardManager not found for card {cl.UniqueCardID}");
                 continue;
             }
-            bool affordable = (cl.MainCost <= mainRessourceAvailable);
+            bool affordable = cl.MainCost <= mainRessourceAvailable;
             cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
         }
 
@@ -559,6 +570,7 @@ public class Player : MonoBehaviour, ILivable
                 // Debug.LogError($"[HighlightPlayableCards] OneCreatureManager not found for creature {crl.UniqueCreatureID}");
                 continue;
             }
+            creatureManager.CanReorderNow = canMove && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
         }

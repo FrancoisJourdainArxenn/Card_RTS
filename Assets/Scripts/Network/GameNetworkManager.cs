@@ -763,6 +763,36 @@ public class GameNetworkManager : NetworkBehaviour
         creature.Move(targetBaseID, tablePos);
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ReorderCreaturesServerRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
+    {
+        // Update buffered tablePos so the flush sends creatures in the correct final order to remote clients.
+        // Remote clients have no pending creatures, so the ClientRpc alone would sort an empty list — too early.
+        for (int i = 0; i < _actionBuffer.Count; i++)
+        {
+            PendingAction a = _actionBuffer[i];
+            if (a.type != ActionType.PlayCreature || a.playerIndex != playerIndex || a.param4 != baseID)
+                continue;
+
+            int creatureID = a.param2;
+            int newPos = System.Array.IndexOf(meleeIDs, creatureID);
+            if (newPos < 0) newPos = System.Array.IndexOf(rangedIDs, creatureID);
+            if (newPos >= 0)
+            {
+                a.param3 = newPos;
+                _actionBuffer[i] = a;
+            }
+        }
+
+        ReorderCreaturesClientRpc(playerIndex, baseID, meleeIDs, rangedIDs);
+    }
+
+    [ClientRpc]
+    void ReorderCreaturesClientRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
+    {
+        Player.Players[playerIndex].NetworkApplyCreatureOrder(baseID, meleeIDs, rangedIDs);
+    }
+
     // //Attacking Units
     // [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     // public void AttackCreatureServerRpc(int attackerID, int targetCreatureID)
