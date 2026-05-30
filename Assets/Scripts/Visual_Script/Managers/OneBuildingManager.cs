@@ -12,6 +12,8 @@ public class OneBuildingManager : OneLivableManager
     public BuildingLogic BuildingLogic { get; set; }
     public BuildSpotVisual OriginSpot { get; set; }
 
+    public bool HasBeenSeen { get; private set; } = false;
+    public void MarkSeen() => HasBeenSeen = true;
 
     void Awake()
     {
@@ -63,6 +65,11 @@ public class OneBuildingManager : OneLivableManager
     {
         art.color = isPending ? new Color(0.4f, 0.4f, 0.4f, 1f) : Color.white;
         if (PendingIcon != null) PendingIcon.SetActive(isPending);
+    }
+    public void SetGray(bool gray)
+    {
+        art.color  = gray ? Color.gray : Color.white;
+        frame.color = gray ? Color.gray : Color.white;
     }
 
 }

@@ -187,9 +187,16 @@ public class ZoneCombatResolver : MonoBehaviour
         List<CreatureLogic> creatures = GetCreaturesInMyZone(defender, zone);
         List<BuildingLogic> buildings = GetAllBuildingsInMyZone(defender, zone);
 
+        // Tier 1 : bâtiments mêlée
+        List<BuildingLogic> eligibleMeleeBuildings = new List<BuildingLogic>();
         foreach (BuildingLogic b in buildings)
         {
             if (!b.IsMelee || IsEffectivelyDeadBuilding(b)) continue;
+            eligibleMeleeBuildings.Add(b);
+        }
+        if (eligibleMeleeBuildings.Count > 0)
+        {
+            BuildingLogic b = eligibleMeleeBuildings[UnityEngine.Random.Range(0, eligibleMeleeBuildings.Count)];
             pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
@@ -208,9 +215,17 @@ public class ZoneCombatResolver : MonoBehaviour
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
+
+        // Tier 2 : créatures mêlée
+        List<CreatureLogic> eligibleMeleeCreatures = new List<CreatureLogic>();
         foreach (CreatureLogic t in creatures)
         {
             if (!t.IsMelee || IsEffectivelyDead(t)) continue;
+            eligibleMeleeCreatures.Add(t);
+        }
+        if (eligibleMeleeCreatures.Count > 0)
+        {
+            CreatureLogic t = eligibleMeleeCreatures[UnityEngine.Random.Range(0, eligibleMeleeCreatures.Count)];
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
@@ -226,9 +241,17 @@ public class ZoneCombatResolver : MonoBehaviour
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
+
+        // Tier 3 : créatures ranged
+        List<CreatureLogic> eligibleRangedCreatures = new List<CreatureLogic>();
         foreach (CreatureLogic t in creatures)
         {
             if (t.IsMelee || IsEffectivelyDead(t)) continue;
+            eligibleRangedCreatures.Add(t);
+        }
+        if (eligibleRangedCreatures.Count > 0)
+        {
+            CreatureLogic t = eligibleRangedCreatures[UnityEngine.Random.Range(0, eligibleRangedCreatures.Count)];
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
@@ -244,9 +267,17 @@ public class ZoneCombatResolver : MonoBehaviour
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
+
+        // Tier 4 : bâtiments ranged
+        List<BuildingLogic> eligibleRangedBuildings = new List<BuildingLogic>();
         foreach (BuildingLogic b in buildings)
         {
             if (b.IsMelee || IsEffectivelyDeadBuilding(b)) continue;
+            eligibleRangedBuildings.Add(b);
+        }
+        if (eligibleRangedBuildings.Count > 0)
+        {
+            BuildingLogic b = eligibleRangedBuildings[UnityEngine.Random.Range(0, eligibleRangedBuildings.Count)];
             pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
@@ -283,6 +314,7 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         return (dmg, null);
     }
+
 
     void EnqueueBattleCommands(List<BattleStepRecord> steps)
     {
