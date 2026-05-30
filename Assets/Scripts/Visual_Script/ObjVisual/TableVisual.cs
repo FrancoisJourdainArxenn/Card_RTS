@@ -88,7 +88,6 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
-        // Debug.Log($"[Add] {ca.name} à l'index {listIndex} — liste : [{string.Join(", ", targetList.ConvertAll(g => { var ocm = g.GetComponent<OneCreatureManager>(); return (ocm != null && ocm.cardAsset != null) ? ocm.cardAsset.name : "?"; }))}]");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = rowLocalPos;
@@ -242,6 +241,18 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
     }
 
+    private static string FormatIDs(List<GameObject> list)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        for (int i = 0; i < list.Count; i++)
+        {
+            IDHolder h = list[i] != null ? list[i].GetComponent<IDHolder>() : null;
+            if (i > 0) sb.Append(", ");
+            sb.Append(h != null ? h.UniqueID.ToString() : "?");
+        }
+        return sb.ToString();
+    }
+
     public void ReorderCreature(GameObject creature)
     {
         if (_previewIndex < 0)
@@ -250,17 +261,50 @@ public class TableVisual : MonoBehaviour
         bool isMelee = MeleeCreaturesOnTable.Contains(creature);
         List<GameObject> targetList = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
 
+        string before = FormatIDs(targetList);
         int insertIndex = _previewIndex;
         targetList.Remove(creature);
         targetList.Insert(Mathf.Min(insertIndex, targetList.Count), creature);
+        Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
 
         _previewIndex = -1;
         _movingCreature = null;
+
+        // Téléporte immédiatement la créature à sa position finale pour qu'elle réapparaisse au bon endroit
+        CenteredSlots rowSlots = GetRowSlots(isMelee);
+        int finalIndex = targetList.IndexOf(creature);
+        creature.transform.DOKill();
+        creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
 
         PlaceCreaturesOnNewSlots();
 
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+    }
+
+    public void ApplyCreatureOrder(int[] meleeIDs, int[] rangedIDs)
+    {
+        SortListByIDs(MeleeCreaturesOnTable, meleeIDs);
+        SortListByIDs(RangedCreaturesOnTable, rangedIDs);
+        PlaceCreaturesOnNewSlots();
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+    }
+
+    private void SortListByIDs(List<GameObject> list, int[] ids)
+    {
+        List<GameObject> sorted = new List<GameObject>(ids.Length);
+        foreach (int id in ids)
+        {
+            GameObject go = IDHolder.GetGameObjectWithID(id);
+            if (go != null && list.Contains(go))
+                sorted.Add(go);
+        }
+        foreach (GameObject go in list)
+            if (!sorted.Contains(go))
+                sorted.Add(go);
+        list.Clear();
+        list.AddRange(sorted);
     }
 
     public void ClearInsertPreview()
@@ -281,7 +325,10 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, uniqueID, baseID, pendingSlots.Children[index].transform.position);
         creature.transform.SetParent(pendingSlots.transform);
         PendingCreaturesOnTable.Add(creature);
-        creature.GetComponent<OneCreatureManager>().SetGray(true);
+        OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
+        manager.SetGray(true);
+        manager.CanReorderNow = true;
+        manager.UpdateGlow();
     }
 
     private CenteredSlots GetRowSlots(bool isMelee) =>

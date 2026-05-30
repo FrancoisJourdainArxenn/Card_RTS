@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayACreatureCommand : Command
 {
@@ -31,10 +32,18 @@ public class PlayACreatureCommand : Command
         GameObject existingCreature = IDHolder.GetGameObjectWithID(creatureID);
         if (existingCreature != null)
         {
+            // Use the current visual position so any reorder the player did is preserved
+            bool isMelee = cl.ca.melee;
+            List<GameObject> visualList = isMelee
+                ? selectedPArea.tableVisual.MeleeCreaturesOnTable
+                : selectedPArea.tableVisual.RangedCreaturesOnTable;
+            int currentVisualPos = visualList.IndexOf(existingCreature);
+            int resolvedPos = currentVisualPos >= 0 ? currentVisualPos : tablePos;
+
             selectedPArea.tableVisual.PendingCreaturesOnTable.Remove(existingCreature);
             selectedPArea.tableVisual.MeleeCreaturesOnTable.Remove(existingCreature);
             selectedPArea.tableVisual.RangedCreaturesOnTable.Remove(existingCreature);
-            selectedPArea.tableVisual.MoveCreatureToIndex(existingCreature, creatureID, tablePos, selectedPArea.baseID);
+            selectedPArea.tableVisual.MoveCreatureToIndex(existingCreature, creatureID, resolvedPos, selectedPArea.baseID);
             if (existingCreature.TryGetComponent(out OneCreatureManager ocm)) ocm.SetPending(false);
         }
         else

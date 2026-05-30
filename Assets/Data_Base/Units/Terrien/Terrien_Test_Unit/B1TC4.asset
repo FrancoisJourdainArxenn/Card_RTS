@@ -24,14 +24,14 @@ MonoBehaviour:
   MaxHealth: 2
   AttacksForOneTurn: 1
   melee: 1
-  MoveSpeed: 10
-  Celerity: 1
+  MoveSpeed: 1
+  Celerity: 0
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
   Effects:
   - EffectName: Shield Up !
-    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
+    Effect: {fileID: 0}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
@@ -47,17 +47,8 @@ MonoBehaviour:
         includesSource: 1
         queries: []
       repartition: 0
-    Parameters:
-      Amount: 1
-      SecondAmount: 0
-      TokenToSummon: {fileID: 0}
-      Placement: 0
-    VisualData:
-      vfxPrefab: {fileID: 4335554914053084289, guid: b7ad731ac1f6ebc49ab8c316b96da0d9, type: 3}
-      overlayMaterial: {fileID: 0}
-      OverrideOverlayDuration: 0
   - EffectName: Shield at the Ready
-    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
+    Effect: {fileID: 0}
     Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
@@ -73,12 +64,3 @@ MonoBehaviour:
         includesSource: 1
         queries: []
       repartition: 0
-    Parameters:
-      Amount: 1
-      SecondAmount: 0
-      TokenToSummon: {fileID: 0}
-      Placement: 0
-    VisualData:
-      vfxPrefab: {fileID: 4335554914053084289, guid: b7ad731ac1f6ebc49ab8c316b96da0d9, type: 3}
-      overlayMaterial: {fileID: 0}
-      OverrideOverlayDuration: 0

@@ -52,8 +52,8 @@ public class OneCreatureManager : OneLivableManager
 
     public void UpdateGlow()
     {
-        glow.color = Color.green;
-        glow.enabled = CanMoveNow;
+        glow.enabled = CanMoveNow || CanReorderNow;
+        glow.color = CanMoveNow ? Color.green : Color.skyBlue;
     }
 
     public void SetGray(bool gray)
