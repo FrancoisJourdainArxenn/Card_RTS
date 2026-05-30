@@ -142,10 +142,17 @@ public class TokenGenerationSO : EffectSO
 
         if (visualData?.vfxPrefab != null)
         {
-            int newCount     = currentCount + 1;
-            Vector3 spawnPos = rowSlots.GetSlotPosition(currentCount, newCount);
-            new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
-            new DelayCommand(0.9f).AddToQueue();
+            ZoneManager targetZone = targetArea.parentZone;
+            bool isVisible = targetZone == null || FogOfWarManager.Instance == null
+                             || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
+
+            if (isVisible)
+            {
+                int newCount     = currentCount + 1;
+                Vector3 spawnPos = rowSlots.GetSlotPosition(currentCount, newCount);
+                new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
+                new DelayCommand(0.9f).AddToQueue();
+            }
         }
 
         new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();

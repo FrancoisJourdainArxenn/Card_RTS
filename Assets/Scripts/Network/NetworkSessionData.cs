@@ -27,4 +27,7 @@ public static class NetworkSessionData
     /// </summary>
     public static int SelectedDeckPresetIndex { get; set; } = -1;
 
+    public static bool EnemyDetection { get; set; }
+
+
 }
