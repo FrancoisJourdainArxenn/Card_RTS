@@ -304,15 +304,22 @@ public class Player : MonoBehaviour, ILivable
 
         if (visualData?.vfxPrefab != null)
         {
-            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
-                ? targetArea.tableVisual.meleeSlots
-                : targetArea.tableVisual.rangedSlots;
-            int currentCount = tokenIsMelee
-                ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-                : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-            Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
-            new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
-            new DelayCommand(0.9f).AddToQueue();
+            ZoneManager targetZone = targetArea.parentZone;
+            bool isVisible = targetZone == null || FogOfWarManager.Instance == null
+                             || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
+
+            if (isVisible)
+            {
+                CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                    ? targetArea.tableVisual.meleeSlots
+                    : targetArea.tableVisual.rangedSlots;
+                int currentCount = tokenIsMelee
+                    ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                    : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+                Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
+                new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
+                new DelayCommand(0.9f).AddToQueue();
+            }
         }
 
         new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();

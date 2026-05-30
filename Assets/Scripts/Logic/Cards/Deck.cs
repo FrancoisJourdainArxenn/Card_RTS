@@ -10,10 +10,13 @@ public class Deck : MonoBehaviour {
     public Dictionary<CardAsset, int> timesDrawn = new Dictionary<CardAsset, int>();
 
     private int _n1, _n2, _n3;
+    private List<CardAsset> _runtimeCards = new List<CardAsset>();
 
     void Awake()
     {
         timesDrawn = new Dictionary<CardAsset, int>();
+        if (playerDeck != null)
+            _runtimeCards = new List<CardAsset>(playerDeck.cards);
         CacheTierCounts();
     }
 
@@ -22,6 +25,7 @@ public class Deck : MonoBehaviour {
         if(chosenDeck == null)
             return;
         playerDeck = chosenDeck;
+        _runtimeCards = new List<CardAsset>(chosenDeck.cards);
         timesDrawn.Clear();
         CacheTierCounts();
     }
@@ -29,7 +33,7 @@ public class Deck : MonoBehaviour {
     private void CacheTierCounts()
     {
         _n1 = 0; _n2 = 0; _n3 = 0;
-        foreach (CardAsset card in playerDeck.cards)
+        foreach (CardAsset card in _runtimeCards)
         {
             int t = (int)card.tier;
             if (t == 1)      _n1++;
@@ -48,7 +52,7 @@ public class Deck : MonoBehaviour {
         }
 
         CardAsset drawn = WeightedDraw.Draw(
-            playerDeck.cards, timesDrawn, _n1, _n2, _n3,
+            _runtimeCards, timesDrawn, _n1, _n2, _n3,
             mainIncome, seed, drawConfig, playerTag);
 
         if (drawn != null)
@@ -61,12 +65,12 @@ public class Deck : MonoBehaviour {
 
     public void ShuffleWithSeed(int seed)
     {
-        playerDeck.cards.ShuffleWithSeed(seed);
+        _runtimeCards.ShuffleWithSeed(seed);
     }
 
     public void SelectRandomCardFromSeed(int seed)
     {
-        playerDeck.cards.SelectRandomCardFromSeed(seed);
+        _runtimeCards.SelectRandomCardFromSeed(seed);
     }
 
     public CardAsset FindBuildingByIndex(int index)
