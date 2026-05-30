@@ -93,6 +93,23 @@ public abstract class EffectSO : ScriptableObject
                 ApplyAll(repartition, visualData);
                 break;
             }
+
+            case EffectRepartition.RandomSingleTarget:
+            {
+                if (affectedElements.Count == 0) break;
+                int index = _networkRng != null
+                    ? _networkRng.Next(0, affectedElements.Count)
+                    : Random.Range(0, affectedElements.Count);
+                ILivable target = (ILivable)affectedElements[index];
+                ApplyToTarget(target, visualData);
+                if (this is IRevertable r && r.IsTemporary)
+                {
+                    ILivable t = target;
+                    TempEffectTracker.Register(t.ID, () => r.Revert(t));
+                }
+                break;
+            }
+
         }
     }
 

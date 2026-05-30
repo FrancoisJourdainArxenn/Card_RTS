@@ -65,7 +65,8 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
 
         EnsureColorsCached();
         Debug.Log($"{cardAsset.name} took {amount} damage. {healthAfter} left afterwards.");
-        VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
+        if (gameObject.activeInHierarchy)
+            VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
         ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();

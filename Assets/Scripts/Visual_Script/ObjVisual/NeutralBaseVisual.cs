@@ -83,7 +83,7 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     public void ResetBuildingZone()
     {
-        neutralBaseController.SetTrueColor(GlobalSettings.Instance.NeutralColor);
+        neutralBaseController.SetOwnerColor(GlobalSettings.Instance.NeutralColor);
         neutralBaseController.ResetBuildingSpotTag();
         canBuild = true;
     }

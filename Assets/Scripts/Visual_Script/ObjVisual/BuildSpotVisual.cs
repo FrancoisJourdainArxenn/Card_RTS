@@ -7,6 +7,7 @@ public class BuildSpotVisual : MonoBehaviour
     public int SpotID => spotID;
     [SerializeField] private Transform spawner;
     [SerializeField] private GameObject spotVisual;
+    [SerializeField] private GameObject buildTextObject;
     private string originalTag;
     public OneBuildingManager PendingBuilding { get; private set; }
 
@@ -37,49 +38,86 @@ public class BuildSpotVisual : MonoBehaviour
         _ZoneView = GetComponentInParent<ZoneManager>();
         this.tag = _ZoneView.tag;
         originalTag = this.tag;
+        RefreshBuildLabel();
+    }
+
+    void OnEnable()
+    {
+        TurnManager.OnPhaseEntered += RefreshBuildLabel;
+        if (_ZoneView != null) RefreshBuildLabel();
+    }
+
+    void OnDisable()
+    {
+        TurnManager.OnPhaseEntered -= RefreshBuildLabel;
     }
 
     public void TakePlayerTag(string playerTag)
     {
         tag = playerTag;
+        RefreshBuildLabel();
     }
 
     public void ResetTag()
     {
         tag = originalTag;
+        RefreshBuildLabel();
     }
 
-    public void ShowBuildings()
+    private bool CanBuild()
     {
-        if (TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
-        {
-            new ShowMessageCommand("You can't build now.", 1.5f).AddToQueue();
-            return;
-        }
+        if (TurnManager.Instance == null || TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+            return false;
+
+        if (GlobalSettings.Instance == null) return false;
         Player localP = GlobalSettings.Instance.localPlayer;
+        if (localP == null || localP.otherPlayer == null) return false;
+
+        if (tag == localP.otherPlayer.tag)
+            return false;
 
         bool ownsSpot = localP.tag == tag;
         bool controlsZone = PlayerHasUnitsInZone(localP, _ZoneView)
-                         && !PlayerHasUnitsInZone(localP.otherPlayer, _ZoneView);
+                        && !PlayerHasUnitsInZone(localP.otherPlayer, _ZoneView);
 
-        if(tag == localP.otherPlayer.tag)
+        return ownsSpot || controlsZone;
+    }
+
+
+    public void ShowBuildings()
+    {
+        if (!CanBuild())
         {
-            new ShowMessageCommand("You can't build here.", 1.5f).AddToQueue();
+            string msg = TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command
+                ? "You can't build now."
+                : tag == GlobalSettings.Instance.localPlayer.otherPlayer.tag
+                    ? "You don't own this base."
+                    : "Impossible to build.";
+            new ShowMessageCommand(msg, 1.5f).AddToQueue();
             return;
         }
-        if (ownsSpot || controlsZone)
-            localP.ShowBuildings(this);
-        else new ShowMessageCommand("Impossible to build.", 1.5f).AddToQueue();
+        GlobalSettings.Instance.localPlayer.ShowBuildings(this);
+    }
 
+    public void RefreshBuildLabel()
+    {
+        if (buildTextObject != null)
+            buildTextObject.gameObject.SetActive(CanBuild());
+    }
+
+    public static void RefreshAll()
+    {
+        foreach (BuildSpotVisual spot in Registry.Values)
+            spot.RefreshBuildLabel();
     }
 
     private bool PlayerHasUnitsInZone(Player player, ZoneManager zone)
     {
-        foreach (PlayerArea pa in player.PAreas)
+        foreach (PlayerArea pa in zone.subZones)
         {
-            if (pa.parentZone != zone) continue;
             foreach (CreatureLogic c in player.playedCards.Creatures)
                 if (c.BaseID == pa.baseID) return true;
+
         }
         return false;
     }

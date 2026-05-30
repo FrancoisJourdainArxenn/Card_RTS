@@ -14,7 +14,8 @@ public class GameNetworkManager : NetworkBehaviour
 {
     public static GameNetworkManager Instance { get; private set; }
     NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
+    [SerializeField] MenuRegistry registry;
+    private readonly Dictionary<ulong, int> _deckChoices = new();
 
 
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
@@ -418,17 +419,31 @@ public class GameNetworkManager : NetworkBehaviour
         LoadMap(mapIndex.Value);
 
         NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
-        PlayerReadyServerRpc();
+        PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId, NetworkSessionData.SelectedDeckPresetIndex);
     }
 
+    public DeckSO GetDeckPresetForPlayer(int idx)
+    {
+        if (idx < 0 || registry == null || idx >= registry.decks.Length) 
+        { 
+            return null; 
+        }
+        return registry.decks[idx];
+    }
 
     void LoadMap(int index)
     {
         Transform env = MapLoader.EnvironnementTransform;
-        if (env == null) { Debug.LogError("EnvironnementTransform est null"); return; }
+        if (env == null) 
+        { 
+            Debug.LogError("EnvironnementTransform est null"); 
+            return; 
+        }
         Instantiate(MapLoader.Instance.GetMapPrefab(index), env.position, env.rotation, env);
-        if (GlobalSettings.Instance != null) GlobalSettings.Instance.InitFromMap();
-        if (FogMapOverlay.Instance != null) FogMapOverlay.Instance.ComputeMapBounds();
+        if (GlobalSettings.Instance != null) 
+            GlobalSettings.Instance.InitFromMap();
+        if (FogMapOverlay.Instance != null) 
+            FogMapOverlay.Instance.ComputeMapBounds();
     }
 
     /// <summary>
@@ -436,13 +451,16 @@ public class GameNetworkManager : NetworkBehaviour
     /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    void PlayerReadyServerRpc()
+    void PlayerReadyServerRpc(ulong clientId, int deckIndex)
     {
+        _deckChoices[clientId] = deckIndex;
         readyCount++;
         Debug.Log($"[GameNetworkManager] Joueur prêt : {readyCount}/2");
 
         if (readyCount >= 2)
         {
+            int deckLow = _deckChoices.TryGetValue(0, out int dLow) ? dLow : -1;
+            int deckTop = _deckChoices.TryGetValue(1, out int dTop) ? dTop : -1;
             deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             int[] cardInHandIDs = new int[TurnManager.Instance.initdraw * Player.Players.Length];
             for (int i = 0; i < cardInHandIDs.Length; i++)
@@ -450,7 +468,7 @@ public class GameNetworkManager : NetworkBehaviour
                 cardInHandIDs[i] = IDFactory.GetUniqueID();
             }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value, cardInHandIDs);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop);
         }
     }
 
@@ -458,13 +476,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1)
     {
         // 1. Assigner le local player
         AssignLocalPlayerControl();
 
         // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs);
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();
@@ -951,4 +969,19 @@ public class GameNetworkManager : NetworkBehaviour
         if (senderPlayerIndex == localIndex) return;
         TargetingVisualEvents.RaiseOpponentTargetingEnded();
     }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void NotifyZoneRevealServerRpc(int zoneID)
+    {
+        BroadcastZoneRevealClientRpc(zoneID);
+    }
+    [ClientRpc]
+    void BroadcastZoneRevealClientRpc(int zoneID)
+    {
+        ZoneManager zone = ZoneManager.AllZones.Find(z => z.Logic.ID == zoneID);
+        if (zone == null) return;
+        ScanButton.ReceiveRevealNotification(zone);
+    }
+
+
 }

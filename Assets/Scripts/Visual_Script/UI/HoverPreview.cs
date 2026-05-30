@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class HoverPreview : MonoBehaviour
 {
@@ -6,6 +7,11 @@ public class HoverPreview : MonoBehaviour
     public GameObject toHideWhilePrewiew;
     [SerializeField] private float alphaHide = 0.3f;
     [SerializeField] public Vector2 previewOffset = new(200f, 50f);
+    [SerializeField] private Image enemyGlowImage;
+    private Color _savedGlowColor;
+    private bool _savedGlowEnabled;
+    private bool _enemyGlowActive = false;
+
 
     private CanvasGroup _cardCanvasGroup;
 
@@ -53,6 +59,7 @@ public class HoverPreview : MonoBehaviour
 
         if (BuildingShopVisual.IsOpen) return;
         OverCollider = true;
+        TryActivateEnemyGlow();
         if (PreviewsAllowed && ThisPreviewEnabled)
         {
             PreviewThisObject();
@@ -63,6 +70,7 @@ public class HoverPreview : MonoBehaviour
     void OnMouseExit()
     {
         OverCollider = false;
+        TryDeactivateEnemyGlow();
         if (!PreviewingSomeCard())
             StopAllPreviews();
     }
@@ -125,6 +133,48 @@ public class HoverPreview : MonoBehaviour
                 return true;
         }
         return false;
+    }
+    private void TryActivateEnemyGlow()
+    {
+        if (enemyGlowImage == null) return;
+        Player localPlayer = GlobalSettings.Instance.localPlayer;
+        if (localPlayer == null) return;
+
+        bool isEnemy;
+
+        MainBaseVisual mainBase = GetComponentInParent<MainBaseVisual>();
+        if (mainBase != null)
+        {
+            isEnemy = mainBase.player != localPlayer;
+        }
+        else
+        {
+            OneLivableManager livable = GetComponentInParent<OneLivableManager>();
+            OneBaseManager baseManager = GetComponentInParent<OneBaseManager>();
+            if (livable != null)
+                isEnemy = !livable.gameObject.CompareTag(localPlayer.tag);
+            else if (baseManager != null)
+                isEnemy = !baseManager.gameObject.CompareTag(localPlayer.tag);
+            else
+                isEnemy = true; // base neutre pas encore construite
+        }
+
+        if (!isEnemy) return;
+
+        _savedGlowColor = enemyGlowImage.color;
+        _savedGlowEnabled = enemyGlowImage.enabled;
+        _enemyGlowActive = true;
+        enemyGlowImage.color = Color.red;
+        enemyGlowImage.enabled = true;
+    }
+
+
+    private void TryDeactivateEnemyGlow()
+    {
+        if (!_enemyGlowActive) return;
+        enemyGlowImage.color = _savedGlowColor;
+        enemyGlowImage.enabled = _savedGlowEnabled;
+        _enemyGlowActive = false;
     }
 
 }

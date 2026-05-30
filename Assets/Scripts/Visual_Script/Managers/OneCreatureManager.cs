@@ -12,6 +12,7 @@ public class OneCreatureManager : OneLivableManager
     [SerializeField] private Vector3 arrowOriginOffset = Vector3.zero;
     [SerializeField] private float arrowScrollSpeed = 1f;
     private Material pendingMoveArrowMat;
+    [HideInInspector] public bool isGhost = false;
     private bool isArrowVisible = false;
 
 
@@ -69,6 +70,8 @@ public class OneCreatureManager : OneLivableManager
 
     public void OnCreatureClicked()
     {
+        if (isGhost) return;
+
         if (!PhaseEffectPipeline.IsPlayerTargetingComplete(GlobalSettings.Instance.localPlayer))
         {
             IDHolder idHolder = GetComponent<IDHolder>();

@@ -11,10 +11,14 @@ using Unity.Netcode;
 public class TurnManager : MonoBehaviour
 {
     public static event System.Action OnRoundStart;
+    public static event System.Action OnPhaseEntered;
+
 
     public int initdraw = 4;
     [SerializeField] private float effectSequenceDelay = 1.5f;
+    [SerializeField] private float combatSequenceDelay = .5f;
     public float EffectSequenceDelay => effectSequenceDelay;
+    public float CombatSequenceDelay => combatSequenceDelay;
 
     public static TurnManager Instance;
 
@@ -50,7 +54,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null)
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1)
     {
         EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
@@ -65,12 +69,22 @@ public class TurnManager : MonoBehaviour
             p.TransmitInfoAboutPlayerToVisual();
         }
 
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            foreach (Player p in Player.Players)
+            {
+                bool isLow = p == GlobalSettings.Instance.LowPlayer;
+                DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
+                if (preset != null) p.deck.LoadDeck(preset);
+            }
+        }
+
         if (seed.HasValue)
         {
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.cards.ShuffleWithSeed(seed.Value + idx);
+                p.deck.playerDeck.cards.ShuffleWithSeed(seed.Value + idx);
                 p.deck.ResetTimesDrawn();
                 // if (p.deck.cards.Count >= 2)
                 //     Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
@@ -83,7 +97,7 @@ public class TurnManager : MonoBehaviour
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.cards.Shuffle();
+                p.deck.playerDeck.cards.Shuffle();
                 p.deck.ResetTimesDrawn();
             }
             // Debug.Log("TurnManager: Deck shuffled with random seed");
@@ -351,6 +365,7 @@ public class TurnManager : MonoBehaviour
     {
         // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
+        OnPhaseEntered?.Invoke();
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
         PhaseEffectPipeline.ResetForNewPhase();
@@ -393,12 +408,7 @@ public class TurnManager : MonoBehaviour
                     StartCoroutine(AutoAdvanceFromBattle());
                     break;
                 }
-                foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
-                    r.OnBattlePhaseStart();
-                if (!NetworkSessionData.IsNetworkSession)
-                    StartCoroutine(AutoAdvanceFromBattleAfterCombat());
-                else
-                    AutoSubmitBattleAssignment();
+                StartCoroutine(DelayedBattleStart());
                 break;
             case TurnPhases.End:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
@@ -430,6 +440,16 @@ public class TurnManager : MonoBehaviour
             _ => ""
         };
         phaseText.text = label;
+    }
+    IEnumerator DelayedBattleStart()
+    {
+        yield return new WaitForSeconds(combatSequenceDelay);
+        foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
+            r.OnBattlePhaseStart();
+        if (!NetworkSessionData.IsNetworkSession)
+            StartCoroutine(AutoAdvanceFromBattleAfterCombat());
+        else
+            AutoSubmitBattleAssignment();
     }
 
     public static void RefreshAllPlayableHighlights()

@@ -1018,7 +1018,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6814103378340522323}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1026,8 +1026,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -8.21, y: -2.82}
+  m_SizeDelta: {x: 170.22, y: 200.01}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9135446247182576975
 CanvasRenderer:
@@ -1049,15 +1049,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Material: {fileID: 2100000, guid: ada626051d1790c4880d443b23357874, type: 2}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: ff7d2a31a9a2fb644bb74af739a9de39, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7e1194f85159f3142af1f4e44a7d81a1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1431,6 +1431,7 @@ GameObject:
   - component: {fileID: 2820278881990802421}
   - component: {fileID: 2972207008102704594}
   - component: {fileID: 4267437367758285462}
+  - component: {fileID: 4115913096017478983}
   m_Layer: 0
   m_Name: Card_Board_Main-Base
   m_TagString: LowPlayer
@@ -1554,6 +1555,22 @@ MonoBehaviour:
   effectOverlay: {fileID: 6406302029300316302}
   deathPendingMaterial: {fileID: 2100000, guid: 560a6521f09a02d47b099bed265a99ec, type: 2}
   deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
+--- !u!114 &4115913096017478983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 0}
+  alphaHide: 0.3
+  previewOffset: {x: 200, y: 50}
+  enemyGlowImage: {fileID: 2299680080893522801}
 --- !u!1 &8597402261057766994
 GameObject:
   m_ObjectHideFlags: 0

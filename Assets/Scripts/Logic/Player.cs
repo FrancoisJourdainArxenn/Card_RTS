@@ -26,9 +26,9 @@ public class Player : MonoBehaviour, ILivable
         }
     }
     // a script with references to all the visual game objects for this player
-    [HideInInspector] public PlayerArea[] PAreas;
-    [HideInInspector] public PlayerArea MainPArea = null;
-    [HideInInspector] public MainBaseVisual baseVisual;
+    public PlayerArea[] PAreas;
+    public PlayerArea MainPArea = null;
+    public MainBaseVisual baseVisual;
     public HandVisual handVisual;
     public Color playerColor;
 
@@ -246,7 +246,7 @@ public class Player : MonoBehaviour, ILivable
     // draw a single card from the deck
     public void DrawACard(bool fast = false, int netWorkID = -1, int finalSeed = 0)
     {
-        if (deck.cards.Count > 0)
+        if (deck.playerDeck.cards.Count > 0)
         {
             if (hand.CardsInHand.Count < handVisual.slots.Children.Length)
             {
@@ -757,6 +757,16 @@ public class Player : MonoBehaviour, ILivable
             new ShowMessageCommand("Insufficient Ressources", 2f).AddToQueue();
             return false;
         }
+        // Block build if any enemy table in the zone has creatures
+        foreach (TableVisual table in neutralBaseController.tables)
+        {
+            if (table.tag != this.tag && (table.MeleeCreaturesOnTable.Count > 0 || table.RangedCreaturesOnTable.Count > 0))
+            {
+                new ShowMessageCommand("You can't build here while enemy units are present", 2f).AddToQueue();
+                return false;
+            }
+        }
+
         return true;    
     }
 
@@ -778,7 +788,7 @@ public class Player : MonoBehaviour, ILivable
     public void ShowBuildings(BuildSpotVisual spot)
     {
         // Debug.Log("Show Buildings for player " + PlayerID);
-        GlobalSettings.Instance.buildingShop.Show(deck.buildings, spot);
+        GlobalSettings.Instance.buildingShop.Show(deck.playerDeck.buildings, spot);
     }
 
     public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
@@ -787,7 +797,7 @@ public class Player : MonoBehaviour, ILivable
         {
             MainRessourceAvailable -= building.MainCost;
             spot.SpawnPendingBuilding(building, this);
-            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.buildings.IndexOf(building), spot.SpotID);
+            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.playerDeck.buildings.IndexOf(building), spot.SpotID);
         }
         else
             ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());

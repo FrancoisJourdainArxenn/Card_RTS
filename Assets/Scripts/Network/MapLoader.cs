@@ -7,7 +7,7 @@ public class MapLoader : MonoBehaviour
     public static MapLoader Instance { get; private set; }
 
     [SerializeField] GameObject defaultMapPrefab;
-    [SerializeField] GameObject[] mapPrefabs;
+    [SerializeField] MenuRegistry registry;
 
     void Awake()
     {
@@ -17,7 +17,7 @@ public class MapLoader : MonoBehaviour
             Instantiate(defaultMapPrefab, transform.position, transform.rotation, transform);
     }
 
-    public GameObject GetMapPrefab(int index) => mapPrefabs[index];
+    public GameObject GetMapPrefab(int index) => registry.maps[index];
 }
 
 

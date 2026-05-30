@@ -18,6 +18,12 @@ public class TableVisual : MonoBehaviour
     [SerializeField] public List<GameObject> PendingCreaturesOnTable = new List<GameObject>();
     [HideInInspector] public PlayerArea ownerArea;
 
+    //#Ghost versions when losing visions
+    private bool hasBeenSeen = false;
+    private List<GameObject> meleeGhostCreatures = new List<GameObject>();
+    private List<GameObject> rangedGhostCreatures = new List<GameObject>();
+
+
     private bool cursorOverThisTable = false;
     private bool isFogged = false;
     private BoxCollider col;
@@ -70,8 +76,22 @@ public class TableVisual : MonoBehaviour
     public void SetFogged(bool fogged)
     {
         isFogged = fogged;
-        foreach (GameObject c in MeleeCreaturesOnTable)  if (c != null) c.SetActive(!fogged);
-        foreach (GameObject c in RangedCreaturesOnTable) if (c != null) c.SetActive(!fogged);
+
+        if(!fogged)
+        {
+            hasBeenSeen = true;
+            DestroyGhosts();
+            foreach (GameObject c in MeleeCreaturesOnTable)  if (c != null) c.SetActive(true);
+            foreach (GameObject c in RangedCreaturesOnTable) if (c != null) c.SetActive(true);    
+        }
+        else
+        {
+            if(hasBeenSeen)
+                CreateGhosts();
+            foreach (GameObject c in MeleeCreaturesOnTable)  if (c != null) c.SetActive(false);
+            foreach (GameObject c in RangedCreaturesOnTable) if (c != null) c.SetActive(false);    
+        }
+        
     }
 
     // rowLocalPos : 0 = le plus à gauche dans la rangée
@@ -347,6 +367,53 @@ public class TableVisual : MonoBehaviour
         id.UniqueID = uniqueID;
         return creature;
     }
+
+    private void CreateGhosts()
+    {
+        DestroyGhosts();
+        SpawnGhostRow(MeleeCreaturesOnTable, meleeGhostCreatures, GetRowSlots(true));
+        SpawnGhostRow(RangedCreaturesOnTable, rangedGhostCreatures, rangedSlots);
+    }
+
+    private void SpawnGhostRow(List<GameObject> row, List<GameObject> ghostList, CenteredSlots slots)
+    {
+        foreach (GameObject c in row)
+        {
+            if (c == null) continue;
+            OneCreatureManager ocm = c.GetComponent<OneCreatureManager>();
+            if (ocm?.cardAsset == null) continue;
+
+            GameObject ghost = Instantiate(GlobalSettings.Instance.CreaturePrefab,
+                c.transform.position, Quaternion.identity, slots.transform);
+
+            OneCreatureManager ghostOcm = ghost.GetComponent<OneCreatureManager>();
+            ghostOcm.BaseID = ocm.BaseID;
+            ghostOcm.cardAsset = ocm.cardAsset;
+            ghostOcm.ReadCreatureFromAsset();
+            ghostOcm.HealthText.text = ocm.HealthText.text;
+            ghostOcm.isGhost = true;
+            ghostOcm.SetGray(true);
+
+            foreach (Transform t in ghost.GetComponentsInChildren<Transform>())
+                t.tag = owner.ToString() + "Creature";
+
+            ghostList.Add(ghost);
+        }
+    }
+
+    private void DestroyGhosts()
+    {
+        foreach (GameObject g in meleeGhostCreatures) if (g != null) Destroy(g);
+        foreach (GameObject g in rangedGhostCreatures) if (g != null) Destroy(g);
+        meleeGhostCreatures.Clear();
+        rangedGhostCreatures.Clear();
+    }
+
+    void OnDestroy()
+    {
+        DestroyGhosts();
+    }
+
 
     public void SetOwnerColor(Color color) => glow.GetComponent<Image>().color = color;
 }

@@ -33,6 +33,8 @@ public class GlobalSettings : MonoBehaviour
     public float CardTransitionTime = 1f;
     public float CardPreviewTimeFast = 0.2f;
     public float CardTransitionTimeFast = 0.5f;
+    public float AttackMoveDuration = 0.3f;   // durée du mouvement aller-retour
+    public float AttackPostDelay = 0.3f;       // pause après chaque attaque
     [Header("Prefabs and Assets")]
     public GameObject NoTargetSpellCardPrefab;
     public GameObject TargetedSpellCardPrefab;
@@ -81,6 +83,7 @@ public class GlobalSettings : MonoBehaviour
         }
         UiPlayerVisual?.RefreshUI();
         FogOfWarManager.Refresh();
+        BuildSpotVisual.RefreshAll();
     }
 
     public void InitFromMap()
@@ -102,10 +105,13 @@ public class GlobalSettings : MonoBehaviour
         LowPlayer.PAreas = MapManager.Current.LowPlayerAreas;
 
         ZoneManager topZone = MapManager.Current.TopPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
-        TopPlayer.MainPArea = topZone?.subZones.Find(pa => pa.owner == AreaPosition.Top);
+        if (topZone != null)
+            TopPlayer.MainPArea = System.Array.Find(topZone.GetComponentsInChildren<PlayerArea>(), pa => pa.owner == AreaPosition.Top);
 
         ZoneManager lowZone = MapManager.Current.LowPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
-        LowPlayer.MainPArea = lowZone?.subZones.Find(pa => pa.owner == AreaPosition.Low);
+        if (lowZone != null)
+            LowPlayer.MainPArea = System.Array.Find(lowZone.GetComponentsInChildren<PlayerArea>(), pa => pa.owner == AreaPosition.Low);
+
 
         SpawnMainBase(TopPlayer, MapManager.Current.TopPlayerBaseSpawn);
         SpawnMainBase(LowPlayer, MapManager.Current.LowPlayerBaseSpawn);
@@ -140,6 +146,7 @@ public class GlobalSettings : MonoBehaviour
             FogOfWarManager.Refresh();
             PathVisual.RefreshAll();
             RefreshEndPhaseButtons();
+            BuildSpotVisual.RefreshAll();
         }
     }
     

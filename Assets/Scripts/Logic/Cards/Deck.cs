@@ -1,11 +1,9 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class Deck : MonoBehaviour {
 
-    public List<CardAsset> cards = new List<CardAsset>();
-    public List<CardAsset> buildings = new List<CardAsset>();
+    public DeckSO playerDeck;
 
     public WeightedDrawConfig drawConfig;
 
@@ -19,10 +17,19 @@ public class Deck : MonoBehaviour {
         CacheTierCounts();
     }
 
+    public void LoadDeck(DeckSO chosenDeck)
+    {
+        if(chosenDeck == null)
+            return;
+        playerDeck = chosenDeck;
+        timesDrawn.Clear();
+        CacheTierCounts();
+    }
+
     private void CacheTierCounts()
     {
         _n1 = 0; _n2 = 0; _n3 = 0;
-        foreach (CardAsset card in cards)
+        foreach (CardAsset card in playerDeck.cards)
         {
             int t = (int)card.tier;
             if (t == 1)      _n1++;
@@ -41,7 +48,7 @@ public class Deck : MonoBehaviour {
         }
 
         CardAsset drawn = WeightedDraw.Draw(
-            cards, timesDrawn, _n1, _n2, _n3,
+            playerDeck.cards, timesDrawn, _n1, _n2, _n3,
             mainIncome, seed, drawConfig, playerTag);
 
         if (drawn != null)
@@ -54,18 +61,18 @@ public class Deck : MonoBehaviour {
 
     public void ShuffleWithSeed(int seed)
     {
-        cards.ShuffleWithSeed(seed);
+        playerDeck.cards.ShuffleWithSeed(seed);
     }
 
     public void SelectRandomCardFromSeed(int seed)
     {
-        cards.SelectRandomCardFromSeed(seed);
+        playerDeck.cards.SelectRandomCardFromSeed(seed);
     }
 
     public CardAsset FindBuildingByIndex(int index)
     {
-        if (index < 0 || index >= buildings.Count) return null;
-        return buildings[index];
+        if (index < 0 || index >= playerDeck.buildings.Count) return null;
+        return playerDeck.buildings[index];
     }
 
 }

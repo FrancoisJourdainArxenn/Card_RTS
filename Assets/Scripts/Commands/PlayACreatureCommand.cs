@@ -50,5 +50,7 @@ public class PlayACreatureCommand : Command
         {
             selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos, selectedPArea.baseID);
         }
+        BuildSpotVisual.RefreshAll();
+
     }
 }

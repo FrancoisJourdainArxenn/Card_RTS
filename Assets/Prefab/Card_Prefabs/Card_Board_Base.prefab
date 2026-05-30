@@ -863,7 +863,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5380857610467106040}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -871,8 +871,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -4.699997, y: -1.699997}
+  m_SizeDelta: {x: 140.1, y: 197.8}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7894555970576164614
 CanvasRenderer:
@@ -894,15 +894,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Material: {fileID: -876546973899608171, guid: b03e36b938d1dce41a179928f8bb95d7, type: 3}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: ff7d2a31a9a2fb644bb74af739a9de39, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7e1194f85159f3142af1f4e44a7d81a1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1275,6 +1275,7 @@ GameObject:
   - component: {fileID: 5539823569782606735}
   - component: {fileID: 2972207008102704594}
   - component: {fileID: 8664479807213668391}
+  - component: {fileID: 3186098879058963322}
   m_Layer: 0
   m_Name: Card_Board_Base
   m_TagString: Untagged
@@ -1349,8 +1350,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.2278497, y: 1, z: 1.2056566}
-  m_Center: {x: 0.007571833, y: 0, z: 0.011020589}
+  m_Size: {x: 2.2278497, y: 1, z: 1.2990788}
+  m_Center: {x: 0.0075718164, y: 0, z: -0.035690546}
 --- !u!114 &2972207008102704594
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1379,6 +1380,22 @@ MonoBehaviour:
   effectOverlay: {fileID: 65739956403186802}
   deathPendingMaterial: {fileID: 2100000, guid: 560a6521f09a02d47b099bed265a99ec, type: 2}
   deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
+--- !u!114 &3186098879058963322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8434494526590664003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86ac033b34a5d894d991ad95f8e2ffdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoverPreview
+  toHideWhilePrewiew: {fileID: 0}
+  alphaHide: 0.3
+  previewOffset: {x: 200, y: 50}
+  enemyGlowImage: {fileID: 1427065996216362515}
 --- !u!1 &8465229852595459919
 GameObject:
   m_ObjectHideFlags: 0
