@@ -1395,7 +1395,7 @@ MonoBehaviour:
   toHideWhilePrewiew: {fileID: 0}
   alphaHide: 0.3
   previewOffset: {x: 200, y: 50}
-  enemyGlowImage: {fileID: 0}
+  enemyGlowImage: {fileID: 1427065996216362515}
 --- !u!1 &8465229852595459919
 GameObject:
   m_ObjectHideFlags: 0

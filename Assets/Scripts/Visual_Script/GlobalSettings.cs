@@ -83,6 +83,7 @@ public class GlobalSettings : MonoBehaviour
         }
         UiPlayerVisual?.RefreshUI();
         FogOfWarManager.Refresh();
+        BuildSpotVisual.RefreshAll();
     }
 
     public void InitFromMap()
@@ -104,10 +105,13 @@ public class GlobalSettings : MonoBehaviour
         LowPlayer.PAreas = MapManager.Current.LowPlayerAreas;
 
         ZoneManager topZone = MapManager.Current.TopPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
-        TopPlayer.MainPArea = topZone?.subZones.Find(pa => pa.owner == AreaPosition.Top);
+        if (topZone != null)
+            TopPlayer.MainPArea = System.Array.Find(topZone.GetComponentsInChildren<PlayerArea>(), pa => pa.owner == AreaPosition.Top);
 
         ZoneManager lowZone = MapManager.Current.LowPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
-        LowPlayer.MainPArea = lowZone?.subZones.Find(pa => pa.owner == AreaPosition.Low);
+        if (lowZone != null)
+            LowPlayer.MainPArea = System.Array.Find(lowZone.GetComponentsInChildren<PlayerArea>(), pa => pa.owner == AreaPosition.Low);
+
 
         SpawnMainBase(TopPlayer, MapManager.Current.TopPlayerBaseSpawn);
         SpawnMainBase(LowPlayer, MapManager.Current.LowPlayerBaseSpawn);

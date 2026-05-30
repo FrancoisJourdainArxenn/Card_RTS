@@ -6,6 +6,14 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
 {
     public BaseAsset baseAsset;
     public int CurrentHealth { get; private set; }
+    public bool HasBeenSeen { get; private set; } = false;
+    public void MarkSeen() => HasBeenSeen = true;
+
+    public void SetGray(bool gray)
+    {
+        ArtImage.color   = gray ? Color.gray : Color.white;
+        FrameImage.color = gray ? Color.gray : Color.white;
+    }
 
     [Header("Text Component References")]
 

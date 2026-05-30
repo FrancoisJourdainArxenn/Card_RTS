@@ -15,6 +15,9 @@ public class FogOfWarManager : MonoBehaviour
     private Dictionary<int, BuildSpotVisual[]> cachedBuildSpots = new Dictionary<int, BuildSpotVisual[]>();
     private bool _refreshPending;
     private Player _lastObserver;
+    private Dictionary<int, (GameObject ghost, ZoneManager zone)> _buildingGhosts
+    = new Dictionary<int, (GameObject, ZoneManager)>();
+
 
     void Awake()
     {
@@ -110,7 +113,26 @@ public class FogOfWarManager : MonoBehaviour
             foreach (BuildSpotVisual spot in spots)
                 spot.gameObject.SetActive(observerHasPresence);
 
-        foreach (var kvp in BuildingLogic.BuildingsCreatedThisGame)
+        if (observerHasPresence)
+        {
+            List<int> toClean = null;
+            foreach (KeyValuePair<int, (GameObject ghost, ZoneManager zone)> gKvp in _buildingGhosts)
+            {
+                if (gKvp.Value.zone == zone)
+                {
+                    if (toClean == null) toClean = new List<int>();
+                    toClean.Add(gKvp.Key);
+                }
+            }
+            if (toClean != null)
+                foreach (int id in toClean)
+                {
+                    if (_buildingGhosts[id].ghost != null) Destroy(_buildingGhosts[id].ghost);
+                    _buildingGhosts.Remove(id);
+                }
+        }
+
+        foreach (KeyValuePair<int, BuildingLogic> kvp in BuildingLogic.BuildingsCreatedThisGame)
         {
             BuildingLogic b = kvp.Value;
             if (b.OriginSpot == null || b.OriginSpot.Zone != zone) continue;
@@ -118,8 +140,35 @@ public class FogOfWarManager : MonoBehaviour
             GameObject buildingGO = IDHolder.GetGameObjectWithID(b.UniqueBuildingID);
             if (buildingGO == null) continue;
 
-            buildingGO.SetActive(b.owner == observer || observerHasPresence);
+            OneBuildingManager buildingMgr = buildingGO.GetComponent<OneBuildingManager>();
+            bool isOwnerOrVisible = b.owner == observer || observerHasPresence;
+
+            if (isOwnerOrVisible)
+            {
+                buildingMgr?.MarkSeen();
+                buildingGO.SetActive(true);
+            }
+            else
+            {
+                buildingGO.SetActive(false);
+
+                if (buildingMgr != null && buildingMgr.HasBeenSeen && !_buildingGhosts.ContainsKey(b.UniqueBuildingID))
+                {
+                    Transform ghostParent = buildingGO.transform.parent?.parent ?? buildingGO.transform.parent;
+                    GameObject ghost = Instantiate(buildingGO, buildingGO.transform.position,
+                        buildingGO.transform.rotation, ghostParent);
+
+                    OneBuildingManager ghostMgr = ghost.GetComponent<OneBuildingManager>();
+                    ghostMgr.BuildingLogic = null;
+                    ghostMgr.SetGray(true);
+                    IDHolder ghostId = ghost.GetComponent<IDHolder>();
+                    if (ghostId != null) Destroy(ghostId);
+                    ghost.SetActive(true);
+                    _buildingGhosts[b.UniqueBuildingID] = (ghost, zone);
+                }
+            }
         }
+
 
         // Ne mettre à jour les visuels que si l'état du fog ou l'observateur a changé.
         // Évite des SetActive et Image.color inutiles (Canvas rebuild, GPU resource churn).

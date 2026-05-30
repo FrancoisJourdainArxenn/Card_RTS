@@ -138,7 +138,28 @@ public class HoverPreview : MonoBehaviour
     {
         if (enemyGlowImage == null) return;
         Player localPlayer = GlobalSettings.Instance.localPlayer;
-        if (localPlayer == null || CompareTag(localPlayer.tag)) return;
+        if (localPlayer == null) return;
+
+        bool isEnemy;
+
+        MainBaseVisual mainBase = GetComponentInParent<MainBaseVisual>();
+        if (mainBase != null)
+        {
+            isEnemy = mainBase.player != localPlayer;
+        }
+        else
+        {
+            OneLivableManager livable = GetComponentInParent<OneLivableManager>();
+            OneBaseManager baseManager = GetComponentInParent<OneBaseManager>();
+            if (livable != null)
+                isEnemy = !livable.gameObject.CompareTag(localPlayer.tag);
+            else if (baseManager != null)
+                isEnemy = !baseManager.gameObject.CompareTag(localPlayer.tag);
+            else
+                isEnemy = true; // base neutre pas encore construite
+        }
+
+        if (!isEnemy) return;
 
         _savedGlowColor = enemyGlowImage.color;
         _savedGlowEnabled = enemyGlowImage.enabled;
@@ -146,6 +167,7 @@ public class HoverPreview : MonoBehaviour
         enemyGlowImage.color = Color.red;
         enemyGlowImage.enabled = true;
     }
+
 
     private void TryDeactivateEnemyGlow()
     {
