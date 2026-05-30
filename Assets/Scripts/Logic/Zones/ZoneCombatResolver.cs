@@ -49,6 +49,8 @@ public class ZoneCombatResolver : MonoBehaviour
             (zoneView.subZones.Contains(p2.MainPArea) && p1CreatureCount > 0) ||
             (p1HasBuildingAtk && p2CreatureCount > 0) ||
             (p2HasBuildingAtk && p1CreatureCount > 0) ||
+            (p1CreatureCount > 0 && GetAllBuildingsInMyZone(p2, zoneView).Count > 0) ||
+            (p2CreatureCount > 0 && GetAllBuildingsInMyZone(p1, zoneView).Count > 0) ||
             (p1HasBuildingAtk && FindDefenderBaseInZone(p2) != null) ||
             (p2HasBuildingAtk && FindDefenderBaseInZone(p1) != null) ||
             (p1HasBuildingAtk && zoneView.subZones.Contains(p2.MainPArea)) ||
