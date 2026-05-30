@@ -30,7 +30,7 @@ MonoBehaviour:
   Keywords: []
   Effects:
   - EffectName: For the Swarm
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Effect: {fileID: 11400000, guid: 6a11898b25201584fb5d889c9b005d34, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
@@ -38,7 +38,10 @@ MonoBehaviour:
       - targetType: 0
         includesSource: 0
         onlySource: 0
-        queries: []
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
