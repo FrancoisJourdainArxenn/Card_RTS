@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &17112407
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1097,7 +1097,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &238315092
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1114,8 +1114,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -36, y: 98}
-  m_SizeDelta: {x: -76.9435, y: -260.1765}
+  m_AnchoredPosition: {x: 725.397, y: -245.76001}
+  m_SizeDelta: {x: -1601.34, y: -960.61}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &238315093
 MonoBehaviour:
@@ -5192,7 +5192,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1612766771}
-  - component: {fileID: 1612766772}
   m_Layer: 0
   m_Name: Scan_Arrow
   m_TagString: Untagged
@@ -5216,19 +5215,6 @@ Transform:
   - {fileID: 349764276}
   m_Father: {fileID: 219902736}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1612766772
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1612766770}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44fbc86ab85b94043a4455add587df73, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EffectTargetingArrow
-  arrow: {fileID: 349764275}
 --- !u!114 &1637805278 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1928544945300602132, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}

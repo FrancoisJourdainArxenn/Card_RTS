@@ -42,12 +42,21 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
     void OnEnable()
     {
         TurnManager.OnRoundStart += ClearRevealedZones;
+        TargetingVisualEvents.OnTargetingStarted += OnEffectTargetingStarted;
     }
 
     void OnDisable()
     {
         TurnManager.OnRoundStart -= ClearRevealedZones;
+        TargetingVisualEvents.OnTargetingStarted -= OnEffectTargetingStarted;
     }
+
+    private void OnEffectTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
+    {
+        if (_activeSession != null)
+            CancelSelection();
+    }
+
 
     public void OnPointerClick(PointerEventData eventData)
     {
