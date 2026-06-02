@@ -19,7 +19,8 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Melee</b>
 
-    <b>On Death:</b> Gives +1/+1 to a Unit.'
+    <b>Begin Battle:</b> Gives +1/+1 to a Unit for
+    this turn.'
   CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
   MainCost: 2
   Attack: 1
@@ -29,11 +30,12 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
   Effects:
   - EffectName: Inspire
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 1
+    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
