@@ -29,6 +29,7 @@ public class TableVisual : MonoBehaviour
     private BoxCollider col;
     private int _previewIndex = -1;
     private bool _previewIsMelee;
+    private GameObject _movingCreature;
 
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
@@ -107,7 +108,6 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
-        // Debug.Log($"[Add] {ca.name} à l'index {listIndex} — liste : [{string.Join(", ", targetList.ConvertAll(g => { var ocm = g.GetComponent<OneCreatureManager>(); return (ocm != null && ocm.cardAsset != null) ? ocm.cardAsset.name : "?"; }))}]");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = rowLocalPos;
@@ -123,8 +123,7 @@ public class TableVisual : MonoBehaviour
     // rowLocalPos : 0 = le plus à gauche dans la rangée
     public void MoveCreatureToIndex(GameObject creature, int UniqueID, int rowLocalPos, int baseID)
     {
-        var ocm      = creature.GetComponent<OneCreatureManager>();
-        bool isMelee = ocm != null && ocm.cardAsset != null && ocm.cardAsset.melee;
+        bool isMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(UniqueID, out CreatureLogic cl) && cl.IsMelee;
         CenteredSlots rowSlots  = GetRowSlots(isMelee);
         List<GameObject> targetList = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
 
@@ -209,25 +208,50 @@ public class TableVisual : MonoBehaviour
         int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
         int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;
 
-        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap);
-        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap);
+        GameObject meleeExcluded  = (_movingCreature != null && MeleeCreaturesOnTable.Contains(_movingCreature))  ? _movingCreature : null;
+        GameObject rangedExcluded = (_movingCreature != null && RangedCreaturesOnTable.Contains(_movingCreature)) ? _movingCreature : null;
+
+        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded);
+        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap, rangedExcluded);
     }
 
-    void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1)
+    // gapIndex : position du slot virtuel vide dans la rangée effective (sans excluded)
+    // excluded : créature en cours de drag, exclue du calcul de slots
+    void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1, GameObject excluded = null)
     {
         int count = group.Count;
         if (count == 0) return;
 
-        bool hasGap = gapIndex >= 0 && gapIndex <= count;
-        int virtualCount = count + (hasGap ? 1 : 0);
+        bool hasExcluded = excluded != null && group.Contains(excluded);
+        int effectiveCount = count - (hasExcluded ? 1 : 0);
+        bool hasGap = gapIndex >= 0;
+        int virtualCount = effectiveCount + (hasGap ? 1 : 0);
+        // On clamp pour éviter que gapIndex > effectiveCount ne décale rien (gap en fin de liste)
+        int clampedGap = hasGap ? Mathf.Min(gapIndex, effectiveCount) : -1;
 
+        if (virtualCount == 0) return;
+
+        int effectivePos = 0;
         for (int i = 0; i < count; i++)
         {
-            int virtualIndex = (hasGap && i >= gapIndex) ? i + 1 : i;
+            if (group[i] == excluded) continue;
+            int virtualIndex = (hasGap && effectivePos >= clampedGap) ? effectivePos + 1 : effectivePos;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
             group[i].transform.DOKill();
             group[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
+            effectivePos++;
         }
+    }
+
+    // Preview de déplacement intra-zone : la créature est exclue de la rangée et un slot vide la remplace
+    public void ShowMovePreview(GameObject creature)
+    {
+        _movingCreature = creature;
+        bool isMelee = MeleeCreaturesOnTable.Contains(creature);
+        _previewIsMelee = isMelee;
+        // effectiveCount + 1 gap = count total → les positions de slots sont identiques à l'original
+        _previewIndex = TablePosForNewCreature(isMelee);
+        PlaceCreaturesOnNewSlots();
     }
 
     public void ShowInsertPreview(int rowLocalPos, bool isMelee)
@@ -237,10 +261,78 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
     }
 
+    private static string FormatIDs(List<GameObject> list)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        for (int i = 0; i < list.Count; i++)
+        {
+            IDHolder h = list[i] != null ? list[i].GetComponent<IDHolder>() : null;
+            if (i > 0) sb.Append(", ");
+            sb.Append(h != null ? h.UniqueID.ToString() : "?");
+        }
+        return sb.ToString();
+    }
+
+    public void ReorderCreature(GameObject creature)
+    {
+        if (_previewIndex < 0)
+            return;
+
+        bool isMelee = MeleeCreaturesOnTable.Contains(creature);
+        List<GameObject> targetList = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+
+        string before = FormatIDs(targetList);
+        int insertIndex = _previewIndex;
+        targetList.Remove(creature);
+        targetList.Insert(Mathf.Min(insertIndex, targetList.Count), creature);
+        Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
+
+        _previewIndex = -1;
+        _movingCreature = null;
+
+        // Téléporte immédiatement la créature à sa position finale pour qu'elle réapparaisse au bon endroit
+        CenteredSlots rowSlots = GetRowSlots(isMelee);
+        int finalIndex = targetList.IndexOf(creature);
+        creature.transform.DOKill();
+        creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
+
+        PlaceCreaturesOnNewSlots();
+
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+    }
+
+    public void ApplyCreatureOrder(int[] meleeIDs, int[] rangedIDs)
+    {
+        SortListByIDs(MeleeCreaturesOnTable, meleeIDs);
+        SortListByIDs(RangedCreaturesOnTable, rangedIDs);
+        PlaceCreaturesOnNewSlots();
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+    }
+
+    private void SortListByIDs(List<GameObject> list, int[] ids)
+    {
+        List<GameObject> sorted = new List<GameObject>(ids.Length);
+        foreach (int id in ids)
+        {
+            GameObject go = IDHolder.GetGameObjectWithID(id);
+            if (go != null && list.Contains(go))
+                sorted.Add(go);
+        }
+        foreach (GameObject go in list)
+            if (!sorted.Contains(go))
+                sorted.Add(go);
+        list.Clear();
+        list.AddRange(sorted);
+    }
+
     public void ClearInsertPreview()
     {
-        if (_previewIndex < 0) return;
+        if (_previewIndex < 0 && _movingCreature == null)
+            return;
         _previewIndex = -1;
+        _movingCreature = null;
         PlaceCreaturesOnNewSlots();
     }
 
@@ -253,7 +345,10 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, uniqueID, baseID, pendingSlots.Children[index].transform.position);
         creature.transform.SetParent(pendingSlots.transform);
         PendingCreaturesOnTable.Add(creature);
-        creature.GetComponent<OneCreatureManager>().SetGray(true);
+        OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
+        manager.SetGray(true);
+        manager.CanReorderNow = true;
+        manager.UpdateGlow();
     }
 
     private CenteredSlots GetRowSlots(bool isMelee) =>

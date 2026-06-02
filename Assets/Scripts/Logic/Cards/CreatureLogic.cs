@@ -40,11 +40,14 @@ public class CreatureLogic: ILivable
                 ShieldValue -= absorbed;
                 value = health - (damage - absorbed);
                 // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {damage} | Absorbés: {absorbed} | Shield restant: {ShieldValue} | PV: {health} → {value}");
-                var shieldVfx = IDHolder.GetGameObjectWithID(UniqueCreatureID)?.GetComponent<VfxManager>();
-                if (ShieldValue == 0)
-                    shieldVfx?.HideShieldVfx();
-                else
-                    shieldVfx?.UpdateShieldVfx(ShieldValue);
+                VfxManager vfx = Vfx;
+                if (vfx != null)
+                {
+                    if (ShieldValue == 0)
+                        vfx.HideShieldVfx();
+                    else
+                        vfx.UpdateShieldVfx(ShieldValue);
+                }
             }
             else if (value < health)
             {
@@ -68,8 +71,9 @@ public class CreatureLogic: ILivable
                     health = 0;
                     IsPendingDeath = true;
                     PendingDeathList.Add(this);
-                    GameObject go = IDHolder.GetGameObjectWithID(UniqueCreatureID);
-                    go?.GetComponent<VfxManager>()?.ShowDeathPending();
+                    VfxManager vfx = Vfx;
+                    if (vfx != null)
+                        vfx.ShowDeathPending();
                 }
                 else
                 {
@@ -134,6 +138,15 @@ public class CreatureLogic: ILivable
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
+
+    private VfxManager Vfx
+    {
+        get
+        {
+            GameObject go = IDHolder.GetGameObjectWithID(UniqueCreatureID);
+            return go != null ? go.GetComponent<VfxManager>() : null;
+        }
+    }
     public bool Targetable
     {
         get

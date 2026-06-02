@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: B1TC4
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
+  Type: 0
+  subType: 2
+  tier: 1
+  Description: <b>Shield 1</b>
+  CardImage: {fileID: 21300000, guid: be9c17079b0d8f049bc86f6268da86a9, type: 3}
+  MainCost: 0
+  Attack: 2
+  MaxHealth: 2
+  AttacksForOneTurn: 1
+  melee: 1
+  MoveSpeed: 1
+  Celerity: 0
+  ActivationsForOneTurn: 0
+  Keywords:
+  - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  Effects:
+  - EffectName: Shield Up !
+    Effect: {fileID: 0}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 0
+        includesSource: 1
+        queries: []
+      repartition: 0
+  - EffectName: Shield at the Ready
+    Effect: {fileID: 0}
+    Trigger: 2
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 1
+        includesTarget: 0
+        includesSource: 1
+        queries: []
+      repartition: 0

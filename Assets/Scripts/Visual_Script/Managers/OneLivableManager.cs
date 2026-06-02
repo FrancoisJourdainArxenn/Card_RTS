@@ -13,6 +13,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     
     [Header("Image References")]
     public Image art;
+    public GameObject artMask;
     public Image frame;
     public Image glow;
     public Image MeleeImage;
@@ -49,6 +50,12 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         set { canMoveNow = value; }
     }
 
+    private bool canReorderNow = false;
+    public bool CanReorderNow
+    {
+        get { return canReorderNow; }
+        set { canReorderNow = value; }
+    }
     public int BaseID {get; set;}
 
     public void TakeDamage(int amount, int healthAfter)
@@ -91,6 +98,18 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
         }
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
+    }
+
+    public void SetVisible(bool visible)
+    {
+        if (artMask != null)    artMask.SetActive(visible);
+        else if (art != null)   art.enabled        = visible;
+        if (frame != null)      frame.enabled      = visible;
+        if (MeleeImage != null) MeleeImage.enabled = visible;
+        if (AttackText != null) AttackText.enabled = visible;
+        if (HealthText != null) HealthText.enabled = visible;
+        if (glow != null && visible == false)
+            glow.enabled = false;
     }
 
     public virtual void UpgdateGlow() {}
