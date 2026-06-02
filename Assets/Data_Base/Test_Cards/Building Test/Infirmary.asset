@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Infirmary
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 1
+  subType: 4
+  tier: 1
+  Description: <b>Command:</b> Heals for 1 any Unit.
+  CardImage: {fileID: 21300000, guid: 4df5f885d436ac74cbfae8f89616a9f1, type: 3}
+  MainCost: 0
+  Attack: 0
+  MaxHealth: 3
+  AttacksForOneTurn: 0
+  melee: 0
+  MoveSpeed: 0
+  Celerity: 0
+  ActivationsForOneTurn: 0
+  Keywords:
+  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
+  Effects:
+  - EffectName: Healing Syringe
+    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
+    Trigger: 3
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 4
+          zoneFilter: 0
+        requiresPlayerSelection: 1
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        queries:
+        - team: 1
+          statusFilter: 4
+          zoneFilter: 0
+      repartition: 0

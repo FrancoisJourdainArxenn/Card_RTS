@@ -52,7 +52,7 @@ GameObject:
   - component: {fileID: 8134276237803818483}
   - component: {fileID: 4817741056568971717}
   m_Layer: 0
-  m_Name: MAP_Eoa
+  m_Name: Map_Eoa
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

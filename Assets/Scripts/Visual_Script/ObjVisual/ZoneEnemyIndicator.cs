@@ -3,6 +3,7 @@ using UnityEngine;
 public class ZoneEnemyIndicator : MonoBehaviour
 {
     public GameObject indicatorObject;
+    private bool _isActive = false;
 
     private ZoneManager _zone;
 
@@ -13,6 +14,11 @@ public class ZoneEnemyIndicator : MonoBehaviour
         _zone = GetComponent<ZoneManager>();
         if (indicatorObject != null)
             indicatorObject.SetActive(false);
+    }
+
+    void Start()
+    {
+        Refresh();
     }
 
     void OnEnable()  => OnRefreshRequested += Refresh;
@@ -28,9 +34,23 @@ public class ZoneEnemyIndicator : MonoBehaviour
         Player enemy = local.otherPlayer;
         if (enemy == null) return;
 
-        bool show = EnemyIsInThisZone(enemy) && LocalIsInAdjacentZone(local);
-        indicatorObject.SetActive(show);
+        bool enemyPresent = EnemyIsInThisZone(enemy);
+
+        if (enemyPresent && ScoutEnterSO.HasScoutAdjacentTo(_zone.Logic, local))
+        {
+            indicatorObject.SetActive(true);
+            return;
+        }
+
+        if (GameNetworkManager.Instance == null || !GameNetworkManager.Instance.EnemyDetection)
+        {
+            indicatorObject.SetActive(false);
+            return;
+        }
+
+        indicatorObject.SetActive(enemyPresent && LocalIsInAdjacentZone(local));
     }
+
 
     private bool EnemyIsInThisZone(Player enemy)
     {

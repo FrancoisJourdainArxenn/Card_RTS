@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: 
   cards:
-  - {fileID: 11400000, guid: bea7df1aa71c5d742a9427c36658ddf4, type: 2}
-  - {fileID: 11400000, guid: 615c4969f5fb2ff4bb48e0620e3b4ce2, type: 2}
+  - {fileID: 11400000, guid: b045c4806586211498af78e6bbe4c81b, type: 2}
+  - {fileID: 11400000, guid: 81a7cc3a83f81724096010815d6c1797, type: 2}
   buildings:
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

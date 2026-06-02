@@ -111,7 +111,10 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
     {
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         localPlayer.MainRessourceAvailable -= currentScanCost;
-        currentScanCost += 1;
+        if (currentScanCost < scanCost)
+            currentScanCost = scanCost;        
+        else
+            currentScanCost += 1;
         SetUsed(true);
         Debug.Log($"Scan now Costs :" + currentScanCost);
         RefreshCostText();
