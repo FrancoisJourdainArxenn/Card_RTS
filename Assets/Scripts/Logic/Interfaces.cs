@@ -18,6 +18,14 @@ public interface ILivable: IIdentifiable
     public bool IsRanged => false;
     public int Attack { get; set; }
     void Die();
+
+    // Applies damage, respecting shield on implementors that have one.
+    // Returns the actual Health after absorption. Default: no shield.
+    int TakeDamage(int dmg)
+    {
+        Health -= dmg;
+        return Health;
+    }
 }
 
 public interface IIdentifiable

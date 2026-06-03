@@ -59,6 +59,12 @@ public class BaseLogic: ILivable
     
     public int BaseID {get; private set;}
     
+    public int TakeDamage(int dmg)
+    {
+        Health -= dmg;
+        return Health;
+    }
+
     public void Die()
     {
         if (IsHomeBase) return; // mort de la home base gérée par Player

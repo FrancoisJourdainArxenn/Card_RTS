@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: FastDeck
+  m_Name: FastDeck 2
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Test Deck (1)
+  deckName: Test Deck (2)
   cards:
-  - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
+  - {fileID: 11400000, guid: 76b2768144f9fbb46b668ff29ff161c8, type: 2}
   buildings:
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

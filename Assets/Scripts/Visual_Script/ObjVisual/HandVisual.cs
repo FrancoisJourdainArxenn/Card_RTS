@@ -106,7 +106,7 @@ public class HandVisual : MonoBehaviour
         else
         {
             // this is a spell: checking for targeted or non-targeted spell
-            if (c.Effects[0].RequiresPlayerInput == false)
+            if (c.Effects == null || c.Effects.Count == 0 || c.Effects[0].RequiresPlayerInput == false)
                 card = GameObject.Instantiate(GlobalSettings.Instance.NoTargetSpellCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
             else
             {

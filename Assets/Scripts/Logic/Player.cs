@@ -535,6 +535,12 @@ public class Player : MonoBehaviour, ILivable
         // HighlightPlayableCards();
     }
 
+    public int TakeDamage(int dmg)
+    {
+        Health -= dmg;
+        return Health;
+    }
+
     public void Die()
     {
         // game over

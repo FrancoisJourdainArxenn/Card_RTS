@@ -14,6 +14,10 @@ public static class EffectRegistry
     private static readonly Dictionary<TriggerType, List<RegisteredEffect>> _listeners
         = new Dictionary<TriggerType, List<RegisteredEffect>>();
 
+    // ID de l'entité source de l'effet en cours d'exécution.
+    // Alimenté par Execute() pour que DeathDrainRecorder sache qui a causé un changement de HP.
+    public static int CurrentSourceID { get; private set; } = -1;
+
     private struct RegisteredEffect
     {
         public CardEffectData             Data;
@@ -180,7 +184,9 @@ public static class EffectRegistry
             return;
         }
 
+        CurrentSourceID = context.Source?.ID ?? -1;
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
+        CurrentSourceID = -1;
 
         if (!data.RequiresPlayerInput)
             TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);

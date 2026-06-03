@@ -38,9 +38,14 @@ public class DealDamageCommand : Command
             {
                 CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out var sourceLogic);
                 int sourceHealth = sourceLogic?.Health ?? 0;
+                bool fired = false;
                 DOVirtual.DelayedCall(0.2f, () =>
-                    attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter)
-                ).SetLink(source);
+                {
+                    fired = true;
+                    attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter);
+                })
+                .SetLink(source)
+                .OnKill(() => { if (!fired) CommandExecutionComplete(); });
                 return;
             }
         }

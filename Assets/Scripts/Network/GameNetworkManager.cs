@@ -668,7 +668,10 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (nextPhase == TurnManager.TurnPhases.Battle)
         {
-            StartCoroutine(DrainThenEnterPhase(nextPhase));
+            if (IsServer)
+                StartCoroutine(DrainBeginCombatAndTransition());
+            else
+                Debug.Log("[PhaseTransition][Client] Battle reçu — en attente de BroadcastDeathDrainClientRpc");
             return;
         }
 
@@ -688,15 +691,103 @@ public class GameNetworkManager : NetworkBehaviour
         }
     }
 
-    IEnumerator DrainThenEnterPhase(TurnManager.TurnPhases nextPhase)
+    // -------------------------------------------------------------------------
+    // DRAIN DES MORTS — END → REGROUP (autoritaire serveur)
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Appelé par le serveur après avoir enregistré le drain complet.
+    /// Sérialise la séquence ordonnée d'événements et la broadcast à tous les clients.
+    /// </summary>
+    public void BroadcastDeathDrain(List<DeathDrainRecorder.DrainEvent> events, TurnManager.TurnPhases nextPhase = TurnManager.TurnPhases.Regroup)
     {
-        yield return StartCoroutine(TurnManager.Instance.DrainPendingDeaths());
+        if (!IsServer) return;
+        int n = events.Count;
+        int[] types        = new int[n];
+        int[] creatureIDs  = new int[n];
+        int[] sourceIDs    = new int[n];
+        int[] targetIDs    = new int[n];
+        int[] damages      = new int[n];
+        int[] healthAfters = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            types[i]        = (int)events[i].Type;
+            creatureIDs[i]  = events[i].CreatureID;
+            sourceIDs[i]    = events[i].SourceID;
+            targetIDs[i]    = events[i].TargetID;
+            damages[i]      = events[i].Damage;
+            healthAfters[i] = events[i].HealthAfter;
+        }
+        BroadcastDeathDrainClientRpc(types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters, (int)nextPhase);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients (y compris le serveur/host).
+    /// Côté client  : rejoue la séquence (SilentDie + animations) puis entre dans nextPhase.
+    /// Côté serveur : les changements sont déjà appliqués — attend juste la fin de la queue.
+    /// </summary>
+    [ClientRpc]
+    void BroadcastDeathDrainClientRpc(
+        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] targetIDs, int[] damages, int[] healthAfters,
+        int nextPhase)
+    {
+        StartCoroutine(ApplyDeathDrainAndTransition(
+            types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters,
+            (TurnManager.TurnPhases)nextPhase));
+    }
+
+    IEnumerator ApplyDeathDrainAndTransition(
+        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] targetIDs, int[] damages, int[] healthAfters,
+        TurnManager.TurnPhases nextPhase)
+    {
+        string drainRole = IsServer ? "[Server]" : "[Client]";
+        Debug.Log($"[DeathDrain]{drainRole} REPLAY — {types.Length} événement(s) reçu(s)");
+        if (!IsServer)
+        {
+            // Rejouer la séquence dans le même ordre que le serveur.
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (types[i] == (int)DeathDrainRecorder.EventType.Death)
+                {
+                    if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+                        creature.SilentDie();
+                }
+                else // Anim
+                {
+                    new DealDamageCommand(targetIDs[i], damages[i], healthAfters[i], sourceIDs[i], null).AddToQueue();
+                }
+            }
+            CreatureLogic.PendingDeathList.Clear();
+        }
+
+        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue démarré (playingQueue={Command.playingQueue})");
+        yield return new WaitWhile(() => Command.playingQueue);
+        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
+
         TurnManager.Instance.EnterPhase(nextPhase);
+
         if (IsServer)
         {
             FlushPendingEndPhase(nextPhase);
             BroadcastFullGameState();
         }
+    }
+
+    // Drain serveur-autoritaire de la transition BeginCombat→Battle.
+    // Même pattern que AutoAdvanceFromEnd : le serveur enregistre les événements
+    // (morts + animations Acid Explosion / chaîne) et les diffuse via BroadcastDeathDrain.
+    // Le client attend ce RPC et rejoue avec SilentDie, sans randomness indépendante.
+    IEnumerator DrainBeginCombatAndTransition()
+    {
+        DeathDrainRecorder.Begin();
+        while (CreatureLogic.PendingDeathList.Count > 0)
+            CreatureLogic.ProcessPendingDeaths();
+        List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
+        Debug.Log($"[DeathDrain][Server] BeginCombat drain — {events.Count} événement(s) enregistré(s)");
+        BroadcastDeathDrain(events, TurnManager.TurnPhases.Battle);
+        yield break;
     }
 
     private int _drawSeedOffset = 0;

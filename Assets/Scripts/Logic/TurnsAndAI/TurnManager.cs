@@ -576,9 +576,32 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator AutoAdvanceFromEnd()
     {
+        // Client passif : attendre BroadcastDeathDrainClientRpc qui gère tout.
+        if (NetworkSessionData.IsNetworkSession && !Unity.Netcode.NetworkManager.Singleton.IsServer)
+        {
+            Debug.Log("[AutoAdvanceFromEnd][Client] yield break — en attente de BroadcastDeathDrainClientRpc");
+            yield break;
+        }
+
+        Debug.Log($"[AutoAdvanceFromEnd][Server] WaitWhile démarré — IsComplete={PhaseEffectPipeline.IsComplete}, playingQueue={Command.playingQueue}, PendingDeaths={CreatureLogic.PendingDeathList.Count}");
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
-        yield return StartCoroutine(DrainPendingDeaths());
-        EnterPhase(TurnPhases.Regroup);
+        Debug.Log($"[AutoAdvanceFromEnd][Server] WaitWhile résolu — début drain, {CreatureLogic.PendingDeathList.Count} mort(s) en attente");
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            DeathDrainRecorder.Begin();
+            while (CreatureLogic.PendingDeathList.Count > 0)
+                CreatureLogic.ProcessPendingDeaths();
+            List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
+            Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
+            GameNetworkManager.Instance.BroadcastDeathDrain(events);
+            // La transition vers Regroup est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
+        }
+        else
+        {
+            yield return StartCoroutine(DrainPendingDeaths());
+            EnterPhase(TurnPhases.Regroup);
+        }
     }
 
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)

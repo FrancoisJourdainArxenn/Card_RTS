@@ -11,15 +11,15 @@ public abstract class HealthEffectSO : EffectSO
         EffectVisualData visualData
     )
     {
-        Log($"{EffectName}: Execution");
-        List<IIdentifiable> affectedElements = GetAffectedElements(context, effectInfo);
-        if (affectedElements.Count == 0)
+        Log($"[HealthEffect] RESOLVING — {EffectName}");
+        List<IIdentifiable> eligibleTargets = GetAffectedElements(context, effectInfo);
+        if (eligibleTargets.Count == 0)
         {
-            Log($"{EffectName}: no eligible targets found, effect cancelled.");
+            Log($"[HealthEffect] RESOLVED — {EffectName}: aucune cible éligible, effet annulé.");
             return;
         }
 
-        Log($"{EffectName}: {Amount} to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
-        ApplyEffect(effectInfo, affectedElements, visualData);
+        Log($"[HealthEffect] RESOLVED — {EffectName}: {eligibleTargets.Count} cible(s) éligible(s) et affectée(s) — [{string.Join(", ", eligibleTargets.Select(t => $"{t.DisplayName}(ID:{t.ID})"))}]");
+        ApplyEffect(effectInfo, eligibleTargets, visualData);
     }
 }

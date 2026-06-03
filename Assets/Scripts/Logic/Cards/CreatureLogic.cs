@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 
 [System.Serializable]
 public class CreatureLogic: ILivable 
@@ -33,27 +34,6 @@ public class CreatureLogic: ILivable
 
         set
         {
-            if (value < health && ShieldValue > 0)
-            {
-                int damage = health - value;
-                int absorbed = Mathf.Min(damage, ShieldValue);
-                ShieldValue -= absorbed;
-                value = health - (damage - absorbed);
-                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {damage} | Absorbés: {absorbed} | Shield restant: {ShieldValue} | PV: {health} → {value}");
-                VfxManager vfx = Vfx;
-                if (vfx != null)
-                {
-                    if (ShieldValue == 0)
-                        vfx.HideShieldVfx();
-                    else
-                        vfx.UpdateShieldVfx(ShieldValue);
-                }
-            }
-            else if (value < health)
-            {
-                // Debug.Log($"[Shield/Setter] {DisplayName} — Dégâts: {health - value} | Pas de shield | PV: {health} → {value}");
-            }
-
             if (value > MaxHealth)
                 health = MaxHealth;
             else if (value <= 0)
@@ -71,6 +51,8 @@ public class CreatureLogic: ILivable
                     health = 0;
                     IsPendingDeath = true;
                     PendingDeathList.Add(this);
+                    string pendingRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+                    UnityEngine.Debug.Log($"[Death]{pendingRole} PENDING — {DisplayName} (ID:{UniqueCreatureID}) | PendingDeathList taille: {PendingDeathList.Count}");
                     VfxManager vfx = Vfx;
                     if (vfx != null)
                         vfx.ShowDeathPending();
@@ -81,7 +63,9 @@ public class CreatureLogic: ILivable
                 }
             }
             else
+            {
                 health = value;
+            }
         }
     }
 
@@ -93,6 +77,26 @@ public class CreatureLogic: ILivable
     public void ApplyShield(int value)
     {
         ShieldValue = Mathf.Max(ShieldValue, value);
+    }
+
+    public int TakeDamage(int dmg)
+    {
+        if (ShieldValue > 0)
+        {
+            int absorbed = Mathf.Min(dmg, ShieldValue);
+            ShieldValue -= absorbed;
+            dmg -= absorbed;
+            VfxManager vfx = Vfx;
+            if (vfx != null)
+            {
+                if (ShieldValue == 0)
+                    vfx.HideShieldVfx();
+                else
+                    vfx.UpdateShieldVfx(ShieldValue);
+            }
+        }
+        Health -= dmg;
+        return Health;
     }
 
     // returns true if we can attack with this creature now
@@ -209,8 +213,24 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {
+        string dieRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+        UnityEngine.Debug.Log($"[Death]{dieRole} DIE — {DisplayName} (ID:{UniqueCreatureID}) | était dans playedCards: {owner.playedCards.Creatures.Contains(this)}");
         bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDied(this, owner);
+        DeathDrainRecorder.RecordDeath(UniqueCreatureID);
+        FogOfWarManager.Refresh();
+        if (wasInList)
+            new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+    }
+
+    // Meurt silencieusement sans déclencher d'effets OnDeath.
+    // Utilisé côté client pour rejouer le résultat du drain serveur.
+    public void SilentDie()
+    {
+        Debug.Log($"[Death][Client] SILENT_DIE — {DisplayName} (ID:{UniqueCreatureID})");
+        bool wasInList = owner.playedCards.Creatures.Remove(this);
+        TempEffectTracker.Unregister(UniqueCreatureID);
+        EffectRegistry.UnregisterEntity(UniqueCreatureID);
         FogOfWarManager.Refresh();
         if (wasInList)
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
@@ -230,21 +250,16 @@ public class CreatureLogic: ILivable
     public void GoFace()
     {
         AttacksLeftThisTurn--;
-        int targetHealthAfter = owner.otherPlayer.Health - Attack;
+        int targetHealthAfter = owner.otherPlayer.TakeDamage(Attack);
         new CreatureAttackCommand(owner.otherPlayer.PlayerID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
-        owner.otherPlayer.Health -= Attack;
     }
 
     public void AttackCreature (CreatureLogic target)
     {
         AttacksLeftThisTurn--;
-        // calculate the values so that the creature does not fire the DIE command before the Attack command is sent
-        int targetHealthAfter = target.Health - Attack;
-        int attackerHealthAfter = Health - target.Attack;
+        int targetHealthAfter = target.TakeDamage(Attack);
+        int attackerHealthAfter = TakeDamage(target.Attack);
         new CreatureAttackCommand(target.UniqueCreatureID, UniqueCreatureID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
-
-        target.Health -= Attack;
-        Health -= target.Attack;
     }
 
     public void AttackCreatureWithID(int uniqueCreatureID)
@@ -262,10 +277,8 @@ public class CreatureLogic: ILivable
     public void AttackBase(BaseLogic target)
     {
         AttacksLeftThisTurn--;
-        int targetHealthAfter = target.Health - Attack;
+        int targetHealthAfter = target.TakeDamage(Attack);
         new CreatureAttackCommand(target.ID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
-        target.Health -= Attack;
-
     }
 
     public void Move(int baseID, int tablePos)
@@ -283,6 +296,8 @@ public class CreatureLogic: ILivable
     {
         List<CreatureLogic> toProcess = new (PendingDeathList);
         PendingDeathList.Clear();
+        string processRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+        Debug.Log($"[Death]{processRole} ProcessPendingDeaths — {toProcess.Count} unité(s) à traiter: [{string.Join(", ", toProcess.ConvertAll(c => $"{c.DisplayName}(ID:{c.UniqueCreatureID})"))}]");
         foreach (CreatureLogic creature in toProcess)
             creature.Die();
     }
