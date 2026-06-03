@@ -262,16 +262,20 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     void BroadcastFullGameState()
     {
-        List<int> creatureIDList     = new List<int>();
-        List<int> creatureHealthList = new List<int>();
-        List<int> creatureBaseIDList = new List<int>();
-        List<int> attacksLeftList    = new List<int>();
-        List<int> movementsLeftList  = new List<int>();
+        List<int> creatureIDList        = new List<int>();
+        List<int> creatureHealthList    = new List<int>();
+        List<int> creatureMaxHealthList = new List<int>();
+        List<int> creatureAttackList    = new List<int>();
+        List<int> creatureBaseIDList    = new List<int>();
+        List<int> attacksLeftList       = new List<int>();
+        List<int> movementsLeftList     = new List<int>();
 
         foreach (KeyValuePair<int, CreatureLogic> entry in CreatureLogic.CreaturesCreatedThisGame)
         {
             creatureIDList.Add(entry.Key);
             creatureHealthList.Add(entry.Value.Health);
+            creatureMaxHealthList.Add(entry.Value.MaxHealth);
+            creatureAttackList.Add(entry.Value.Attack);
             creatureBaseIDList.Add(entry.Value.BaseID);
             attacksLeftList.Add(entry.Value.AttacksLeftThisTurn);
             movementsLeftList.Add(entry.Value.MovementsLeftThisTurn);
@@ -297,8 +301,9 @@ public class GameNetworkManager : NetworkBehaviour
         }
 
         SyncFullGameStateClientRpc(
-            creatureIDList.ToArray(), creatureHealthList.ToArray(),
-            creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
+            creatureIDList.ToArray(), creatureHealthList.ToArray(), creatureMaxHealthList.ToArray(),
+            creatureAttackList.ToArray(), creatureBaseIDList.ToArray(),
+            attacksLeftList.ToArray(), movementsLeftList.ToArray(),
             baseIDList.ToArray(), baseHealthList.ToArray(),
             playerHealths, playerMainRes);
     }
@@ -311,39 +316,67 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     [ClientRpc]
     void SyncFullGameStateClientRpc(
-        int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
+        int[] creatureIDs,   int[] creatureHealths, int[] creatureMaxHealths,
+        int[] creatureAttacks, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
         int[] baseIDs,       int[] baseHealths,
         int[] playerHealths, int[] playerMainRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
 
+        var serverCreatureIDSet = new System.Collections.Generic.HashSet<int>(creatureIDs);
+
         for (int i = 0; i < creatureIDs.Length; i++)
         {
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
                 continue;
+            }
 
             if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
                 creature.Health = creatureHealths[i];
+            }
+            if (creature.MaxHealth != creatureMaxHealths[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
+                creature.MaxHealth = creatureMaxHealths[i];
+            }
+            if (creature.Attack != creatureAttacks[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
+                creature.Attack = creatureAttacks[i];
             }
             if (creature.AttacksLeftThisTurn != attacksLeft[i])
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
                 creature.AttacksLeftThisTurn = attacksLeft[i];
             }
             if (creature.MovementsLeftThisTurn != movementsLeft[i])
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
                 creature.MovementsLeftThisTurn = movementsLeft[i];
+            }
+        }
+
+        foreach (int localID in CreatureLogic.CreaturesCreatedThisGame.Keys)
+        {
+            if (!serverCreatureIDSet.Contains(localID))
+            {
+                CreatureLogic.CreaturesCreatedThisGame.TryGetValue(localID, out CreatureLogic c);
+                Debug.LogError($"[Desync] Créature {localID} ({c?.DisplayName ?? "??"}) : présente côté client (HP={c?.Health}/{c?.MaxHealth}, ATK={c?.Attack}) mais absente de l'état serveur.");
             }
         }
 
         for (int i = 0; i < baseIDs.Length; i++)
         {
             if (!BaseLogic.BasesCreatedThisGame.TryGetValue(baseIDs[i], out BaseLogic _base))
+            {
+                Debug.LogError($"[Desync] Base {baseIDs[i]} : présente côté serveur (HP={baseHealths[i]}) mais absente côté client.");
                 continue;
+            }
 
             if (_base.Health != baseHealths[i] && baseHealths[i] > 0)
             {
@@ -668,7 +701,10 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (nextPhase == TurnManager.TurnPhases.Battle)
         {
-            StartCoroutine(DrainThenEnterPhase(nextPhase));
+            if (IsServer)
+                StartCoroutine(DrainBeginCombatAndTransition());
+            else
+                Debug.Log("[PhaseTransition][Client] Battle reçu — en attente de BroadcastDeathDrainClientRpc");
             return;
         }
 
@@ -688,15 +724,103 @@ public class GameNetworkManager : NetworkBehaviour
         }
     }
 
-    IEnumerator DrainThenEnterPhase(TurnManager.TurnPhases nextPhase)
+    // -------------------------------------------------------------------------
+    // DRAIN DES MORTS — END → REGROUP (autoritaire serveur)
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Appelé par le serveur après avoir enregistré le drain complet.
+    /// Sérialise la séquence ordonnée d'événements et la broadcast à tous les clients.
+    /// </summary>
+    public void BroadcastDeathDrain(List<DeathDrainRecorder.DrainEvent> events, TurnManager.TurnPhases nextPhase = TurnManager.TurnPhases.Regroup)
     {
-        yield return StartCoroutine(TurnManager.Instance.DrainPendingDeaths());
+        if (!IsServer) return;
+        int n = events.Count;
+        int[] types        = new int[n];
+        int[] creatureIDs  = new int[n];
+        int[] sourceIDs    = new int[n];
+        int[] targetIDs    = new int[n];
+        int[] damages      = new int[n];
+        int[] healthAfters = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            types[i]        = (int)events[i].Type;
+            creatureIDs[i]  = events[i].CreatureID;
+            sourceIDs[i]    = events[i].SourceID;
+            targetIDs[i]    = events[i].TargetID;
+            damages[i]      = events[i].Damage;
+            healthAfters[i] = events[i].HealthAfter;
+        }
+        BroadcastDeathDrainClientRpc(types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters, (int)nextPhase);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients (y compris le serveur/host).
+    /// Côté client  : rejoue la séquence (SilentDie + animations) puis entre dans nextPhase.
+    /// Côté serveur : les changements sont déjà appliqués — attend juste la fin de la queue.
+    /// </summary>
+    [ClientRpc]
+    void BroadcastDeathDrainClientRpc(
+        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] targetIDs, int[] damages, int[] healthAfters,
+        int nextPhase)
+    {
+        StartCoroutine(ApplyDeathDrainAndTransition(
+            types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters,
+            (TurnManager.TurnPhases)nextPhase));
+    }
+
+    IEnumerator ApplyDeathDrainAndTransition(
+        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] targetIDs, int[] damages, int[] healthAfters,
+        TurnManager.TurnPhases nextPhase)
+    {
+        string drainRole = IsServer ? "[Server]" : "[Client]";
+        Debug.Log($"[DeathDrain]{drainRole} REPLAY — {types.Length} événement(s) reçu(s)");
+        if (!IsServer)
+        {
+            // Rejouer la séquence dans le même ordre que le serveur.
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (types[i] == (int)DeathDrainRecorder.EventType.Death)
+                {
+                    if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+                        creature.SilentDie();
+                }
+                else // Anim
+                {
+                    new DealDamageCommand(targetIDs[i], damages[i], healthAfters[i], sourceIDs[i], null).AddToQueue();
+                }
+            }
+            CreatureLogic.PendingDeathList.Clear();
+        }
+
+        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue démarré (playingQueue={Command.playingQueue})");
+        yield return new WaitWhile(() => Command.playingQueue);
+        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
+
         TurnManager.Instance.EnterPhase(nextPhase);
+
         if (IsServer)
         {
             FlushPendingEndPhase(nextPhase);
             BroadcastFullGameState();
         }
+    }
+
+    // Drain serveur-autoritaire de la transition BeginCombat→Battle.
+    // Même pattern que AutoAdvanceFromEnd : le serveur enregistre les événements
+    // (morts + animations Acid Explosion / chaîne) et les diffuse via BroadcastDeathDrain.
+    // Le client attend ce RPC et rejoue avec SilentDie, sans randomness indépendante.
+    IEnumerator DrainBeginCombatAndTransition()
+    {
+        DeathDrainRecorder.Begin();
+        while (CreatureLogic.PendingDeathList.Count > 0)
+            CreatureLogic.ProcessPendingDeaths();
+        List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
+        Debug.Log($"[DeathDrain][Server] BeginCombat drain — {events.Count} événement(s) enregistré(s)");
+        BroadcastDeathDrain(events, TurnManager.TurnPhases.Battle);
+        yield break;
     }
 
     private int _drawSeedOffset = 0;

@@ -75,14 +75,14 @@ public class CreatureAttackVisual : MonoBehaviour
         VisualStates tempState = w.VisualState;
         w.VisualState = VisualStates.Transition;
         Vector3 originalPosition = transform.position;
-        // SetLink tue automatiquement le tween si ce GameObject est détruit pendant l'animation
+        bool moveDone = false;
         transform.DOMove(target.transform.position, moveDuration)
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InBack)
             .SetLink(gameObject)
             .OnComplete((TweenCallback)(() =>
             {
-                // L'attaquant ou la cible peut avoir été détruit pendant l'animation
+                moveDone = true;
                 if (this == null)
                 {
                     Command.CommandExecutionComplete();
@@ -121,11 +121,14 @@ public class CreatureAttackVisual : MonoBehaviour
                 w.VisualState = tempState;
 
                 manager.HealthText.text = attackerHealthAfter.ToString();
+                bool seqDone = false;
                 Sequence s = DOTween.Sequence();
                 s.AppendInterval(postDelay);
                 s.SetLink(gameObject);
-                s.OnComplete(Command.CommandExecutionComplete);
-            }));
+                s.OnComplete(() => { seqDone = true; Command.CommandExecutionComplete(); });
+                s.OnKill(() => { if (!seqDone) Command.CommandExecutionComplete(); });
+            }))
+            .OnKill(() => { if (!moveDone) Command.CommandExecutionComplete(); });
     }
         
 }

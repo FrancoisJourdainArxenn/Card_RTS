@@ -390,8 +390,15 @@ public static class PhaseEffectPipeline
 
         TargetingVisualEvents.RaiseEffectsExecuting();
 
-        // En réseau, les effets adverses n'ont pas de délai visuel (évite la fuite d'information en Regroup).
+        // En réseau, les effets adverses n'ont pas de délai visuel en Regroup/Command/End
+        // (évite la fuite d'information sur les cartes ou capacités adverses).
+        // En BeginCombat, la phase est commune : les deux joueurs ont engagé leurs unités,
+        // tous les effets déclenchés (Snipe, OnAttack…) sont visibles des deux côtés.
         Player localPlayer = NetworkSessionData.IsNetworkSession ? GlobalSettings.Instance?.localPlayer : null;
+        bool isCombat = TurnManager.Instance != null && (
+            TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat
+            || TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle
+        );
 
         List<PendingEffectSelection> visualEffects = new List<PendingEffectSelection>();
         List<Action> callbacks  = new List<Action>();
@@ -401,7 +408,7 @@ public static class PhaseEffectPipeline
         {
             CardEffectData data = ResolveEffectData(sourceEntityIDs[i], effectIndexes[i], out EffectContext ctx);
             // Debug.Log($"[Pipeline] Effect : {data.EffectName} by {ctx.Source.DisplayName}");
-            
+
             if (data == null || ctx == null)
                 continue;
 
@@ -415,7 +422,7 @@ public static class PhaseEffectPipeline
                 EligibleTargets = new List<IIdentifiable>()
             });
 
-            bool isLocalEffect = localPlayer == null || ctx.Caster == null || ctx.Caster == localPlayer;
+            bool isLocalEffect = isCombat || localPlayer == null || ctx.Caster == null || ctx.Caster == localPlayer;
             hasVisuals.Add(isLocalEffect && (!data.RequiresPlayerInput || selectedTargetIDs[i] >= 0));
 
             CardEffectData capturedData = data;

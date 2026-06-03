@@ -71,13 +71,22 @@ public abstract class TurnMaker : MonoBehaviour {
             PhaseEffectPipeline.StartSession(p, TriggerType.OnBeginCombat);
     }
 
+    public virtual void OnEndBattlePhaseEntered()
+    {
+        bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
+            || p.MainPArea.AllowedToControlThisPlayer;
+
+        if (isLocalPlayer)
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnBattleEnd);
+    }
+
     public virtual void OnEndPhaseEntered()
     {
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
 
         if (isLocalPlayer)
-            PhaseEffectPipeline.StartSession(p, TriggerType.OnBattleEnd, TriggerType.OnEndTurn);
+            PhaseEffectPipeline.StartSession(p, TriggerType.OnEndTurn);
     }
 
     public virtual void OnTurnEnd()
