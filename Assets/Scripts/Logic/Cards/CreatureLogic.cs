@@ -218,7 +218,6 @@ public class CreatureLogic: ILivable
         bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDied(this, owner);
         DeathDrainRecorder.RecordDeath(UniqueCreatureID);
-        FogOfWarManager.Refresh();
         if (wasInList)
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }
@@ -231,7 +230,6 @@ public class CreatureLogic: ILivable
         bool wasInList = owner.playedCards.Creatures.Remove(this);
         TempEffectTracker.Unregister(UniqueCreatureID);
         EffectRegistry.UnregisterEntity(UniqueCreatureID);
-        FogOfWarManager.Refresh();
         if (wasInList)
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }

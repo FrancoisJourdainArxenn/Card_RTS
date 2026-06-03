@@ -30,7 +30,6 @@ public class BuildingDieCommand : Command
         if (originSpot?.Zone != null)
             foreach (PlayerArea pa in originSpot.Zone.subZones)
                 pa.RefreshAreaStats();
-        FogOfWarManager.Refresh();
         CommandExecutionComplete();
     }
 
