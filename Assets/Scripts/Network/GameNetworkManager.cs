@@ -262,16 +262,20 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     void BroadcastFullGameState()
     {
-        List<int> creatureIDList     = new List<int>();
-        List<int> creatureHealthList = new List<int>();
-        List<int> creatureBaseIDList = new List<int>();
-        List<int> attacksLeftList    = new List<int>();
-        List<int> movementsLeftList  = new List<int>();
+        List<int> creatureIDList        = new List<int>();
+        List<int> creatureHealthList    = new List<int>();
+        List<int> creatureMaxHealthList = new List<int>();
+        List<int> creatureAttackList    = new List<int>();
+        List<int> creatureBaseIDList    = new List<int>();
+        List<int> attacksLeftList       = new List<int>();
+        List<int> movementsLeftList     = new List<int>();
 
         foreach (KeyValuePair<int, CreatureLogic> entry in CreatureLogic.CreaturesCreatedThisGame)
         {
             creatureIDList.Add(entry.Key);
             creatureHealthList.Add(entry.Value.Health);
+            creatureMaxHealthList.Add(entry.Value.MaxHealth);
+            creatureAttackList.Add(entry.Value.Attack);
             creatureBaseIDList.Add(entry.Value.BaseID);
             attacksLeftList.Add(entry.Value.AttacksLeftThisTurn);
             movementsLeftList.Add(entry.Value.MovementsLeftThisTurn);
@@ -297,8 +301,9 @@ public class GameNetworkManager : NetworkBehaviour
         }
 
         SyncFullGameStateClientRpc(
-            creatureIDList.ToArray(), creatureHealthList.ToArray(),
-            creatureBaseIDList.ToArray(), attacksLeftList.ToArray(), movementsLeftList.ToArray(),
+            creatureIDList.ToArray(), creatureHealthList.ToArray(), creatureMaxHealthList.ToArray(),
+            creatureAttackList.ToArray(), creatureBaseIDList.ToArray(),
+            attacksLeftList.ToArray(), movementsLeftList.ToArray(),
             baseIDList.ToArray(), baseHealthList.ToArray(),
             playerHealths, playerMainRes);
     }
@@ -311,39 +316,67 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     [ClientRpc]
     void SyncFullGameStateClientRpc(
-        int[] creatureIDs,   int[] creatureHealths, int[] creatureBaseIDs,
+        int[] creatureIDs,   int[] creatureHealths, int[] creatureMaxHealths,
+        int[] creatureAttacks, int[] creatureBaseIDs,
         int[] attacksLeft,   int[] movementsLeft,
         int[] baseIDs,       int[] baseHealths,
         int[] playerHealths, int[] playerMainRes)
     {
         if (IsServer) return; // Le serveur est la source de vérité
 
+        var serverCreatureIDSet = new System.Collections.Generic.HashSet<int>(creatureIDs);
+
         for (int i = 0; i < creatureIDs.Length; i++)
         {
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
                 continue;
+            }
 
             if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
                 creature.Health = creatureHealths[i];
+            }
+            if (creature.MaxHealth != creatureMaxHealths[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
+                creature.MaxHealth = creatureMaxHealths[i];
+            }
+            if (creature.Attack != creatureAttacks[i])
+            {
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
+                creature.Attack = creatureAttacks[i];
             }
             if (creature.AttacksLeftThisTurn != attacksLeft[i])
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
                 creature.AttacksLeftThisTurn = attacksLeft[i];
             }
             if (creature.MovementsLeftThisTurn != movementsLeft[i])
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
+                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
                 creature.MovementsLeftThisTurn = movementsLeft[i];
+            }
+        }
+
+        foreach (int localID in CreatureLogic.CreaturesCreatedThisGame.Keys)
+        {
+            if (!serverCreatureIDSet.Contains(localID))
+            {
+                CreatureLogic.CreaturesCreatedThisGame.TryGetValue(localID, out CreatureLogic c);
+                Debug.LogError($"[Desync] Créature {localID} ({c?.DisplayName ?? "??"}) : présente côté client (HP={c?.Health}/{c?.MaxHealth}, ATK={c?.Attack}) mais absente de l'état serveur.");
             }
         }
 
         for (int i = 0; i < baseIDs.Length; i++)
         {
             if (!BaseLogic.BasesCreatedThisGame.TryGetValue(baseIDs[i], out BaseLogic _base))
+            {
+                Debug.LogError($"[Desync] Base {baseIDs[i]} : présente côté serveur (HP={baseHealths[i]}) mais absente côté client.");
                 continue;
+            }
 
             if (_base.Health != baseHealths[i] && baseHealths[i] > 0)
             {
