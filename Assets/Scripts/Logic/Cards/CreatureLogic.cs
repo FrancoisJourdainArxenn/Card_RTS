@@ -42,8 +42,8 @@ public class CreatureLogic: ILivable
 
                 bool inCombatPhase = TurnManager.Instance != null && (
                     TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat ||
-                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle ||
-                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.End
+                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle      ||
+                    TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.EndBattle
                 );
 
                 if (inCombatPhase)

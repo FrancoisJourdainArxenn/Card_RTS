@@ -15,6 +15,7 @@ MonoBehaviour:
   deckName: Test Deck (1)
   cards:
   - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
+  - {fileID: 11400000, guid: cf90fc1f873b345459fd5c8348af32c1, type: 2}
   buildings:
   - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

@@ -22,7 +22,7 @@ public class TurnManager : MonoBehaviour
 
     public static TurnManager Instance;
 
-    public enum TurnPhases { Regroup, Command, BeginCombat, Battle, End }
+    public enum TurnPhases { Regroup, Command, BeginCombat, Battle, EndBattle, EndTurn }
 
     public TMP_Text phaseText;
 
@@ -295,8 +295,9 @@ public class TurnManager : MonoBehaviour
         {
             TurnPhases.Command     => TurnPhases.BeginCombat,
             TurnPhases.BeginCombat => TurnPhases.Battle,
-            TurnPhases.Battle      => TurnPhases.End,
-            TurnPhases.End         => TurnPhases.Regroup,
+            TurnPhases.Battle      => TurnPhases.EndBattle,
+            TurnPhases.EndBattle   => TurnPhases.EndTurn,
+            TurnPhases.EndTurn     => TurnPhases.Regroup,
             TurnPhases.Regroup     => TurnPhases.Command,
             _                      => TurnPhases.Command
         };
@@ -317,7 +318,8 @@ public class TurnManager : MonoBehaviour
             if (currentPhase == TurnPhases.Command)
                 FlushSoloMoveBuffer();
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
-                                 currentPhase == TurnPhases.Battle;
+                                 currentPhase == TurnPhases.Battle      ||
+                                 currentPhase == TurnPhases.EndBattle;
             if (isCombatPhase)
             {
                 StartCoroutine(CombatPhaseTransitionCoroutine(next, roundEnded));
@@ -410,10 +412,15 @@ public class TurnManager : MonoBehaviour
                 }
                 StartCoroutine(DelayedBattleStart());
                 break;
-            case TurnPhases.End:
-                // new ShowMessageCommand("End", 1.5f).AddToQueue();
+            case TurnPhases.EndBattle:
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseEnd();
+                foreach (Player p in Player.Players)
+                    p.GetComponent<TurnMaker>().OnEndBattlePhaseEntered();
+                StartCoroutine(AutoAdvanceFromEndBattle());
+                break;
+            case TurnPhases.EndTurn:
+                // new ShowMessageCommand("End", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnEndPhaseEntered();
                 StartCoroutine(AutoAdvanceFromEnd());
@@ -436,7 +443,8 @@ public class TurnManager : MonoBehaviour
             TurnPhases.Command     => "Command",
             TurnPhases.BeginCombat => "Begin Combat",
             TurnPhases.Battle      => "Battle",
-            TurnPhases.End         => "End",
+            TurnPhases.EndBattle   => "End Battle",
+            TurnPhases.EndTurn     => "End Turn",
             _ => ""
         };
         phaseText.text = label;
@@ -574,7 +582,7 @@ public class TurnManager : MonoBehaviour
             assignment.BuildingIDs,     assignment.BuildingDamages);
     }
 
-    IEnumerator AutoAdvanceFromEnd()
+    IEnumerator AutoAdvanceFromEndBattle()
     {
         // Client passif : attendre BroadcastDeathDrainClientRpc qui gère tout.
         if (NetworkSessionData.IsNetworkSession && !Unity.Netcode.NetworkManager.Singleton.IsServer)
@@ -594,14 +602,21 @@ public class TurnManager : MonoBehaviour
                 CreatureLogic.ProcessPendingDeaths();
             List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
             Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
-            GameNetworkManager.Instance.BroadcastDeathDrain(events);
-            // La transition vers Regroup est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
+            GameNetworkManager.Instance.BroadcastDeathDrain(events, TurnPhases.EndTurn);
+            // La transition vers EndTurn est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
         }
         else
         {
             yield return StartCoroutine(DrainPendingDeaths());
-            EnterPhase(TurnPhases.Regroup);
+            EnterPhase(TurnPhases.EndTurn);
         }
+    }
+    
+    IEnumerator AutoAdvanceFromEnd()
+    {
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
+        if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
+            AdvancePhaseWhenAllReady();
     }
 
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
@@ -634,7 +649,7 @@ public class TurnManager : MonoBehaviour
         {
             foreach (Player p in Player.Players)
                 p.GetComponent<TurnMaker>().OnTurnEnd();
-            // curorentRound++;
+            currentRound++;
         }
         EnterPhase(next);
     }
