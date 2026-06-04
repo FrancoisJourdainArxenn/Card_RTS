@@ -1113,10 +1113,6 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 8307801932309684713, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.72
-      objectReference: {fileID: 0}
     - target: {fileID: 8442910777245485701, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: GizmoColor.b
       value: 1

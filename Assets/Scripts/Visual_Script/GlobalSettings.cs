@@ -35,6 +35,11 @@ public class GlobalSettings : MonoBehaviour
     public float CardTransitionTimeFast = 0.5f;
     public float AttackMoveDuration = 0.3f;   // durée du mouvement aller-retour
     public float AttackPostDelay = 0.3f;       // pause après chaque attaque
+
+    [Header("Pop Animation")]
+    public float popStrength = 0.35f;
+    public float popDuration = 0.35f;
+
     [Header("Prefabs and Assets")]
     public GameObject NoTargetSpellCardPrefab;
     public GameObject TargetedSpellCardPrefab;

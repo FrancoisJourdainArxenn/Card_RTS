@@ -842,7 +842,29 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
         Player player = Player.Players[playerIndex];
         player.DrawACard(false, cardID, finalSeed);
-    } 
+    }
+
+    public void BroadCastGainRessources(int playerIndex, int amount, bool isRecurring, int sourceID)
+    {
+        if (!IsServer) return;
+        GainRessourcesClientRpc(playerIndex, amount, isRecurring, sourceID);
+    }
+
+    [ClientRpc]
+    public void GainRessourcesClientRpc(int playerIndex, int amount, bool isRecurring, int sourceID)
+    {
+        Player player = Player.Players[playerIndex];
+        if (isRecurring)
+        {
+            if (sourceID != -1)
+                player.AddBonusIncomeFromSource(sourceID, amount);
+            else
+                player.AddBonusIncome(amount);
+        }
+        else
+            player.GetBonusRessources(amount);
+    }
+
 
     //Moving Units
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

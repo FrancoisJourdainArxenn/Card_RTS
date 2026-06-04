@@ -12,18 +12,20 @@ public class UiPlayerVisual : MonoBehaviour
     [SerializeField] Player player;
 
     int lastShownCount = int.MinValue;
+    int _lastIncome = int.MinValue;
 
     void OnEnable()
     {
         lastShownCount = int.MinValue;
+        _lastIncome = int.MinValue;
     }
 
     void Start()
     {
         ResolvePlayer();
         lastShownCount = int.MinValue;
+        _lastIncome = int.MinValue;
     }
-
 
     void ResolvePlayer()
     {
@@ -37,10 +39,24 @@ public class UiPlayerVisual : MonoBehaviour
         ResolvePlayer();
         if (player == null) return;
 
+        int ressource = player.mainRessourceAvailable;
         if (mainRessourceText != null)
-            mainRessourceText.text = player.mainRessourceAvailable.ToString();
+        {
+            mainRessourceText.text = ressource.ToString();
+            if (ressource > lastShownCount && lastShownCount != int.MinValue)
+                ValuePopAnimation.Pop(mainRessourceText.transform);
+            lastShownCount = ressource;
+        }
+
+        int income = player.playerMainIncome;
         if (MainRessourceIncomeText != null)
-            MainRessourceIncomeText.text = player.playerMainIncome.ToString();
+        {
+            MainRessourceIncomeText.text = income.ToString();
+            if (income > _lastIncome && _lastIncome != int.MinValue)
+                ValuePopAnimation.Pop(MainRessourceIncomeText.transform);
+            _lastIncome = income;
+        }
     }
+
 
 }

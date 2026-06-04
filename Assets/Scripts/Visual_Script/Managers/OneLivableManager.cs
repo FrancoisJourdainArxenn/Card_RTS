@@ -91,11 +91,14 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         {
             AttackText.text = attackAfter.ToString();
             ApplyStatColor(AttackText, attackAfter, cardAsset.Attack, _originalAttackColor);
+            ValuePopAnimation.Pop(AttackText.transform);
+
         }
         if (secondAmount != 0)
         {
             HealthText.text = healthAfter.ToString();
             ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
+            ValuePopAnimation.Pop(HealthText.transform);
         }
         GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
