@@ -736,22 +736,24 @@ public class GameNetworkManager : NetworkBehaviour
     {
         if (!IsServer) return;
         int n = events.Count;
-        int[] types        = new int[n];
-        int[] creatureIDs  = new int[n];
-        int[] sourceIDs    = new int[n];
-        int[] targetIDs    = new int[n];
-        int[] damages      = new int[n];
-        int[] healthAfters = new int[n];
+        int[] types         = new int[n];
+        int[] creatureIDs   = new int[n];
+        int[] sourceIDs     = new int[n];
+        int[] effectIndexes = new int[n];
+        int[] targetIDs     = new int[n];
+        int[] damages       = new int[n];
+        int[] healthAfters  = new int[n];
         for (int i = 0; i < n; i++)
         {
-            types[i]        = (int)events[i].Type;
-            creatureIDs[i]  = events[i].CreatureID;
-            sourceIDs[i]    = events[i].SourceID;
-            targetIDs[i]    = events[i].TargetID;
-            damages[i]      = events[i].Damage;
-            healthAfters[i] = events[i].HealthAfter;
+            types[i]         = (int)events[i].Type;
+            creatureIDs[i]   = events[i].CreatureID;
+            sourceIDs[i]     = events[i].SourceID;
+            effectIndexes[i] = events[i].EffectIndex;
+            targetIDs[i]     = events[i].TargetID;
+            damages[i]       = events[i].Damage;
+            healthAfters[i]  = events[i].HealthAfter;
         }
-        BroadcastDeathDrainClientRpc(types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters, (int)nextPhase);
+        BroadcastDeathDrainClientRpc(types, creatureIDs, sourceIDs, effectIndexes, targetIDs, damages, healthAfters, (int)nextPhase);
     }
 
     /// <summary>
@@ -761,17 +763,17 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     [ClientRpc]
     void BroadcastDeathDrainClientRpc(
-        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] types, int[] creatureIDs, int[] sourceIDs, int[] effectIndexes,
         int[] targetIDs, int[] damages, int[] healthAfters,
         int nextPhase)
     {
         StartCoroutine(ApplyDeathDrainAndTransition(
-            types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters,
+            types, creatureIDs, sourceIDs, effectIndexes, targetIDs, damages, healthAfters,
             (TurnManager.TurnPhases)nextPhase));
     }
 
     IEnumerator ApplyDeathDrainAndTransition(
-        int[] types, int[] creatureIDs, int[] sourceIDs,
+        int[] types, int[] creatureIDs, int[] sourceIDs, int[] effectIndexes,
         int[] targetIDs, int[] damages, int[] healthAfters,
         TurnManager.TurnPhases nextPhase)
     {
@@ -780,8 +782,18 @@ public class GameNetworkManager : NetworkBehaviour
         if (!IsServer)
         {
             // Rejouer la séquence dans le même ordre que le serveur.
+            // Un WaitForSeconds entre chaque événement garantit que les VFX/animations
+            // sont visibles séparément (tout est synchrone donc sans délai tout
+            // s'exécuterait dans le même frame).
+            float drainEventDelay = TurnManager.Instance != null
+                ? TurnManager.Instance.CombatSequenceDelay
+                : 0.5f;
+
             for (int i = 0; i < types.Length; i++)
             {
+                if (i > 0)
+                    yield return new WaitForSeconds(drainEventDelay);
+
                 if (types[i] == (int)DeathDrainRecorder.EventType.Death)
                 {
                     if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
@@ -789,7 +801,18 @@ public class GameNetworkManager : NetworkBehaviour
                 }
                 else // Anim
                 {
-                    new DealDamageCommand(targetIDs[i], damages[i], healthAfters[i], sourceIDs[i], null).AddToQueue();
+                    EffectVisualData vfx = EffectRegistry.GetTokenVisualData(sourceIDs[i], effectIndexes[i]);
+                    new DealDamageCommand(targetIDs[i], damages[i], healthAfters[i], sourceIDs[i], vfx).AddToQueue();
+
+                    if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceIDs[i], out CreatureLogic src)
+                        && src.ca != null && src.ca.Effects != null
+                        && effectIndexes[i] >= 0 && effectIndexes[i] < src.ca.Effects.Count)
+                    {
+                        CardEffectData effectData = src.ca.Effects[effectIndexes[i]];
+                        if (!effectData.RequiresPlayerInput)
+                            TargetingVisualEvents.RaiseAutoEffectTriggered(effectData,
+                                new EffectContext { Caster = src.owner, Source = src });
+                    }
                 }
             }
             CreatureLogic.PendingDeathList.Clear();
@@ -815,12 +838,10 @@ public class GameNetworkManager : NetworkBehaviour
     IEnumerator DrainBeginCombatAndTransition()
     {
         DeathDrainRecorder.Begin();
-        while (CreatureLogic.PendingDeathList.Count > 0)
-            CreatureLogic.ProcessPendingDeaths();
+        yield return StartCoroutine(TurnManager.Instance.DrainPendingDeathsOneByOne());
         List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
         Debug.Log($"[DeathDrain][Server] BeginCombat drain — {events.Count} événement(s) enregistré(s)");
         BroadcastDeathDrain(events, TurnManager.TurnPhases.Battle);
-        yield break;
     }
 
     private int _drawSeedOffset = 0;

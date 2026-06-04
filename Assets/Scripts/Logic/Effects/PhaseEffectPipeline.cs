@@ -398,6 +398,7 @@ public static class PhaseEffectPipeline
         bool isCombat = TurnManager.Instance != null && (
             TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.BeginCombat
             || TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.Battle
+            || TurnManager.Instance.CurrentPhase == TurnManager.TurnPhases.EndBattle
         );
 
         List<PendingEffectSelection> visualEffects = new List<PendingEffectSelection>();

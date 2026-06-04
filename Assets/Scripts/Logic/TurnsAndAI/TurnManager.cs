@@ -546,6 +546,20 @@ public class TurnManager : MonoBehaviour
         }
         // ici : queue vide ET aucune mort en attente
     }
+
+    // Variante réseau : traite une mort à la fois avec effectSequenceDelay entre chaque,
+    // pour que le host et le client voient les événements dans le même rythme.
+    public IEnumerator DrainPendingDeathsOneByOne()
+    {
+        while (CreatureLogic.PendingDeathList.Count > 0)
+        {
+            CreatureLogic creature = CreatureLogic.PendingDeathList[0];
+            CreatureLogic.PendingDeathList.RemoveAt(0);
+            creature.Die();
+            if (CreatureLogic.PendingDeathList.Count > 0)
+                yield return new WaitForSeconds(effectSequenceDelay);
+        }
+    }
     IEnumerator AutoAdvanceFromBeginCombat()
     {
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
@@ -598,8 +612,7 @@ public class TurnManager : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             DeathDrainRecorder.Begin();
-            while (CreatureLogic.PendingDeathList.Count > 0)
-                CreatureLogic.ProcessPendingDeaths();
+            yield return StartCoroutine(DrainPendingDeathsOneByOne());
             List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
             Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
             GameNetworkManager.Instance.BroadcastDeathDrain(events, TurnPhases.EndTurn);

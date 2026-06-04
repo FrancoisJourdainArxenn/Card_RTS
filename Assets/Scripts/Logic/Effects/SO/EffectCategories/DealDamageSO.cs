@@ -27,7 +27,7 @@ public class DealDamageSO : HealthEffectSO
         bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
         int sourceId = hasCustomVfx ? -1 : _sourceID;
         int healthAfter = target.TakeDamage(dmg);
-        DeathDrainRecorder.RecordAnim(sourceId, target.ID, dmg, healthAfter);
+        DeathDrainRecorder.RecordAnim(_sourceID, target.ID, dmg, healthAfter, EffectRegistry.CurrentEffectIndex);
         new DealDamageCommand(target.ID, dmg, healthAfter, sourceId, hasCustomVfx ? visualData : null).AddToQueue();
     }
 

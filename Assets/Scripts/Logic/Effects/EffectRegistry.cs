@@ -16,7 +16,10 @@ public static class EffectRegistry
 
     // ID de l'entité source de l'effet en cours d'exécution.
     // Alimenté par Execute() pour que DeathDrainRecorder sache qui a causé un changement de HP.
-    public static int CurrentSourceID { get; private set; } = -1;
+    public static int CurrentSourceID    { get; private set; } = -1;
+    // Index de l'effet courant dans la liste ca.Effects du source.
+    // Alimenté par Execute() pour que DeathDrainRecorder puisse retrouver le visualData côté client.
+    public static int CurrentEffectIndex { get; private set; } = -1;
 
     private struct RegisteredEffect
     {
@@ -184,9 +187,11 @@ public static class EffectRegistry
             return;
         }
 
-        CurrentSourceID = context.Source?.ID ?? -1;
+        CurrentSourceID    = context.Source?.ID ?? -1;
+        CurrentEffectIndex = FindEffectIndex(CurrentSourceID, data);
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
-        CurrentSourceID = -1;
+        CurrentSourceID    = -1;
+        CurrentEffectIndex = -1;
 
         if (!data.RequiresPlayerInput)
             TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
