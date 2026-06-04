@@ -7,14 +7,16 @@ public class DealDamageCommand : Command
     private int amount;
     private int healthAfter;
     private EffectVisualData visualData;
+    private float speedMultiplier;
 
-    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1, EffectVisualData visualData = null)
+    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1, EffectVisualData visualData = null, float speedMultiplier = 1f)
     {
         this.targetID = targetID;
         this.amount = amount;
         this.healthAfter = healthAfter;
         this.sourceID = sourceID;
         this.visualData = visualData;
+        this.speedMultiplier = speedMultiplier;
     }
 
     public override void StartCommandExecution()
@@ -39,10 +41,10 @@ public class DealDamageCommand : Command
                 CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out var sourceLogic);
                 int sourceHealth = sourceLogic?.Health ?? 0;
                 bool fired = false;
-                DOVirtual.DelayedCall(0.2f, () =>
+                DOVirtual.DelayedCall(0.2f / speedMultiplier, () =>
                 {
                     fired = true;
-                    attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter);
+                    attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter, speedMultiplier);
                 })
                 .SetLink(source)
                 .OnKill(() => { if (!fired) CommandExecutionComplete(); });

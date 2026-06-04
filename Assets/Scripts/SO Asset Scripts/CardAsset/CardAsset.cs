@@ -57,6 +57,11 @@ public class CardAsset : ScriptableObject
     public int MaxHealth;   // =0 => spell card
     public int AttacksForOneTurn = 1;
     public bool melee = false;
+    public float AttackSpeedMultiplier = 1f;
+    public List<AttackModifierSO> AttackModifiers = new List<AttackModifierSO>();
+
+    
+
     
     [Header("Movement info")]
     public int MoveSpeed = 1;
