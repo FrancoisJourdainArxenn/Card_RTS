@@ -11,8 +11,10 @@ public class CreatureAttackCommand : Command
     private int TargetHealthAfter;
     private int DamageTakenByAttacker;
     private int DamageTakenByTarget;
+    private float SpeedMultiplier;
 
-    public CreatureAttackCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter)
+
+    public CreatureAttackCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f)
     {
         this.TargetUniqueID = targetID;
         this.AttackerUniqueID = attackerID;
@@ -20,6 +22,7 @@ public class CreatureAttackCommand : Command
         this.TargetHealthAfter = targetHealthAfter;
         this.DamageTakenByTarget = damageTakenByTarget;
         this.DamageTakenByAttacker = damageTakenByAttacker;
+        this.SpeedMultiplier = speedMultiplier;
     }
 
     public override void StartCommandExecution()
@@ -29,6 +32,6 @@ public class CreatureAttackCommand : Command
         if (attacker == null) { CommandExecutionComplete(); return; }
         CreatureAttackVisual visual = attacker.GetComponent<CreatureAttackVisual>();
         if (visual == null) { CommandExecutionComplete(); return; }
-        visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter);
+        visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier);
     }
 }

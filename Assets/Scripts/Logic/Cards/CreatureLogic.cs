@@ -142,6 +142,11 @@ public class CreatureLogic: ILivable
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
+    public List<AttackModifierSO> AttackModifiers => ca.AttackModifiers;
+    public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
+
+
+
 
     private VfxManager Vfx
     {
@@ -245,7 +250,7 @@ public class CreatureLogic: ILivable
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
     }
 
-    public void GoFace()
+public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = owner.otherPlayer.TakeDamage(Attack);

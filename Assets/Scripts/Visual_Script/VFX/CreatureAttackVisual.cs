@@ -51,7 +51,7 @@ public class CreatureAttackVisual : MonoBehaviour
         return AttackTargetType.Unknown;
     }
 
-    public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter)
+    public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f)
     {
         // L'attaquant peut avoir été détruit entre l'enregistrement et l'exécution de la commande
         if (this == null)
@@ -69,6 +69,8 @@ public class CreatureAttackVisual : MonoBehaviour
             return;
         }
         AttackTargetType targetType = GetTargetType(targetUniqueID);
+        float moveDur  = moveDuration / speedMultiplier;
+        float postDel  = postDelay    / speedMultiplier;
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
@@ -76,7 +78,7 @@ public class CreatureAttackVisual : MonoBehaviour
         w.VisualState = VisualStates.Transition;
         Vector3 originalPosition = transform.position;
         bool moveDone = false;
-        transform.DOMove(target.transform.position, moveDuration)
+        transform.DOMove(target.transform.position, moveDur)
             .SetLoops(2, LoopType.Yoyo)
             .SetEase(Ease.InBack)
             .SetLink(gameObject)
@@ -123,7 +125,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 manager.HealthText.text = attackerHealthAfter.ToString();
                 bool seqDone = false;
                 Sequence s = DOTween.Sequence();
-                s.AppendInterval(postDelay);
+                s.AppendInterval(postDel);
                 s.SetLink(gameObject);
                 s.OnComplete(() => { seqDone = true; Command.CommandExecutionComplete(); });
                 s.OnKill(() => { if (!seqDone) Command.CommandExecutionComplete(); });
