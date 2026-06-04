@@ -116,7 +116,7 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
 
         if (isFogged) creature.SetActive(false);
-        ownerArea?.RefreshAreaStats();
+        // ownerArea?.RefreshAreaStats();
         if (completeCommand) Command.CommandExecutionComplete();
     }
 
@@ -143,7 +143,7 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
 
         creature.SetActive(!isFogged);
-        ownerArea?.RefreshAreaStats();
+        // ownerArea?.RefreshAreaStats();
 
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
@@ -187,7 +187,7 @@ public class TableVisual : MonoBehaviour
     {
         if (!MeleeCreaturesOnTable.Remove(creature))
             RangedCreaturesOnTable.Remove(creature);
-        ownerArea?.RefreshAreaStats();
+        // ownerArea?.RefreshAreaStats();
         PlaceCreaturesOnNewSlots();
     }
 
@@ -199,7 +199,7 @@ public class TableVisual : MonoBehaviour
         Destroy(creatureToRemove);
 
         PlaceCreaturesOnNewSlots();
-        ownerArea?.RefreshAreaStats();
+        // ownerArea?.RefreshAreaStats();
         Command.CommandExecutionComplete();
     }
 
@@ -291,10 +291,10 @@ public class TableVisual : MonoBehaviour
         _movingCreature = null;
 
         // Téléporte immédiatement la créature à sa position finale pour qu'elle réapparaisse au bon endroit
-        CenteredSlots rowSlots = GetRowSlots(isMelee);
-        int finalIndex = targetList.IndexOf(creature);
-        creature.transform.DOKill();
-        creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
+        // CenteredSlots rowSlots = GetRowSlots(isMelee);
+        // int finalIndex = targetList.IndexOf(creature);
+        // creature.transform.DOKill();
+        // creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
 
         PlaceCreaturesOnNewSlots();
 

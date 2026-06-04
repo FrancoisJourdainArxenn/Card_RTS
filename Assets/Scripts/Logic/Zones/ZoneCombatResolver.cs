@@ -626,8 +626,8 @@ public class ZoneCombatResolver : MonoBehaviour
     }
     void RefreshAllAreaStats()
     {
-        foreach (PlayerArea pa in zoneView.subZones)
-            pa.RefreshAreaStats();
+        // foreach (PlayerArea pa in zoneView.subZones)
+        //     pa.RefreshAreaStats();
     }
 
     // Called from OneCreatureManager click — finds which resolver owns a baseID

@@ -27,9 +27,9 @@ public class BuildingDieCommand : Command
         manager?.OriginSpot?.OnBuildingDestroyed();
         Object.Destroy(buildingGO);
 
-        if (originSpot?.Zone != null)
-            foreach (PlayerArea pa in originSpot.Zone.subZones)
-                pa.RefreshAreaStats();
+        // if (originSpot?.Zone != null)
+        //     foreach (PlayerArea pa in originSpot.Zone.subZones)
+        //         pa.RefreshAreaStats();
         CommandExecutionComplete();
     }
 

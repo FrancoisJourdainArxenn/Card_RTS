@@ -108,6 +108,8 @@ public static class EffectRegistry
 
         TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
+        dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
+
     }
 
     public static void NotifyBuildingDied(BuildingLogic died, Player dyingOwner)
@@ -129,6 +131,7 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster != dyingOwner);
 
         UnregisterEntity(died.UniqueBuildingID);
+        dyingOwner.RemoveBonusIncomeFromSource(died.UniqueBuildingID); // ← ajouté pour retirer les bonus de revenu liés au bâtiment mort
     }
 
     // ── Collecte différée (→ PhaseEffectPipeline) ─────────────────────────────

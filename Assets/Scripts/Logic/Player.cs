@@ -35,6 +35,10 @@ public class Player : MonoBehaviour, ILivable
     public int mainRessourceTotal;
     public int mainRessourceAvailable;
     public int playerMainIncome;
+    [HideInInspector] public int bonusMainIncome;
+    [HideInInspector] public int bonusMainRessource;
+    private Dictionary<int, int> _incomeFromSources = new(); // income lié à une entité vivante
+
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -45,9 +49,6 @@ public class Player : MonoBehaviour, ILivable
 
     // a static array that will store both players, should always have 2 players
     public static Player[] Players;
-
-    // this value used exclusively for our coin spell
-    private int bonusMainRessource = 0;
 
     // PROPERTIES
     // this property is a part of interface ILivable
@@ -238,8 +239,8 @@ public class Player : MonoBehaviour, ILivable
     // FOR TESTING ONLY
     void Update()
     {
-        /*if (Input.GetKeyDown(KeyCode.C))
-            DrawACard();*/
+        if (Input.GetKeyDown(KeyCode.C))
+            DrawACard();
 
     }
 
@@ -730,19 +731,36 @@ public class Player : MonoBehaviour, ILivable
         return PlayerOwnsBaseInController(c); // tag joueur + même controller
     }
     
+    public void AddBonusIncome(int amount)
+    {
+        bonusMainIncome += amount;
+        CalculatePlayerIncome();
+    }
+
+    public void AddBonusIncomeFromSource(int sourceID, int amount)
+    {
+        _incomeFromSources[sourceID] = _incomeFromSources.GetValueOrDefault(sourceID, 0) + amount;
+        CalculatePlayerIncome();
+    }
+
+    public void RemoveBonusIncomeFromSource(int sourceID)
+    {
+        if (!_incomeFromSources.Remove(sourceID)) return;
+        CalculatePlayerIncome();
+    }
+
     public void CalculatePlayerIncome()
     {
-        playerMainIncome = 0;
+        playerMainIncome = bonusMainIncome;
+        foreach (int amt in _incomeFromSources.Values)
+            playerMainIncome += amt;
         foreach (BaseAsset baseAsset in controlledBaseAssets)
-        {
             playerMainIncome += baseAsset.mainRessourceIncome;
-        }
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
-        {
             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
-        }
         baseVisual.ApplyLookFromAsset();
     }
+
 
     // METHODS TO CREATE A NEW BASE 
     // 1st overload - by ID

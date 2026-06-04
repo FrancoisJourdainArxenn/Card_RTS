@@ -25,6 +25,13 @@ public class CurvedArrow : MonoBehaviour
         enabled = true;
     }
 
+    public void Show(Vector3 startPosition)
+    {
+        _fixedStart = startPosition;
+        if (arrowHead != null) arrowHead.gameObject.SetActive(true);
+        enabled = true;
+    }
+
     public void Hide()
     {
         enabled = false;

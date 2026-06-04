@@ -104,6 +104,12 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         this.baseAsset = baseAsset;
         ReadBaseFromAsset();
     }
+
+    public void RefreshIncomeDisplay(int income)
+    {
+        if (MainRessourceIncome != null)
+            MainRessourceIncome.text = "+ " + income.ToString();
+    }
     
     public void TakeDamage(int amount, int healthAfter)
     {

@@ -1321,7 +1321,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6695202149691135267
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1462,7 +1462,6 @@ MonoBehaviour:
   baseID: 0
   parentZone: {fileID: 0}
   BattlePos: {fileID: 187037439730835140}
-  AreaATKText: {fileID: 2183433566130362682}
   AreaHealthText: {fileID: 2382258568072171178}
 --- !u!114 &403595339840204762
 MonoBehaviour:
@@ -1755,7 +1754,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4482683937940621718
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2378,7 +2377,6 @@ MonoBehaviour:
   baseID: 0
   parentZone: {fileID: 0}
   BattlePos: {fileID: 187037439730835140}
-  AreaATKText: {fileID: 7885233487191220477}
   AreaHealthText: {fileID: 4675038382742340861}
 --- !u!114 &7636775938359942866
 MonoBehaviour:
