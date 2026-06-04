@@ -37,7 +37,6 @@ Transform:
   m_Children:
   - {fileID: 3620167656825172104}
   - {fileID: 7165418902205234437}
-  - {fileID: 1583018141698161382}
   - {fileID: 7791550586606667239}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -370,12 +369,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1404771886118404281}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.044, z: -0.027}
+  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: -0.02700001, z: -0.044}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1670990553462151866}
+  m_Father: {fileID: 3620167656825172104}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1992726695954042229
 GameObject:
@@ -1031,6 +1030,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1583018141698161382}
   - {fileID: 4635061962066779402}
   m_Father: {fileID: 1670990553462151866}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1262,9 +1262,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragCreatureAttack
   targettingArrow: {fileID: 9082617779479691250}
-  dragCardPrefab: {fileID: 8725022076114089944, guid: a3b632f9caa85cb4db936e15f40aecf4, type: 3}
-  dragCardOffset: {x: 0, y: 0}
-  dragCardScale: 0.3
+  arrowStartPoint: {fileID: 1583018141698161382}
+  _elevationHeight: 2
 --- !u!1 &6822298171705914818
 GameObject:
   m_ObjectHideFlags: 0

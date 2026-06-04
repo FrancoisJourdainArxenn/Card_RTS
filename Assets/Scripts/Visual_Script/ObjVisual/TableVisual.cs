@@ -291,10 +291,10 @@ public class TableVisual : MonoBehaviour
         _movingCreature = null;
 
         // Téléporte immédiatement la créature à sa position finale pour qu'elle réapparaisse au bon endroit
-        CenteredSlots rowSlots = GetRowSlots(isMelee);
-        int finalIndex = targetList.IndexOf(creature);
-        creature.transform.DOKill();
-        creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
+        // CenteredSlots rowSlots = GetRowSlots(isMelee);
+        // int finalIndex = targetList.IndexOf(creature);
+        // creature.transform.DOKill();
+        // creature.transform.position = rowSlots.GetSlotPosition(finalIndex, targetList.Count);
 
         PlaceCreaturesOnNewSlots();
 

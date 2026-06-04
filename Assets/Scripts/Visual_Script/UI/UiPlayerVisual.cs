@@ -51,7 +51,7 @@ public class UiPlayerVisual : MonoBehaviour
         int income = player.playerMainIncome;
         if (MainRessourceIncomeText != null)
         {
-            MainRessourceIncomeText.text = income.ToString();
+            MainRessourceIncomeText.text = $"[+ {income}]";
             if (income > _lastIncome && _lastIncome != int.MinValue)
                 ValuePopAnimation.Pop(MainRessourceIncomeText.transform);
             _lastIncome = income;

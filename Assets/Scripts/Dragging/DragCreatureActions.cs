@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class DragCreatureActions : DraggingActions {
 
@@ -16,17 +17,24 @@ public class DragCreatureActions : DraggingActions {
 
     [SerializeField] private CurvedArrow targettingArrow;
     // Prefab carte affiché sous la souris pendant le drag (à assigner dans l'Inspector)
-    [SerializeField] private GameObject dragCardPrefab;
-    [SerializeField] private Vector2 dragCardOffset = new Vector2(0f, 0f);
-    [SerializeField] private float dragCardScale = 0.3f;
-    private GameObject _dragCard;
-    private RectTransform _dragCardRect;
-    private Camera _dragUiCamera;
-    // Partagé entre toutes les créatures — créé au premier drag, détruit avec la scène
-    private static RectTransform _sharedDragCardParent;
-    private static Canvas _preferredDragCanvas;
+    // [SerializeField] private GameObject dragCardPrefab;
+    // [SerializeField] private Vector2 dragCardOffset = new Vector2(0f, 0f);
+    // [SerializeField] private float dragCardScale = 0.3f;
+    // private GameObject _dragCard;
+    // private RectTransform _dragCardRect;
+    // private Camera _dragUiCamera;
+    // // Partagé entre toutes les créatures — créé au premier drag, détruit avec la scène
+    // private static RectTransform _sharedDragCardParent;
+    // private static Canvas _preferredDragCanvas;
 
-    public static void SetDragCanvas(Canvas canvas) => _preferredDragCanvas = canvas;
+    [SerializeField] private float _elevationHeight = 2f;
+    private Vector3 _originalManagerLocalPosition;
+    private bool _reorderDone = false;
+    private bool _wasInOriginArea = true;
+
+
+
+    // public static void SetDragCanvas(Canvas canvas) => _preferredDragCanvas = canvas;
 
     void Awake()
     {
@@ -56,6 +64,8 @@ public class DragCreatureActions : DraggingActions {
     private PlayerArea originArea;
     public override void OnStartDrag()
     {
+        _wasInOriginArea = true;
+
         if (GetCreatureLogic() != null)
         {
             if (NetworkSessionData.IsNetworkSession)
@@ -72,99 +82,100 @@ public class DragCreatureActions : DraggingActions {
         sr.enabled = true;
         if (manager.CanMoveNow)
             HighlightReachableAreas();
+    
         
-        //ColorizeUnits();
-
-        manager.SetVisible(false);
-        SpawnDragCard();
+        _originalManagerLocalPosition = manager.transform.localPosition;
+        manager.transform.position += Vector3.up * _elevationHeight;
+        // manager.SetVisible(false);
+        // SpawnDragCard();
     }
 
-    private void SpawnDragCard()
-    {
-        if (dragCardPrefab == null)
-            return;
+    // private void SpawnDragCard()
+    // {
+    //     if (dragCardPrefab == null)
+    //         return;
 
-        RectTransform parent = GetOrCreateDragCardParent();
-        if (parent == null)
-            return;
+    //     RectTransform parent = GetOrCreateDragCardParent();
+    //     if (parent == null)
+    //         return;
 
-        _dragCard = Instantiate(dragCardPrefab, parent);
-        _dragCardRect = _dragCard.GetComponent<RectTransform>();
-        // Card_Preview a son ancre en top-center — on recentre pour que anchoredPosition = position locale de la souris
-        _dragCardRect.anchorMin = new Vector2(0.5f, 0.5f);
-        _dragCardRect.anchorMax = new Vector2(0.5f, 0.5f);
-        _dragCard.transform.localScale = Vector3.one * dragCardScale;
+    //     _dragCard = Instantiate(dragCardPrefab, parent);
+    //     _dragCardRect = _dragCard.GetComponent<RectTransform>();
+    //     // Card_Preview a son ancre en top-center — on recentre pour que anchoredPosition = position locale de la souris
+    //     _dragCardRect.anchorMin = new Vector2(0.5f, 0.5f);
+    //     _dragCardRect.anchorMax = new Vector2(0.5f, 0.5f);
+    //     _dragCard.transform.localScale = Vector3.one * dragCardScale;
 
-        Canvas canvas = parent.GetComponentInParent<Canvas>();
-        _dragUiCamera = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay) ? canvas.worldCamera : null;
+    //     Canvas canvas = parent.GetComponentInParent<Canvas>();
+    //     _dragUiCamera = (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay) ? canvas.worldCamera : null;
 
-        OneCardManager cardManager = _dragCard.GetComponent<OneCardManager>();
-        if (cardManager != null)
-        {
-            cardManager.cardAsset = manager.cardAsset;
-            cardManager.ReadCardFromAsset();
+    //     OneCardManager cardManager = _dragCard.GetComponent<OneCardManager>();
+    //     if (cardManager != null)
+    //     {
+    //         cardManager.cardAsset = manager.cardAsset;
+    //         cardManager.ReadCardFromAsset();
 
-            CreatureLogic creatureLogic = GetCreatureLogic();
-            if (creatureLogic != null)
-                cardManager.OverrideStats(creatureLogic.Attack, creatureLogic.Health, creatureLogic.MaxHealth);
-        }
+    //         CreatureLogic creatureLogic = GetCreatureLogic();
+    //         if (creatureLogic != null)
+    //             cardManager.OverrideStats(creatureLogic.Attack, creatureLogic.Health, creatureLogic.MaxHealth);
+    //     }
 
-        UpdateDragCardPosition();
-    }
+    //     UpdateDragCardPosition();
+    // }
 
-    private void UpdateDragCardPosition()
-    {
-        if (_dragCardRect == null || _sharedDragCardParent == null)
-            return;
+    // private void UpdateDragCardPosition()
+    // {
+    //     if (_dragCardRect == null || _sharedDragCardParent == null)
+    //         return;
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            _sharedDragCardParent,
-            Input.mousePosition,
-            _dragUiCamera,
-            out Vector2 localPoint
-        );
-        _dragCardRect.anchoredPosition = localPoint + dragCardOffset;
-    }
+    //     RectTransformUtility.ScreenPointToLocalPointInRectangle(
+    //         _sharedDragCardParent,
+    //         Input.mousePosition,
+    //         _dragUiCamera,
+    //         out Vector2 localPoint
+    //     );
+    //     _dragCardRect.anchoredPosition = localPoint + dragCardOffset;
+    // }
 
-    private static RectTransform GetOrCreateDragCardParent()
-    {
-        if (_sharedDragCardParent != null)
-            return _sharedDragCardParent;
+    // private static RectTransform GetOrCreateDragCardParent()
+    // {
+    //     if (_sharedDragCardParent != null)
+    //         return _sharedDragCardParent;
 
-        Canvas best = _preferredDragCanvas;
-        if (best == null)
-        {
-            foreach (Canvas c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
-            {
-                if (c.renderMode == RenderMode.WorldSpace)
-                    continue;
-                if (best == null || c.sortingOrder > best.sortingOrder)
-                    best = c;
-            }
-        }
-        if (best == null)
-            return null;
+    //     Canvas best = _preferredDragCanvas;
+    //     if (best == null)
+    //     {
+    //         foreach (Canvas c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+    //         {
+    //             if (c.renderMode == RenderMode.WorldSpace)
+    //                 continue;
+    //             if (best == null || c.sortingOrder > best.sortingOrder)
+    //                 best = c;
+    //         }
+    //     }
+    //     if (best == null)
+    //         return null;
 
-        Transform existing = best.transform.Find("DragCardLayer");
-        if (existing != null)
-        {
-            _sharedDragCardParent = existing.GetComponent<RectTransform>();
+    //     Transform existing = best.transform.Find("DragCardLayer");
+    //     if (existing != null)
+    //     {
+    //         _sharedDragCardParent = existing.GetComponent<RectTransform>();
 
-            return _sharedDragCardParent;
-        }
+    //         return _sharedDragCardParent;
+    //     }
 
-        GameObject layer = new GameObject("DragCardLayer");
-        layer.transform.SetParent(best.transform, false);
-        RectTransform rt = layer.AddComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-        layer.transform.SetAsLastSibling();
-        _sharedDragCardParent = rt;
+    //     GameObject layer = new GameObject("DragCardLayer");
+    //     layer.transform.SetParent(best.transform, false);
+    //     RectTransform rt = layer.AddComponent<RectTransform>();
+    //     rt.anchorMin = Vector2.zero;
+    //     rt.anchorMax = Vector2.one;
+    //     rt.offsetMin = Vector2.zero;
+    //     rt.offsetMax = Vector2.zero;
+    //     layer.transform.SetAsLastSibling();
+    //     _sharedDragCardParent = rt;
 
-        return _sharedDragCardParent;
-    }
+    //     return _sharedDragCardParent;
+    // }
 
     private CreatureLogic GetCreatureLogic()
     {
@@ -177,11 +188,15 @@ public class DragCreatureActions : DraggingActions {
 
     public override void OnDraggingInUpdate()
     {
-        UpdateDragCardPosition();
         bool isInOriginArea = originArea.tableVisual.CursorOverThisTable;
 
         if (isInOriginArea)
         {
+            manager.transform.position = new Vector3(
+                transform.position.x,
+                manager.transform.position.y,
+                transform.position.z
+            );
             if (targettingArrow.enabled)
                 targettingArrow.Hide();
             if (manager.CanReorderNow)
@@ -192,11 +207,22 @@ public class DragCreatureActions : DraggingActions {
         }
         else
         {
-            if(!targettingArrow.enabled && manager.CanMoveNow)
-                targettingArrow.Show();
+            if (_wasInOriginArea)
+            {
+                Vector3 worldOrigin = manager.transform.parent != null
+                    ? manager.transform.parent.TransformPoint(_originalManagerLocalPosition)
+                    : _originalManagerLocalPosition;
+                manager.transform.DOKill();
+                manager.transform.DOMove(worldOrigin, 0.3f).SetEase(Ease.OutQuad);
+                if (manager.CanMoveNow)
+                    targettingArrow.Show(worldOrigin);
+            }
             originArea.tableVisual.ClearInsertPreview();
         }
+
+        _wasInOriginArea = isInOriginArea;
     }
+
 
     public override void OnEndDrag()
     {
@@ -226,6 +252,8 @@ public class DragCreatureActions : DraggingActions {
 
     private void Reorder()
     {
+        _reorderDone = true;
+
         GameObject creatureGO = IDHolder.GetGameObjectWithID(idHolder.UniqueID);
         originArea.tableVisual.ReorderCreature(creatureGO);
 
@@ -313,41 +341,29 @@ public class DragCreatureActions : DraggingActions {
         ResetAreaHighlights();
         originArea.tableVisual.ClearInsertPreview();
 
+        if (!_reorderDone)
+        {
+            Vector3 worldOrigin = manager.transform.parent != null
+                ? manager.transform.parent.TransformPoint(_originalManagerLocalPosition)
+                : _originalManagerLocalPosition;
+            manager.transform.DOKill();
+            manager.transform.DOMove(worldOrigin, 0.3f).SetEase(Ease.OutQuad);
+        }
+        _reorderDone = false;
+
         transform.SetLocalPositionAndRotation(originalLocalPosition, Quaternion.Euler(90f, 0f, 0f));
         sr.enabled = false;
         targettingArrow.Hide();
 
-        if (_dragCard != null)
-        {
-            Destroy(_dragCard);
-            _dragCard = null;
-            _dragCardRect = null;
-        }
+        // if (_dragCard != null)
+        // {
+        //     Destroy(_dragCard);
+        //     _dragCard = null;
+        //     _dragCardRect = null;
+        // }
     }
 
     private void OnDragFailed() { }
-
-    /*private void ColorizeUnits()
-    {
-        TurnManager turnmanager = TurnManager.Instance;
-        if (turnmanager.CurrentPhase != TurnManager.TurnPhases.Battle) {
-            return;
-        }
-        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesInPlay)
-        {
-            GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
-            g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(cl.Targetable);
-        }
-    }*/
-
-    /*private void ResetColorizeUnits()
-    {
-        foreach (CreatureLogic cl in playerOwner.otherPlayer.table.CreaturesInPlay)
-        {
-            GameObject g = IDHolder.GetGameObjectWithID(cl.UniqueCreatureID);
-            g.GetComponent<OneCreatureManager>().UpdateTargetableVisual(true);
-        }
-    }*/
 
     private void HighlightReachableAreas()
     {
