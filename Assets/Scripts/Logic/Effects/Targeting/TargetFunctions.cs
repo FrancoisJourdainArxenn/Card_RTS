@@ -21,6 +21,8 @@ public partial class EffectContext
                 _                   => Enumerable.Empty<IIdentifiable>()
             };
 
+            candidates = candidates.Where(t => !(t is ILivable l && l.IsPendingDeath));
+
             candidates = query.statusFilter switch
             {
                 TargetStatusFilter.Melee      => candidates.Where(t => t is ILivable c && c.IsMelee),
