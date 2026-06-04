@@ -16,7 +16,7 @@ public class PlayerArea : MonoBehaviour
     public ZoneManager parentZone;
     public Transform BattlePos;
 
-    public TMP_Text AreaATKText;
+    // public TMP_Text AreaATKText;
     public TMP_Text AreaHealthText;
 
     public bool AllowedToControlThisPlayer
@@ -31,42 +31,42 @@ public class PlayerArea : MonoBehaviour
             tableVisual.ownerArea = this;
     }
 
-    public void SetStatsFogged(bool fogged)
-    {
-        if (AreaATKText != null) AreaATKText.gameObject.SetActive(!fogged);
-        if (AreaHealthText != null) AreaHealthText.gameObject.SetActive(!fogged);
-    }   
+    // public void SetStatsFogged(bool fogged)
+    // {
+    //     if (AreaATKText != null) AreaATKText.gameObject.SetActive(!fogged);
+    //     if (AreaHealthText != null) AreaHealthText.gameObject.SetActive(!fogged);
+    // }   
 
-    public void RefreshAreaStats()
-    {
-        if (AreaATKText != null)
-        {
-            if (TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase)
-            {
-                Player localPlayer = GlobalSettings.Instance.localPlayer;
-                AreaPosition localPos = localPlayer == GlobalSettings.Instance.LowPlayer
-                    ? AreaPosition.Low : AreaPosition.Top;
+    // public void RefreshAreaStats()
+    // {
+    //     if (AreaATKText != null)
+    //     {
+    //         if (TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase)
+    //         {
+    //             Player localPlayer = GlobalSettings.Instance.localPlayer;
+    //             AreaPosition localPos = localPlayer == GlobalSettings.Instance.LowPlayer
+    //                 ? AreaPosition.Low : AreaPosition.Top;
 
-                if (owner == localPos && parentZone != null)
-                {
-                    ZoneCombatResolver resolver = parentZone.GetComponent<ZoneCombatResolver>();
-                    if (resolver != null)
-                        AreaATKText.text = resolver.GetRemainingPool(owner).ToString();
-                }
-                else
-                {
-                    AreaATKText.text = GetTotalATK().ToString();
-                }
-            }
-            else
-            {
-                AreaATKText.text = GetTotalATK().ToString();
-            }
-        }
+    //             if (owner == localPos && parentZone != null)
+    //             {
+    //                 ZoneCombatResolver resolver = parentZone.GetComponent<ZoneCombatResolver>();
+    //                 if (resolver != null)
+    //                     AreaATKText.text = resolver.GetRemainingPool(owner).ToString();
+    //             }
+    //             else
+    //             {
+    //                 AreaATKText.text = GetTotalATK().ToString();
+    //             }
+    //         }
+    //         else
+    //         {
+    //             AreaATKText.text = GetTotalATK().ToString();
+    //         }
+    //     }
 
-        if (AreaHealthText != null)
-            AreaHealthText.text = GetTotalHealth().ToString();
-    }
+    //     if (AreaHealthText != null)
+    //         AreaHealthText.text = GetTotalHealth().ToString();
+    // }
 
     public Player GetOwnerPlayer()
     {

@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: RessourceTest
   cards:
-  - {fileID: 11400000, guid: e39fe2462f5006d47ba8822c8f654811, type: 2}
   - {fileID: 11400000, guid: d7eb39e55b9888046b73c886cb08d2f1, type: 2}
+  - {fileID: 11400000, guid: e39fe2462f5006d47ba8822c8f654811, type: 2}
+  - {fileID: 11400000, guid: cf90fc1f873b345459fd5c8348af32c1, type: 2}
+  - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
   buildings:
   - {fileID: 11400000, guid: 2610bac9af99faf4c924278acc0cc72b, type: 2}

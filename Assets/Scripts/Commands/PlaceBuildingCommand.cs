@@ -34,9 +34,9 @@ public class PlaceBuildingCommand : Command
         player.playedCards.Buildings.Add(buildingLogic);
         spot.SpawnBuilding(buildingLogic, player);
         EffectRegistry.ETB(building, new EffectContext { Caster = player, Source = buildingLogic }); // ← ajout
-        if (spot.Zone != null)
-            foreach (PlayerArea pa in spot.Zone.subZones)
-                pa.RefreshAreaStats();
+        // if (spot.Zone != null)
+        //     foreach (PlayerArea pa in spot.Zone.subZones)
+        //         pa.RefreshAreaStats();
 
         FogOfWarManager.Refresh();
         CommandExecutionComplete();

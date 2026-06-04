@@ -65,6 +65,7 @@ MonoBehaviour:
   pendingMoveArrow: {fileID: 2621815310663996257}
   arrowOriginOffset: {x: 0, y: 0, z: 0.5}
   arrowScrollSpeed: 1
+  isGhost: 0
 --- !u!114 &7802661973951423628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1214,6 +1215,7 @@ MonoBehaviour:
   toHideWhilePrewiew: {fileID: 0}
   alphaHide: 0.5
   previewOffset: {x: -250, y: 100}
+  enemyGlowImage: {fileID: 0}
 --- !u!65 &595442661226241583
 BoxCollider:
   m_ObjectHideFlags: 0
