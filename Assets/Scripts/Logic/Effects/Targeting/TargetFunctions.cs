@@ -43,6 +43,9 @@ public partial class EffectContext
             {
                 candidates = candidates.Where(t => t is ILivable livable && livable.Zone == targetZone);
             }
+            if (query.cardFilter != null)
+                candidates = candidates.Where(t => query.cardFilter.Matches(GetCardAsset(t)));
+
 
             targets.AddRange(candidates);
         }
@@ -89,4 +92,11 @@ public partial class EffectContext
         }
         return targets;
     }
+    private static CardAsset GetCardAsset(IIdentifiable target) => target switch
+    {
+        CreatureLogic c => c.ca,
+        BuildingLogic b => b.ca,
+        _               => null
+    };
+
 }

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Jourd\\\\Desktop\\\\Card_RTS\\\\Card_RTS\\\\Assets\\\\Scripts\\\\Logic\\\\Effects\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\Jourd\\\\Desktop\\\\Card_RTS\\\\Card_RTS\\\\Assets\\\\Scripts\\\\Logic\\\\Effects\" -Recurse -Name)"
+    ]
+  }
+}

@@ -10,25 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Roach 1
+  m_Name: Marine 1
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 1
+  subType: 0
   tier: 1
-  Description: <b>Melee</b>
-  CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
+  Description: 
+  CardImage: {fileID: 21300000, guid: c79e860526283f94d9c972fff3604f41, type: 3}
   MainCost: 0
-  Attack: 1
-  MaxHealth: 50
+  Attack: 2
+  MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
   AttackSpeedMultiplier: 1
   AttackModifiers: []
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  Keywords: []
   Effects: []

@@ -16,6 +16,7 @@ public struct TargetQuery
     public TargetTeam team;
     public TargetStatusFilter statusFilter;
     public TargetZoneFilter zoneFilter;
+    public CardFilterSO cardFilter;
 }
 
 public enum TargetTeam
