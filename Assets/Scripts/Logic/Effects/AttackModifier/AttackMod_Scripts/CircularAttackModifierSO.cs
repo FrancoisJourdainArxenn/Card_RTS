@@ -10,8 +10,10 @@ public class CircularAttackModifierSO : AttackModifierSO
         int idx = sameRow.IndexOf(mainTarget);
         if (idx < 0) return;
 
-        if (idx > 0)                        DealDamage(attacker, sameRow[idx - 1]);
-        if (idx < sameRow.Count - 1)       DealDamage(attacker, sameRow[idx + 1]);
+        if (idx > 0)                        
+            DealDamage(attacker, sameRow[idx - 1]);
+        if (idx < sameRow.Count - 1)       
+            DealDamage(attacker, sameRow[idx + 1]);
 
         if (mainTarget.IsMelee)
         {
