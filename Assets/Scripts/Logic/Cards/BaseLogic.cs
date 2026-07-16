@@ -58,6 +58,11 @@ public class BaseLogic: ILivable
     }
     
     public int BaseID {get; private set;}
+    public CardTier CurrentTier { get; private set; } = CardTier.T1;
+    public int CurrentUpgradeCost { get; private set; }
+    public static event Action<BaseLogic> OnUpgradeCostChanged;
+    private BaseTierLevel NextTierData =>
+        (int)CurrentTier < ba.tierLevels.Count ? ba.tierLevels[(int)CurrentTier] : null;
     
     public int TakeDamage(int dmg)
     {
@@ -78,6 +83,7 @@ public class BaseLogic: ILivable
     public BaseLogic(Player owner, BaseAsset ba, NeutralZoneController neutralBaseController, int networkID = -1)
     {
         this.ba = ba;
+        CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         this.neutralBaseController = neutralBaseController;
         baseHealth = ba.MaxHealth;
         health = baseHealth;
@@ -92,6 +98,7 @@ public class BaseLogic: ILivable
     public BaseLogic(Player owner, ZoneLogic homeZone)
     {
         this.ba = owner.baseAsset;
+        CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         this.neutralBaseController = null;
         this._homeZone = homeZone;
         baseHealth = ba.MaxHealth;
@@ -100,6 +107,32 @@ public class BaseLogic: ILivable
         this.owner = owner;
         uniqueBaseID = owner.PlayerID;
         BasesCreatedThisGame[uniqueBaseID] = this;
+    }
+
+    public void TickUpgradeCostDown()
+    {
+        if (!IsHomeBase) return;
+        BaseTierLevel next = NextTierData;
+        if (next == null) return; // déjà au tier max
+        CurrentUpgradeCost = Math.Max(next.upgradeCostFloor, CurrentUpgradeCost - next.upgradeCostReductionPerTurn);
+        OnUpgradeCostChanged?.Invoke(this);
+    }
+
+    public bool TryUpgrade()
+    {
+        if (!IsHomeBase) return false;
+        BaseTierLevel next = NextTierData;
+        if (next == null) return false;
+        if (owner.MainRessourceAvailable < CurrentUpgradeCost) return false;
+
+        owner.MainRessourceAvailable -= CurrentUpgradeCost;
+        owner.AddBonusIncomeFromSource(ID, next.incomeBonus);
+        owner.deck.drawConfig = next.drawConfig;
+
+        CurrentTier = next.tier;
+        CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
+        OnUpgradeCostChanged?.Invoke(this);
+        return true;
     }
 
     // STATIC For managing IDs

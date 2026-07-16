@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using TMPro;
 
 [CreateAssetMenu(fileName = "BaseAsset", menuName = "BaseAsset")]
@@ -12,6 +13,22 @@ public class BaseAsset : ScriptableObject
     public int mainRessourceIncome;
     public int mainRessourceBaseCost;
 
+    [Header("Upgrade tiers")]
+    public List<BaseTierLevel> tierLevels = new List<BaseTierLevel>();
+}
 
-
+[System.Serializable]
+public class BaseTierLevel
+{
+    public CardTier tier;
+    [Tooltip("Revenu additionnel accordé une fois ce tier atteint")]
+    public int incomeBonus;
+    [Tooltip("Coût initial pour atteindre ce tier depuis le précédent")]
+    public int upgradeCost;
+    [Tooltip("Coût minimum après réduction passive")]
+    public int upgradeCostFloor;
+    [Tooltip("Réduction du coût à chaque début de tour")]
+    public int upgradeCostReductionPerTurn;
+    [Tooltip("Config de tirage pondéré active une fois ce tier atteint")]
+    public WeightedDrawConfig drawConfig;
 }

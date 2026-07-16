@@ -1024,6 +1024,24 @@ public class GameNetworkManager : NetworkBehaviour
         player.ExecuteBuildNeutralBase(neutralBaseVisual, baseUniqueID);
     }
 
+    ///Base Upgrade
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void UpgradeBaseServerRpc(int playerIndex)
+    {
+        UpgradeBaseClientRpc(playerIndex);
+    }
+
+    [ClientRpc]
+    void UpgradeBaseClientRpc(int playerIndex)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] UpgradeBaseClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player.Players[playerIndex].homeBaseLogic?.TryUpgrade();
+    }
+
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void PlaceBuildingServerRpc(int playerIndex, int buildingIndex, int spotID)
     {

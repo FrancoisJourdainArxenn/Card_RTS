@@ -12,6 +12,10 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     public AreaPosition owner;
     public TMP_Text HealthText, MainRessourceText;
     public Image fogOverlay;
+    public TMP_Text UpgradeCostText;
+    public Button UpgradeButton;
+    private int _lastShownUpgradeCost = int.MinValue;
+
     [HideInInspector] public bool hasBeenSeen = false;
     private bool currentlyVisible = true;
     	
@@ -23,6 +27,8 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         baseManager?.RefreshIncomeDisplay(player.playerMainIncome);
+        RefreshUpgradeDisplay();
+
     }
 
     public void TakeDamage(int amount, int healthAfter)
@@ -107,5 +113,46 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
                 fogOverlay.gameObject.SetActive(hasBeenSeen);
         }
     }
+
+    void OnEnable()
+    {
+        BaseLogic.OnUpgradeCostChanged += HandleUpgradeCostChanged;
+    }
+
+    void OnDisable()
+    {
+        BaseLogic.OnUpgradeCostChanged -= HandleUpgradeCostChanged;
+    }
+
+    private void HandleUpgradeCostChanged(BaseLogic bl)
+    {
+        if (player == null || bl != player.homeBaseLogic) return;
+        RefreshUpgradeDisplay();
+    }
+
+    public void RefreshUpgradeDisplay()
+    {
+        if (player?.homeBaseLogic == null || UpgradeCostText == null) return;
+
+        int cost = player.homeBaseLogic.CurrentUpgradeCost;
+        UpgradeCostText.text = cost.ToString();
+
+        if (cost < _lastShownUpgradeCost && _lastShownUpgradeCost != int.MinValue)
+            ValuePopAnimation.Pop(UpgradeCostText.transform);
+        _lastShownUpgradeCost = cost;
+
+    if (UpgradeButton != null)
+        UpgradeButton.interactable = player == GlobalSettings.Instance.localPlayer
+            && player.MainRessourceAvailable >= cost;
+
+    }
+
+    public void OnUpgradeButtonClicked()
+    {
+        if (player == null) return;
+        player.RequestUpgradeBase();
+    }
+
+
 
 }
