@@ -14,7 +14,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     public Image fogOverlay;
     public TMP_Text UpgradeCostText;
     public Button UpgradeButton;
+    public GameObject UpgradeButtonContainer;
+    public Image CurrentTierImage;
+    public Image NextTierImage;
     private int _lastShownUpgradeCost = int.MinValue;
+    private CardTier _lastShownTier = 0;
 
     [HideInInspector] public bool hasBeenSeen = false;
     private bool currentlyVisible = true;
@@ -134,17 +138,35 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     {
         if (player?.homeBaseLogic == null || UpgradeCostText == null) return;
 
-        int cost = player.homeBaseLogic.CurrentUpgradeCost;
+        BaseLogic bl = player.homeBaseLogic;
+        int cost = bl.CurrentUpgradeCost;
         UpgradeCostText.text = cost.ToString();
 
         if (cost < _lastShownUpgradeCost && _lastShownUpgradeCost != int.MinValue)
             ValuePopAnimation.Pop(UpgradeCostText.transform);
         _lastShownUpgradeCost = cost;
 
-    if (UpgradeButton != null)
-        UpgradeButton.interactable = player == GlobalSettings.Instance.localPlayer
-            && player.MainRessourceAvailable >= cost;
+        if (CurrentTierImage != null)
+        {
+            CurrentTierImage.sprite = bl.CurrentTierIcon;
+            if (bl.CurrentTier != _lastShownTier && _lastShownTier != 0)
+                ValuePopAnimation.Pop(CurrentTierImage.transform);
+            _lastShownTier = bl.CurrentTier;
+        }
 
+        bool isMaxTier = bl.IsMaxTier;
+        if (UpgradeButtonContainer != null)
+            UpgradeButtonContainer.SetActive(!isMaxTier);
+
+        if (!isMaxTier)
+        {
+            if (NextTierImage != null)
+                NextTierImage.sprite = bl.NextTierIcon;
+
+            if (UpgradeButton != null)
+                UpgradeButton.interactable = player == GlobalSettings.Instance.localPlayer
+                    && player.MainRessourceAvailable >= cost;
+        }
     }
 
     public void OnUpgradeButtonClicked()

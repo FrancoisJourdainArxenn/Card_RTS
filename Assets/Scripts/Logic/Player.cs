@@ -816,10 +816,18 @@ public class Player : MonoBehaviour, ILivable
 
     public void RequestUpgradeBase()
     {
+        if (homeBaseLogic == null || homeBaseLogic.IsMaxTier) return;
+
+        if (MainRessourceAvailable < homeBaseLogic.CurrentUpgradeCost)
+        {
+            new ShowMessageCommand("You don't have enough Ressources to upgrade your Base.", 2f).AddToQueue();
+            return;
+        }
+
         if (NetworkSessionData.IsNetworkSession)
             GameNetworkManager.Instance.UpgradeBaseServerRpc(playerIndex);
         else
-            homeBaseLogic?.TryUpgrade();
+            homeBaseLogic.TryUpgrade();
     }
 
     public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int baseUniqueID)

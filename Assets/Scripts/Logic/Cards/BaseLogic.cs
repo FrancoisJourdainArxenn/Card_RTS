@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityEngine;
 
 [System.Serializable]
 public class BaseLogic: ILivable
@@ -63,6 +64,9 @@ public class BaseLogic: ILivable
     public static event Action<BaseLogic> OnUpgradeCostChanged;
     private BaseTierLevel NextTierData =>
         (int)CurrentTier < ba.tierLevels.Count ? ba.tierLevels[(int)CurrentTier] : null;
+    public bool IsMaxTier => NextTierData == null;
+    public Sprite CurrentTierIcon => ba.tierLevels[(int)CurrentTier - 1].tierIcon;
+    public Sprite NextTierIcon => NextTierData?.tierIcon;
     
     public int TakeDamage(int dmg)
     {

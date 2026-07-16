@@ -31,4 +31,6 @@ public class BaseTierLevel
     public int upgradeCostReductionPerTurn;
     [Tooltip("Config de tirage pondéré active une fois ce tier atteint")]
     public WeightedDrawConfig drawConfig;
+    [Tooltip("Icône représentant ce tier (T1/T2/T3)")]
+    public Sprite tierIcon;
 }
