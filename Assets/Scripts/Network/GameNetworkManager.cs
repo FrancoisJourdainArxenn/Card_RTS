@@ -246,6 +246,7 @@ public class GameNetworkManager : NetworkBehaviour
         int effectSeed,
         ClientRpcParams clientRpcParams = default)
     {
+        Debug.Log($"[ClientRpc] ApplyCanonicalEffectResolution reçu — {sourceEntityIDs.Length} effet(s), seed={effectSeed}, phase={TurnManager.Instance.CurrentPhase}");
         PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
         );

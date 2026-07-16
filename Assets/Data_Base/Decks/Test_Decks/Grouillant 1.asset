@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Grouillant Test
   cards:
-  - {fileID: 11400000, guid: 7d8aa53131a4fe24d97c8dda6ad114f8, type: 2}
+  - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
   - {fileID: 11400000, guid: 47d9edc581f78c148b7417ac42d9536f, type: 2}
+  - {fileID: 11400000, guid: 280fbb14ba7df9146b983efd6d4b06ae, type: 2}
   buildings:
   - {fileID: 11400000, guid: 9cefef2a04acfbf45bc521a41f3256be, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

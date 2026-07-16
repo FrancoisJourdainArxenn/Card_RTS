@@ -16,12 +16,15 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  tier: 2
-  Description: All row
+  tier: 3
+  Description: '<b>Battle Start:</b> Give +0/+1 to friendly units until end of turn.
+
+    Also
+    deals damage to every other Units of the same Row.'
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 0
   Attack: 2
-  MaxHealth: 5
+  MaxHealth: 6
   AttacksForOneTurn: 1
   melee: 0
   AttackSpeedMultiplier: 1
@@ -33,7 +36,7 @@ MonoBehaviour:
   Keywords: []
   Effects:
   - EffectName: For the Swarm
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Effect: {fileID: 11400000, guid: 6a11898b25201584fb5d889c9b005d34, type: 2}
     Trigger: 4
     Condition: {fileID: 0}
     Effectinfo:
@@ -56,4 +59,4 @@ MonoBehaviour:
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
-      repartition: 3
+      repartition: 0
