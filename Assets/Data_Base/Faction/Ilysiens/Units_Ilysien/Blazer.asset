@@ -16,38 +16,20 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
-  tier: 1
-  Description: '<b>Melee.
-
-    Begin Battle:</b> Deal 1 Damage to random Unit.'
+  tier: 2
+  Description: "<b>Melee.</b> \nAlso deals damages to Units behind whomever this
+    attacks."
   CardImage: {fileID: 21300000, guid: 4a3cbf0af05f742499b46d55ff6c1055, type: 3}
-  MainCost: 1
-  Attack: 0
-  MaxHealth: 3
+  MainCost: 3
+  Attack: 1
+  MaxHealth: 4
   AttacksForOneTurn: 1
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers:
+  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
   Keywords: []
-  Effects:
-  - EffectName: Bruler
-    Effect: {fileID: 11400000, guid: dd53d2e9daa92f34d999c8f2cdb4f171, type: 2}
-    Trigger: 4
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries: []
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        queries:
-        - team: 2
-          statusFilter: 0
-          zoneFilter: 1
-      repartition: 2
+  Effects: []

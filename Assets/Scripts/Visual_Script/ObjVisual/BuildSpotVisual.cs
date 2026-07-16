@@ -52,6 +52,11 @@ public class BuildSpotVisual : MonoBehaviour
         TurnManager.OnPhaseEntered -= RefreshBuildLabel;
     }
 
+    void OnDestroy()
+    {
+        Registry.Remove(SpotID);
+    }
+
     public void TakePlayerTag(string playerTag)
     {
         tag = playerTag;

@@ -19,11 +19,13 @@ MonoBehaviour:
   tier: 1
   Description: +1 <b>Income</b>.
   CardImage: {fileID: 21300000, guid: ee65f1428a6ee7741bd700f7164f2fe0, type: 3}
-  MainCost: 0
+  MainCost: 4
   Attack: 0
   MaxHealth: 3
-  AttacksForOneTurn: 1
+  AttacksForOneTurn: 0
   melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
