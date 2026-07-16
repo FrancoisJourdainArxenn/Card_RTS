@@ -17,13 +17,16 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>Battle Start:</b> Give +1/+1 to a friendly unit.
+  Description: All row
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 0
   Attack: 2
   MaxHealth: 5
   AttacksForOneTurn: 1
   melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers:
+  - {fileID: 11400000, guid: f3700aa79d9c73749b559ce573d874b1, type: 2}
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
@@ -42,6 +45,7 @@ MonoBehaviour:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
@@ -51,4 +55,5 @@ MonoBehaviour:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
       repartition: 3

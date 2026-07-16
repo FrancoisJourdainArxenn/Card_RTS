@@ -330,6 +330,8 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out CreatureLogic target)) continue;
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature);
 
+                    if (!step.attackerIsBuilding && attackerCreature != null && attackerCreature.IsPendingDeath) continue;
+
                     int shieldAbsorbed = Mathf.Min(step.damage, target.ShieldValue);
                     int effectiveDamage = step.damage - shieldAbsorbed;
                     int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
