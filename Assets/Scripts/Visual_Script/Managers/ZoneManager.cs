@@ -87,7 +87,7 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (ScanButton.HandleZoneClickIfActive(this)) return;
+        if (ScanButton.HandleZoneClickIfActive(this, eventData)) return;
         if (TurnManager.Instance == null) return;
         if (PhaseEffectPipeline.IsComplete) return;
         PhaseEffectPipeline.OnEntityClicked(Logic);

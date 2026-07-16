@@ -125,4 +125,16 @@ public class OneCreatureManager : OneLivableManager
         isArrowVisible = false;
     }
 
+    public void Select()
+    {
+        glow.enabled = true;
+        glow.color = Color.yellow;
+        Debug.Log($"[Select] Glow enabled for {gameObject.name}");
+    }
+
+    public void Deselect()
+    {
+        UpdateGlow();
+    }
+
 }
