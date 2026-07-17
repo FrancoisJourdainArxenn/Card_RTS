@@ -10,6 +10,7 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private HoverArrow hoverArrow;
     [SerializeField] private GameObject presenceNotificationVFX;
+    [SerializeField] private UITooltipTrigger scanTooltipTrigger;
 
     public int scanCost = 2;
     public TMP_Text scanCostText;
@@ -38,6 +39,14 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
         _sprite2NormalColor = radarLine.color;
 
         RefreshCostText();
+
+        if (scanTooltipTrigger != null)
+        {
+            scanTooltipTrigger.SetDynamicText(() =>
+                $"Spend {currentScanCost} to reveal a zone.\n" +
+                $"Each turn, the amount to spend reduces by 1. \n" +
+                $"The amount Resets after use.");
+        }
     }
 
     void Update()

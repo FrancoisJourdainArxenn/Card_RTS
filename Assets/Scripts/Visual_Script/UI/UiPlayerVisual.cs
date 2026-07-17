@@ -13,6 +13,8 @@ public class UiPlayerVisual : MonoBehaviour
     public Image NextTierImage;
     public GameObject UpgradeButtonContainer;
     public Button UpgradeButton;
+    [SerializeField] private UITooltipTrigger ressourceTooltipTrigger;
+    [SerializeField] private UITooltipTrigger upgradeTooltipTrigger;
 
     [Tooltip("Si renseigné, prend la priorité sur owner.")]
     [SerializeField] Player player;
@@ -47,6 +49,29 @@ public class UiPlayerVisual : MonoBehaviour
         ResolvePlayer();
         lastShownCount = int.MinValue;
         _lastIncome = int.MinValue;
+
+        if (ressourceTooltipTrigger != null)
+        {
+            ressourceTooltipTrigger.SetDynamicText(() =>
+                $"You have {player.mainRessourceAvailable} Ressources to spend.\n" +
+                $"You don't lose unspent Ressources.\n" +
+                $"The [{player.playerMainIncome}] is your Income (how much Ressources you get each turn).");
+        }
+
+        if (upgradeTooltipTrigger != null)
+        {
+            upgradeTooltipTrigger.SetDynamicText(() =>
+            {
+                BaseLogic bl = player.homeBaseLogic;
+                if (bl.IsMaxTier)
+                    return "This base is already at max Tier.";
+
+                int nextTier = (int)bl.CurrentTier + 1;
+                return $"Spend {bl.CurrentUpgradeCost} to get to Tier {nextTier}.\n" +
+                       $"Tier {nextTier} increases your chances of drawing tier {nextTier} cards.\n" +
+                       $"Each tier increases your Income by 1.";
+            });
+        }
     }
 
     void ResolvePlayer()
