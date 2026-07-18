@@ -20,4 +20,7 @@ public enum TriggerType
     OnEnemyCreatureDies,
     OnFriendlyBuildingDies,
     OnEnemyBuildingDies,
+
+    // Token
+    OnTokenCreated,
 }

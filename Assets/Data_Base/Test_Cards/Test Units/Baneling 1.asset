@@ -22,10 +22,14 @@ MonoBehaviour:
     <b>Death :</b> Deals 2 Damage randomly.'
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 0
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
@@ -43,8 +47,14 @@ MonoBehaviour:
       - affectedElementType: 0
         includesTarget: 0
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 2
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
       repartition: 2
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

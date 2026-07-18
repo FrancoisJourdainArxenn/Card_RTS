@@ -22,6 +22,8 @@ MonoBehaviour:
     <b>On Regroup:</b> Gives +1/+1 to a Unit.'
   CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 1
   MaxHealth: 3
   AttacksForOneTurn: 1
@@ -52,9 +54,14 @@ MonoBehaviour:
       - affectedElementType: 0
         includesTarget: 0
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
       repartition: 3
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

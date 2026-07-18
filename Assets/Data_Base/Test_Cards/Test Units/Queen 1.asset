@@ -16,14 +16,18 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  tier: 3
+  tier: 1
   Description: <b>Regroup :</b> Create a 1/1 Zergling in my zone.
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 1
   MaxHealth: 4
   AttacksForOneTurn: 1
   melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
@@ -43,13 +47,20 @@ MonoBehaviour:
         - team: 0
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 3
         includesTarget: 0
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 0
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

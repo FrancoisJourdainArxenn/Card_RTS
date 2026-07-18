@@ -158,6 +158,9 @@ public class TokenGenerationSO : EffectSO
             Caster = caster,
             Source = newCreature
         });
+
+        EffectRegistry.NotifyTokenCreated(caster, newCreature);
+
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null) { }

@@ -20,6 +20,8 @@ MonoBehaviour:
   Description: Lateral attack (next to).
   CardImage: {fileID: 21300000, guid: be9c17079b0d8f049bc86f6268da86a9, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 3
   MaxHealth: 50
   AttacksForOneTurn: 1

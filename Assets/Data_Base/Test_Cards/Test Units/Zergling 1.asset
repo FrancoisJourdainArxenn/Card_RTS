@@ -55,9 +55,14 @@ MonoBehaviour:
       - affectedElementType: 3
         includesTarget: 0
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 0
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: FastDeck
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Test Deck (1)
-  heroCard: {fileID: 11400000, guid: 0934b3622adfd6c43a492af05ba9653d, type: 2}
+  heroCard: {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
   cards:
+  - {fileID: 11400000, guid: dac5871494178b94a96abaeb09c87054, type: 2}
   - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
-  - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}
-  - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
+  - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
+  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
   buildings:
   - {fileID: 11400000, guid: 7e435039d49311b40b7797527b6db2df, type: 2}
-  - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}
+  - {fileID: 11400000, guid: 0826368b770da794584a44c190288b63, type: 2}

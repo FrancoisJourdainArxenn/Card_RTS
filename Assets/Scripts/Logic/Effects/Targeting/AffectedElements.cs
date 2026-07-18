@@ -6,5 +6,6 @@ public struct AffectedElement
     public EffectObjectType affectedElementType;
     public bool includesTarget;
     public bool includesSource;
+    public bool includesEventSubject;
     public List<TargetQuery> queries;
 }

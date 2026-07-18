@@ -24,6 +24,13 @@ public class ModifyStatsSO : EffectSO, IRevertable
     )
     {
         Log($"{EffectName}: Execution");
+
+        if (effectInfo.useScalingCount)
+        {
+            ExecuteScaled(EffectName, context, effectInfo, visualData);
+            return;
+        }
+
         List<IIdentifiable> affectedElements = GetAffectedElements(context, effectInfo);
         if (affectedElements.Count == 0)
         {
@@ -33,6 +40,48 @@ public class ModifyStatsSO : EffectSO, IRevertable
 
         Log($"{EffectName}: {(AttackBonus > 0 ? "+" : "")}{AttackBonus} ATK / {(HealthBonus > 0 ? "+" : "")}{HealthBonus} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
         ApplyEffect(effectInfo, affectedElements, visualData);
+    }
+
+    // Scales AttackBonus/HealthBonus by a dynamic count (e.g. "per unit in your zone") instead of
+    // applying the fixed bonus. Bypasses ApplyEffect/ApplyToTarget/Revert entirely so the exact
+    // scaled delta can be captured for a correct revert, since the generic pipeline never threads
+    // an amount through for Uniform/RandomSingleTarget repartition.
+    private void ExecuteScaled(string EffectName, EffectContext context, EffectInfo effectInfo, EffectVisualData visualData)
+    {
+        int count = context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries);
+        if (count == 0)
+        {
+            Log($"{EffectName}: scaling count is 0, effect cancelled.");
+            return;
+        }
+
+        List<IIdentifiable> affectedElements = GetAffectedElements(context, effectInfo);
+        if (affectedElements.Count == 0)
+        {
+            Log($"{EffectName}: no eligible targets found, effect cancelled.");
+            return;
+        }
+
+        int scaledAttack = AttackBonus * count;
+        int scaledHealth = HealthBonus * count;
+
+        Log($"{EffectName}: {(scaledAttack > 0 ? "+" : "")}{scaledAttack} ATK / {(scaledHealth > 0 ? "+" : "")}{scaledHealth} HP (x{count}) to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
+
+        foreach (ILivable target in affectedElements.Cast<ILivable>())
+        {
+            ApplyStatsDelta(target, scaledAttack, scaledHealth);
+            new ModifyStatsCommand(target.ID, scaledAttack, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
+
+            if (IsTempEffect)
+            {
+                ILivable t = target;
+                TempEffectTracker.Register(t.ID, () =>
+                {
+                    ApplyStatsDelta(t, -scaledAttack, -scaledHealth);
+                    new ModifyStatsCommand(t.ID, -scaledAttack, t.Attack, -scaledHealth, t.Health, RevertVisual).AddToQueue();
+                });
+            }
+        }
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? _ = null)

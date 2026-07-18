@@ -20,6 +20,8 @@ MonoBehaviour:
   Description: <b>Battle End:</b> Heals a unit for 2.
   CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 1
@@ -51,9 +53,14 @@ MonoBehaviour:
       - affectedElementType: 0
         includesTarget: 1
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 1
           statusFilter: 4
           zoneFilter: 1
           cardFilter: {fileID: 0}
       repartition: 3
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

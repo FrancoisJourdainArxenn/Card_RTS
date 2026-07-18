@@ -24,24 +24,36 @@ public class GainResourcesSO : EffectSO
         }
 
         int sourceID = context.Source?.ID ?? -1;
-        Log($"{EffectName}: {context.Caster.name} gains {resourceAmount} {(IsRecurring ? "income" : "resources")} (sourceID={sourceID})");
+
+        int count = effectInfo.useScalingCount
+            ? context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries)
+            : 1;
+        int totalAmount = resourceAmount * count;
+
+        Log($"{EffectName}: {context.Caster.name} gains {totalAmount} {(IsRecurring ? "income" : "resources")} (sourceID={sourceID})");
+
+        if (totalAmount == 0)
+        {
+            Log($"{EffectName}: scaled amount is 0, cancelled.");
+            return;
+        }
 
         if (NetworkSessionData.IsNetworkSession)
         {
             if (!NetworkManager.Singleton.IsServer) return;
-            GameNetworkManager.Instance.BroadCastGainRessources(context.Caster.playerIndex, resourceAmount, IsRecurring, sourceID);
+            GameNetworkManager.Instance.BroadCastGainRessources(context.Caster.playerIndex, totalAmount, IsRecurring, sourceID);
         }
         else
         {
             if (IsRecurring)
             {
                 if (sourceID != -1)
-                    context.Caster.AddBonusIncomeFromSource(sourceID, resourceAmount);
+                    context.Caster.AddBonusIncomeFromSource(sourceID, totalAmount);
                 else
-                    context.Caster.AddBonusIncome(resourceAmount);
+                    context.Caster.AddBonusIncome(totalAmount);
             }
             else
-                context.Caster.GetBonusRessources(resourceAmount);
+                context.Caster.GetBonusRessources(totalAmount);
         }
     }
 

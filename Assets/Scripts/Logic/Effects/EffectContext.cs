@@ -66,6 +66,9 @@ public partial class EffectContext
         return targets;
     }
 
+    public int GetTargetCount(EffectObjectType type, List<TargetQuery> queries) =>
+        ResolveByType(type, queries).Count;
+
     public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
     {
         List<IIdentifiable> elements = new();
@@ -79,8 +82,21 @@ public partial class EffectContext
                 var src = GetSourceByType(affectedElement.affectedElementType);
                 if (src != null) elements.Add(src);
             }
+            if (affectedElement.includesEventSubject)
+            {
+                var subject = GetEventSubjectByType(affectedElement.affectedElementType);
+                if (subject != null) elements.Add(subject);
+            }
             elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
         }
         return elements;
     }
+
+    // Returns the entity that raised the current event (e.g. the token that was just created).
+    private IIdentifiable GetEventSubjectByType(EffectObjectType type) => type switch
+    {
+        EffectObjectType.Creature => EventSubjectCreature,
+        EffectObjectType.Building => EventSubjectBuilding,
+        _                         => null
+    };
 }

@@ -134,6 +134,16 @@ public static class EffectRegistry
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueBuildingID); // ← ajouté pour retirer les bonus de revenu liés au bâtiment mort
     }
 
+    // ── Triggers de token ─────────────────────────────────────────────────────
+    public static void NotifyTokenCreated(Player creatingPlayer, CreatureLogic tokenOnBoard)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = tokenOnBoard };
+
+        FireListeners(TriggerType.OnTokenCreated, eventCtx,
+            re => re.ContextFactory().Caster == creatingPlayer);
+    }
+
+
     // ── Collecte différée (→ PhaseEffectPipeline) ─────────────────────────────
 
     public static List<PendingEffectSelection> CollectPhaseEffects(Player owner, TriggerType trigger)

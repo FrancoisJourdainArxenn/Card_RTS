@@ -20,6 +20,8 @@ MonoBehaviour:
   Description: Piercing attack
   CardImage: {fileID: 21300000, guid: 8a7f70d83619c7943a8a988accfc10a5, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 3
   MaxHealth: 50
   AttacksForOneTurn: 1

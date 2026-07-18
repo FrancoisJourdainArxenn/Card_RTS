@@ -332,6 +332,8 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
         EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.NotifyTokenCreated(this, newCreature);
+
     }
 
 

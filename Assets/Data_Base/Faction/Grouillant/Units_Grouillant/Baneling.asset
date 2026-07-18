@@ -17,16 +17,48 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Melee</b>
+  Description: '<b>Melee.
+
+    On Death :</b> Create a Zerglings in my zone.'
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
-  MainCost: 1
+  MainCost: 2
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 3
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
   Keywords:
-  - {fileID: 11400000, guid: 6aeb78b8cd35d9842aea0894ce569823, type: 2}
-  Effects: []
+  - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
+  Effects:
+  - EffectName: More Swarm !
+    Effect: {fileID: 11400000, guid: 0339fd8f4a0d630408f7f5f7f8bad261, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 3
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 0
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 3
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 0
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+      repartition: 0
