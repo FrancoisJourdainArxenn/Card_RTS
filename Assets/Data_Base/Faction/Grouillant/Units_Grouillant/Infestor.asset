@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: <b>On Play:</b> I gain +1/+1 for each Unit in my zone.
   CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
-  MainCost: 0
+  MainCost: 5
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
@@ -36,7 +36,7 @@ MonoBehaviour:
   - EffectName: Upgrade
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 0
-    Condition: {fileID: 11400000, guid: 78777b9d4ac95324b988967fb8045c03, type: 2}
+    Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
       affectedElements:
@@ -49,4 +49,8 @@ MonoBehaviour:
       useScalingCount: 1
       scalingQuery:
         targetType: 0
-        queries: []
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}

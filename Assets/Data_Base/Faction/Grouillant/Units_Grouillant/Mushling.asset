@@ -34,7 +34,7 @@ MonoBehaviour:
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
   Effects:
-  - EffectName: 
+  - EffectName: Sporification
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 11
     Condition: {fileID: 11400000, guid: 78777b9d4ac95324b988967fb8045c03, type: 2}
