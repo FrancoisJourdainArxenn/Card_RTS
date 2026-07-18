@@ -109,13 +109,18 @@ public class Player : MonoBehaviour, ILivable
         { return mainRessourceAvailable;}
         set
         {
+            int previous = mainRessourceAvailable;
             if (value < 0)
                 mainRessourceAvailable = 0;
             else if (value > mainRessourceTotal)
                 mainRessourceAvailable = mainRessourceTotal;
             else
                 mainRessourceAvailable = value;
-            
+
+            int spent = previous - mainRessourceAvailable;
+            if (spent > 0)
+                matchStats.Add(MatchStatType.RessourcesSpent, spent);
+
             //PArea.ManaBar.AvailableCrystals = manaLeft;
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
@@ -365,7 +370,6 @@ public class Player : MonoBehaviour, ILivable
     public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
         matchStats.Add(MatchStatType.CardsPlayed);
 
         EffectRegistry.ETB(playedCard.ca, new EffectContext
@@ -391,7 +395,6 @@ public class Player : MonoBehaviour, ILivable
     public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
     {
         MainRessourceAvailable -= playedCard.MainCost;
-        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
         matchStats.Add(MatchStatType.CardsPlayed);
         int baseID       = selectedPArea.baseID;
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
@@ -456,7 +459,6 @@ public class Player : MonoBehaviour, ILivable
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
         MainRessourceAvailable -= playedCard.MainCost;
-        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
         matchStats.Add(MatchStatType.CardsPlayed);
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
@@ -534,7 +536,6 @@ public class Player : MonoBehaviour, ILivable
         }
 
         MainRessourceAvailable -= playedCard.MainCost;
-        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
         matchStats.Add(MatchStatType.CardsPlayed);
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients

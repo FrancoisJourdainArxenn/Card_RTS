@@ -136,9 +136,18 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void NotifyLockState(bool isLocked)
     {
         if (_wasLocked && !isLocked)
-            ValuePopAnimation.Pop(ArtImage.transform);
+            PopCard();
 
         _wasLocked = isLocked;
+    }
+
+    private void PopCard()
+    {
+        float strength = GlobalSettings.Instance != null ? GlobalSettings.Instance.popStrength : 1f;
+        float duration = GlobalSettings.Instance != null ? GlobalSettings.Instance.popDuration : 1f;
+        transform.DOKill();
+        transform.localScale = originalScale;
+        transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

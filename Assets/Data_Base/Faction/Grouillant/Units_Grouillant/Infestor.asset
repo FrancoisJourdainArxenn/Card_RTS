@@ -16,7 +16,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
-  tier: 1
+  tier: 3
   Description: <b>On Play:</b> I gain +1/+1 for each Unit in my zone.
   CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
   MainCost: 5
