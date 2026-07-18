@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
   m_Name: Grouillant 1
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Grouillant Test
+  deckName: Grouillant 1
   cards:
-  - {fileID: 11400000, guid: 7d8aa53131a4fe24d97c8dda6ad114f8, type: 2}
-  - {fileID: 11400000, guid: 47d9edc581f78c148b7417ac42d9536f, type: 2}
+  - {fileID: 11400000, guid: 280fbb14ba7df9146b983efd6d4b06ae, type: 2}
+  - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
   buildings:
   - {fileID: 11400000, guid: 9cefef2a04acfbf45bc521a41f3256be, type: 2}
   - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

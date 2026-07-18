@@ -44,7 +44,7 @@ public class Player : MonoBehaviour, ILivable
     public Deck deck;
     public Hand hand;
     public PlayedCards playedCards;
-
+    [HideInInspector] public BaseLogic homeBaseLogic;
 
 
     // a static array that will store both players, should always have 2 players
@@ -119,6 +119,8 @@ public class Player : MonoBehaviour, ILivable
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
             TurnManager.RefreshAllPlayableHighlights();
+            baseVisual?.RefreshUpgradeDisplay();
+
         }
     }
 
@@ -145,19 +147,6 @@ public class Player : MonoBehaviour, ILivable
         }
     }
     
-    void Start()
-    {
-        baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
-        foreach (PlayerArea area in PAreas)
-        {
-            area.tableVisual.ownerColor = playerColor;
-            area.tableVisual.SetOwnerColor(playerColor);
-        }
-
-        InitBaseIDs();
-        new BaseLogic(this, MainPArea?.parentZone?.Logic);
-    }
-
     // CODE FOR EVENTS TO LET CREATURES KNOW WHEN TO CAUSE EFFECTS
     public delegate void VoidWithNoArguments();
     //public event VoidWithNoArguments CreaturePlayedEvent;
@@ -179,6 +168,20 @@ public class Player : MonoBehaviour, ILivable
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
         controlledBaseAssets.Add(baseAsset);
+        homeBaseLogic = new BaseLogic(this, MainPArea?.parentZone?.Logic);
+
+    }
+
+    void Start()
+    {
+        baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;
+        foreach (PlayerArea area in PAreas)
+        {
+            area.tableVisual.ownerColor = playerColor;
+            area.tableVisual.SetOwnerColor(playerColor);
+        }
+
+        InitBaseIDs();
     }
 
     public void InitBaseIDs()
@@ -203,6 +206,8 @@ public class Player : MonoBehaviour, ILivable
         {
             mainRessourceAvailable += playerMainIncome;
         }
+        homeBaseLogic?.TickUpgradeCostDown();
+
 
         // Refresh UI + playable state.
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
@@ -807,6 +812,22 @@ public class Player : MonoBehaviour, ILivable
             GameNetworkManager.Instance.BuildNeutralBaseServerRpc(playerIndex, neutralBaseId);
         else
             ExecuteBuildNeutralBase(NeutralBaseVisual.Registry[neutralBaseId], IDFactory.GetUniqueID());
+    }
+
+    public void RequestUpgradeBase()
+    {
+        if (homeBaseLogic == null || homeBaseLogic.IsMaxTier) return;
+
+        if (MainRessourceAvailable < homeBaseLogic.CurrentUpgradeCost)
+        {
+            new ShowMessageCommand("You don't have enough Ressources to upgrade your Base.", 2f).AddToQueue();
+            return;
+        }
+
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.UpgradeBaseServerRpc(playerIndex);
+        else
+            homeBaseLogic.TryUpgrade();
     }
 
     public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int baseUniqueID)

@@ -1262,7 +1262,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragCreatureAttack
   targettingArrow: {fileID: 9082617779479691250}
-  arrowStartPoint: {fileID: 1583018141698161382}
   _elevationHeight: 2
 --- !u!1 &6822298171705914818
 GameObject:

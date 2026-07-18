@@ -57,6 +57,7 @@ public class Draggable : MonoBehaviour {
     {
         if (dragging)
         { 
+
             Vector3 mousePos = MouseInWorldCoords();
             //Debug.Log(mousePos);
             transform.position = new Vector3(mousePos.x - pointerDisplacement.x,transform.position.y, mousePos.z - pointerDisplacement.z);   

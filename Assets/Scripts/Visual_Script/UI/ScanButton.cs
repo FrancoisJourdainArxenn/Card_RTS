@@ -10,6 +10,7 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private HoverArrow hoverArrow;
     [SerializeField] private GameObject presenceNotificationVFX;
+    [SerializeField] private UITooltipTrigger scanTooltipTrigger;
 
     public int scanCost = 2;
     public TMP_Text scanCostText;
@@ -27,6 +28,7 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
     private static ScanButton _instance;
     private static ScanButton _activeSession;
     public static bool IsActive => _activeSession != null;
+    private int _sessionStartFrame = -1;
 
 
     void Awake()
@@ -37,6 +39,29 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
         _sprite2NormalColor = radarLine.color;
 
         RefreshCostText();
+
+        if (scanTooltipTrigger != null)
+        {
+            scanTooltipTrigger.SetDynamicText(() =>
+                $"Spend {currentScanCost} to reveal a zone.\n" +
+                $"Each turn, the amount to spend reduces by 1. \n" +
+                $"The amount Resets after use.");
+        }
+    }
+
+    void Update()
+    {
+        if (_activeSession != this) return;
+        if (Draggable.DraggingThis != null)
+            CancelSelection();
+    }
+
+    void LateUpdate()
+    {
+        if (_activeSession != this) return;
+        if (Time.frameCount == _sessionStartFrame) return;
+        if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1))
+            CancelSelection();
     }
 
     void OnEnable()
@@ -69,10 +94,13 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
         StartSelection();
     }
 
-    public static bool HandleZoneClickIfActive(ZoneManager zone)
+    public static bool HandleZoneClickIfActive(ZoneManager zone, PointerEventData eventData)
     {
         if (_activeSession == null) return false;
-        _activeSession.OnZoneSelected(zone);
+        if (eventData.button == PointerEventData.InputButton.Right)
+            _activeSession.CancelSelection();
+        else
+            _activeSession.OnZoneSelected(zone);
         return true;
     }
 
@@ -96,6 +124,7 @@ public class ScanButton : MonoBehaviour, IPointerClickHandler
             return;
         }
         _activeSession = this;
+        _sessionStartFrame = Time.frameCount;
         foreach (ZoneManager zone in ZoneManager.AllZones)
         {
             bool noPresence = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(zone);

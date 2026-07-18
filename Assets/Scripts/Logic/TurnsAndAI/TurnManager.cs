@@ -365,6 +365,8 @@ public class TurnManager : MonoBehaviour
 
     public void EnterPhase(TurnPhases phase)
     {
+        bool isServer = NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer;
+        Debug.Log($"[EnterPhase] {currentPhase} → {phase} | round={currentRound} | role={(isServer ? "SERVER" : "CLIENT")} | frame={Time.frameCount}");
         // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
         OnPhaseEntered?.Invoke();
@@ -530,7 +532,16 @@ public class TurnManager : MonoBehaviour
 
     IEnumerator AutoAdvanceFromRegroup()
     {
-        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending());
+        float t0 = Time.realtimeSinceStartup;
+        Debug.Log($"[Regroup] Entrée WaitWhile — round={currentRound} IsServer={(NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer)}");
+        yield return new WaitWhile(() =>
+        {
+            bool stuck = !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending();
+            if (stuck && Time.realtimeSinceStartup - t0 > 5f && Time.frameCount % 60 == 0)
+                Debug.LogWarning($"[Regroup] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — IsComplete={PhaseEffectPipeline.IsComplete} playingQueue={Command.playingQueue} CardDrawPending={Command.CardDrawPending()}");
+            return stuck;
+        });
+        Debug.Log($"[Regroup] WaitWhile résolu après {Time.realtimeSinceStartup - t0:F1}s → EnterPhase(Command)");
         // yield return new WaitForSeconds(1.5f);
         if (currentPhase == TurnPhases.Regroup)
             EnterPhase(TurnPhases.Command);

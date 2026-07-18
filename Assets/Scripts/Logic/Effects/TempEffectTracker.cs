@@ -19,14 +19,20 @@ public static class TempEffectTracker
         _revertActions[entityId].Add(revert);
     }
 
-    /// <summary>Fires and removes all revert actions for every entity. Call at start of Regroup.</summary>
+    /// <summary>Fires and removes all revert actions for every entity. Call at start of Regroop.</summary>
+    // Fix 2026-07-16: snapshot the values then clear _revertActions BEFORE invoking the revert
+    // actions. A revert action can have side effects (e.g. a creature dying) that call
+    // Register/Unregister on _revertActions; doing that while still enumerating .Values threw
+    // "InvalidOperationException: Collection was modified", which aborted EnterPhase(Regroup)
+    // partway through and left clients permanently stuck in the Regroup phase.
     public static void RevertAll()
     {
-        foreach (List<Action> actions in _revertActions.Values)
+        List<List<Action>> snapshot = new List<List<Action>>(_revertActions.Values);
+        _revertActions.Clear();
+
+        foreach (List<Action> actions in snapshot)
             foreach (Action action in actions)
                 action.Invoke();
-
-        _revertActions.Clear();
     }
 
     /// <summary>Removes all pending revert actions for an entity (e.g. on death).</summary>

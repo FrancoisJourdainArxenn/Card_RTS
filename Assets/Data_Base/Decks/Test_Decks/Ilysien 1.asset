@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Ilysien 1
   cards:
-  - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
   - {fileID: 11400000, guid: ceee12917c9586741b42c83b03b187aa, type: 2}
   - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
   - {fileID: 11400000, guid: 939b0e5beef688145b726fa9ffb1c6ef, type: 2}

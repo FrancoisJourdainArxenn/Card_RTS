@@ -246,6 +246,7 @@ public class GameNetworkManager : NetworkBehaviour
         int effectSeed,
         ClientRpcParams clientRpcParams = default)
     {
+        Debug.Log($"[ClientRpc] ApplyCanonicalEffectResolution reçu — {sourceEntityIDs.Length} effet(s), seed={effectSeed}, phase={TurnManager.Instance.CurrentPhase}");
         PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
         );
@@ -1021,6 +1022,24 @@ public class GameNetworkManager : NetworkBehaviour
         }
         Player player = Player.Players[playerIndex];
         player.ExecuteBuildNeutralBase(neutralBaseVisual, baseUniqueID);
+    }
+
+    ///Base Upgrade
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void UpgradeBaseServerRpc(int playerIndex)
+    {
+        UpgradeBaseClientRpc(playerIndex);
+    }
+
+    [ClientRpc]
+    void UpgradeBaseClientRpc(int playerIndex)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] UpgradeBaseClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player.Players[playerIndex].homeBaseLogic?.TryUpgrade();
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

@@ -277,7 +277,7 @@ public class DragCreatureActions : DraggingActions {
         return ids;
     }
 
-    private bool Move(PlayerArea targetPlayerArea)
+    private bool Move(PlayerArea targetPlayerArea, bool silent = false)
     {
         if (targetPlayerArea == null)
         {
@@ -300,7 +300,8 @@ public class DragCreatureActions : DraggingActions {
             ZonePath path = currentZone.GetPathTo(targetZone);
             if (path == null || !path.Logic.CanTraverse(playerOwner, currentZone.Logic))
             {
-                new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
+                if (!silent)
+                    new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
                 return false;
             }
         }
@@ -396,4 +397,44 @@ public class DragCreatureActions : DraggingActions {
     {
         return true;
     }
+
+    public void GetReachableAreasInto(HashSet<PlayerArea> result)
+    {
+        if (TurnManager.Instance == null || TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+            return;
+
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null) return;
+
+        PlayerArea origin = playerOwner.GetPlayerAreaByID(creatureLogic.BaseID);
+        if (origin == null || origin.parentZone == null) return;
+
+        ZoneManager currentZone = origin.parentZone;
+        foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
+        {
+            if (pa == origin) continue;
+            if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
+            ZonePath path = currentZone.GetPathTo(pa.parentZone);
+            if (pa.parentZone == currentZone || (path != null && path.Logic.CanTraverse(playerOwner, currentZone.Logic)))
+                result.Add(pa);
+        }
+    }
+
+    public bool TryGroupMoveTo(PlayerArea targetPlayerArea)
+    {
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null) return false;
+
+        originArea = playerOwner.GetPlayerAreaByID(creatureLogic.BaseID);
+        if (originArea == null) return false;
+
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+            TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
+        manager.ClearPendingMoveArrow();
+
+        return Move(targetPlayerArea, silent: true);
+    }
+
 }
