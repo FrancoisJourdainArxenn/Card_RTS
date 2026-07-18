@@ -381,10 +381,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3358241271824798668}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.25310728, y: 0.8231788}
+  m_AnchorMin: {x: 0, y: 0.83976924}
   m_AnchorMax: {x: 0.80989295, y: 0.8986234}
-  m_AnchoredPosition: {x: -35, y: -14.654053}
-  m_SizeDelta: {x: 13.568, y: 18.7579}
+  m_AnchoredPosition: {x: 39.66371, y: 0.39860535}
+  m_SizeDelta: {x: -79.3274, y: -0.7982998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2354580390998505375
 CanvasRenderer:
@@ -448,7 +448,7 @@ MonoBehaviour:
   m_fontSizeMin: 12
   m_fontSizeMax: 24
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -480,7 +480,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: -0.37024307, z: -2.2583776, w: 34.78062}
+  m_margin: {x: 0, y: 0.23428145, z: -2.2583776, w: 1.3055506}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -792,10 +792,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3358241271824798668}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.22200002, y: 0.79300004}
+  m_AnchorMin: {x: 0.01777778, y: 0.79300004}
   m_AnchorMax: {x: 0.73322225, y: 0.82900006}
-  m_AnchoredPosition: {x: -28.973007, y: -3.6022034}
-  m_SizeDelta: {x: -2.3740005, y: 1.6290998}
+  m_AnchoredPosition: {x: 62.410995, y: 3.300003}
+  m_SizeDelta: {x: -94.374, y: 1.6291046}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5708955296389764004
 CanvasRenderer:
@@ -1452,8 +1452,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -6.8728, y: -3.8747864}
-  m_SizeDelta: {x: -13.746, y: -43.4904}
+  m_AnchoredPosition: {x: 0.55529785, y: -3.5162964}
+  m_SizeDelta: {x: -39.3616, y: -70.7768}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1890951640810958097
 CanvasRenderer:
@@ -1483,8 +1483,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c054323bfdc4bec49b1671b3385b7152, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 5a8a00a23484e2d4298c58e2775d29d0, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1545,6 +1545,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
+  owner: {fileID: 0}
   NameText: {fileID: 6801832437530937297}
   subType: {fileID: 8886240278299217661}
   MainCostText: {fileID: 8473048586835849894}
