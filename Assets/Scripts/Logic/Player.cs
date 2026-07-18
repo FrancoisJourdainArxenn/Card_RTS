@@ -585,6 +585,7 @@ public class Player : MonoBehaviour, ILivable
                 continue;
             }
             bool affordable = cl.MainCost <= mainRessourceAvailable;
+            cardManager.NotifyLockState(cl.IsLocked);
             cardManager.CanBePlayedNow = canPlayCards && affordable && !cl.IsLocked && !removeAllHighlights;
         }
 

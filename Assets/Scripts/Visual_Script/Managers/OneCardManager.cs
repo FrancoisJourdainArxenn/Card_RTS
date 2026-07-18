@@ -30,6 +30,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private Color _originalAttackColor;
     private Color _originalHealthColor;
     private HeroUnlockConditionSO _unlockCondition;
+    private bool _wasLocked;
 
     void Awake()
     {
@@ -130,6 +131,14 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         if (_unlockCondition != null && owner != null && !_unlockCondition.IsUnlocked(owner))
             DescriptionText.text = _unlockCondition.GetDescription(owner);
+    }
+
+    public void NotifyLockState(bool isLocked)
+    {
+        if (_wasLocked && !isLocked)
+            ValuePopAnimation.Pop(ArtImage.transform);
+
+        _wasLocked = isLocked;
     }
 
     public void OnPointerEnter(PointerEventData eventData)

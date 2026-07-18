@@ -500,7 +500,15 @@ public class GameNetworkManager : NetworkBehaviour
         if (readyCount >= 2)
         {
             int deckLow = _deckChoices.TryGetValue(0, out int dLow) ? dLow : -1;
-            int deckTop = _deckChoices.TryGetValue(1, out int dTop) ? dTop : -1;
+            int deckTop = -1;
+            foreach (KeyValuePair<ulong, int> kvp in _deckChoices)
+            {
+                if (kvp.Key != 0)
+                {
+                    deckTop = kvp.Value;
+                    break;
+                }
+            }
             deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
             int[] heroCardIDs = new int[Player.Players.Length];
