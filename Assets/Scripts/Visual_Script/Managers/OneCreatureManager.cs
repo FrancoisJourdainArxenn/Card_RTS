@@ -14,6 +14,7 @@ public class OneCreatureManager : OneLivableManager
     private Material pendingMoveArrowMat;
     [HideInInspector] public bool isGhost = false;
     private bool isArrowVisible = false;
+    public bool HasPendingMove => isArrowVisible;
 
 
     void Awake()
@@ -129,7 +130,7 @@ public class OneCreatureManager : OneLivableManager
     {
         glow.enabled = true;
         glow.color = Color.yellow;
-        Debug.Log($"[Select] Glow enabled for {gameObject.name}");
+        // Debug.Log($"[Select] Glow enabled for {gameObject.name}");
     }
 
     public void Deselect()

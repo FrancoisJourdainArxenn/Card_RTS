@@ -29,6 +29,8 @@ public class GlobalSettings : MonoBehaviour
     
 
     [Header("Numbers and Values")]
+    public int initdraw = 4;
+    public int MaxCreaturePerRow = 5;
     public float CardPreviewTime = 1f;
     public float CardTransitionTime = 1f;
     public float CardPreviewTimeFast = 0.2f;

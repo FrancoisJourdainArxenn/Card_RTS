@@ -51,6 +51,9 @@ public class CardAsset : ScriptableObject
 	public Sprite CardImage;
     public int MainCost;
 
+    [Header("Hero")]
+    public bool IsHero = false;
+    public HeroUnlockConditionSO UnlockCondition;
 
     [Header("Attack and Health info")]
     public int Attack;
@@ -59,10 +62,7 @@ public class CardAsset : ScriptableObject
     public bool melee = false;
     public float AttackSpeedMultiplier = 1f;
     public List<AttackModifierSO> AttackModifiers = new List<AttackModifierSO>();
-
-    
-
-    
+   
     [Header("Movement info")]
     public int MoveSpeed = 1;
     public bool Celerity = false;

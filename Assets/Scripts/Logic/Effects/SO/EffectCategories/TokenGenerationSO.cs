@@ -50,10 +50,7 @@ public class TokenGenerationSO : EffectSO
             int baseTablePos = tokenIsMelee
                 ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
                 : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-            CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
-                ? targetArea.tableVisual.meleeSlots
-                : targetArea.tableVisual.rangedSlots;
-            int maxSlots = rowSlots.MaxCreatures;
+
 
             for (int i = 0; i < TokenCount; i++)
             {
@@ -63,9 +60,9 @@ public class TokenGenerationSO : EffectSO
                         GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
                         break;
                     case TokenPlacement.ToZone:
-                        if (baseTablePos + i >= maxSlots)
+                        if (baseTablePos + i >= GlobalSettings.Instance.MaxCreaturePerRow)
                         {
-                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({baseTablePos + i}/{maxSlots}), token {i + 1} annulé.");
+                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({baseTablePos + i}/{GlobalSettings.Instance.MaxCreaturePerRow}), token {i + 1} annulé.");
                             new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
                             continue;
                         }
@@ -122,11 +119,10 @@ public class TokenGenerationSO : EffectSO
         CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
             ? targetArea.tableVisual.meleeSlots
             : targetArea.tableVisual.rangedSlots;
-        int maxSlots = rowSlots.MaxCreatures;
 
-        if (currentCount >= maxSlots)
+        if (!targetArea.tableVisual.RowHasSpace(tokenIsMelee))
         {
-            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{maxSlots}), token annulé.");
+            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{GlobalSettings.Instance.MaxCreaturePerRow}), token annulé.");
             new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
             return;
         }

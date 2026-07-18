@@ -14,6 +14,8 @@ public class CardLogic: IIdentifiable
     public CardAsset ca;
     // a script of type spell effect that will be attached to this card when it`s created
     public string DisplayName => ca.name;
+    public bool IsLocked => ca.IsHero && ca.UnlockCondition != null && !ca.UnlockCondition.IsUnlocked(owner);
+
 
     // STATIC (for managing IDs)
     public static Dictionary<int, CardLogic> CardsCreatedThisGame = new Dictionary<int, CardLogic>();
@@ -39,7 +41,7 @@ public class CardLogic: IIdentifiable
             /*if (ca.MaxHealth > 0)
                 fieldNotFull = (owner.table.CreaturesOnTable.Count < 7);*/
             //Debug.Log("Card: " + ca.name + " has params: ownersTurn=" + ownersTurn + "fieldNotFull=" + fieldNotFull + " hasMana=" + (CurrentManaCost <= owner.ManaLeft));
-            return ownersTurn && fieldNotFull && (MainCost <= owner.MainRessourceAvailable);
+            return ownersTurn && fieldNotFull && !IsLocked && (MainCost <= owner.MainRessourceAvailable);
         }
     }
 

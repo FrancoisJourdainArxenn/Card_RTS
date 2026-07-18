@@ -34,8 +34,14 @@ public class TableVisual : MonoBehaviour
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
         MeleeCreaturesOnTable.Concat(RangedCreaturesOnTable);
-    public int TotalCreatureCount =>
-        MeleeCreaturesOnTable.Count + RangedCreaturesOnTable.Count;
+    public bool RowHasSpace(bool isMelee)
+    {
+        List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+        int occupied = row.Count(go => go != null
+            && !go.GetComponent<OneCreatureManager>().HasPendingMove);
+        return occupied < GlobalSettings.Instance.MaxCreaturePerRow;
+    }
+
 
     public static bool CursorOverSomeTable
     {

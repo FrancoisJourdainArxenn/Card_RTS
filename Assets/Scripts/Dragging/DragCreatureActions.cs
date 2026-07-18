@@ -293,7 +293,7 @@ public class DragCreatureActions : DraggingActions {
 
         ZoneManager currentZone = originArea.parentZone;
         ZoneManager targetZone = targetPlayerArea.parentZone;
-        Debug.Log($"[Move] current={currentZone?.name ?? "NULL"}, target={targetZone?.name ?? "NULL"}, path={currentZone?.GetPathTo(targetZone)?.Logic?.DisplayName ?? "NULL"}");
+        // Debug.Log($"[Move] current={currentZone?.name ?? "NULL"}, target={targetZone?.name ?? "NULL"}, path={currentZone?.GetPathTo(targetZone)?.Logic?.DisplayName ?? "NULL"}");
 
         if (currentZone != targetZone)
         {

@@ -254,6 +254,7 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = owner.otherPlayer.TakeDamage(Attack);
+        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         new CreatureAttackCommand(owner.otherPlayer.PlayerID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
     }
 
@@ -261,7 +262,9 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = target.TakeDamage(Attack);
+        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         int attackerHealthAfter = TakeDamage(target.Attack);
+        target.owner.matchStats.Add(MatchStatType.DamageDealt, target.Attack);
         new CreatureAttackCommand(target.UniqueCreatureID, UniqueCreatureID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
     }
 
@@ -281,6 +284,7 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = target.TakeDamage(Attack);
+        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         new CreatureAttackCommand(target.ID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
     }
 

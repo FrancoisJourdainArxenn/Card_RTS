@@ -6,6 +6,9 @@ using System.Collections.Generic;
 public class DeckSO : ScriptableObject
 {
     public string deckName;
+    
+    [Header("Hero")]
+    public CardAsset heroCard;
     public List<CardAsset> cards = new List<CardAsset>();
     public List<CardAsset> buildings = new List<CardAsset>();
 }

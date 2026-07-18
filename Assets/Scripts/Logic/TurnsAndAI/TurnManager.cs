@@ -14,7 +14,7 @@ public class TurnManager : MonoBehaviour
     public static event System.Action OnPhaseEntered;
 
 
-    public int initdraw = 4;
+    public int initdraw;
     [SerializeField] private float effectSequenceDelay = 1.5f;
     [SerializeField] private float combatSequenceDelay = .5f;
     public float EffectSequenceDelay => effectSequenceDelay;
@@ -47,10 +47,12 @@ public class TurnManager : MonoBehaviour
 
     void Start()
     {
+        initdraw = GlobalSettings.Instance.initdraw;
+
         //GameStart local
         if (!NetworkSessionData.IsNetworkSession)
         {
-            OnGameStart();            
+            OnGameStart();
         }
     }
 
@@ -67,6 +69,7 @@ public class TurnManager : MonoBehaviour
         {
             p.LoadCharacterInfoFromAsset();
             p.TransmitInfoAboutPlayerToVisual();
+            p.matchStats.Reset(); 
         }
 
         if (NetworkSessionData.IsNetworkSession)
@@ -110,6 +113,11 @@ public class TurnManager : MonoBehaviour
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
 
+        foreach (Player p in Player.Players)
+        {
+            if (p.deck.playerDeck.heroCard != null)
+                p.GetACardNotFromDeck(p.deck.playerDeck.heroCard);
+        }
         
         int drawSeedOffset = 0;
         int deckSeed = seed ?? 0;

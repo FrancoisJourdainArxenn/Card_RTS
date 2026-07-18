@@ -9,7 +9,6 @@ public class DragCreatureOnTable : DraggingActions {
     private IDHolder idScript;
     private VisualStates tempState;
     private OneCardManager manager;
-    public int maxCreatureOnBoard = 7;
     private bool _isReturning = false;
     private bool _isPlayed = false;
 
@@ -98,8 +97,8 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
             return false;
         }
-        bool TableNotFull = (selectedPArea.tableVisual.TotalCreatureCount < maxCreatureOnBoard);
-        if (!TableNotFull)
+        bool RowNotFull = selectedPArea.tableVisual.RowHasSpace(manager.cardAsset.melee);
+        if (!RowNotFull)
         {
             new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();
             return false;

@@ -44,6 +44,7 @@ public class Player : MonoBehaviour, ILivable
     public Deck deck;
     public Hand hand;
     public PlayedCards playedCards;
+    public HeroCountUnlock matchStats = new HeroCountUnlock();
     [HideInInspector] public BaseLogic homeBaseLogic;
 
 
@@ -167,6 +168,7 @@ public class Player : MonoBehaviour, ILivable
             a.transform.GetSiblingIndex().CompareTo(b.transform.GetSiblingIndex()));
         // obtain unique id from IDFactory
         PlayerID = IDFactory.GetUniqueID();
+        matchStats.OwnerLabel = $"Player {PlayerID} ({name})";
         controlledBaseAssets.Add(baseAsset);
         homeBaseLogic = new BaseLogic(this, MainPArea?.parentZone?.Logic);
 
@@ -361,6 +363,8 @@ public class Player : MonoBehaviour, ILivable
     public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
     {
         MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
+        matchStats.Add(MatchStatType.CardsPlayed);
 
         EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
@@ -385,6 +389,8 @@ public class Player : MonoBehaviour, ILivable
     public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
     {
         MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
+        matchStats.Add(MatchStatType.CardsPlayed);
         int baseID       = selectedPArea.baseID;
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
 
@@ -524,6 +530,8 @@ public class Player : MonoBehaviour, ILivable
         }
 
         MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
+        matchStats.Add(MatchStatType.CardsPlayed);
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
@@ -573,7 +581,7 @@ public class Player : MonoBehaviour, ILivable
                 continue;
             }
             bool affordable = cl.MainCost <= mainRessourceAvailable;
-            cardManager.CanBePlayedNow = canPlayCards && affordable && !removeAllHighlights;            
+            cardManager.CanBePlayedNow = canPlayCards && affordable && !cl.IsLocked && !removeAllHighlights;
         }
 
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
