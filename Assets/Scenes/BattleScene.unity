@@ -883,7 +883,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardPreviewUI
   previewScale: 1
   previewAnchor: {fileID: 164374047}
-  cardPreviewPrefab: {fileID: 8725022076114089944, guid: a3b632f9caa85cb4db936e15f40aecf4, type: 3}
+  cardPreviewPrefab: {fileID: 8725022076114089944, guid: bb7363f760a55c241bcb078d0a6c398f, type: 3}
+  heroCardPreviewPrefab: {fileID: 8725022076114089944, guid: a3b632f9caa85cb4db936e15f40aecf4, type: 3}
   effectTriggeredPrefab: {fileID: 8725022076114089944, guid: 509a825e83fee224dbdf833f69056d8d, type: 3}
   _opponentHologramMaterial: {fileID: 2100000, guid: 84dd94a465fbc7344a97cd63c15872d8, type: 2}
   targetingAnchor: {fileID: 475356312}
@@ -1981,6 +1982,7 @@ MonoBehaviour:
   NoTargetSpellCardPrefab: {fileID: 6744150721965934964, guid: b509d50d5a92e9f469238833110d9074, type: 3}
   TargetedSpellCardPrefab: {fileID: 3025979967316183455, guid: 0b427a7a275ec464cbb10da584ffe8e8, type: 3}
   CreatureCardPrefab: {fileID: 6821526227381898363, guid: a18732ceb6304d347b384e170c1e008f, type: 3}
+  HeroCardPrefab: {fileID: 6821526227381898363, guid: d0e4961955cfc784299117c88ac6c6e9, type: 3}
   CreaturePrefab: {fileID: 126706081317096460, guid: 0c83baa8f0f3a2c42b0039d4e559f657, type: 3}
   DamageEffectPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
   ExplosionPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
@@ -3143,8 +3145,7 @@ MonoBehaviour:
   MainRessourceIncomeText: {fileID: 1637805278}
   UpgradeCostText: {fileID: 1522274806}
   CurrentTierImage: {fileID: 1535797326}
-  NextTierImage: {fileID: 0}
-  UpgradeButtonContainer: {fileID: 0}
+  UpgradeCost: {fileID: 1941401936}
   UpgradeButton: {fileID: 1535797325}
   ressourceTooltipTrigger: {fileID: 282579321}
   upgradeTooltipTrigger: {fileID: 1535797328}
@@ -8223,7 +8224,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2010819136
 MonoBehaviour:
   m_ObjectHideFlags: 0

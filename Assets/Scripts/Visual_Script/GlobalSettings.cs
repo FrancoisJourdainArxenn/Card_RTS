@@ -46,6 +46,7 @@ public class GlobalSettings : MonoBehaviour
     public GameObject NoTargetSpellCardPrefab;
     public GameObject TargetedSpellCardPrefab;
     public GameObject CreatureCardPrefab;
+    public GameObject HeroCardPrefab;
     public GameObject CreaturePrefab;
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;

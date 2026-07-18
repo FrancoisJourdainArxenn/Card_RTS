@@ -8,5 +8,15 @@ public class StatThresholdUnlockCondition : HeroUnlockConditionSO
 
     public override bool IsUnlocked(Player owner) => owner.matchStats.Get(Stat) >= Threshold;
 
-    public override string GetDescription() => $"{Stat} : {Threshold}";
+    public override string GetDescription(Player owner)
+    {
+        int remaining = Mathf.Max(0, Threshold - owner.matchStats.Get(Stat));
+        return Stat switch
+        {
+            MatchStatType.RessourcesSpent => $"Spend {remaining} Ressources to Unlock me.",
+            MatchStatType.DamageDealt     => $"Deal {remaining} Damage to Unlock me.",
+            MatchStatType.CardsPlayed     => $"Play {remaining} Cards to Unlock me.",
+            _ => $"{Stat} : {remaining}"
+        };
+    }
 }

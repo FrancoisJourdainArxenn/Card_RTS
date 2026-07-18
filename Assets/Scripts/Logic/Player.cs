@@ -120,7 +120,7 @@ public class Player : MonoBehaviour, ILivable
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();
             //Debug.Log(ManaLeft);
             TurnManager.RefreshAllPlayableHighlights();
-            baseVisual?.RefreshUpgradeDisplay();
+            baseVisual?.RefreshTierIcon();
 
         }
     }

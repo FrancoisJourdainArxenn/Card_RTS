@@ -93,6 +93,8 @@ public class HoverPreview : MonoBehaviour
                     ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
                     ?? GetComponentInParent<OneCardManager>()?.cardAsset;
 
+        Player owner = GetComponentInParent<OneCardManager>()?.owner;
+
         int? attackOverride    = null;
         int? healthOverride    = null;
         int? maxHealthOverride = null;
@@ -105,7 +107,7 @@ public class HoverPreview : MonoBehaviour
             maxHealthOverride = creature.MaxHealth;
         }
 
-        CardPreviewUI.Instance?.Show(asset, previewOffset, attackOverride, healthOverride, maxHealthOverride);
+        CardPreviewUI.Instance?.Show(asset, previewOffset, owner, attackOverride, healthOverride, maxHealthOverride);
     }
 
 

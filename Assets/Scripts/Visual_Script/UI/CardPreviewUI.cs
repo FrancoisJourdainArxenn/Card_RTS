@@ -14,6 +14,7 @@ public class CardPreviewUI : MonoBehaviour
     private GameObject currentPreview;
     private GameObject currentPrefab;
     [SerializeField] private GameObject cardPreviewPrefab;
+    [SerializeField] private GameObject heroCardPreviewPrefab;
     [SerializeField] private GameObject effectTriggeredPrefab;
     private RectTransform _anchorRect;
     private Canvas _canvas;
@@ -312,7 +313,7 @@ public class CardPreviewUI : MonoBehaviour
         previewingEffects = false;
     }
 
-    public void Show(CardAsset asset, Vector2 mouseOffset, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
+    public void Show(CardAsset asset, Vector2 mouseOffset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
     {
         if(previewingEffects)
             return;
@@ -328,14 +329,15 @@ public class CardPreviewUI : MonoBehaviour
         Vector2 previewPosition = localPoint + mouseOffset;
         _anchorRect.anchoredPosition = previewPosition;
 
-        ShowPreview(asset, previewPosition, attackOverride, healthOverride, maxHealthOverride);
+        ShowPreview(asset, previewPosition, owner, attackOverride, healthOverride, maxHealthOverride);
     }
 
-    private void ShowPreview(CardAsset asset, Vector2 previewPosition, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
+    private void ShowPreview(CardAsset asset, Vector2 previewPosition, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
     {
-        if (cardPreviewPrefab == null) return;
+        GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab : cardPreviewPrefab;
+        if (prefabToUse == null) return;
 
-        if (currentPreview != null && currentPrefab != cardPreviewPrefab)
+        if (currentPreview != null && currentPrefab != prefabToUse)
         {
             Destroy(currentPreview);
             currentPreview = null;
@@ -343,14 +345,15 @@ public class CardPreviewUI : MonoBehaviour
 
         if (currentPreview == null)
         {
-            currentPreview = Instantiate(cardPreviewPrefab, previewAnchor);
+            currentPreview = Instantiate(prefabToUse, previewAnchor);
             currentPreview.transform.localPosition = Vector3.zero;
             currentPreview.transform.localRotation = Quaternion.identity;
-            currentPrefab = cardPreviewPrefab;
+            currentPrefab = prefabToUse;
         }
 
         OneCardManager manager = currentPreview.GetComponent<OneCardManager>();
         manager.cardAsset = asset;
+        manager.owner = owner;
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         if (ReminderTextManager.Instance != null)

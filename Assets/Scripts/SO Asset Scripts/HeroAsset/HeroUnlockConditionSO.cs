@@ -3,5 +3,5 @@ using UnityEngine;
 public abstract class HeroUnlockConditionSO : ScriptableObject
 {
     public abstract bool IsUnlocked(Player owner);
-    public abstract string GetDescription();
+    public abstract string GetDescription(Player owner);
 }

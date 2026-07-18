@@ -10,8 +10,7 @@ public class UiPlayerVisual : MonoBehaviour
     public TMP_Text MainRessourceIncomeText;
     public TMP_Text UpgradeCostText;
     public Image CurrentTierImage;
-    public Image NextTierImage;
-    public GameObject UpgradeButtonContainer;
+    public GameObject UpgradeCost;
     public Button UpgradeButton;
     [SerializeField] private UITooltipTrigger ressourceTooltipTrigger;
     [SerializeField] private UITooltipTrigger upgradeTooltipTrigger;
@@ -128,17 +127,14 @@ public class UiPlayerVisual : MonoBehaviour
         }
 
         bool isMaxTier = bl.IsMaxTier;
-        if (UpgradeButtonContainer != null)
-            UpgradeButtonContainer.SetActive(!isMaxTier);
+        if (UpgradeCost != null)
+            UpgradeCost.SetActive(!isMaxTier);
 
-        if (!isMaxTier)
-        {
-            if (NextTierImage != null)
-                NextTierImage.sprite = bl.NextTierIcon;
-
-            if (UpgradeButton != null)
-                UpgradeButton.interactable = player.MainRessourceAvailable >= cost;
-        }
+        // if (!isMaxTier)
+        // {
+        //     if (UpgradeButton != null)
+        //         UpgradeButton.interactable = player.MainRessourceAvailable >= cost;
+        // }
     }
 
     public void OnUpgradeButtonClicked()

@@ -12,12 +12,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     public AreaPosition owner;
     public TMP_Text HealthText, MainRessourceText;
     public Image fogOverlay;
-    public TMP_Text UpgradeCostText;
-    public Button UpgradeButton;
-    public GameObject UpgradeButtonContainer;
     public Image CurrentTierImage;
-    public Image NextTierImage;
-    private int _lastShownUpgradeCost = int.MinValue;
     private CardTier _lastShownTier = 0;
 
     [HideInInspector] public bool hasBeenSeen = false;
@@ -31,7 +26,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         HealthText.text = player.Health.ToString();
         MainRessourceText.text = player.mainRessourceAvailable.ToString();
         baseManager?.RefreshIncomeDisplay(player.playerMainIncome);
-        RefreshUpgradeDisplay();
+        RefreshTierIcon();
 
     }
 
@@ -131,48 +126,18 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     private void HandleUpgradeCostChanged(BaseLogic bl)
     {
         if (player == null || bl != player.homeBaseLogic) return;
-        RefreshUpgradeDisplay();
+        RefreshTierIcon();
     }
 
-    public void RefreshUpgradeDisplay()
+    public void RefreshTierIcon()
     {
-        if (player?.homeBaseLogic == null || UpgradeCostText == null) return;
+        if (player?.homeBaseLogic == null || CurrentTierImage == null) return;
 
         BaseLogic bl = player.homeBaseLogic;
-        int cost = bl.CurrentUpgradeCost;
-        UpgradeCostText.text = cost.ToString();
-
-        if (cost < _lastShownUpgradeCost && _lastShownUpgradeCost != int.MinValue)
-            ValuePopAnimation.Pop(UpgradeCostText.transform);
-        _lastShownUpgradeCost = cost;
-
-        if (CurrentTierImage != null)
-        {
-            CurrentTierImage.sprite = bl.CurrentTierIcon;
-            if (bl.CurrentTier != _lastShownTier && _lastShownTier != 0)
-                ValuePopAnimation.Pop(CurrentTierImage.transform);
-            _lastShownTier = bl.CurrentTier;
-        }
-
-        bool isMaxTier = bl.IsMaxTier;
-        if (UpgradeButtonContainer != null)
-            UpgradeButtonContainer.SetActive(!isMaxTier);
-
-        if (!isMaxTier)
-        {
-            if (NextTierImage != null)
-                NextTierImage.sprite = bl.NextTierIcon;
-
-            if (UpgradeButton != null)
-                UpgradeButton.interactable = player == GlobalSettings.Instance.localPlayer
-                    && player.MainRessourceAvailable >= cost;
-        }
-    }
-
-    public void OnUpgradeButtonClicked()
-    {
-        if (player == null) return;
-        player.RequestUpgradeBase();
+        CurrentTierImage.sprite = bl.CurrentTierIcon;
+        if (bl.CurrentTier != _lastShownTier && _lastShownTier != 0)
+            ValuePopAnimation.Pop(CurrentTierImage.transform);
+        _lastShownTier = bl.CurrentTier;
     }
 
 

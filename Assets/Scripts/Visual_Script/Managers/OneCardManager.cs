@@ -10,6 +10,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 {
 
     public CardAsset cardAsset;
+    public Player owner;
     // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
@@ -28,6 +29,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private Vector3 originalScale;
     private Color _originalAttackColor;
     private Color _originalHealthColor;
+    private HeroUnlockConditionSO _unlockCondition;
 
     void Awake()
     {
@@ -64,6 +66,9 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         DescriptionText.text = cardAsset.Description.ToString();
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
+
+        _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
+        ApplyUnlockDescriptionIfLocked();
 
         if (cardAsset.MaxHealth != 0)
         {
@@ -121,18 +126,22 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     }
 
 
+    public void ApplyUnlockDescriptionIfLocked()
+    {
+        if (_unlockCondition != null && owner != null && !_unlockCondition.IsUnlocked(owner))
+            DescriptionText.text = _unlockCondition.GetDescription(owner);
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
             transform.DOScale(originalScale * 1.1f, 0.15f);
-
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
             transform.DOScale(originalScale, 0.15f);
-
     }
 
 

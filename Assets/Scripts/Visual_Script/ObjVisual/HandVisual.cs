@@ -94,11 +94,16 @@ public class HandVisual : MonoBehaviour
     // CARD DRAW METHODS
 
     // creates a card and returns a new card as a GameObject
-    GameObject CreateACardAtPosition(CardAsset c, Vector3 position, Vector3 eulerAngles)
+    GameObject CreateACardAtPosition(CardAsset c, Vector3 position, Vector3 eulerAngles, Player owner)
     {
         // Instantiate a card depending on its type
         GameObject card;
-        if (c.MaxHealth > 0)
+        if (c.IsHero)
+        {
+            // heroes are otherwise referenced as creatures (MaxHealth > 0), but get their own frame
+            card = GameObject.Instantiate(GlobalSettings.Instance.HeroCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
+        }
+        else if (c.MaxHealth > 0)
         {
             // this card is a creature card
             card = GameObject.Instantiate(GlobalSettings.Instance.CreatureCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
@@ -121,6 +126,7 @@ public class HandVisual : MonoBehaviour
         // apply the look of the card based on the info from CardAsset
         OneCardManager manager = card.GetComponent<OneCardManager>();
         manager.cardAsset = c;
+        manager.owner = owner;
         manager.ReadCardFromAsset();
 
         return card;
@@ -131,9 +137,9 @@ public class HandVisual : MonoBehaviour
     {
         GameObject card;
         if (fromDeck)
-            card = CreateACardAtPosition(c, DeckTransform.position, new Vector3(0f, 0f, 179f));
+            card = CreateACardAtPosition(c, DeckTransform.position, new Vector3(0f, 0f, 179f), p);
         else
-            card = CreateACardAtPosition(c, OtherCardDrawSourceTransform.position, new Vector3(0f, 0f, 179f));
+            card = CreateACardAtPosition(c, OtherCardDrawSourceTransform.position, new Vector3(0f, 0f, 179f), p);
 
         // Set a tag to reflect where this card is
         foreach (Transform t in card.GetComponentsInChildren<Transform>())
