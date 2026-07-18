@@ -17,32 +17,44 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Scout.</b>
+  Description: On death zergling
   CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
   MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 2
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: a5416abf016aec34eacb915942ab6efd, type: 2}
+  Keywords: []
   Effects:
-  - EffectName: Intel
-    Effect: {fileID: 11400000, guid: 4a4eb16e30db07a4f80ebaf3473745de, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
-  - EffectName: No More Intel
-    Effect: {fileID: 11400000, guid: 3a89841769b488e42b5e485220586cb3, type: 2}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 0339fd8f4a0d630408f7f5f7f8bad261, type: 2}
     Trigger: 1
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
+      effectTargets:
+      - targetType: 3
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 0
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 3
+        includesTarget: 0
+        includesSource: 0
+        queries:
+        - team: 0
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
       repartition: 0

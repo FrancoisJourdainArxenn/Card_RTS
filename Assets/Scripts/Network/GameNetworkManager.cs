@@ -502,13 +502,20 @@ public class GameNetworkManager : NetworkBehaviour
             int deckLow = _deckChoices.TryGetValue(0, out int dLow) ? dLow : -1;
             int deckTop = _deckChoices.TryGetValue(1, out int dTop) ? dTop : -1;
             deckSeed.Value = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+
+            int[] heroCardIDs = new int[Player.Players.Length];
+            for (int i = 0; i < heroCardIDs.Length; i++)
+            {
+                heroCardIDs[i] = IDFactory.GetUniqueID();
+            }
+
             int[] cardInHandIDs = new int[TurnManager.Instance.initdraw * Player.Players.Length];
             for (int i = 0; i < cardInHandIDs.Length; i++)
             {
                 cardInHandIDs[i] = IDFactory.GetUniqueID();
             }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs);
         }
     }
 
@@ -516,13 +523,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
     {
         // 1. Assigner le local player
         AssignLocalPlayerControl();
 
         // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop);
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();
@@ -843,6 +850,25 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
         Player player = Player.Players[playerIndex];
         player.DrawACard(false, cardID, finalSeed);
+    }
+
+    public void BroadcastHeroReturnToHand(int playerIndex)
+    {
+        if (!IsServer) return;
+        int cardID = IDFactory.GetUniqueID();
+        Debug.Log($"[BroadcastHeroReturnToHand] joueur={playerIndex} cardID={cardID}");
+        HeroReturnToHandClientRpc(playerIndex, cardID);
+    }
+
+    [ClientRpc]
+    void HeroReturnToHandClientRpc(int playerIndex, int cardID)
+    {
+        Player player = Player.Players[playerIndex];
+        CardAsset heroAsset = player.deck.playerDeck.heroCard;
+        if (heroAsset == null) return;
+
+        heroAsset.UnlockCondition?.ResetProgress(player);
+        player.GetACardNotFromDeck(heroAsset, cardID);
     }
 
     public void BroadCastGainRessources(int playerIndex, int amount, bool isRecurring, int sourceID)

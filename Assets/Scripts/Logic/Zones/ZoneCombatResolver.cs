@@ -354,10 +354,6 @@ public class ZoneCombatResolver : MonoBehaviour
                     else
                         target.Health -= step.damage;
 
-                    HeroCombatStatHooks.RecordDamageDealt(step.attackerID, step.attackerIsBuilding, step.damage);
-                    if (counterDamage > 0 && target.owner != null)
-                        target.owner.matchStats.Add(MatchStatType.DamageDealt, counterDamage);
-
                     if (!step.attackerIsBuilding && attackerCreature != null)
                     {
                         if (attackerHealthAfter <= 0)
@@ -398,10 +394,6 @@ public class ZoneCombatResolver : MonoBehaviour
                     else
                         target.Die();
 
-                    HeroCombatStatHooks.RecordDamageDealt(step.attackerID, step.attackerIsBuilding, step.damage);
-                    if (counterDamage > 0 && target.owner != null)
-                        target.owner.matchStats.Add(MatchStatType.DamageDealt, counterDamage);
-
                     if (!step.attackerIsBuilding)
                     {
                         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature))
@@ -441,7 +433,6 @@ public class ZoneCombatResolver : MonoBehaviour
                     else
                         target.Die();
 
-                    HeroCombatStatHooks.RecordDamageDealt(step.attackerID, step.attackerIsBuilding, step.damage);
                     break;
                 }
                 case TargetKind.Player:
@@ -456,7 +447,6 @@ public class ZoneCombatResolver : MonoBehaviour
                     else
                         new BuildingAttackCommand(target.PlayerID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
                     target.Health = targetHealthAfter;
-                    HeroCombatStatHooks.RecordDamageDealt(step.attackerID, step.attackerIsBuilding, step.damage);
                     break;
                 }
             }

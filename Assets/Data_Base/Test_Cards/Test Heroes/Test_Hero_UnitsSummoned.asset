@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Test_Hero_CardsPlayed
+  m_Name: Test_Hero_UnitsSummoned
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Hero CardPlayed
+  Name: Hero Ressource Spent
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
   tier: 1
-  Description: Circular Attack
-  CardImage: {fileID: 21300000, guid: b747bc2ee2826424799ac0151017b5a2, type: 3}
+  Description: Token will be stronger
+  CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
   MainCost: 0
   IsHero: 1
-  UnlockCondition: {fileID: 11400000, guid: 251b3dacae07ec24c9dc8e588607252a, type: 2}
+  UnlockCondition: {fileID: 11400000, guid: 2c776b9e50920024eb56abdf9df7be92, type: 2}
   Attack: 6
   MaxHealth: 12
   AttacksForOneTurn: 1
@@ -30,7 +30,7 @@ MonoBehaviour:
   AttackModifiers:
   - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
   MoveSpeed: 1
-  Celerity: 0
+  Celerity: 1
   ActivationsForOneTurn: 0
   Keywords: []
   Effects: []

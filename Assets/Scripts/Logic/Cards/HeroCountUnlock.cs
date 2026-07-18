@@ -3,10 +3,9 @@ using System.Collections.Generic;
 
 public enum MatchStatType
 {
-    DamageDealt,
-    // CreaturesKilled, //to do later if needed
     RessourcesSpent,
     CardsPlayed,
+    UnitsSummoned,
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 
@@ -28,5 +27,11 @@ public class HeroCountUnlock
     {
         _values.Clear();
         Debug.Log("[HeroCountUnlock] Reset");
+    }
+
+    public void Reset(MatchStatType stat)
+    {
+        _values[stat] = 0;
+        Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} reset to 0");
     }
 }

@@ -454,6 +454,8 @@ public class Player : MonoBehaviour, ILivable
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
         MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.RessourcesSpent, playedCard.MainCost);
+        matchStats.Add(MatchStatType.CardsPlayed);
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 

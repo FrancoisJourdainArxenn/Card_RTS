@@ -198,6 +198,7 @@ public class CreatureLogic: ILivable
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
+        owner.matchStats.Add(MatchStatType.UnitsSummoned);
         if (ca.Effects != null && ca.Effects.Count > 0)
             EffectRegistry.RegisterCreatureEffects(this, ca);
     }
@@ -225,6 +226,23 @@ public class CreatureLogic: ILivable
         DeathDrainRecorder.RecordDeath(UniqueCreatureID);
         if (wasInList)
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+
+        if (ca.IsHero)
+            ReturnHeroToHand();
+    }
+
+    // A hero that dies comes back to its owner's hand, locked again.
+    // Die() only runs server-side in network sessions (clients replay via SilentDie), so the
+    // network case must be broadcast rather than applied directly to avoid only updating the host.
+    private void ReturnHeroToHand()
+    {
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.BroadcastHeroReturnToHand(owner.playerIndex);
+        else
+        {
+            ca.UnlockCondition?.ResetProgress(owner);
+            owner.GetACardNotFromDeck(ca);
+        }
     }
 
     // Meurt silencieusement sans déclencher d'effets OnDeath.
@@ -254,7 +272,6 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = owner.otherPlayer.TakeDamage(Attack);
-        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         new CreatureAttackCommand(owner.otherPlayer.PlayerID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
     }
 
@@ -262,9 +279,7 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = target.TakeDamage(Attack);
-        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         int attackerHealthAfter = TakeDamage(target.Attack);
-        target.owner.matchStats.Add(MatchStatType.DamageDealt, target.Attack);
         new CreatureAttackCommand(target.UniqueCreatureID, UniqueCreatureID, target.Attack, Attack, attackerHealthAfter, targetHealthAfter).AddToQueue();
     }
 
@@ -284,7 +299,6 @@ public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = target.TakeDamage(Attack);
-        owner.matchStats.Add(MatchStatType.DamageDealt, Attack);
         new CreatureAttackCommand(target.ID, UniqueCreatureID, 0, Attack, Health, targetHealthAfter).AddToQueue();
     }
 

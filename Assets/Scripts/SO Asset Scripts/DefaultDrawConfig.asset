@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeightedDrawConfig
   I_min: 2
   I_max: 6
-  T1_early: 0.6
-  T2_early: 0.3
+  T1_early: 0.8
+  T2_early: 0.2
   T3_early: 0
-  T1_late: 0.2
-  T2_late: 0.5
-  T3_late: 0.3
+  T1_late: 0.6
+  T2_late: 0.4
+  T3_late: 0
   reDrawMultiplicator: 2

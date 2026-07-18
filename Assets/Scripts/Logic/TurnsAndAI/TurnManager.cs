@@ -56,7 +56,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1)
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
     {
         EffectRegistry.Reset();
         if (Player.Players == null || Player.Players.Length < 2)
@@ -113,10 +113,14 @@ public class TurnManager : MonoBehaviour
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();
 
-        foreach (Player p in Player.Players)
+        for (int idx = 0; idx < Player.Players.Length; idx++)
         {
+            Player p = Player.Players[idx];
             if (p.deck.playerDeck.heroCard != null)
-                p.GetACardNotFromDeck(p.deck.playerDeck.heroCard);
+            {
+                int heroID = (NetworkSessionData.IsNetworkSession && heroCardIDs != null) ? heroCardIDs[idx] : -1;
+                p.GetACardNotFromDeck(p.deck.playerDeck.heroCard, heroID);
+            }
         }
         
         int drawSeedOffset = 0;
