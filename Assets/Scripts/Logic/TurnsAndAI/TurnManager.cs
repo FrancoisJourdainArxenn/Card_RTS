@@ -87,7 +87,7 @@ public class TurnManager : MonoBehaviour
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.playerDeck.cards.ShuffleWithSeed(seed.Value + idx);
+                p.deck.ShuffleWithSeed(seed.Value + idx);
                 p.deck.ResetTimesDrawn();
                 // if (p.deck.cards.Count >= 2)
                 //     Debug.Log($"[DeckCheck] Player {idx} top1={p.deck.cards[0].name}, top2={p.deck.cards[1].name}");
@@ -100,7 +100,7 @@ public class TurnManager : MonoBehaviour
             for (int idx = 0; idx < Player.Players.Length; idx++)
             {
                 Player p = Player.Players[idx];
-                p.deck.playerDeck.cards.Shuffle();
+                p.deck.Shuffle();
                 p.deck.ResetTimesDrawn();
             }
             // Debug.Log("TurnManager: Deck shuffled with random seed");

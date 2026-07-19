@@ -792,7 +792,7 @@ public class GameNetworkManager : NetworkBehaviour
         TurnManager.TurnPhases nextPhase)
     {
         string drainRole = IsServer ? "[Server]" : "[Client]";
-        Debug.Log($"[DeathDrain]{drainRole} REPLAY — {types.Length} événement(s) reçu(s)");
+        // Debug.Log($"[DeathDrain]{drainRole} REPLAY — {types.Length} événement(s) reçu(s)");
         if (!IsServer)
         {
             // Rejouer la séquence dans le même ordre que le serveur.
@@ -811,9 +811,9 @@ public class GameNetworkManager : NetworkBehaviour
             CreatureLogic.PendingDeathList.Clear();
         }
 
-        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue démarré (playingQueue={Command.playingQueue})");
+        // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue démarré (playingQueue={Command.playingQueue})");
         yield return new WaitWhile(() => Command.playingQueue);
-        Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
+        // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
 
         TurnManager.Instance.EnterPhase(nextPhase);
 
@@ -834,7 +834,7 @@ public class GameNetworkManager : NetworkBehaviour
         while (CreatureLogic.PendingDeathList.Count > 0)
             CreatureLogic.ProcessPendingDeaths();
         List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
-        Debug.Log($"[DeathDrain][Server] BeginCombat drain — {events.Count} événement(s) enregistré(s)");
+        // Debug.Log($"[DeathDrain][Server] BeginCombat drain — {events.Count} événement(s) enregistré(s)");
         BroadcastDeathDrain(events, TurnManager.TurnPhases.Battle);
         yield break;
     }

@@ -37,7 +37,7 @@ public static class WeightedDraw
         else if (tierRoll < wT1 + wT2)  pickedTier = 2;
         else                             pickedTier = 3;
 
-        //Debug.Log(
+        // Debug.Log(
         //    $"[WeightedDraw|{playerTag}] seed={seed}\n" +
         //    $"  Config early T1/T2/T3={config.T1_early:F2}/{config.T2_early:F2}/{config.T3_early:F2}  " +
         //    $"late T1/T2/T3={config.T1_late:F2}/{config.T2_late:F2}/{config.T3_late:F2}\n" +

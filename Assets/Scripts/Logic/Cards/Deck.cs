@@ -68,6 +68,12 @@ public class Deck : MonoBehaviour {
         _runtimeCards.ShuffleWithSeed(seed);
     }
 
+    public void Shuffle()
+    {
+        _runtimeCards.Shuffle();
+    }
+
+
     public void SelectRandomCardFromSeed(int seed)
     {
         _runtimeCards.SelectRandomCardFromSeed(seed);
