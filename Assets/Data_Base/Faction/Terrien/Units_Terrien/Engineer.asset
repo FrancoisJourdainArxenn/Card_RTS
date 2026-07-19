@@ -17,10 +17,9 @@ MonoBehaviour:
   Type: 0
   subType: 3
   tier: 1
-  Description: "<b>Melee. \nRegroup:</b> Gives +1 Attack to Robots in my zone for
-    the turn."
+  Description: "<b>Melee. \nRegroup:</b> +1 Ressource."
   CardImage: {fileID: 21300000, guid: ffb54a6abf56d9449b2ef6e804b76ce7, type: 3}
-  MainCost: 2
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
@@ -35,30 +34,12 @@ MonoBehaviour:
   Keywords: []
   Effects:
   - EffectName: Juice !
-    Effect: {fileID: 11400000, guid: 3a5e648d35a26d745bff2d8fcb1eff6d, type: 2}
+    Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
     Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

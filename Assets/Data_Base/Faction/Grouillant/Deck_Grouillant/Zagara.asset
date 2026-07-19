@@ -15,7 +15,6 @@ MonoBehaviour:
   deckName: Zagara, Queen of the Swarm
   heroCard: {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
   cards:
-  - {fileID: 11400000, guid: cb5b8e5571cc61b43a62a420a72e1f31, type: 2}
   - {fileID: 11400000, guid: fd6daaf4727090345b9ad461bc3ee6dc, type: 2}
   - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
   - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}
@@ -25,8 +24,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f4101c1205d4fdb46a9816e3c341291a, type: 2}
   - {fileID: 11400000, guid: f01c93db45d9f87428921f110cec8624, type: 2}
   - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
-  buildings:
-  - {fileID: 11400000, guid: f385c15c786411a4b8d6d6fc1c947b82, type: 2}
-  - {fileID: 11400000, guid: 0826368b770da794584a44c190288b63, type: 2}
-  - {fileID: 11400000, guid: 2610bac9af99faf4c924278acc0cc72b, type: 2}
-  - {fileID: 11400000, guid: 991f2f1a01997bb41862f00fdf14562a, type: 2}
+  - {fileID: 11400000, guid: cb5b8e5571cc61b43a62a420a72e1f31, type: 2}
+  buildings: []
