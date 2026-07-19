@@ -40,7 +40,7 @@ MonoBehaviour:
     Effectinfo:
       effectTargets:
       - targetType: 0
-        includesSource: 1
+        includesSource: 0
         onlySource: 0
         queries:
         - team: 1
@@ -51,14 +51,14 @@ MonoBehaviour:
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1
-        includesSource: 1
+        includesSource: 0
         includesEventSubject: 0
         queries:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
-      repartition: 0
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

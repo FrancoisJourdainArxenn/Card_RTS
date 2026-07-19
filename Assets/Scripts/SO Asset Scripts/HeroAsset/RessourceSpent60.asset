@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: RessourceSpent60
   m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockConditionSO
   Stat: 0
-  Threshold: 50
+  Threshold: 60

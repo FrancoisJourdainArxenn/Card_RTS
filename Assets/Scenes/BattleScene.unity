@@ -2874,7 +2874,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: c69948e416fca8642b2544a611dbf802, type: 2}
+  playerDeck: {fileID: 11400000, guid: a409730b51e9eb1409d5393e78f3e713, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &662666355
 GameObject:
