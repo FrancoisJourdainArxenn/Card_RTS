@@ -12,19 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
   m_Name: Raynor
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Raynor
+  deckName: Raynor, Rebel Leader
   heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
   cards:
-  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
-  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
-  - {fileID: 11400000, guid: f94ed962b11bdfe4a9ccad30280ecc42, type: 2}
-  - {fileID: 11400000, guid: 1acc9bba98d24a1428c02931e7f1c1e4, type: 2}
   - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}
+  - {fileID: 11400000, guid: f94ed962b11bdfe4a9ccad30280ecc42, type: 2}
   - {fileID: 11400000, guid: f5c4f64c3708c2a42acd0110f92d6032, type: 2}
-  - {fileID: 11400000, guid: 49a772c3be1d35b4c981530da2e02183, type: 2}
-  - {fileID: 11400000, guid: 3dffc249e96d09545a80812d428b1c8d, type: 2}
-  - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
+  - {fileID: 11400000, guid: e8fae97ad1e5234408acbe8aa8a539fd, type: 2}
   - {fileID: 11400000, guid: 883c9d07425573c42a7d6c0358d967bf, type: 2}
+  - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
+  - {fileID: 11400000, guid: 3dffc249e96d09545a80812d428b1c8d, type: 2}
+  - {fileID: 11400000, guid: 49a772c3be1d35b4c981530da2e02183, type: 2}
+  - {fileID: 11400000, guid: 1acc9bba98d24a1428c02931e7f1c1e4, type: 2}
+  - {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   buildings:
   - {fileID: 11400000, guid: 2610bac9af99faf4c924278acc0cc72b, type: 2}
   - {fileID: 11400000, guid: a1a357126ef84e746ad8595ea5467308, type: 2}

@@ -119,7 +119,10 @@ public class Player : MonoBehaviour, ILivable
 
             int spent = previous - mainRessourceAvailable;
             if (spent > 0)
+            {
                 matchStats.Add(MatchStatType.RessourcesSpent, spent);
+                EffectRegistry.NotifyRessourceSpent(this);
+            }
 
             //PArea.ManaBar.AvailableCrystals = manaLeft;
             new UpdateRessourcesCommand(this, mainRessourceTotal, mainRessourceAvailable).AddToQueue();

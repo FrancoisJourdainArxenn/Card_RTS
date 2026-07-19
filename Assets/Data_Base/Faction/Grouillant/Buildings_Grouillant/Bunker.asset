@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 1
-  subType: 0
+  subType: 4
   tier: 1
   Description: '<b>Melee.
 
@@ -24,10 +24,14 @@ MonoBehaviour:
 '
   CardImage: {fileID: 21300000, guid: 56fc62b1d6abc2245a330ff34060eac4, type: 3}
   MainCost: 2
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 0
   MaxHealth: 2
   AttacksForOneTurn: 0
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 0
   Celerity: 0
   ActivationsForOneTurn: 0
@@ -43,6 +47,10 @@ MonoBehaviour:
       effectTargets: []
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
   - EffectName: Outpost
     Effect: {fileID: 11400000, guid: 3a89841769b488e42b5e485220586cb3, type: 2}
     Trigger: 1
@@ -51,3 +59,7 @@ MonoBehaviour:
       effectTargets: []
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

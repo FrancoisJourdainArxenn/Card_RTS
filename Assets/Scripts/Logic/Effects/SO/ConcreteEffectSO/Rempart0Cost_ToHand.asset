@@ -18,5 +18,5 @@ MonoBehaviour:
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
   TokenCount: 1
-  TokenToSummon: {fileID: 11400000, guid: d351d8a119406314b87379d9cda6ec8b, type: 2}
+  TokenToSummon: {fileID: 11400000, guid: d5db13ad01a7ec44ca776765701d1ae3, type: 2}
   Placement: 1

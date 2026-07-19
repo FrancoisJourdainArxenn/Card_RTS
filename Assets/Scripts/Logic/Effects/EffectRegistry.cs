@@ -157,6 +157,14 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster == playingPlayer && re.ContextFactory().Source != playedEntity);
     }
 
+    public static void NotifyRessourceSpent(Player spendingPlayer)
+    {
+        EffectContext eventCtx = new EffectContext();
+
+        FireListeners(TriggerType.OnRessourceSpent, eventCtx,
+            re => re.ContextFactory().Caster == spendingPlayer);
+    }
+
 
     // ── Collecte différée (→ PhaseEffectPipeline) ─────────────────────────────
 

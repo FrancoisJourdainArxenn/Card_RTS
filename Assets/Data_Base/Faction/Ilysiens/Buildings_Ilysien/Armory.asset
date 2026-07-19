@@ -17,18 +17,21 @@ MonoBehaviour:
   Type: 1
   subType: 4
   tier: 1
-  Description: <b>Regroup:</b>Gives +0/+1 to a Unit.
+  Description: <b>Regroup:</b> Gives +0/+1 to your Soldiers here.
   CardImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
-  MainCost: 2
+  MainCost: 4
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 0
   melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 0
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
+  Keywords: []
   Effects:
   - EffectName: Armor Up !
     Effect: {fileID: 11400000, guid: 8289fd6539174714ab2bf1171d0225b9, type: 2}
@@ -43,13 +46,20 @@ MonoBehaviour:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0
         includesSource: 0
+        includesEventSubject: 0
         queries:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
-      repartition: 3
+          cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

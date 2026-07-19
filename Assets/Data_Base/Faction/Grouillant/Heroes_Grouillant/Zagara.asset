@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Zagara
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Zagara, Queen of Swarm
+  Name: Zagara, Queen of the Swarm
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
@@ -48,3 +48,7 @@ MonoBehaviour:
         includesEventSubject: 1
         queries: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Raffinerie
+  m_Name: Refinery
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
@@ -20,6 +20,8 @@ MonoBehaviour:
   Description: +1 <b>Income</b>.
   CardImage: {fileID: 21300000, guid: ee65f1428a6ee7741bd700f7164f2fe0, type: 3}
   MainCost: 4
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 0
@@ -39,3 +41,7 @@ MonoBehaviour:
       effectTargets: []
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

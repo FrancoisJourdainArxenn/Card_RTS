@@ -9,9 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: Terrien
-  m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Terrien Starter Deck
-  cards: []
-  buildings: []
+  m_Script: {fileID: 11500000, guid: 6db95dc339b3bbd47ae2e5c9fc377065, type: 3}
+  m_Name: Building
+  m_EditorClassIdentifier: Assembly-CSharp::CondSubType
+  RequiredSubType: 4

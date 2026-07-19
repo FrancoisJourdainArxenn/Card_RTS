@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
+  m_Name: J4CK
+  m_EditorClassIdentifier: Assembly-CSharp::DeckSO
+  deckName: J4CK, Master of Machines
+  heroCard: {fileID: 11400000, guid: 14173477f42014544949c602731c7f33, type: 2}
+  cards:
+  - {fileID: 11400000, guid: 5c9e22e9fd9c70743bc74e90faed160a, type: 2}
+  - {fileID: 11400000, guid: c21192de5c42bc7478c16bd1e3be3bd3, type: 2}
+  - {fileID: 11400000, guid: 24b0d276860b55c48954d4f9b91e1e59, type: 2}
+  - {fileID: 11400000, guid: f0b086eda811cf24288b59ee880141a1, type: 2}
+  - {fileID: 11400000, guid: 7c547edd7511e8344904e9c4cefaf5c4, type: 2}
+  - {fileID: 11400000, guid: aa5572c3530ec9e498b265a95626936f, type: 2}
+  - {fileID: 11400000, guid: 521a5c2e94f529948b95c97ceb2fb7af, type: 2}
+  - {fileID: 11400000, guid: b5fcda89bd29d8c4b8908f3da5b39196, type: 2}
+  - {fileID: 11400000, guid: c5798783f606d1d41b6e47493302931c, type: 2}
+  - {fileID: 11400000, guid: 52d430687d159ef4994e9c0470a2856e, type: 2}
+  buildings:
+  - {fileID: 11400000, guid: 2610bac9af99faf4c924278acc0cc72b, type: 2}
+  - {fileID: 11400000, guid: 8cd23fb273469e24a8b496e1e67d1767, type: 2}
+  - {fileID: 11400000, guid: e9b95d816d115104c88a5a7c15c614d5, type: 2}

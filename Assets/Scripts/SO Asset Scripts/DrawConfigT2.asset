@@ -20,4 +20,4 @@ MonoBehaviour:
   T1_late: 0.1
   T2_late: 0.7
   T3_late: 0.2
-  reDrawMultiplicator: 1
+  reDrawMultiplicator: 1.5

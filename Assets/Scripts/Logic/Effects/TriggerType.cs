@@ -25,4 +25,5 @@ public enum TriggerType
     OnTokenCreated,
     //Reactions
     OnCardPlayed,
+    OnRessourceSpent,
 }

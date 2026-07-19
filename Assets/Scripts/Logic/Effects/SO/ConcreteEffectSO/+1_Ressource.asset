@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99c8c7036e8627b4dacd3eb2491898a7, type: 3}
   m_Name: +1_Ressource
   m_EditorClassIdentifier: Assembly-CSharp::GainResourcesSO
-  Description: +1 Income
+  Description: +1 Ressource
   EffectVisual:
     vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}

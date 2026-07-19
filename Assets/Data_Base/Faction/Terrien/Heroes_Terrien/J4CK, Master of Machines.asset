@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: J4CK, Master of Machines
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
+  Type: 0
+  subType: 2
+  tier: 1
+  Description: When you spend Ressources, a Robot in my zone gains +1/+1.
+  CardImage: {fileID: 21300000, guid: be4dd77881ded5a4697af3ee21be45fc, type: 3}
+  MainCost: 0
+  IsHero: 1
+  UnlockCondition: {fileID: 11400000, guid: ccf88d671a9535f4db48ae78a260fe68, type: 2}
+  Attack: 10
+  MaxHealth: 10
+  AttacksForOneTurn: 1
+  melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
+  MoveSpeed: 1
+  Celerity: 0
+  ActivationsForOneTurn: 0
+  Keywords: []
+  Effects:
+  - EffectName: Raise the Machines
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 13
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 1
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 1
+        includesEventSubject: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
