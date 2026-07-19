@@ -9,8 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
-  m_Name: Marine Token
-  m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Marine Token
-  description: 2/2 Soldier Unit that costs 1.
+  m_Script: {fileID: 11500000, guid: 6db95dc339b3bbd47ae2e5c9fc377065, type: 3}
+  m_Name: Soldier
+  m_EditorClassIdentifier: Assembly-CSharp::CondSubType
+  RequiredSubType: 0

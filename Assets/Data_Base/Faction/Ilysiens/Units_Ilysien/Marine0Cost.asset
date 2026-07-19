@@ -10,23 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Briseur
+  m_Name: Marine0Cost
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: 
+  Name: Marine
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 2
-  tier: 3
-  Description: Also deals damage to Units next to whomever this attacks.
-  CardImage: {fileID: 21300000, guid: be9c17079b0d8f049bc86f6268da86a9, type: 3}
-  MainCost: 8
-  Attack: 3
-  MaxHealth: 8
+  subType: 0
+  tier: 1
+  Description: 
+  CardImage: {fileID: 21300000, guid: c79e860526283f94d9c972fff3604f41, type: 3}
+  MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 2
+  MaxHealth: 2
   AttacksForOneTurn: 1
   melee: 0
-  AttackSpeedMultiplier: 1.5
-  AttackModifiers:
-  - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0

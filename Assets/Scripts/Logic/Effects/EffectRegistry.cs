@@ -143,6 +143,20 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster == creatingPlayer);
     }
 
+    // ── Triggers Reactif ─────────────────────────────────────────────────────
+
+    public static void NotifyCardPlayed(Player playingPlayer, ILivable playedEntity)
+    {
+        EffectContext eventCtx = new EffectContext();
+        if (playedEntity is CreatureLogic creature)
+            eventCtx.EventSubjectCreature = creature;
+        else if (playedEntity is BuildingLogic building)
+            eventCtx.EventSubjectBuilding = building;
+
+        FireListeners(TriggerType.OnCardPlayed, eventCtx,
+            re => re.ContextFactory().Caster == playingPlayer && re.ContextFactory().Source != playedEntity);
+    }
+
 
     // ── Collecte différée (→ PhaseEffectPipeline) ─────────────────────────────
 

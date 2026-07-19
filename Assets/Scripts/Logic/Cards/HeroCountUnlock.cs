@@ -34,4 +34,21 @@ public class HeroCountUnlock
         _values[stat] = 0;
         Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} reset to 0");
     }
+
+    private readonly Dictionary<SubType, int> _subTypeValues = new();
+
+    public int GetSubType(SubType subType) => _subTypeValues.GetValueOrDefault(subType, 0);
+
+    public void AddSubType(SubType subType, int amount = 1)
+    {
+        if (amount == 0) return;
+        _subTypeValues[subType] = GetSubType(subType) + amount;
+        Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType {subType} +{amount} => {_subTypeValues[subType]}");
+    }
+
+    public void ResetSubType(SubType subType)
+    {
+        _subTypeValues[subType] = 0;
+        Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType {subType} reset to 0");
+    }
 }

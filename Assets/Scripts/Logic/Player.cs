@@ -396,6 +396,7 @@ public class Player : MonoBehaviour, ILivable
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
+        matchStats.AddSubType(playedCard.ca.subType);
         int baseID       = selectedPArea.baseID;
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
 
@@ -405,6 +406,7 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, rowLocalPos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
         EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature });
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
     }
@@ -460,6 +462,7 @@ public class Player : MonoBehaviour, ILivable
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
+        matchStats.AddSubType(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -508,6 +511,7 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
         EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
 
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -537,6 +541,7 @@ public class Player : MonoBehaviour, ILivable
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
+        matchStats.AddSubType(playedCard.ca.subType);
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
@@ -547,6 +552,7 @@ public class Player : MonoBehaviour, ILivable
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
         EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
 
 
         hand.CardsInHand.Remove(playedCard);

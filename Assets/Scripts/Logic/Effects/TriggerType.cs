@@ -23,4 +23,6 @@ public enum TriggerType
 
     // Token
     OnTokenCreated,
+    //Reactions
+    OnCardPlayed,
 }

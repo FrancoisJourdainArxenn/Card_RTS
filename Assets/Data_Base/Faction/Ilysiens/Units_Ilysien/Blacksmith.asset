@@ -10,40 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Flag-Bearer
+  m_Name: Blacksmith
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
-  tier: 1
-  Description: '<b>Melee.
-
-    On Play:</b> Create a Marine in your hand.'
-  CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
+  tier: 2
+  Description: When you play a Soldier in my zone, it gains +1/+1.
+  CardImage: {fileID: 21300000, guid: ca5f52a1754e23b498e588b0c860c40d, type: 3}
   MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
+  Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
   AttackSpeedMultiplier: 1
   AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
-  - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
+  Keywords: []
   Effects:
-  - EffectName: Garnison
-    Effect: {fileID: 11400000, guid: 6997254306650b84a97bc1e413d3c30d, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 12
+    Condition: {fileID: 11400000, guid: e760ac52042b2af4e883555d7bf15669, type: 2}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
