@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 2
   Description: When you create a Unit in my zone, gives +1/+1 to a unit in my zone.
   CardImage: {fileID: 21300000, guid: 11a7b4b220bf0c8438c37bd5a05dda22, type: 3}
-  MainCost: 3
+  MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1

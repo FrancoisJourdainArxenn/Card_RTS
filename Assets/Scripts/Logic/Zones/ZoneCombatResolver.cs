@@ -114,15 +114,15 @@ public class ZoneCombatResolver : MonoBehaviour
         List<(int attack, bool isBuilding, int id)> queue2 = BuildAttackQueue(p2, zone);
 
         bool p1Turn = UnityEngine.Random.value < 0.5f;
-        Debug.Log($"[Sequence] Commence : {(p1Turn ? p1.name : p2.name)}");
+        Debug.Log($"[Sequence:{zoneView.name}] Commence : {(p1Turn ? p1.name : p2.name)} | queue1={queue1.Count} queue2={queue2.Count}");
         int i1 = 0, i2 = 0, stepNum = 0;
 
         while (true)
         {
             while (i1 < queue1.Count && IsAttackerDead(queue1[i1]))
-            { Debug.Log($"  [Skip mort] {p1.name} — ID:{queue1[i1].id}"); i1++; }
+            { Debug.Log($"  [Skip mort:{zoneView.name}] {p1.name} — ID:{queue1[i1].id}"); i1++; }
             while (i2 < queue2.Count && IsAttackerDead(queue2[i2]))
-            { Debug.Log($"  [Skip mort] {p2.name} — ID:{queue2[i2].id}"); i2++; }
+            { Debug.Log($"  [Skip mort:{zoneView.name}] {p2.name} — ID:{queue2[i2].id}"); i2++; }
 
             bool p1CanAct = i1 < queue1.Count;
             bool p2CanAct = i2 < queue2.Count;
@@ -149,7 +149,7 @@ public class ZoneCombatResolver : MonoBehaviour
             if (p1CanAct && p2CanAct) p1Turn = !p1Turn;
             else p1Turn = p1CanAct;
         }
-        Debug.Log($"[Sequence] {steps.Count} step(s) générés au total");
+        Debug.Log($"[Sequence:{zoneView.name}] {steps.Count} step(s) générés au total");
         return steps;
     }
 
@@ -202,6 +202,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
+            Debug.Log($"[Assign:{zoneView.name}][Tier1:BâtimentMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             if (b.Attack > 0)
             {
                 if (!attacker.isBuilding)
@@ -231,6 +232,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
+            Debug.Log($"[Assign:{zoneView.name}][Tier2:CréatureMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             if (!attacker.isBuilding)
             {
                 pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
@@ -257,6 +259,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
+            Debug.Log($"[Assign:{zoneView.name}][Tier3:CréatureRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             if (!attacker.isBuilding)
             {
                 pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
@@ -283,6 +286,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBuildingDamage.TryGetValue(b.UniqueBuildingID, out int existing);
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
+            Debug.Log($"[Assign:{zoneView.name}][Tier4:BâtimentRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             if (b.Attack > 0)
             {
                 if (!attacker.isBuilding)
@@ -304,24 +308,28 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             pendingBaseDamage.TryGetValue(defenderBase.ID, out int existing);
             pendingBaseDamage[defenderBase.ID] = existing + dmg;
-            Debug.Log($"[Battle→Base] attaquant={attacker.id} cible base={defenderBase.ID} ({defenderBase.DisplayName}) dégâts={dmg}");
+            Debug.Log($"[Battle→Base:{zoneView.name}] attaquant={attacker.id} cible base={defenderBase.ID} ({defenderBase.DisplayName}) dégâts={dmg}");
             return (0, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = defenderBase.ID, targetKind = TargetKind.Base, damage = dmg, targetOwnerPlayerID = defender.PlayerID });
         }
         if (zoneView.subZones.Contains(defender.MainPArea))
         {
             pendingPlayerDamage.TryGetValue(defender.PlayerID, out int existing);
             pendingPlayerDamage[defender.PlayerID] = existing + dmg;
-            Debug.Log($"[Battle→Player] attaquant={attacker.id} cible joueur={defender.name} dégâts={dmg}");
+            Debug.Log($"[Battle→Player:{zoneView.name}] attaquant={attacker.id} cible joueur={defender.name} dégâts={dmg}");
             return (0, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = defender.PlayerID, targetKind = TargetKind.Player, damage = dmg, targetOwnerPlayerID = defender.PlayerID });
         }
+        Debug.Log($"[Assign:{zoneView.name}][AucuneCible] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) dégâts={dmg} perdus — aucune cible éligible (créatures/bâtiments/base/joueur)");
         return (dmg, null);
     }
 
 
     void EnqueueBattleCommands(List<BattleStepRecord> steps)
     {
+        Debug.Log($"[Enqueue:{zoneView.name}] Traitement de {steps.Count} step(s)");
+        int stepIdx = 0;
         foreach (BattleStepRecord step in steps)
         {
+            stepIdx++;
             int attackerHP = GetAttackerCurrentHP(step);
             switch (step.targetKind)
             {
@@ -330,7 +338,13 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out CreatureLogic target)) continue;
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature);
 
-                    if (!step.attackerIsBuilding && attackerCreature != null && attackerCreature.IsPendingDeath) continue;
+                    if (!step.attackerIsBuilding && attackerCreature != null && attackerCreature.IsPendingDeath)
+                    {
+                        Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} ignoré — attaquant {step.attackerID} déjà IsPendingDeath");
+                        continue;
+                    }
+                    if (target.IsPendingDeath)
+                        Debug.LogWarning($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — cible {target.UniqueCreatureID}({target.DisplayName}) DÉJÀ IsPendingDeath au moment du traitement (tuée par un effet secondaire ?) — contre-attaque fantôme possible");
 
                     int shieldAbsorbed = Mathf.Min(step.damage, target.ShieldValue);
                     int effectiveDamage = step.damage - shieldAbsorbed;
@@ -344,6 +358,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     // Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
 
+                    Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Creature — attaquant={step.attackerID} cible={target.UniqueCreatureID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f).AddToQueue();
                     else
@@ -374,7 +389,10 @@ public class ZoneCombatResolver : MonoBehaviour
                     }
                     if (attackerCreature != null)
                     foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
+                    {
+                        Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
                         mod.Apply(attackerCreature, target);
+                    }
 
                     break;
                 }
@@ -385,6 +403,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     int counterDamage = target.Attack;
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic atkCr);
+                    Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Building — attaquant={step.attackerID} cible bât={target.UniqueBuildingID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, atkCr?.AttackSpeedMultiplier ?? 1f).AddToQueue();
                     else
@@ -420,10 +439,11 @@ public class ZoneCombatResolver : MonoBehaviour
                 {
                     if (!BaseLogic.BasesCreatedThisGame.TryGetValue(step.targetID, out BaseLogic target))
                     {
-                        Debug.LogWarning($"[EnqueueBase] Base introuvable id={step.targetID} — step ignoré !");
+                        Debug.LogWarning($"[Enqueue:{zoneView.name}][EnqueueBase] step {stepIdx}/{steps.Count} — Base introuvable id={step.targetID} — step ignoré !");
                         continue;
                     }
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
+                    Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Base — attaquant={step.attackerID} cible base={target.ID}({target.DisplayName}) dégâts={step.damage} PVaprès={targetHealthAfter}");
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(step.targetID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
                     else
@@ -441,7 +461,7 @@ public class ZoneCombatResolver : MonoBehaviour
                         ? GlobalSettings.Instance.LowPlayer
                         : GlobalSettings.Instance.TopPlayer;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
-                    Debug.Log($"[EnqueuePlayer] joueur={target.name} HP avant={target.Health} dégâts={step.damage} → HP après={targetHealthAfter}");
+                    Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Player — attaquant={step.attackerID} cible joueur={target.name} HP avant={target.Health} dégâts={step.damage} → HP après={targetHealthAfter}");
                     if (!step.attackerIsBuilding)
                         new CreatureAttackCommand(target.PlayerID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
                     else
@@ -451,6 +471,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
             }
         }
+        Debug.Log($"[Enqueue:{zoneView.name}] Terminé — {steps.Count} step(s) traité(s), file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
     }
 
     public void EnqueueZoneClashMove()
@@ -523,7 +544,16 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (KeyValuePair<int, List<BattleStepRecord>> kvp in stepsByResolver)
         {
             if (kvp.Key < 0 || kvp.Key >= allResolvers.Count) continue;
-            allResolvers[kvp.Key].EnqueueBattleCommands(kvp.Value);
+            try
+            {
+                allResolvers[kvp.Key].EnqueueBattleCommands(kvp.Value);
+            }
+            catch (System.Exception e)
+            {
+                // Sans ce filet, une exception ici saute tous les resolvers suivants dans ce dictionnaire
+                // (donc leurs combats entiers) côté client, pour la même raison que dans TurnManager.DelayedBattleStart.
+                Debug.LogError($"[EnqueueAllReconstructed] EXCEPTION pour resolver #{kvp.Key} — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
+            }
         }
     }
 

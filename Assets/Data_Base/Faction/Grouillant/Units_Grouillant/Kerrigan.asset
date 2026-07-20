@@ -17,12 +17,12 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: When you create a Unit in my zone, gain 1 Ressource.
+  Description: <b>On Regroup:</b> Create a Hydralisk in my zone.
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 5
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
+  Attack: 2
   MaxHealth: 2
   AttacksForOneTurn: 1
   melee: 0

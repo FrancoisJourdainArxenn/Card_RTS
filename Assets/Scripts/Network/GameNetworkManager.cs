@@ -87,11 +87,16 @@ public class GameNetworkManager : NetworkBehaviour
             TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages,
             BuildingIDs     = buildingIDs,     BuildingDamages  = buildingDamages
         };
+        Debug.Log($"[BattleAssignment][Server] Soumission reçue — joueur {playerIndex} | créatures={creatureIDs.Length} bases={baseIDs.Length} joueurs={targetPlayerIDs.Length} bâtiments={buildingIDs.Length} | total soumis: {_battleSubmissions.Count}/2");
 
         if (_battleSubmissions.Count < 2)
+        {
+            Debug.Log($"[BattleAssignment][Server] En attente de l'autre joueur — {_battleSubmissions.Count}/2 soumission(s) reçue(s)");
             return;
+        }
 
         _battleSubmissions.Clear();
+        Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — sérialisation de l'état canonique et broadcast");
 
         ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
         ApplyCanonicalBattleAssignmentClientRpc(
@@ -124,12 +129,16 @@ public class GameNetworkManager : NetworkBehaviour
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
     {
-        Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus");
+        int nCreature = 0, nBuilding = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
-            if (targetKinds[i] >= 2) // Base=2, Player=3
-                Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+        {
+            switch (targetKinds[i]) { case 0: nCreature++; break; case 1: nBuilding++; break; case 2: nBase++; break; case 3: nPlayer++; break; }
+            Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Bât,2=Base,3=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+        }
+        Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
+        Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
     }
 
     /// <summary>

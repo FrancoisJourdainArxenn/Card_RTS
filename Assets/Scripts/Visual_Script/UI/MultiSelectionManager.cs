@@ -31,6 +31,10 @@ public class MultiSelectionManager : MonoBehaviour
     {
         isDragging = false;
         isMouseDown = false;
+        // ScreenToLocal() renvoie des coordonnées relatives au pivot du parent :
+        // les ancres du selectionBox doivent donc être centrées (0.5, 0.5) pour matcher ce référentiel,
+        // sinon anchoredPosition subit un décalage constant égal à la moitié de la taille du parent.
+        selectionBox.anchorMin = selectionBox.anchorMax = new Vector2(0.5f, 0.5f);
         RefreshSelectableObjects();
     }
 
@@ -94,25 +98,38 @@ public class MultiSelectionManager : MonoBehaviour
             isDragging = false;
             selectionBox.gameObject.SetActive(false);
 
-            
             if (CurrSelectedObjects.Count > 0)
                 StartGroupMove();
         }
     }
 
+    static readonly Vector3[] _cardWorldCorners = new Vector3[4];
+
     void SelectUnits()
     {
+        Vector2 boxMin = Vector2.Min(MouseStartPos, Input.mousePosition);
+        Vector2 boxMax = Vector2.Max(MouseStartPos, Input.mousePosition);
+
         foreach (OneCreatureManager so in AllSelectableObjects)
         {
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(so.transform.position);
-            Vector2 localPos = ScreenToLocal(screenPos);
+            RectTransform cardRect = so.frame != null ? so.frame.rectTransform : null;
+            if (cardRect == null) continue;
 
-            float left   = selectionBox.anchoredPosition.x - selectionBox.sizeDelta.x / 2;
-            float right  = selectionBox.anchoredPosition.x + selectionBox.sizeDelta.x / 2;
-            float bottom = selectionBox.anchoredPosition.y - selectionBox.sizeDelta.y / 2;
-            float top    = selectionBox.anchoredPosition.y + selectionBox.sizeDelta.y / 2;
+            cardRect.GetWorldCorners(_cardWorldCorners);
 
-            if (localPos.x > left && localPos.x < right && localPos.y > bottom && localPos.y < top)
+            Vector2 cardMin = new Vector2(float.MaxValue, float.MaxValue);
+            Vector2 cardMax = new Vector2(float.MinValue, float.MinValue);
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 screenCorner = Camera.main.WorldToScreenPoint(_cardWorldCorners[i]);
+                cardMin = Vector2.Min(cardMin, screenCorner);
+                cardMax = Vector2.Max(cardMax, screenCorner);
+            }
+
+            bool overlaps = cardMin.x <= boxMax.x && cardMax.x >= boxMin.x
+                          && cardMin.y <= boxMax.y && cardMax.y >= boxMin.y;
+
+            if (overlaps)
             {
                 if (!CurrSelectedObjects.Contains(so))
                 {

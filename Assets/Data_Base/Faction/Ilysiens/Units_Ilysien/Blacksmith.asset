@@ -23,7 +23,7 @@ MonoBehaviour:
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
-  MaxHealth: 3
+  MaxHealth: 2
   AttacksForOneTurn: 1
   melee: 0
   AttackSpeedMultiplier: 1

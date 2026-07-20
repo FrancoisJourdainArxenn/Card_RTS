@@ -62,3 +62,7 @@ MonoBehaviour:
           zoneFilter: 1
           cardFilter: {fileID: 0}
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

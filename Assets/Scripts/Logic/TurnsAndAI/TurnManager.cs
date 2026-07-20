@@ -466,8 +466,25 @@ public class TurnManager : MonoBehaviour
     IEnumerator DelayedBattleStart()
     {
         yield return new WaitForSeconds(combatSequenceDelay);
+        Debug.Log($"[Battle] DelayedBattleStart — {ZoneCombatResolver.AllResolvers.Count} resolver(s) à traiter");
+        int idx = 0;
         foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
-            r.OnBattlePhaseStart();
+        {
+            Debug.Log($"[Battle] OnBattlePhaseStart resolver #{idx} ({r.name})");
+            try
+            {
+                r.OnBattlePhaseStart();
+            }
+            catch (System.Exception e)
+            {
+                // Sans ce try/catch, une exception ici arrête la coroutine : tous les resolvers suivants
+                // dans cette liste (donc tous leurs combats) ne sont jamais traités, et AutoSubmitBattleAssignment
+                // (réseau) n'est jamais appelé non plus — ce qui bloque la partie pour les deux joueurs.
+                Debug.LogError($"[Battle] EXCEPTION dans OnBattlePhaseStart du resolver #{idx} ({r.name}) — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
+            }
+            idx++;
+        }
+        Debug.Log($"[Battle] Tous les resolvers traités — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         if (!NetworkSessionData.IsNetworkSession)
             StartCoroutine(AutoAdvanceFromBattleAfterCombat());
         else
@@ -586,7 +603,16 @@ public class TurnManager : MonoBehaviour
     IEnumerator AutoAdvanceFromBattleAfterCombat()
     {
         yield return null; // one frame so the queue can start
-        yield return new WaitWhile(() => Command.playingQueue);
+        float t0 = Time.realtimeSinceStartup;
+        Debug.Log($"[Battle] AutoAdvanceFromBattleAfterCombat — attente fin de file (playingQueue={Command.playingQueue}, restants={Command.CommandQueue.Count})");
+        yield return new WaitWhile(() =>
+        {
+            bool stuck = Command.playingQueue;
+            if (stuck && Time.realtimeSinceStartup - t0 > 5f && Time.frameCount % 60 == 0)
+                Debug.LogWarning($"[Battle] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — playingQueue={Command.playingQueue} restants={Command.CommandQueue.Count} — la file de commandes de combat est probablement gelée");
+            return stuck;
+        });
+        Debug.Log($"[Battle] File vidée après {Time.realtimeSinceStartup - t0:F1}s → passage à EndBattle");
         if (currentPhase == TurnPhases.Battle)
             AdvancePhaseWhenAllReady();
     }
@@ -594,9 +620,14 @@ public class TurnManager : MonoBehaviour
     void AutoSubmitBattleAssignment()
     {
         int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
-        if (localIndex < 0) return;
+        if (localIndex < 0)
+        {
+            Debug.LogWarning("[Battle][Client] AutoSubmitBattleAssignment — localIndex introuvable, soumission ANNULÉE (ce joueur ne soumettra jamais son assignment — le serveur restera bloqué à attendre)");
+            return;
+        }
         ZoneCombatResolver.BattleAssignment assignment =
             ZoneCombatResolver.SerializeMyAttackAssignments(localIndex);
+        Debug.Log($"[Battle][Client] AutoSubmitBattleAssignment — joueur {localIndex} | créatures={assignment.CreatureIDs.Length} bases={assignment.BaseIDs.Length} joueurs={assignment.TargetPlayerIDs.Length} bâtiments={assignment.BuildingIDs.Length}");
         GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
             localIndex,
             assignment.CreatureIDs,     assignment.CreatureDamages,

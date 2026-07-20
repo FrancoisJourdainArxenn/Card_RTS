@@ -22,11 +22,13 @@ public class BuildingAttackCommand : Command
 
     public override void StartCommandExecution()
     {
+        Debug.Log($"[BuildingAttackCmd] attaquant={attackerID} → cible={targetID} dégâts cible={damageTakenByTarget} dégâts attaquant={damageTakenByAttacker}");
         GameObject attackerGO = IDHolder.GetGameObjectWithID(attackerID);
         GameObject targetGO = IDHolder.GetGameObjectWithID(targetID);
 
         if (attackerGO == null || targetGO == null)
         {
+            Debug.LogWarning($"[BuildingAttackCmd] attaquant ou cible introuvable (attaquant={attackerGO != null}, cible={targetGO != null}) — CommandExecutionComplete forcé");
             ApplyEffects(attackerGO, targetGO);
             CommandExecutionComplete();
             return;
@@ -38,7 +40,14 @@ public class BuildingAttackCommand : Command
             .SetLink(attackerGO)
             .OnComplete(() =>
             {
-                ApplyEffects(attackerGO, targetGO);
+                try
+                {
+                    ApplyEffects(attackerGO, targetGO);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[BuildingAttackCmd] EXCEPTION pendant ApplyEffects (attaquant={attackerID}, cible={targetID}) — file débloquée de force: {e}");
+                }
                 CommandExecutionComplete();
             });
     }

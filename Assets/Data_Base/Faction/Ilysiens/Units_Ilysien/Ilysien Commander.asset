@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 3
   Description: '<b>On Play and Regroup</b>: Draw a card'
   CardImage: {fileID: 21300000, guid: a3e22aa4abf4412479eadb0ec9a81d28, type: 3}
-  MainCost: 5
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2

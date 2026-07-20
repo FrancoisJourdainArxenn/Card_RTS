@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 3
   Description: <b>Melee, Arcing Attacks</b>
   CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
-  MainCost: 6
+  MainCost: 5
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 4

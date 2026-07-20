@@ -19,10 +19,10 @@ MonoBehaviour:
   tier: 3
   Description: <b>On Play:</b> I gain +1/+1 for each Unit in my zone.
   CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
-  MainCost: 5
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
+  Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 0

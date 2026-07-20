@@ -17,16 +17,31 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Melee</b>
+  Description: <b>On Play:</b> Create a Zergling in your hand.
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 1
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 3
+  MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
-  Effects: []
+  Keywords: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 3c0f136ab2db4e244bfd45b91f0f04c4, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

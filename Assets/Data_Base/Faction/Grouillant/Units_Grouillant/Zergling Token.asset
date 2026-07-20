@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: Melee
   CardImage: {fileID: 21300000, guid: acca65c89799521429ba0c9a7617f829, type: 3}
-  MainCost: 1
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1

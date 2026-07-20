@@ -21,8 +21,9 @@ public class DealDamageCommand : Command
 
     public override void StartCommandExecution()
     {
+        Debug.Log($"[DealDamageCmd] source={sourceID} → cible={targetID} montant={amount} PVaprès={healthAfter} (effet secondaire, ex: modificateur d'attaque)");
         GameObject target = IDHolder.GetGameObjectWithID(targetID);
-        if (target == null) { CommandExecutionComplete(); return; }
+        if (target == null) { Debug.LogWarning($"[DealDamageCmd] cible {targetID} introuvable — CommandExecutionComplete forcé"); CommandExecutionComplete(); return; }
 
         if (visualData != null)
         {
@@ -44,10 +45,11 @@ public class DealDamageCommand : Command
                 DOVirtual.DelayedCall(0.2f / speedMultiplier, () =>
                 {
                     fired = true;
+                    Debug.Log($"[DealDamageCmd] délai écoulé — relais vers CreatureAttackVisual.AttackTarget pour source={sourceID} cible={targetID}");
                     attackVisual.AttackTarget(targetID, amount, 0, sourceHealth, healthAfter, speedMultiplier);
                 })
                 .SetLink(source)
-                .OnKill(() => { if (!fired) CommandExecutionComplete(); });
+                .OnKill(() => { if (!fired) { Debug.LogWarning($"[DealDamageCmd] delayed call tué avant déclenchement (source={sourceID} détruite/désactivée ?) — CommandExecutionComplete forcé"); CommandExecutionComplete(); } });
                 return;
             }
         }

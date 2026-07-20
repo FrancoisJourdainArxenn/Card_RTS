@@ -20,10 +20,14 @@ MonoBehaviour:
   Description: <b>Scout.</b>
   CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
   MainCost: 1
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 2
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 0
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
@@ -38,6 +42,10 @@ MonoBehaviour:
       effectTargets: []
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
   - EffectName: No More Intel
     Effect: {fileID: 11400000, guid: 3a89841769b488e42b5e485220586cb3, type: 2}
     Trigger: 1
@@ -46,3 +54,7 @@ MonoBehaviour:
       effectTargets: []
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

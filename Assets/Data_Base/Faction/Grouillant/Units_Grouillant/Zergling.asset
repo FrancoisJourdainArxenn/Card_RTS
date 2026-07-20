@@ -22,10 +22,14 @@ MonoBehaviour:
     <b>Play</b> : Creates another Zergling.'
   CardImage: {fileID: 21300000, guid: acca65c89799521429ba0c9a7617f829, type: 3}
   MainCost: 1
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
   Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
@@ -45,6 +49,11 @@ MonoBehaviour:
         - team: 0
           statusFilter: 0
           zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements: []
       repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
