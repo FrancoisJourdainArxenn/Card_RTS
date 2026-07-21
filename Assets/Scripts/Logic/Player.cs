@@ -39,6 +39,11 @@ public class Player : MonoBehaviour, ILivable
     [HideInInspector] public int bonusMainRessource;
     private Dictionary<int, int> _incomeFromSources = new(); // income lié à une entité vivante
 
+    [HideInInspector] public int bonusHandDrawCount;
+    private Dictionary<int, int> _drawCountFromSources = new(); // bonus de pioche lié à une entité vivante (tier, effet...)
+
+    public int HandDrawCount => GlobalSettings.Instance.initdraw + bonusHandDrawCount + _drawCountFromSources.Values.Sum();
+
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -290,6 +295,23 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
+    // discard the whole hand (used at the start of each turn, before drawing the new hand)
+    // hero cards stay in hand: they aren't drawn from the deck and shouldn't be discarded
+    public void DiscardHand()
+    {
+        List<CardLogic> toDiscard = hand.CardsInHand.Where(cl => !cl.ca.IsHero).ToList();
+        foreach (CardLogic cl in toDiscard)
+        {
+            GameObject cardGO = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
+            if (cardGO != null)
+            {
+                handVisual.RemoveCard(cardGO);
+                GameObject.Destroy(cardGO);
+            }
+            hand.CardsInHand.Remove(cl);
+        }
+    }
+
     // get card NOT from deck (a token or a coin)
     public void GetACardNotFromDeck(CardAsset cardAsset, int networkID = -1, EffectVisualData visualData = null)
     {
@@ -476,11 +498,20 @@ public class Player : MonoBehaviour, ILivable
             GameObject.Destroy(cardGO);
         }
 
-        // Only local player sees their own pending creatures
-        if (this != GlobalSettings.Instance.localPlayer) return;
-
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) return;
+
+        // Résolution logique immédiate (créature + OnPlay), indépendante du reveal visuel.
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
+        FogOfWarManager.Refresh();
+
+        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
+
+        // Visuel : seul le joueur local voit sa créature en attente (reste caché à l'adversaire jusqu'au flush).
+        if (this != GlobalSettings.Instance.localPlayer) return;
 
         targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
         GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
@@ -506,15 +537,8 @@ public class Player : MonoBehaviour, ILivable
             return;
         }
 
-        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
-        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
-        playedCards.Creatures.Insert(logicalIndex, newCreature);
-
-        FogOfWarManager.Refresh();
-
+        // CreatureLogic + OnPlay déjà résolus dans NetworkPendingPlayCreature ; ici on ne fait que révéler le visuel.
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
-        EffectRegistry.NotifyCardPlayed(this, newCreature);
 
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -754,6 +778,7 @@ public class Player : MonoBehaviour, ILivable
         if (area == null) return false;
         if (!System.Array.Exists(PAreas, a => a == area)) return false;
         if (area == MainPArea) return true;
+        if (area.tableVisual != null && area.tableVisual.AllCreaturesOnTable.Any()) return true;
         NeutralZoneController c = GetNeutralControllerForArea(area);
         if (c == null) return false;
         return PlayerOwnsBaseInController(c); // tag joueur + même controller
@@ -775,6 +800,21 @@ public class Player : MonoBehaviour, ILivable
     {
         if (!_incomeFromSources.Remove(sourceID)) return;
         CalculatePlayerIncome();
+    }
+
+    public void AddBonusHandDrawCount(int amount)
+    {
+        bonusHandDrawCount += amount;
+    }
+
+    public void AddBonusHandDrawCountFromSource(int sourceID, int amount)
+    {
+        _drawCountFromSources[sourceID] = _drawCountFromSources.GetValueOrDefault(sourceID, 0) + amount;
+    }
+
+    public void RemoveBonusHandDrawCountFromSource(int sourceID)
+    {
+        _drawCountFromSources.Remove(sourceID);
     }
 
     public void CalculatePlayerIncome()

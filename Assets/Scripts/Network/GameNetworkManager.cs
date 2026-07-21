@@ -852,21 +852,21 @@ public class GameNetworkManager : NetworkBehaviour
 
     public void InitDrawSeedOffset(int value) { _drawSeedOffset = value; }
 
-    public void BroadCastDrawCard(int playerIndex)
+    public void BroadCastDrawCard(int playerIndex, bool fast = false)
     {
         if (!IsServer) return;
         int cardID = IDFactory.GetUniqueID();
         int finalSeed = DeckSeed + _drawSeedOffset++;
-        Debug.Log($"[BroadCastDrawCard] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
-        DrawAcardClientRpc(playerIndex, cardID, finalSeed);
+        Debug.Log($"[BroadCastDrawCard] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
+        DrawAcardClientRpc(playerIndex, cardID, finalSeed, fast);
     }
 
     [ClientRpc]
-    public void DrawAcardClientRpc(int playerIndex, int cardID, int finalSeed)
+    public void DrawAcardClientRpc(int playerIndex, int cardID, int finalSeed, bool fast)
     {
-        Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed}");
+        Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
         Player player = Player.Players[playerIndex];
-        player.DrawACard(false, cardID, finalSeed);
+        player.DrawACard(fast, cardID, finalSeed);
     }
 
     public void BroadcastHeroReturnToHand(int playerIndex)

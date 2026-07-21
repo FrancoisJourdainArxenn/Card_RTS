@@ -22,6 +22,7 @@ public abstract class TurnMaker : MonoBehaviour {
     {
         TempEffectTracker.RevertAll();
         p.OnTurnStart();
+        p.DiscardHand();
 
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
@@ -37,14 +38,18 @@ public abstract class TurnMaker : MonoBehaviour {
         if (NetworkSessionData.IsNetworkSession)
         {
             if (NetworkManager.Singleton.IsServer)
-                GameNetworkManager.Instance.BroadCastDrawCard(p.playerIndex);
+            {
+                for (int i = 0; i < p.HandDrawCount; i++)
+                    GameNetworkManager.Instance.BroadCastDrawCard(p.playerIndex, fast: true);
+            }
 
             if (isLocalPlayer)
                 TurnManager.Instance.RegisterEndPhase(p);
         }
         else
         {
-            p.DrawACard();
+            for (int i = 0; i < p.HandDrawCount; i++)
+                p.DrawACard(fast: true);
             TurnManager.Instance.RegisterEndPhase(p);
         }
     }

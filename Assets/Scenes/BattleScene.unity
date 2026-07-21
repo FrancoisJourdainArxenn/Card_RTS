@@ -2223,8 +2223,8 @@ MonoBehaviour:
   - {fileID: 0}
   initdraw: 3
   MaxCreaturePerRow: 5
-  CardPreviewTime: 0.5
-  CardTransitionTime: 0.5
+  CardPreviewTime: 0.1
+  CardTransitionTime: 0.1
   CardPreviewTimeFast: 0.05
   CardTransitionTimeFast: 0.05
   AttackMoveDuration: 0.4
@@ -5498,6 +5498,7 @@ MonoBehaviour:
   playerMainIncome: 0
   bonusMainIncome: 0
   bonusMainRessource: 0
+  bonusHandDrawCount: 0
   deck: {fileID: 636250721}
   hand: {fileID: 540669342}
   playedCards: {fileID: 675442735}
@@ -7499,6 +7500,7 @@ MonoBehaviour:
   playerMainIncome: 0
   bonusMainIncome: 0
   bonusMainRessource: 0
+  bonusHandDrawCount: 0
   deck: {fileID: 625286360}
   hand: {fileID: 1791882151}
   playedCards: {fileID: 1411569196}

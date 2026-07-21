@@ -131,6 +131,7 @@ public class BaseLogic: ILivable
 
         owner.MainRessourceAvailable -= CurrentUpgradeCost;
         owner.AddBonusIncomeFromSource(ID, next.incomeBonus);
+        owner.AddBonusHandDrawCountFromSource(ID, next.drawCountBonus);
         owner.deck.drawConfig = next.drawConfig;
 
         CurrentTier = next.tier;
