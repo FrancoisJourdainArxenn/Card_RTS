@@ -390,6 +390,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (attackerCreature != null)
                     foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
                     {
+                        if (mod == null) continue; // slot vide/cassé dans AttackModifiers — on l'ignore au lieu de planter tout le resolver
                         Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
                         mod.Apply(attackerCreature, target);
                     }

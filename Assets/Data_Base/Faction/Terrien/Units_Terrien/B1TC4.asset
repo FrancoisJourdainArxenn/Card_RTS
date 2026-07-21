@@ -29,8 +29,7 @@ MonoBehaviour:
   AttacksForOneTurn: 1
   melee: 1
   AttackSpeedMultiplier: 1
-  AttackModifiers:
-  - {fileID: 0}
+  AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
