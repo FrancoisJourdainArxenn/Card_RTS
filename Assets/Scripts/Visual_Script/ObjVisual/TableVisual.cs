@@ -371,6 +371,16 @@ public class TableVisual : MonoBehaviour
             t.tag = owner.ToString() + "Creature";
         IDHolder id = creature.AddComponent<IDHolder>();
         id.UniqueID = uniqueID;
+
+        // Si la logique existe déjà et a été modifiée avant que ce visuel soit créé
+        // (ex: reveal différé côté réseau, buffs OnPlay résolus avant l'affichage),
+        // on affiche les stats actuelles plutôt que les stats imprimées de la carte.
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
+        {
+            manager.AttackText.text = cl.Attack.ToString();
+            manager.HealthText.text = cl.Health.ToString();
+        }
+
         return creature;
     }
 

@@ -501,26 +501,28 @@ public class Player : MonoBehaviour, ILivable
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) return;
 
-        // Résolution logique immédiate (créature + OnPlay), indépendante du reveal visuel.
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, tablePos);
         playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
+        // Visuel : seul le joueur local voit sa créature en attente (reste caché à l'adversaire jusqu'au flush).
+        // Créé AVANT les triggers pour que ModifyStatsCommand/VFX trouvent une cible valide (IDHolder déjà enregistré).
+        if (this == GlobalSettings.Instance.localPlayer)
+        {
+            targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
+            GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
+            if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+            {
+                ocm.SetPending(true);
+                ocm.CanReorderNow = true;
+                ocm.UpdateGlow();
+            }
+        }
+
+        // Résolution logique immédiate (créature + OnPlay), après le reveal visuel local pour garder une cible valide.
         EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
         EffectRegistry.NotifyCardPlayed(this, newCreature);
-
-        // Visuel : seul le joueur local voit sa créature en attente (reste caché à l'adversaire jusqu'au flush).
-        if (this != GlobalSettings.Instance.localPlayer) return;
-
-        targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
-        GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
-        if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
-        {
-            ocm.SetPending(true);
-            ocm.CanReorderNow = true;
-            ocm.UpdateGlow();
-        }
     }
 
     public void NetworkFlushPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
