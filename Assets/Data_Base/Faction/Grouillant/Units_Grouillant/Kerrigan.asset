@@ -17,13 +17,16 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>On Regroup:</b> Create a Hydralisk in my zone.
+  Description: '<b>Row Attacks.</b>
+
+    When a Unit is created in my zone, I gain
+    +1/+1.'
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
-  MainCost: 5
+  MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 2
+  Attack: 1
+  MaxHealth: 1
   AttacksForOneTurn: 1
   melee: 0
   AttackSpeedMultiplier: 1
@@ -32,17 +35,20 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: fbbc36a1ce50c3742a461bffa9e1b278, type: 2}
-  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  Keywords: []
   Effects:
-  - EffectName: For the Swarm
-    Effect: {fileID: 11400000, guid: 2b73375ed59fa58409311268e5a6a065, type: 2}
-    Trigger: 2
-    Condition: {fileID: 0}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 11
+    Condition: {fileID: 11400000, guid: 78777b9d4ac95324b988967fb8045c03, type: 2}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

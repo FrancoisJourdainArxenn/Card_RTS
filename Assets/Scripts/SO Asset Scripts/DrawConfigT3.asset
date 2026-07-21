@@ -15,9 +15,9 @@ MonoBehaviour:
   I_min: 4
   I_max: 10
   T1_early: 0.2
-  T2_early: 0.5
-  T3_early: 0.3
-  T1_late: 0.1
+  T2_early: 0.4
+  T3_early: 0.4
+  T1_late: 0.2
   T2_late: 0.4
-  T3_late: 0.5
+  T3_late: 0.4
   reDrawMultiplicator: 1.5

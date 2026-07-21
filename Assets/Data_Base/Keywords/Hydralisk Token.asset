@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Hydralisk Token
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Hydralisk Token
-  description: '3/1 Organic Unit with : Piercing Attacks.'
+  description: '2/1 Organic Unit with : Piercing Attacks.'

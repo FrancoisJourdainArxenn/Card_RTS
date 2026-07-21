@@ -17,7 +17,7 @@ MonoBehaviour:
   T1_early: 0.4
   T2_early: 0.6
   T3_early: 0
-  T1_late: 0.1
+  T1_late: 0.4
   T2_late: 0.7
-  T3_late: 0.2
+  T3_late: 0
   reDrawMultiplicator: 1.5

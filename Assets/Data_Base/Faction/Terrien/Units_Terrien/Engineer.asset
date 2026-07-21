@@ -13,34 +13,53 @@ MonoBehaviour:
   m_Name: Engineer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
   Type: 0
-  subType: 3
+  subType: 0
   tier: 1
-  Description: "<b>Melee. \nRegroup:</b> +1 Ressource."
+  Description: <b>Battle End:</b> Heals a Robot for 2.
   CardImage: {fileID: 21300000, guid: ffb54a6abf56d9449b2ef6e804b76ce7, type: 3}
-  MainCost: 4
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 3
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 1
+  melee: 0
   AttackSpeedMultiplier: 1
   AttackModifiers: []
   MoveSpeed: 1
   Celerity: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
   Effects:
-  - EffectName: Juice !
-    Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
-    Trigger: 2
+  - EffectName: Heal
+    Effect: {fileID: 11400000, guid: 2bb29b9f06c94a74ea05a43bd9a3eba5, type: 2}
+    Trigger: 5
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 4
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 1
+          statusFilter: 4
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

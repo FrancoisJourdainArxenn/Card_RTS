@@ -449,7 +449,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3929146196856053519
 RectTransform:
   m_ObjectHideFlags: 0
@@ -819,7 +819,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 6891238427603454131}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -1405,11 +1405,7 @@ MonoBehaviour:
   HealthText: {fileID: 7191212524514199971}
   MainRessourceText: {fileID: 215713205907225638}
   fogOverlay: {fileID: 9191104824621293537}
-  UpgradeCostText: {fileID: 0}
-  UpgradeButton: {fileID: 0}
-  UpgradeButtonContainer: {fileID: 0}
   CurrentTierImage: {fileID: 6891238427603454131}
-  NextTierImage: {fileID: 0}
   hasBeenSeen: 0
 --- !u!114 &2972207008102704594
 MonoBehaviour:

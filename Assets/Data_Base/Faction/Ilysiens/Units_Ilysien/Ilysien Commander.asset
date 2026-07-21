@@ -16,14 +16,14 @@ MonoBehaviour:
   Faction: {fileID: 0}
   Type: 0
   subType: 0
-  tier: 3
+  tier: 2
   Description: '<b>On Play and Regroup</b>: Draw a card'
   CardImage: {fileID: 21300000, guid: a3e22aa4abf4412479eadb0ec9a81d28, type: 3}
-  MainCost: 4
+  MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
-  MaxHealth: 5
+  MaxHealth: 4
   AttacksForOneTurn: 1
   melee: 0
   AttackSpeedMultiplier: 1

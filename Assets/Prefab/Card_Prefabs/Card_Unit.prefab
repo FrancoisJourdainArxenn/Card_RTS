@@ -1064,7 +1064,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.452, y: 0.1, z: -0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.4, y: 1, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5331659336106854959}
@@ -1104,6 +1104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
+  owner: {fileID: 0}
   NameText: {fileID: 3210977288471384358}
   subType: {fileID: 2417086422155912971}
   MainCostText: {fileID: 6955613804869879659}
@@ -1155,7 +1156,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44913d79fd9fdc249af74b94ff43b141, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragCreatureOnTable
-  maxCreatureOnBoard: 10
   dragScale: 0.4
 --- !u!114 &4338421819388494301
 MonoBehaviour:

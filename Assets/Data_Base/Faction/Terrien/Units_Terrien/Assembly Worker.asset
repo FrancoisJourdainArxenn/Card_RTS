@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 2
   Description: <b>On Play:</b> Draw a card.
   CardImage: {fileID: 21300000, guid: 54c41faccdfdd9d4ba3195209c483317, type: 3}
-  MainCost: 3
+  MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
