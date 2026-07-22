@@ -52,6 +52,10 @@ public class GlobalSettings : MonoBehaviour
     public GameObject ExplosionPrefab;
     public GameObject NeutralBasePrefab;
     public GameObject BuildingPrefab;
+
+    [Header("Card Tier Icons")]
+    public Sprite[] CardTierIcons = new Sprite[3]; // index 0 = T1, 1 = T2, 2 = T3
+
     
     [Header("Other")]
     public Button ConfirmTargetingButton;

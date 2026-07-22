@@ -25,6 +25,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image ArtImage;
     public Image FrameImage;
     public Image CardFaceGlowImage;
+    public Image TierImage;
     public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
     private Color _originalAttackColor;
@@ -67,6 +68,12 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         DescriptionText.text = cardAsset.Description.ToString();
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
+        if (TierImage != null && GlobalSettings.Instance != null)
+        {
+            int tierIndex = (int)cardAsset.tier - 1;
+            if (tierIndex >= 0 && tierIndex < GlobalSettings.Instance.CardTierIcons.Length)
+                TierImage.sprite = GlobalSettings.Instance.CardTierIcons[tierIndex];
+        }
 
         _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
         ApplyUnlockDescriptionIfLocked();
