@@ -477,8 +477,14 @@ public class Player : MonoBehaviour, ILivable
             if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
                 ordered.Add(cl);
         }
+        // Créatures déjà présentes en logique dans cette zone mais pas encore visuellement
+        // (ex: reveal différé côté réseau) : ne pas les perdre lors du resync.
+        List<CreatureLogic> pendingWithoutGO = playedCards.Creatures.FindAll(c =>
+            c.BaseID == baseID && !ordered.Contains(c));
+
         playedCards.Creatures.RemoveAll(c => c.BaseID == baseID);
         playedCards.Creatures.AddRange(ordered);
+        playedCards.Creatures.AddRange(pendingWithoutGO);
     }
 
     public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)

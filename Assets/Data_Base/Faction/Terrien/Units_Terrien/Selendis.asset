@@ -47,14 +47,14 @@ MonoBehaviour:
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 0
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0
