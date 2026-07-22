@@ -17,6 +17,7 @@ public enum SubType
     Robot,
     Mechanical,
     Building,
+    Organic,
 }
 
 public enum TargetingOptions

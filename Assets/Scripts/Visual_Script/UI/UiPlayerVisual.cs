@@ -67,8 +67,9 @@ public class UiPlayerVisual : MonoBehaviour
 
                 int nextTier = (int)bl.CurrentTier + 1;
                 return $"Spend {bl.CurrentUpgradeCost} to get to Tier {nextTier}.\n" +
-                       $"Tier {nextTier} increases your chances of drawing tier {nextTier} cards.\n" +
-                       $"Each tier increases your Income by 1.";
+                       $"Tier {nextTier} allow you to draw tier {nextTier} cards.\n" +
+                       $"Each tier, you draw 1 more card and your Income is increased by 1.\n" +
+                       $"Reduce the cost of upgrade by 1 each turn.";
             });
         }
     }
