@@ -360,8 +360,33 @@ public class CardPreviewUI : MonoBehaviour
             ReminderTextManager.Instance.ShowTooltips(asset.Keywords, previewPosition);
 
         currentPreview.SetActive(true);
+
+        // mesurer/clamp à la taille finale, puis repartir de l'échelle réduite pour l'animation de pop-in
+        currentPreview.transform.localScale = Vector3.one * previewScale;
+        ClampPreviewToScreen((RectTransform)currentPreview.transform);
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    private void ClampPreviewToScreen(RectTransform previewRect)
+    {
+        Vector3[] corners = new Vector3[4];
+        previewRect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
+
+        Camera cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+        Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+        Vector2 max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+
+        float shiftX = 0f;
+        if (min.x < 0f) shiftX = -min.x;
+        else if (max.x > Screen.width) shiftX = Screen.width - max.x;
+
+        float shiftY = 0f;
+        if (min.y < 0f) shiftY = -min.y;
+        else if (max.y > Screen.height) shiftY = Screen.height - max.y;
+
+        if (shiftX != 0f || shiftY != 0f)
+            _anchorRect.anchoredPosition += new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
     }
 
     private void PushToAutoStack(PendingEffectSelection selection, Material materialOverride = null)

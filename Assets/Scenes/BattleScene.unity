@@ -2240,6 +2240,10 @@ MonoBehaviour:
   ExplosionPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
   BuildingPrefab: {fileID: 126706081317096460, guid: a1d0ad6a13751354b993f8d8c8ec1cca, type: 3}
+  CardTierIcons:
+  - {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
+  - {fileID: 21300000, guid: 537405a30e1344843a2a7fff7adb858b, type: 3}
+  - {fileID: 21300000, guid: 996db40c8ee6838448d239518bae46aa, type: 3}
   ConfirmTargetingButton: {fileID: 162971764}
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
@@ -6613,8 +6617,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43bb502a99fd9cd4fa6cb13ac8123974, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  tooltipText: Spend Ressources to get to the next Tier. \nEach tier increases your
-    chances of getting card of that tier. \nEach tier increases your Income by 1.
+  tooltipText: Spend Ressources to get to the next Tier. \nEach tier allows you to
+    draw card of that tier.\nYou draw 1 more card each tier.\nYour [Income] is increased
+    by 1 each tier.
 --- !u!1 &1565125312
 GameObject:
   m_ObjectHideFlags: 0
