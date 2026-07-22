@@ -482,6 +482,9 @@ public class Player : MonoBehaviour, ILivable
         List<CreatureLogic> pendingWithoutGO = playedCards.Creatures.FindAll(c =>
             c.BaseID == baseID && !ordered.Contains(c));
 
+        if (pendingWithoutGO.Count > 0)
+            Debug.LogWarning($"[Resync] baseID={baseID} — {pendingWithoutGO.Count} créature(s) sans GO visuel au moment du resync, réintégrée(s) au lieu d'être perdue(s).");
+
         playedCards.Creatures.RemoveAll(c => c.BaseID == baseID);
         playedCards.Creatures.AddRange(ordered);
         playedCards.Creatures.AddRange(pendingWithoutGO);

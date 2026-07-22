@@ -191,8 +191,8 @@ public class TableVisual : MonoBehaviour
 
     public void MoveCreatureAway(GameObject creature)
     {
-        if (!MeleeCreaturesOnTable.Remove(creature))
-            RangedCreaturesOnTable.Remove(creature);
+        if (!MeleeCreaturesOnTable.Remove(creature) && !RangedCreaturesOnTable.Remove(creature))
+            Debug.LogWarning($"[MoveCreatureAway] GO '{creature?.name ?? "null"}' introuvable dans les listes de {ownerArea?.baseID}. Il pourrait rester dupliqué dans son ancienne zone.");
         // ownerArea?.RefreshAreaStats();
         PlaceCreaturesOnNewSlots();
     }
