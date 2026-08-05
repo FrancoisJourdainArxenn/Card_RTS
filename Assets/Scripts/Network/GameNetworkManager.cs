@@ -65,6 +65,14 @@ public class GameNetworkManager : NetworkBehaviour
     private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
 
     /// <summary>
+    /// Joueurs ayant confirmé que leur file de commandes locale (animations de combat) a fini
+    /// de jouer. Le serveur n'appelle ForceRegisterEndPhase qu'une fois les deux confirmations
+    /// reçues — sinon la transition vers EndBattle peut arriver avant la fin des animations et
+    /// interrompre en plein vol une commande (ex. BattleCam), gelant la file pour toujours.
+    /// </summary>
+    private readonly HashSet<int> _battleAnimationsDone = new HashSet<int>();
+
+    /// <summary>
     /// Reçu par le serveur quand un joueur termine la Battle phase.
     /// Stocke la soumission pour compter les deux joueurs. Quand les deux ont soumis :
     ///   1. Sérialise l'état calculé par le serveur (BuildAutoBattleSequence déjà exécuté dans OnBattlePhaseStart)
@@ -115,8 +123,9 @@ public class GameNetworkManager : NetworkBehaviour
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs);
 
-        TurnManager.Instance.ForceRegisterEndPhase(0);
-        TurnManager.Instance.ForceRegisterEndPhase(1);
+        // La transition vers EndBattle est désormais déclenchée depuis ReportBattleAnimationsDoneServerRpc,
+        // une fois que CHAQUE client a confirmé que sa file de commandes locale a fini de jouer les
+        // animations de combat (voir BroadcastBattleStepsClientRpc / WaitForBattleAnimationsThenReport).
     }
 
     /// <summary>
@@ -139,6 +148,43 @@ public class GameNetworkManager : NetworkBehaviour
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
         Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
+        StartCoroutine(WaitForBattleAnimationsThenReport());
+    }
+
+    /// <summary>
+    /// Attend que la file de commandes locale (animations de combat qu'on vient d'enqueue)
+    /// ait fini de jouer, puis prévient le serveur. Tourne sur CHAQUE client, y compris le host.
+    /// </summary>
+    IEnumerator WaitForBattleAnimationsThenReport()
+    {
+        yield return null; // laisser EnqueueAllReconstructedBattleCommands démarrer la file (synchrone)
+        yield return new WaitWhile(() => Command.playingQueue);
+
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (localIndex < 0)
+        {
+            Debug.LogWarning("[Battle] WaitForBattleAnimationsThenReport — localIndex introuvable, confirmation ANNULÉE (le serveur restera bloqué à attendre)");
+            yield break;
+        }
+        Debug.Log($"[Battle] Animations locales terminées — joueur {localIndex} confirme au serveur");
+        ReportBattleAnimationsDoneServerRpc(localIndex);
+    }
+
+    /// <summary>
+    /// Reçu par le serveur quand un client (ou le host) a fini de jouer les animations de combat
+    /// localement. Une fois les deux joueurs confirmés, déclenche la transition vers EndBattle.
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ReportBattleAnimationsDoneServerRpc(int playerIndex)
+    {
+        _battleAnimationsDone.Add(playerIndex);
+        Debug.Log($"[BattleAssignment][Server] Animations terminées — joueur {playerIndex} | total confirmé: {_battleAnimationsDone.Count}/2");
+        if (_battleAnimationsDone.Count < 2)
+            return;
+
+        _battleAnimationsDone.Clear();
+        TurnManager.Instance.ForceRegisterEndPhase(0);
+        TurnManager.Instance.ForceRegisterEndPhase(1);
     }
 
     /// <summary>

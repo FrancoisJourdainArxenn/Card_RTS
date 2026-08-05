@@ -229,7 +229,13 @@ public class CameraController : MonoBehaviour
 
     void TransitionTo(Vector3 targetPos, Quaternion targetRot, System.Action onComplete)
     {
-        transform.DOKill();
+        // complete=true : si un tween est déjà en vol (seul cas possible : ExitBattleCam ou
+        // FocusBattleCamOn qui interrompt un FocusBattleCamOn précédent — les contrôles manuels
+        // ne peuvent pas re-déclencher TransitionTo pendant State.Transitioning), on force son
+        // OnComplete à s'exécuter avant d'enchaîner. Sinon DOKill() abandonne silencieusement le
+        // callback en attente (ex. CreatureAttackCommand.PlayAttack), ce qui gèle la file de
+        // commandes pour toujours (Command.playingQueue reste true).
+        transform.DOKill(true);
         _state = State.Transitioning;
         transform.DOMove(targetPos, transitionDuration).SetEase(transitionEase);
         transform.DORotateQuaternion(targetRot, transitionDuration).SetEase(transitionEase)
