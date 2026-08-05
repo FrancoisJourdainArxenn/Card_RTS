@@ -17,9 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>Melee</b>
-
-    <b>Play</b> : Creates another Zergling.'
+  Description: '<b>Play</b> : Creates another Zergling.'
   CardImage: {fileID: 21300000, guid: acca65c89799521429ba0c9a7617f829, type: 3}
   MainCost: 1
   IsHero: 0
@@ -27,11 +25,13 @@ MonoBehaviour:
   Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 1
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>Melee, Arcing Attacks</b>
+  Description: <b>Arcing Attacks</b>
   CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
   MainCost: 5
   IsHero: 0
@@ -25,12 +25,14 @@ MonoBehaviour:
   Attack: 4
   MaxHealth: 7
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 1
   AttackModifiers:
   - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}

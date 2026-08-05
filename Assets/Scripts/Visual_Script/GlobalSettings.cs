@@ -56,6 +56,10 @@ public class GlobalSettings : MonoBehaviour
     [Header("Card Tier Icons")]
     public Sprite[] CardTierIcons = new Sprite[3]; // index 0 = T1, 1 = T2, 2 = T3
 
+    [Header("Row Keywords")]
+    public Keyword MeleeRowKeyword;
+    public Keyword RangedRowKeyword;
+
     
     [Header("Other")]
     public Button ConfirmTargetingButton;
