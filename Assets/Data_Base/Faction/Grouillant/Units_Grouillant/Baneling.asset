@@ -17,9 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>Melee.
-
-    On Death :</b> Create a Zerglings in my zone.'
+  Description: <b>On Death :</b> Create a Zergling in my zone.
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 2
   IsHero: 0
@@ -27,11 +25,13 @@ MonoBehaviour:
   Attack: 3
   MaxHealth: 1
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 1
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: <b>Melee</b>
+  Description: 
   CardImage: {fileID: 21300000, guid: e9e6f2062d3682f4f921545b1d3cf3ed, type: 3}
   MainCost: 2
   IsHero: 0
@@ -25,11 +25,13 @@ MonoBehaviour:
   Attack: 2
   MaxHealth: 3
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 1
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords: []
   Effects: []
