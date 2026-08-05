@@ -357,7 +357,7 @@ public class CardPreviewUI : MonoBehaviour
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         if (ReminderTextManager.Instance != null)
-            ReminderTextManager.Instance.ShowTooltips(asset.Keywords, previewPosition);
+            ReminderTextManager.Instance.ShowTooltips(BuildTooltipKeywords(asset), previewPosition);
 
         currentPreview.SetActive(true);
 
@@ -366,6 +366,22 @@ public class CardPreviewUI : MonoBehaviour
         ClampPreviewToScreen((RectTransform)currentPreview.transform);
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    // Injecte automatiquement le keyword Melee/Ranged selon cardAsset.melee, sans avoir
+    // à l'ajouter manuellement à la liste Keywords de chaque carte Unit/Hero.
+    private List<Keyword> BuildTooltipKeywords(CardAsset asset)
+    {
+        List<Keyword> keywords = new List<Keyword>(asset.Keywords);
+
+        if (asset.Type == CardType.Unit && GlobalSettings.Instance != null)
+        {
+            Keyword rowKeyword = asset.melee ? GlobalSettings.Instance.MeleeRowKeyword : GlobalSettings.Instance.RangedRowKeyword;
+            if (rowKeyword != null)
+                keywords.Insert(0, rowKeyword);
+        }
+
+        return keywords;
     }
 
     private void ClampPreviewToScreen(RectTransform previewRect)

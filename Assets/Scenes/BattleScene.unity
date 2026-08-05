@@ -2248,6 +2248,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
   - {fileID: 21300000, guid: 537405a30e1344843a2a7fff7adb858b, type: 3}
   - {fileID: 21300000, guid: 996db40c8ee6838448d239518bae46aa, type: 3}
+  MeleeRowKeyword: {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  RangedRowKeyword: {fileID: 11400000, guid: 30de3c4646fcc8248b6e8b9ba662238f, type: 2}
   ConfirmTargetingButton: {fileID: 162971764}
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
