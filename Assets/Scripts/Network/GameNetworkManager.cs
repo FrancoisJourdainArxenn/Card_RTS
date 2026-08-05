@@ -941,19 +941,43 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void CancelMoveCreatureServerRpc(int creatureUniqueID, int playerIndex)
+    public void CancelMoveCreatureServerRpc(int creatureUniqueID, int playerIndex, RpcParams rpcParams = default)
     {
         int removed = _actionBuffer.RemoveAll(a =>
             a.type == ActionType.MoveCreature &&
             a.param1 == creatureUniqueID &&
             a.playerIndex == playerIndex);
 
-        if (removed > 0)
-            CancelMoveCreatureClientRpc(creatureUniqueID);
+        if (removed == 0)
+            return;
+
+        // Le client à l'origine de l'annulation a déjà effacé sa propre flèche en local,
+        // de façon synchrone, avant même d'envoyer ce RPC (voir DragCreatureActions.OnStartDrag /
+        // TryGroupMoveTo). Si on le notifiait aussi via ce ClientRpc, l'appel arriverait après un
+        // aller-retour réseau — donc potentiellement APRÈS qu'un nouveau déplacement (multi-select
+        // sur une unité déjà en attente) ait déjà réaffiché sa flèche — et l'effacerait à tort.
+        // On ne relaie donc l'annulation qu'aux autres clients (qui n'affichent de toute façon
+        // jamais la flèche d'attente d'un adversaire).
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        List<ulong> otherClients = new List<ulong>();
+        foreach (ulong id in NetworkManager.ConnectedClientsIds)
+        {
+            if (id != senderId)
+                otherClients.Add(id);
+        }
+
+        if (otherClients.Count == 0)
+            return;
+
+        ClientRpcParams targetParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = otherClients.ToArray() }
+        };
+        CancelMoveCreatureClientRpc(creatureUniqueID, targetParams);
     }
 
     [ClientRpc]
-    void CancelMoveCreatureClientRpc(int creatureUniqueID)
+    void CancelMoveCreatureClientRpc(int creatureUniqueID, ClientRpcParams clientRpcParams = default)
     {
         IDHolder.GetGameObjectWithID(creatureUniqueID)
             ?.GetComponent<OneCreatureManager>()
