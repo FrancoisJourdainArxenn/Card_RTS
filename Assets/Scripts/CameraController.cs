@@ -135,18 +135,21 @@ public class CameraController : MonoBehaviour
             ClampPanPosition();
         }
 
-        var closest = FindClosestAnchorToScreenPoint(Input.mousePosition, out float screenDist);
-        bool withinRadius = closest != null && screenDist <= topViewZoomInRadiusPixels;
-        SetHoveredAnchor(withinRadius ? closest : null);
+        // TEST — désactivé : le zoom manuel sur une zone (survol + molette) est coupé,
+        // la vue ZoomedIn n'est désormais accessible que via la BattleCam. Code conservé
+        // pour pouvoir revenir en arrière facilement.
+        // var closest = FindClosestAnchorToScreenPoint(Input.mousePosition, out float screenDist);
+        // bool withinRadius = closest != null && screenDist <= topViewZoomInRadiusPixels;
+        // SetHoveredAnchor(withinRadius ? closest : null);
 
         float scroll = Input.mouseScrollDelta.y;
-        if (scroll > 0f && withinRadius)
-        {
-            SaveMiddleReturnPoint(_panPosition);
-            SetHoveredAnchor(null);
-            MoveCameraToAnchor(closest);
-            return;
-        }
+        // if (scroll > 0f && withinRadius)
+        // {
+        //     SaveMiddleReturnPoint(_panPosition);
+        //     SetHoveredAnchor(null);
+        //     MoveCameraToAnchor(closest);
+        //     return;
+        // }
         if (scroll != 0f)
         {
             Vector3 worldBefore = RaycastGround(Input.mousePosition);

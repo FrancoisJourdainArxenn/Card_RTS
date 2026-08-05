@@ -124,7 +124,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eebbe3945ec0d2646a07f29eb7c1ba71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  cameraHeight: 35
+  cameraHeight: 25
   clampMiddlePan: 1
   middlePanMin: {x: -10, y: -10}
   middlePanMax: {x: 10, y: 10}
