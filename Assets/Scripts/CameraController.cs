@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -24,10 +25,21 @@ public class CameraController : MonoBehaviour
     public float transitionDuration = 0.7f;
     public Ease transitionEase = Ease.InOutCubic;
 
+    [Header("Right-click drag inertia")]
+    public float panInertiaDamping = 4f;
+    public float panInertiaMinSpeed = 0.05f;
+    public float panVelocitySampleWindow = 0.15f;
+
     enum State { Overview, Transitioning, ZoomedIn, BattleCam }
     State _state = State.Overview;
     float _zoomT = 0f;
     Vector3 _panPosition;
+    bool _isPanDragging;
+    Vector3 _panDragWorldAnchor;
+    Vector3 _panVelocity;
+    readonly Queue<(Vector3 delta, float dt)> _panDragSamples = new();
+    Vector3 _panDragSampleDisplacementSum;
+    float _panDragSampleTimeSum;
 
     public bool IsZoomedIn => _state == State.ZoomedIn;
     public bool IsBattleCam => _state == State.BattleCam;
@@ -90,7 +102,7 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    Vector3 GetPanDirection()
+    Vector3 GetKeyboardEdgeDirection()
     {
         Vector3 direction = Vector3.zero;
         if (Input.mousePosition.y >= Screen.height - panBorderThicknessVertical || Input.GetKey("w"))
@@ -102,6 +114,37 @@ public class CameraController : MonoBehaviour
         if (Input.mousePosition.x <= panBorderThicknessHorizontal || Input.GetKey("a"))
             direction.x -= 1;
         return direction;
+    }
+
+    // Right-click-drag pan: tracks the ground point under the cursor 1:1 (like a
+    // touch-drag), independent of middlePanSpeed/zoomSmoothSpeed.
+    bool TryGetMouseDragPan(out Vector3 panDelta)
+    {
+        panDelta = Vector3.zero;
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            _isPanDragging = true;
+            _panDragWorldAnchor = RaycastGround(Input.mousePosition);
+            _panVelocity = Vector3.zero;
+            _panDragSamples.Clear();
+            _panDragSampleDisplacementSum = Vector3.zero;
+            _panDragSampleTimeSum = 0f;
+            return false;
+        }
+
+        if (!Input.GetMouseButton(1))
+        {
+            _isPanDragging = false;
+            return false;
+        }
+
+        if (!_isPanDragging)
+            return false;
+
+        Vector3 worldNow = RaycastGround(Input.mousePosition);
+        panDelta = _panDragWorldAnchor - worldNow;
+        return true;
     }
 
     void HandleZoomedInPan()
@@ -116,7 +159,7 @@ public class CameraController : MonoBehaviour
             return;
         }
 
-        Vector3 direction = GetPanDirection();
+        Vector3 direction = GetKeyboardEdgeDirection();
         if (direction == Vector3.zero)
             return;
 
@@ -127,12 +170,52 @@ public class CameraController : MonoBehaviour
     {
         // Pan always updates the underlying Middle-level position; its visual
         // effect fades out as _zoomT approaches 1 (Top), so no pan is felt there.
-        Vector3 direction = GetPanDirection();
-        if (direction != Vector3.zero)
+        bool isDragPanning = TryGetMouseDragPan(out Vector3 dragDelta);
+        if (isDragPanning)
         {
-            Vector3 newPan = _panPosition + direction.normalized * middlePanSpeed * Time.deltaTime;
-            _panPosition = newPan;
+            _panPosition += new Vector3(dragDelta.x, 0f, dragDelta.z);
             ClampPanPosition();
+
+            // Average the displacement over a short sliding time window rather than the
+            // instantaneous per-frame delta, so a single jittery frame right before release
+            // can't dominate the inertia — it reflects the cursor's recent average speed.
+            _panDragSamples.Enqueue((dragDelta, Time.deltaTime));
+            _panDragSampleDisplacementSum += dragDelta;
+            _panDragSampleTimeSum += Time.deltaTime;
+            while (_panDragSampleTimeSum > panVelocitySampleWindow && _panDragSamples.Count > 1)
+            {
+                var oldest = _panDragSamples.Dequeue();
+                _panDragSampleDisplacementSum -= oldest.delta;
+                _panDragSampleTimeSum -= oldest.dt;
+            }
+            _panVelocity = _panDragSampleTimeSum > 0.0001f
+                ? _panDragSampleDisplacementSum / _panDragSampleTimeSum
+                : Vector3.zero;
+        }
+        else if (!_isPanDragging)
+        {
+            Vector3 direction = GetKeyboardEdgeDirection();
+            if (direction != Vector3.zero)
+            {
+                _panVelocity = Vector3.zero;
+                _panPosition += direction.normalized * middlePanSpeed * Time.deltaTime;
+                ClampPanPosition();
+            }
+            else if (_panVelocity.sqrMagnitude > panInertiaMinSpeed * panInertiaMinSpeed)
+            {
+                Vector3 preClamp = _panPosition + _panVelocity * Time.deltaTime;
+                _panPosition = preClamp;
+                ClampPanPosition();
+                // Kill inertia on whichever axis just got stopped by the map bounds.
+                if (!Mathf.Approximately(_panPosition.x, preClamp.x)) _panVelocity.x = 0f;
+                if (!Mathf.Approximately(_panPosition.z, preClamp.z)) _panVelocity.z = 0f;
+
+                _panVelocity *= Mathf.Exp(-panInertiaDamping * Time.deltaTime);
+            }
+            else
+            {
+                _panVelocity = Vector3.zero;
+            }
         }
 
         // TEST — désactivé : le zoom manuel sur une zone (survol + molette) est coupé,
@@ -172,6 +255,14 @@ public class CameraController : MonoBehaviour
 
         Vector3 targetPos = new Vector3(_panPosition.x, Mathf.Lerp(MapManager.Current.cameraHeight, MapManager.Current.topHeight, _zoomT), _panPosition.z);
         transform.position = Vector3.Lerp(transform.position, targetPos, 1f - Mathf.Exp(-zoomSmoothSpeed * Time.deltaTime));
+
+        if (isDragPanning)
+        {
+            // Bypass the easing above for XZ: the drag must track the cursor 1:1, with
+            // no lag, while the height (y) keeps easing normally for zoom transitions.
+            Vector3 pos = transform.position;
+            transform.position = new Vector3(targetPos.x, pos.y, targetPos.z);
+        }
     }
 
     void ClampPanPosition()
