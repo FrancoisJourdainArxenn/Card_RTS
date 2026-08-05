@@ -24,18 +24,30 @@ public class CameraController : MonoBehaviour
     public float transitionDuration = 0.7f;
     public Ease transitionEase = Ease.InOutCubic;
 
-    enum State { Overview, Transitioning, ZoomedIn }
+    enum State { Overview, Transitioning, ZoomedIn, BattleCam }
     State _state = State.Overview;
     float _zoomT = 0f;
     Vector3 _panPosition;
 
     public bool IsZoomedIn => _state == State.ZoomedIn;
+    public bool IsBattleCam => _state == State.BattleCam;
     public Vector3 WorldPosition => transform.position;
     public ZoneCameraAnchor CurrentAnchor { get; private set; }
     Vector3 _savedPosition;
     Quaternion _savedRotation;
+    Quaternion _defaultRotation;
 
     ZoneCameraAnchor _hoveredAnchor;
+
+    ZoneCameraAnchor _battleCamAnchor;
+    Vector3 _preBattlePanPosition;
+
+    public static CameraController Instance { get; private set; }
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     // void Start() => StartCoroutine(WaitForLocalPlayer());
 
@@ -56,6 +68,7 @@ public class CameraController : MonoBehaviour
         _zoomT = 0.5f;
         float startHeight = Mathf.Lerp(MapManager.Current.cameraHeight, MapManager.Current.topHeight, _zoomT);
         transform.position = new Vector3(pos.x, startHeight, pos.z);
+        _defaultRotation = transform.rotation;
     }
 
 
@@ -70,6 +83,9 @@ public class CameraController : MonoBehaviour
                 break;
             case State.Overview:
                 HandleOverviewPan();
+                break;
+            case State.BattleCam:
+                // Camera is locked on the active combat zone: no pan, no zoom, no manual control.
                 break;
         }
     }
@@ -210,10 +226,58 @@ public class CameraController : MonoBehaviour
 
     void TransitionTo(Vector3 targetPos, Quaternion targetRot, System.Action onComplete)
     {
+        transform.DOKill();
         _state = State.Transitioning;
         transform.DOMove(targetPos, transitionDuration).SetEase(transitionEase);
         transform.DORotateQuaternion(targetRot, transitionDuration).SetEase(transitionEase)
                  .OnComplete(() => onComplete());
+    }
+
+    // -------------------------------------------------------------------------
+    // BATTLE CAM — automatic camera focus during the Battle phase.
+    // While active, Update() dispatches to no pan/zoom handler, so manual
+    // controls are locked out for the whole duration (see State.BattleCam).
+    // -------------------------------------------------------------------------
+
+    public void EnterBattleCam()
+    {
+        if (_state == State.BattleCam)
+            return;
+        SetHoveredAnchor(null);
+        _preBattlePanPosition = _panPosition;
+        _battleCamAnchor = null;
+        _state = State.BattleCam;
+    }
+
+    // Called whenever a combat step is about to start executing; moves the camera to the
+    // zone closest to worldPos if it's not already there, and only invokes onArrived once
+    // the camera has actually settled on that zone — callers should hold off playing the
+    // attack visual until then, so combat never plays out ahead of the camera.
+    public void FocusBattleCamOn(Vector3 worldPos, System.Action onArrived)
+    {
+        if (_state != State.BattleCam && _state != State.Transitioning)
+        {
+            onArrived?.Invoke();
+            return;
+        }
+        ZoneCameraAnchor anchor = ZoneCameraAnchor.FindClosestTo(worldPos);
+        if (anchor == null || (anchor == _battleCamAnchor && _state == State.BattleCam))
+        {
+            onArrived?.Invoke();
+            return;
+        }
+        _battleCamAnchor = anchor;
+        TransitionTo(anchor.transform.position, anchor.transform.rotation, () => { _state = State.BattleCam; onArrived?.Invoke(); });
+    }
+
+    public void ExitBattleCam()
+    {
+        if (_state != State.BattleCam && _state != State.Transitioning)
+            return;
+        _battleCamAnchor = null;
+        _panPosition = _preBattlePanPosition;
+        Vector3 middlePos = new Vector3(_preBattlePanPosition.x, MapManager.Current.cameraHeight, _preBattlePanPosition.z);
+        TransitionTo(middlePos, _defaultRotation, () => { _state = State.Overview; _zoomT = 0f; CurrentAnchor = null; });
     }
 
     void MoveCameraToClosestBase(Vector3 pos, Vector3? direction = null)

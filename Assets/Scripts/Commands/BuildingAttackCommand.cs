@@ -34,22 +34,30 @@ public class BuildingAttackCommand : Command
             return;
         }
 
-        attackerGO.transform.DOMove(targetGO.transform.position, 0.3f)
-            .SetLoops(2, LoopType.Yoyo)
-            .SetEase(Ease.InBack)
-            .SetLink(attackerGO)
-            .OnComplete(() =>
-            {
-                try
+        void PlayAttack()
+        {
+            attackerGO.transform.DOMove(targetGO.transform.position, 0.3f)
+                .SetLoops(2, LoopType.Yoyo)
+                .SetEase(Ease.InBack)
+                .SetLink(attackerGO)
+                .OnComplete(() =>
                 {
-                    ApplyEffects(attackerGO, targetGO);
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"[BuildingAttackCmd] EXCEPTION pendant ApplyEffects (attaquant={attackerID}, cible={targetID}) — file débloquée de force: {e}");
-                }
-                CommandExecutionComplete();
-            });
+                    try
+                    {
+                        ApplyEffects(attackerGO, targetGO);
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"[BuildingAttackCmd] EXCEPTION pendant ApplyEffects (attaquant={attackerID}, cible={targetID}) — file débloquée de force: {e}");
+                    }
+                    CommandExecutionComplete();
+                });
+        }
+
+        if (CameraController.Instance != null)
+            CameraController.Instance.FocusBattleCamOn(attackerGO.transform.position, PlayAttack);
+        else
+            PlayAttack();
     }
 
     void ApplyEffects(GameObject attackerGO, GameObject targetGO)
