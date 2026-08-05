@@ -784,15 +784,30 @@ public class Player : MonoBehaviour, ILivable
         return false;
     }
 
-    public bool CanPlayCreatureInArea(PlayerArea area)
+    public bool CanPlayCreatureInArea(PlayerArea area, CardAsset cardToPlay = null)
     {
         if (area == null) return false;
         if (!System.Array.Exists(PAreas, a => a == area)) return false;
         if (area == MainPArea) return true;
-        if (area.tableVisual != null && area.tableVisual.AllCreaturesOnTable.Any()) return true;
+        if (HasCommandCreatureInArea(area)) return true;
+        if (cardToPlay != null && cardToPlay.Renfort && HasFriendlyCreatureInArea(area)) return true;
         NeutralZoneController c = GetNeutralControllerForArea(area);
         if (c == null) return false;
         return PlayerOwnsBaseInController(c); // tag joueur + même controller
+    }
+
+    // "Commandement" : une créature vivante avec ca.Commandement autorise son propriétaire
+    // à poser depuis la main dans SA zone (BaseID), même sans base contrôlée là-bas.
+    private bool HasCommandCreatureInArea(PlayerArea area)
+    {
+        return Creatures.Exists(c => c.ca.Commandement && c.BaseID == area.baseID);
+    }
+
+    // "Renfort" : la carte en main peut être posée dans toute zone où le joueur a déjà
+    // une unité, même sans Commandement et sans base contrôlée là-bas.
+    private bool HasFriendlyCreatureInArea(PlayerArea area)
+    {
+        return Creatures.Exists(c => c.BaseID == area.baseID);
     }
     
     public void AddBonusIncome(int amount)

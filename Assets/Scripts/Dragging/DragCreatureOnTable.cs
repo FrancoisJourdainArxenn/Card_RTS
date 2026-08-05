@@ -92,7 +92,7 @@ public class DragCreatureOnTable : DraggingActions {
             return false;
 
         PlayerArea selectedPArea = playerOwner.SelectedPArea();
-        if (!playerOwner.CanPlayCreatureInArea(selectedPArea))
+        if (!playerOwner.CanPlayCreatureInArea(selectedPArea, manager.cardAsset))
         {
             new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
             return false;
@@ -128,7 +128,7 @@ public class DragCreatureOnTable : DraggingActions {
     {
         PlayerArea selectedPArea = playerOwner.SelectedPArea();
         if (selectedPArea == null || !TableVisual.CursorOverSomeTable
-            || !playerOwner.CanPlayCreatureInArea(selectedPArea))
+            || !playerOwner.CanPlayCreatureInArea(selectedPArea, manager.cardAsset))
         {
             ClearInsertPreview();
             return;
@@ -155,7 +155,7 @@ public class DragCreatureOnTable : DraggingActions {
     {
         foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
         {
-            if (playerOwner.CanPlayCreatureInArea(pa))
+            if (playerOwner.CanPlayCreatureInArea(pa, manager.cardAsset))
                 pa.tableVisual.SetHighlight(true);
         }
     }

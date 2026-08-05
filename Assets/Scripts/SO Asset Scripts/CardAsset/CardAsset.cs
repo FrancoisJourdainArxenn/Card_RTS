@@ -60,14 +60,22 @@ public class CardAsset : ScriptableObject
     public int Attack;
     public int MaxHealth;   // =0 => spell card
     public int AttacksForOneTurn = 1;
-    public bool melee = false;
     public float AttackSpeedMultiplier = 1f;
     public List<AttackModifierSO> AttackModifiers = new List<AttackModifierSO>();
    
-    [Header("Movement info")]
+
+    [Header("Keywords")]
+    // Autorise le joueur à poser des créatures depuis sa main dans la zone où se trouve
+    // cette créature, même sans y contrôler de base. Perdu si la créature meurt ou change de zone.
+    public bool Commandement = false;
+    // Autorise à poser CETTE carte dans une zone où le joueur a déjà une unité, même sans
+    // Commandement et sans contrôler de base là-bas. Vérifié une seule fois, au moment de la pose.
+    public bool Renfort = false;
     public int MoveSpeed = 1;
     public bool Celerity = false;
-    
+    public bool melee = false;
+
+
     [Header("Global Properties")]
     public int ActivationsForOneTurn = 0;
     [Header("Effects")]
