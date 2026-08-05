@@ -32,6 +32,13 @@ public class CreatureAttackCommand : Command
         if (attacker == null) { CommandExecutionComplete(); return; }
         CreatureAttackVisual visual = attacker.GetComponent<CreatureAttackVisual>();
         if (visual == null) { CommandExecutionComplete(); return; }
-        visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier);
+
+        void PlayAttack() =>
+            visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier);
+
+        if (CameraController.Instance != null)
+            CameraController.Instance.FocusBattleCamOn(attacker.transform.position, PlayAttack);
+        else
+            PlayAttack();
     }
 }

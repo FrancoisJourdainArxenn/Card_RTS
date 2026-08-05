@@ -424,9 +424,11 @@ public class TurnManager : MonoBehaviour
                     StartCoroutine(AutoAdvanceFromBattle());
                     break;
                 }
+                CameraController.Instance?.EnterBattleCam();
                 StartCoroutine(DelayedBattleStart());
                 break;
             case TurnPhases.EndBattle:
+                CameraController.Instance?.ExitBattleCam();
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseEnd();
                 foreach (Player p in Player.Players)
