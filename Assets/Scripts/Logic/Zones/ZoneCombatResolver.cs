@@ -203,7 +203,7 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier1:BâtimentMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
-            if (b.Attack > 0)
+            if (b.Attack > 0 && IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
                 if (!attacker.isBuilding)
                 {
@@ -233,15 +233,18 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier2:CréatureMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
-            if (!attacker.isBuilding)
+            if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
-                pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                pendingDamage[attacker.id] = attackerExisting + t.Attack;
-            }
-            else
-            {
-                pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
+                if (!attacker.isBuilding)
+                {
+                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingDamage[attacker.id] = attackerExisting + t.Attack;
+                }
+                else
+                {
+                    pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
+                }
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
@@ -260,15 +263,18 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
             pendingDamage[t.UniqueCreatureID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier3:CréatureRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
-            if (!attacker.isBuilding)
+            if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
-                pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                pendingDamage[attacker.id] = attackerExisting + t.Attack;
-            }
-            else
-            {
-                pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
+                if (!attacker.isBuilding)
+                {
+                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingDamage[attacker.id] = attackerExisting + t.Attack;
+                }
+                else
+                {
+                    pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
+                    pendingBuildingDamage[attacker.id] = attackerExisting + t.Attack;
+                }
             }
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID });
         }
@@ -287,7 +293,7 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier4:BâtimentRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
-            if (b.Attack > 0)
+            if (b.Attack > 0 && IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
                 if (!attacker.isBuilding)
                 {
@@ -351,7 +357,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
                     // Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield: {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
 
-                    int counterDamage = target.Attack;
+                    int counterDamage = IsMeleeAttacker(step.attackerID, step.attackerIsBuilding) ? target.Attack : 0;
                     int attackerShieldAbsorbed = (!step.attackerIsBuilding && attackerCreature != null)
                         ? Mathf.Min(counterDamage, attackerCreature.ShieldValue) : 0;
                     int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
@@ -401,7 +407,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 {
                     if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.targetID, out BuildingLogic target)) continue;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
-                    int counterDamage = target.Attack;
+                    int counterDamage = IsMeleeAttacker(step.attackerID, step.attackerIsBuilding) ? target.Attack : 0;
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic atkCr);
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Building — attaquant={step.attackerID} cible bât={target.UniqueBuildingID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
@@ -556,6 +562,14 @@ public class ZoneCombatResolver : MonoBehaviour
                 Debug.LogError($"[EnqueueAllReconstructed] EXCEPTION pour resolver #{kvp.Key} — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
             }
         }
+    }
+
+    // Les attaquants non-mêlée (ranged) ne subissent pas les dégâts de contre-attaque de leur cible
+    bool IsMeleeAttacker(int attackerID, bool attackerIsBuilding)
+    {
+        if (!attackerIsBuilding)
+            return CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic c) && c.IsMelee;
+        return BuildingLogic.BuildingsCreatedThisGame.TryGetValue(attackerID, out BuildingLogic b) && b.IsMelee;
     }
 
     int GetAttackerCurrentHP(BattleStepRecord step)
