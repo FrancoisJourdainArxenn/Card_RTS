@@ -75,7 +75,7 @@ public class CameraController : MonoBehaviour
 
     void Start()
     {
-        var pos = transform.position;
+        Vector3 pos = transform.position;
         _panPosition = pos;
         _zoomT = 0.5f;
         float startHeight = Mathf.Lerp(MapManager.Current.cameraHeight, MapManager.Current.topHeight, _zoomT);
@@ -184,7 +184,7 @@ public class CameraController : MonoBehaviour
             _panDragSampleTimeSum += Time.deltaTime;
             while (_panDragSampleTimeSum > panVelocitySampleWindow && _panDragSamples.Count > 1)
             {
-                var oldest = _panDragSamples.Dequeue();
+                (Vector3 delta, float dt) oldest = _panDragSamples.Dequeue();
                 _panDragSampleDisplacementSum -= oldest.delta;
                 _panDragSampleTimeSum -= oldest.dt;
             }
@@ -267,7 +267,7 @@ public class CameraController : MonoBehaviour
 
     void ClampPanPosition()
     {
-        var map = MapManager.Current;
+        MapManager map = MapManager.Current;
         if (!map.clampMiddlePan)
             return;
         Vector2 min = Vector2.Lerp(map.middlePanMin, map.topPanMin, _zoomT);
@@ -278,8 +278,8 @@ public class CameraController : MonoBehaviour
 
     Vector3 RaycastGround(Vector2 screenPos)
     {
-        var ray = Camera.main.ScreenPointToRay(screenPos);
-        var plane = new Plane(Vector3.up, Vector3.zero);
+        Ray ray = Camera.main.ScreenPointToRay(screenPos);
+        Plane plane = new Plane(Vector3.up, Vector3.zero);
         if (plane.Raycast(ray, out float dist))
             return ray.GetPoint(dist);
         return transform.position;
@@ -289,7 +289,7 @@ public class CameraController : MonoBehaviour
     {
         ZoneCameraAnchor best = null;
         float bestDist = float.MaxValue;
-        foreach (var anchor in ZoneCameraAnchor.All)
+        foreach (ZoneCameraAnchor anchor in ZoneCameraAnchor.All)
         {
             Vector3 groundPos = new Vector3(anchor.transform.position.x, 0f, anchor.transform.position.z);
             float d = Vector2.Distance(Camera.main.WorldToScreenPoint(groundPos), screenPos);
@@ -382,7 +382,7 @@ public class CameraController : MonoBehaviour
 
     void MoveCameraToClosestBase(Vector3 pos, Vector3? direction = null)
     {
-        var nearest = direction.HasValue
+        ZoneCameraAnchor nearest = direction.HasValue
             ? ZoneCameraAnchor.FindClosestFollowingDirection(pos, direction.Value)
             : ZoneCameraAnchor.FindClosestTo(pos);
         if (nearest == null)
