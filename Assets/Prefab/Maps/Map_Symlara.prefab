@@ -126,8 +126,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   cameraHeight: 25
   clampMiddlePan: 1
-  middlePanMin: {x: -10, y: -10}
-  middlePanMax: {x: 10, y: 10}
+  middlePanMin: {x: -20, y: -20}
+  middlePanMax: {x: 20, y: 20}
   topHeight: 80
   topPanMin: {x: 0, y: 0}
   topPanMax: {x: 0, y: 0}
