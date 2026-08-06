@@ -329,10 +329,10 @@ public class CardPreviewUI : MonoBehaviour
         Vector2 previewPosition = localPoint + mouseOffset;
         _anchorRect.anchoredPosition = previewPosition;
 
-        ShowPreview(asset, previewPosition, owner, attackOverride, healthOverride, maxHealthOverride);
+        ShowPreview(asset, owner, attackOverride, healthOverride, maxHealthOverride);
     }
 
-    private void ShowPreview(CardAsset asset, Vector2 previewPosition, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
+    private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
     {
         GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab : cardPreviewPrefab;
         if (prefabToUse == null) return;
@@ -356,14 +356,18 @@ public class CardPreviewUI : MonoBehaviour
         manager.owner = owner;
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
-        if (ReminderTextManager.Instance != null)
-            ReminderTextManager.Instance.ShowTooltips(BuildTooltipKeywords(asset), previewPosition);
+        ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset));
 
         currentPreview.SetActive(true);
 
-        // mesurer/clamp à la taille finale, puis repartir de l'échelle réduite pour l'animation de pop-in
+        // mesurer/clamp à la taille finale (carte + tooltips), puis repartir de l'échelle réduite pour l'animation de pop-in
         currentPreview.transform.localScale = Vector3.one * previewScale;
         ClampPreviewToScreen((RectTransform)currentPreview.transform);
+
+        // les tooltips sont ancrés au bord droit de la carte une fois sa position finale connue
+        ReminderTextManager.Instance?.AnchorToCard(_anchorRect.anchoredPosition);
+        ReminderTextManager.Instance?.FadeIn();
+
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
     }
@@ -386,10 +390,33 @@ public class CardPreviewUI : MonoBehaviour
 
     private void ClampPreviewToScreen(RectTransform previewRect)
     {
-        Vector3[] corners = new Vector3[4];
-        previewRect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
-
         Camera cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+
+        Vector2 shift = ComputeScreenShift(previewRect, cam);
+
+        // Le bloc de tooltips va être ancré au bord droit de la carte (position finale + tooltipOffset) :
+        // on vérifie s'il déborderait aussi de l'écran une fois la carte déplacée, et on cumule le shift.
+        ReminderTextManager reminders = ReminderTextManager.Instance;
+        if (reminders != null && reminders.TooltipRect.childCount > 0)
+        {
+            RectTransform tooltipRect = reminders.TooltipRect;
+            Vector2 savedTooltipPos = tooltipRect.anchoredPosition;
+
+            tooltipRect.anchoredPosition = _anchorRect.anchoredPosition + shift + reminders.TooltipOffset;
+            shift += ComputeScreenShift(tooltipRect, cam);
+
+            tooltipRect.anchoredPosition = savedTooltipPos; // AnchorToCard() fixera la position finale après coup
+        }
+
+        if (shift != Vector2.zero)
+            _anchorRect.anchoredPosition += shift;
+    }
+
+    private Vector2 ComputeScreenShift(RectTransform rect, Camera cam)
+    {
+        Vector3[] corners = new Vector3[4];
+        rect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
+
         Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
         Vector2 max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
 
@@ -401,8 +428,7 @@ public class CardPreviewUI : MonoBehaviour
         if (min.y < 0f) shiftY = -min.y;
         else if (max.y > Screen.height) shiftY = Screen.height - max.y;
 
-        if (shiftX != 0f || shiftY != 0f)
-            _anchorRect.anchoredPosition += new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
+        return new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
     }
 
     private void PushToAutoStack(PendingEffectSelection selection, Material materialOverride = null)

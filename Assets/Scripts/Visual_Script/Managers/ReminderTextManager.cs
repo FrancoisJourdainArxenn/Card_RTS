@@ -1,6 +1,7 @@
 using DG.Tweening;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ReminderTextManager : MonoBehaviour
 {
@@ -13,6 +14,9 @@ public class ReminderTextManager : MonoBehaviour
     public float fadeOutDuration = 0.15f;
     [SerializeField] private Vector2 tooltipOffset = new(320f, 0f);
 
+    public RectTransform TooltipRect => (RectTransform)tooltipContainer;
+    public Vector2 TooltipOffset => tooltipOffset;
+
     private CanvasGroup canvasGroup;
     private readonly List<GameObject> _activePanels = new();
 
@@ -23,9 +27,10 @@ public class ReminderTextManager : MonoBehaviour
         canvasGroup.alpha = 0;
     }
 
-    public void ShowTooltips(List<Keyword> keywords, Vector2 previewPosition)
+    // Construit les panneaux (donc l'encombrement réel du bloc de tooltips) sans encore le positionner,
+    // pour que l'appelant puisse mesurer sa taille avant de fixer la position finale de la carte.
+    public void BuildTooltips(List<Keyword> keywords)
     {
-        ((RectTransform)tooltipContainer).anchoredPosition = previewPosition + tooltipOffset;
         canvasGroup.DOKill();
         ClearPanels();
 
@@ -39,6 +44,18 @@ public class ReminderTextManager : MonoBehaviour
             _activePanels.Add(panel);
         }
 
+        LayoutRebuilder.ForceRebuildLayoutImmediate(TooltipRect);
+    }
+
+    // Ancre le bloc de tooltips au bord droit de la carte, à sa position finale (post-clamp),
+    // pour qu'il reste synchronisé même quand la carte a été repositionnée pour rester à l'écran.
+    public void AnchorToCard(Vector2 cardAnchoredPosition)
+    {
+        TooltipRect.anchoredPosition = cardAnchoredPosition + tooltipOffset;
+    }
+
+    public void FadeIn()
+    {
         canvasGroup.alpha = 0;
         canvasGroup.DOFade(1f, fadeInDuration).SetDelay(tooltipDelay);
     }
