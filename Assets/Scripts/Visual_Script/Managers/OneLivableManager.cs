@@ -108,7 +108,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         if (artMask != null)    artMask.SetActive(visible);
         else if (art != null)   art.enabled        = visible;
         if (frame != null)      frame.enabled      = visible;
-        if (MeleeImage != null) MeleeImage.enabled = visible;
+        if (MeleeImage != null) MeleeImage.enabled = visible && cardAsset != null && cardAsset.melee;
         if (AttackText != null) AttackText.enabled = visible;
         if (HealthText != null) HealthText.enabled = visible;
         if (glow != null && visible == false)
