@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 3
-  Description: '<b>Regroup</b>: Give +2/+2 to another random Soldier in my Zone.'
+  Description: '<b>Regroup</b>: Give +1/+0 to every Unit in my Zone.'
   CardImage: {fileID: 21300000, guid: a3e22aa4abf4412479eadb0ec9a81d28, type: 3}
   MainCost: 3
   IsHero: 0
@@ -36,7 +36,7 @@ MonoBehaviour:
   Keywords: []
   Effects:
   - EffectName: Commander's buff
-    Effect: {fileID: 11400000, guid: fbde9110f8bc44741860133b3a5bdb95, type: 2}
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
     Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
@@ -48,7 +48,7 @@ MonoBehaviour:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

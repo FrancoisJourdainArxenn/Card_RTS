@@ -19,13 +19,13 @@ MonoBehaviour:
   tier: 3
   Description: '<b>Row Attacks.</b>
 
-    When a Unit is created in my zone, I gain
-    +1/+0.'
+    When a token Unit is created in my zone,
+    I gain +1/+0.'
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 5
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
+  Attack: 1
   MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 1

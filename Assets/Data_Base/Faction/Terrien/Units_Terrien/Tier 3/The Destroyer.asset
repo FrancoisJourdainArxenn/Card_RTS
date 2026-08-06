@@ -19,11 +19,11 @@ MonoBehaviour:
   tier: 3
   Description: <b>Row Attacks</b>.
   CardImage: {fileID: 21300000, guid: 9612b5fd0e58fde4e9c720080306f975, type: 3}
-  MainCost: 8
+  MainCost: 7
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 10
-  MaxHealth: 15
+  Attack: 7
+  MaxHealth: 12
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 1
   AttackModifiers:

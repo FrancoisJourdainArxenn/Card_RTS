@@ -17,19 +17,24 @@ MonoBehaviour:
   Type: 0
   subType: 2
   tier: 1
-  Description: When you spend Ressources, a Robot in my zone gains +1/+1.
+  Description: '<b>Commander.</b>
+
+    When you spend Ressources, a Robot in my zone
+    gains +1/+1.'
   CardImage: {fileID: 21300000, guid: be4dd77881ded5a4697af3ee21be45fc, type: 3}
   MainCost: 0
   IsHero: 1
   UnlockCondition: {fileID: 11400000, guid: ccf88d671a9535f4db48ae78a260fe68, type: 2}
-  Attack: 10
-  MaxHealth: 10
+  Attack: 8
+  MaxHealth: 8
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 1
   AttackModifiers: []
+  Commandement: 1
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
