@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Selendis
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
+  subType: 0
+  tier: 2
+  Description: <b>Command:</b> a Robot in my Zone gains +1/+1.
+  CardImage: {fileID: 21300000, guid: 535aa7fe1e430f74ca0cb1453a1d2766, type: 3}
+  MainCost: 3
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 2
+  MaxHealth: 3
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 1
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 0
+  ActivationsForOneTurn: 0
+  Keywords: []
+  Effects:
+  - EffectName: Selendis' Buff
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 3
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 3
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
