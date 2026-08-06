@@ -18,7 +18,8 @@ public class NeutralBaseVisual : MonoBehaviour {
     public Transform baseParent;
 
     [HideInInspector] public Transform BaseApparitionPosition;
-    public Transform BasePosition;
+    public Transform LowBasePosition;
+    public Transform TopBasePosition;
     public GameObject BaseCardPrefab;
     private bool canBuild = true;
     private Player localPlayer;

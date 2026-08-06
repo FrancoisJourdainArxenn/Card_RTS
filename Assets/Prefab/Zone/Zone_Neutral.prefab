@@ -353,7 +353,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &1265318292454595385
 GameObject:
   m_ObjectHideFlags: 0
@@ -2033,7 +2032,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &5920625469934551942
 GameObject:
   m_ObjectHideFlags: 0
@@ -2333,7 +2331,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &7578027315016541562
 GameObject:
   m_ObjectHideFlags: 0
@@ -2763,7 +2760,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &8843833499511395670
 GameObject:
   m_ObjectHideFlags: 0
@@ -3209,6 +3205,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 4400523747067436361}
     - target: {fileID: 8753550234315296394, guid: 641495982c4b6c54dab201206ab822a7, type: 3}
+      propertyPath: LowBasePosition
+      value: 
+      objectReference: {fileID: 4087053743615183700}
+    - target: {fileID: 8753550234315296394, guid: 641495982c4b6c54dab201206ab822a7, type: 3}
+      propertyPath: TopBasePosition
+      value: 
+      objectReference: {fileID: 6224893076555398204}
+    - target: {fileID: 8753550234315296394, guid: 641495982c4b6c54dab201206ab822a7, type: 3}
       propertyPath: neutralBaseController
       value: 
       objectReference: {fileID: 47061821084883809}
@@ -3274,6 +3278,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5507611060660791973, guid: d0e2777609679ec4db150e02fbdd4b99, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3334,6 +3342,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2364494360593765392, guid: d0e2777609679ec4db150e02fbdd4b99, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5507611060660791973, guid: d0e2777609679ec4db150e02fbdd4b99, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
