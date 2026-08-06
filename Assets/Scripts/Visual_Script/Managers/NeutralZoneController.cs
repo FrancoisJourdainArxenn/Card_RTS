@@ -74,7 +74,8 @@ public class NeutralZoneController : MonoBehaviour
         baseManager.ResetValues(ba);
         baseManager.Spawner = nBaseVisual.gameObject;
         baseCard.tag = player.tag;
-        string playerTag = (player == GlobalSettings.Instance.LowPlayer) ? "LowPlayer" : "TopPlayer";
+        bool isLowPlayer = player == GlobalSettings.Instance.LowPlayer;
+        string playerTag = isLowPlayer ? "LowPlayer" : "TopPlayer";
         SetBuildingSpotTag(playerTag);
 
 
@@ -89,10 +90,11 @@ public class NeutralZoneController : MonoBehaviour
         // Animate scale (pop-in)
         baseCard.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
 
-        // Animate movement from BaseApparitionPosition to BasePosition
-        if (nBaseVisual.BasePosition != null)
+        // Animate movement from BaseApparitionPosition to the resting position matching the capturing player's side
+        Transform targetPosition = isLowPlayer ? nBaseVisual.LowBasePosition : nBaseVisual.TopBasePosition;
+        if (targetPosition != null)
         {
-            baseCard.transform.DOMove(nBaseVisual.BasePosition.position, 0.7f).SetEase(Ease.InOutQuad);
+            baseCard.transform.DOMove(targetPosition.position, 0.7f).SetEase(Ease.InOutQuad);
             baseCard.transform.DORotateQuaternion(Quaternion.identity, 0.7f).SetEase(Ease.InOutQuad);
         }
     }
