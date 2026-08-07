@@ -5,5 +5,4 @@ public class MenuRegistry : ScriptableObject
 {
     public GameObject[] maps;
     public DeckSO[] decks;
-    public bool enemyDetection = false;
 }

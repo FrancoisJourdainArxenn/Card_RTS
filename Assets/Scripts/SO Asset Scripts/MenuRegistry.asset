@@ -13,17 +13,10 @@ MonoBehaviour:
   m_Name: MenuRegistry
   m_EditorClassIdentifier: Assembly-CSharp::MenuRegistry
   maps:
-  - {fileID: 7898641444668022876, guid: 4ca2dc2bdb204e24d8ac5a3d663df506, type: 3}
-  - {fileID: 7898641444668022876, guid: 89d18ee66ddbde540b058b33279adc8b, type: 3}
   - {fileID: 8472823780511676816, guid: 9f4a65383cdbd0e4292acdffbc723eea, type: 3}
-  - {fileID: 8472823780511676816, guid: b701fb32a2c10ec4eb887c3940dd1fdf, type: 3}
-  - {fileID: 7898641444668022876, guid: d6fc7d4c4afe18640870a5cdd812e7ea, type: 3}
   decks:
   - {fileID: 11400000, guid: cee0b5bdef8038249bda00f0a20c7510, type: 2}
   - {fileID: 11400000, guid: c69948e416fca8642b2544a611dbf802, type: 2}
   - {fileID: 11400000, guid: a409730b51e9eb1409d5393e78f3e713, type: 2}
   - {fileID: 11400000, guid: 145ac47e3307ef34fabfe216c222adb7, type: 2}
   - {fileID: 11400000, guid: ce58267493771cd46802293f392aa62a, type: 2}
-  - {fileID: 11400000, guid: 4e93c723617187d46958dfb337a4f5e6, type: 2}
-  - {fileID: 11400000, guid: e6158244d77766941bf34c2843baf094, type: 2}
-  enemyDetection: 0

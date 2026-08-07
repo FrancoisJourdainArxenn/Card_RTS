@@ -73,7 +73,7 @@ public class CreatureAttackVisual : MonoBehaviour
         AttackTargetType targetType = GetTargetType(targetUniqueID);
         float moveDur  = moveDuration / speedMultiplier;
         float postDel  = postDelay    / speedMultiplier;
-        float windupDur = (GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupDuration : 0.15f) / speedMultiplier;
+        float windupDur = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupDuration : 0.15f;
         float windupBack   = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupBack   : 0.3f;
         float windupHeight = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupHeight : 0.35f;
 
@@ -92,7 +92,7 @@ public class CreatureAttackVisual : MonoBehaviour
         Sequence attackSeq = DOTween.Sequence();
         attackSeq.SetLink(gameObject);
         attackSeq.Append(transform.DOMove(windupPosition, windupDur).SetEase(Ease.OutSine));
-        attackSeq.Append(transform.DOMove(target.transform.position, moveDur).SetEase(Ease.InExpo));
+        attackSeq.Append(transform.DOMove(target.transform.position, moveDur).SetEase(Ease.InQuad));
         attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
 
         // Shake fires a little before the creature actually reaches the target (impact = windupDur + moveDur),

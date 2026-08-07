@@ -60,7 +60,7 @@ public class CardAsset : ScriptableObject
     public int Attack;
     public int MaxHealth;   // =0 => spell card
     public int AttacksForOneTurn = 1;
-    public float AttackSpeedMultiplier = 1f;
+    public float AttackSpeedMultiplier = 2f;
     public List<AttackModifierSO> AttackModifiers = new List<AttackModifierSO>();
    
 

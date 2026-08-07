@@ -36,19 +36,7 @@ public class ZoneEnemyIndicator : MonoBehaviour
 
         bool enemyPresent = EnemyIsInThisZone(enemy);
 
-        if (enemyPresent && ScoutEnterSO.HasScoutAdjacentTo(_zone.Logic, local))
-        {
-            indicatorObject.SetActive(true);
-            return;
-        }
-
-        if (GameNetworkManager.Instance == null || !GameNetworkManager.Instance.EnemyDetection)
-        {
-            indicatorObject.SetActive(false);
-            return;
-        }
-
-        indicatorObject.SetActive(enemyPresent && LocalIsInAdjacentZone(local));
+        indicatorObject.SetActive(enemyPresent && ScoutEnterSO.HasScoutAdjacentTo(_zone.Logic, local));
     }
 
 
@@ -58,17 +46,6 @@ public class ZoneEnemyIndicator : MonoBehaviour
         {
             ZoneLogic zone = c.Zone;
             if (zone != null && zone == _zone.Logic)
-                return true;
-        }
-        return false;
-    }
-
-    private bool LocalIsInAdjacentZone(Player local)
-    {
-        foreach (CreatureLogic c in local.playedCards.Creatures)
-        {
-            ZoneLogic zone = c.Zone;
-            if (zone != null && _zone.Logic.IsAdjacentTo(zone))
                 return true;
         }
         return false;

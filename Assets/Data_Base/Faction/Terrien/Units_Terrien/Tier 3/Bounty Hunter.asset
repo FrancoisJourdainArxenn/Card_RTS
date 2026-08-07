@@ -27,7 +27,7 @@ MonoBehaviour:
   Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 1
+  AttackSpeedMultiplier: 2
   AttackModifiers:
   - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
   Commandement: 0

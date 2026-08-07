@@ -19,7 +19,6 @@ public class NetworkMenu : MonoBehaviour
     [SerializeField] MenuRegistry menuRegistry;
     [SerializeField] TMP_Dropdown mapDropdown;
     [SerializeField] TMP_Dropdown deckDropdown;
-    [SerializeField] Toggle enemyDetectionToggle;
 
 
     [Header("Scene")]
@@ -47,24 +46,13 @@ public class NetworkMenu : MonoBehaviour
             foreach (DeckSO deck in menuRegistry.decks)
                 deckOptions.Add(new(deck.deckName));
             deckDropdown.ClearOptions();
-            deckDropdown.AddOptions(deckOptions);   
+            deckDropdown.AddOptions(deckOptions);
         }
-
-        if (enemyDetectionToggle != null)
-            enemyDetectionToggle.isOn = menuRegistry.enemyDetection;
-
-
-    }
-
-    public void OnEnemyDetectionChanged(bool value)
-    {
-        menuRegistry.enemyDetection = value;
     }
 
     public void StartHost()
     {
         statusText.text = "Démarrage du serveur...";
-        NetworkSessionData.EnemyDetection = menuRegistry.enemyDetection;
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData("0.0.0.0", Port);
         NetworkManager.Singleton.StartHost();
     }
@@ -99,7 +87,6 @@ public class NetworkMenu : MonoBehaviour
             
             int deckIdx = (deckDropdown != null) ? deckDropdown.value : -1;
             NetworkSessionData.SelectedDeckPresetIndex = deckIdx;
-            NetworkSessionData.EnemyDetection = menuRegistry.enemyDetection;
             NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }

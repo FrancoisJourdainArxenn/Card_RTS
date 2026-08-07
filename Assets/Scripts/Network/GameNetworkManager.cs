@@ -15,8 +15,6 @@ public class GameNetworkManager : NetworkBehaviour
     public static GameNetworkManager Instance { get; private set; }
     NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [SerializeField] MenuRegistry registry;
-    NetworkVariable<bool> _enemyDetection = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public bool EnemyDetection => NetworkSessionData.IsNetworkSession ? _enemyDetection.Value : registry.enemyDetection;
 
     private readonly Dictionary<ulong, int> _deckChoices = new();
 
@@ -525,9 +523,6 @@ public class GameNetworkManager : NetworkBehaviour
             mapIndex.Value = NetworkSessionData.SelectedMapIndex;
 
         LoadMap(mapIndex.Value);
-        if (IsServer)
-            _enemyDetection.Value = NetworkSessionData.EnemyDetection;
-
 
         NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
         PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId, NetworkSessionData.SelectedDeckPresetIndex);

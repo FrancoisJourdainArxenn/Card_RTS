@@ -26,8 +26,4 @@ public static class NetworkSessionData
     /// -1 = utilise le playerDeck assigné dans la scène (défaut).
     /// </summary>
     public static int SelectedDeckPresetIndex { get; set; } = -1;
-
-    public static bool EnemyDetection { get; set; }
-
-
 }
