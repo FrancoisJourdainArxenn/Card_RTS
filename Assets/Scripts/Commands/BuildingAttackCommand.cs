@@ -36,7 +36,20 @@ public class BuildingAttackCommand : Command
 
         void PlayAttack()
         {
-            attackerGO.transform.DOMove(targetGO.transform.position, 0.3f)
+            const float moveDuration = 0.3f;
+
+            // Shake fires a little before the building actually reaches the target (impact = moveDuration),
+            // not after ApplyEffects (which only runs once the whole there-and-back move finishes) — otherwise
+            // it lands visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
+            if (damageTakenByTarget > 0)
+            {
+                float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
+                float shakeDelay = Mathf.Max(0f, moveDuration - leadTime);
+                DOVirtual.DelayedCall(shakeDelay, () => CameraController.Instance?.ShakeForAttackerID(attackerID))
+                    .SetLink(attackerGO);
+            }
+
+            attackerGO.transform.DOMove(targetGO.transform.position, moveDuration)
                 .SetLoops(2, LoopType.Yoyo)
                 .SetEase(Ease.InBack)
                 .SetLink(attackerGO)

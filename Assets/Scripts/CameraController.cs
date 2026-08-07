@@ -54,6 +54,11 @@ public class CameraController : MonoBehaviour
     ZoneCameraAnchor _battleCamAnchor;
     Vector3 _preBattlePanPosition;
 
+    [Header("Camera Shake")]
+    public int shakeVibrato = 20;
+    public float shakeRandomness = 90f;
+    Tween _shakeTween;
+
     public static CameraController Instance { get; private set; }
 
     void Awake()
@@ -400,5 +405,46 @@ public class CameraController : MonoBehaviour
             anchor.transform.rotation,
             () => { _state = State.ZoomedIn; CurrentAnchor = anchor; }
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // CAMERA SHAKE — triggered when a unit's Attack stat crosses the light/strong
+    // thresholds configured on GlobalSettings while it deals damage.
+    // -------------------------------------------------------------------------
+
+    // uniqueID is the ID of the unit whose Attack stat determines shake strength
+    // (the attacker for damage it deals, or the defender for counter-damage it deals back).
+    public void ShakeForAttackerID(int uniqueID)
+    {
+        int attack = GetAttackValue(uniqueID);
+        if (attack < 0)
+            return;
+        ShakeForAttackValue(attack);
+    }
+
+    public void ShakeForAttackValue(int attackValue)
+    {
+        GlobalSettings gs = GlobalSettings.Instance;
+        if (gs == null)
+            return;
+
+        if (attackValue >= gs.CameraShakeThresholdStrong)
+            Shake(gs.CameraShakeDurationStrong, gs.CameraShakeStrengthStrong);
+        else if (attackValue >= gs.CameraShakeThresholdLight)
+            Shake(gs.CameraShakeDurationLight, gs.CameraShakeStrengthLight);
+    }
+
+    void Shake(float duration, float strength)
+    {
+        _shakeTween?.Kill();
+        _shakeTween = transform.DOShakePosition(duration, strength, shakeVibrato, shakeRandomness, false, true)
+            .SetLink(gameObject);
+    }
+
+    static int GetAttackValue(int uniqueID)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic c)) return c.Attack;
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(uniqueID, out BuildingLogic b)) return b.Attack;
+        return -1;
     }
 }

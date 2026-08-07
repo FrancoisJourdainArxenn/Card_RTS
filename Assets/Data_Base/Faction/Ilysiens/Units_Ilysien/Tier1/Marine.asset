@@ -22,14 +22,16 @@ MonoBehaviour:
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
+  Attack: 1
   MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 1
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects: []

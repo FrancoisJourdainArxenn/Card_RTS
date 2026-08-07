@@ -113,7 +113,11 @@ public class ZoneCombatResolver : MonoBehaviour
         List<(int attack, bool isBuilding, int id)> queue1 = BuildAttackQueue(p1, zone);
         List<(int attack, bool isBuilding, int id)> queue2 = BuildAttackQueue(p2, zone);
 
-        bool p1Turn = UnityEngine.Random.value < 0.5f;
+        int p1ZoneUnitCount = GetCreaturesInMyZone(p1, zone).Count;
+        int p2ZoneUnitCount = GetCreaturesInMyZone(p2, zone).Count;
+        bool p1Turn = p1ZoneUnitCount != p2ZoneUnitCount
+            ? p1ZoneUnitCount > p2ZoneUnitCount
+            : UnityEngine.Random.value < 0.5f;
         Debug.Log($"[Sequence:{zoneView.name}] Commence : {(p1Turn ? p1.name : p2.name)} | queue1={queue1.Count} queue2={queue2.Count}");
         int i1 = 0, i2 = 0, stepNum = 0;
 

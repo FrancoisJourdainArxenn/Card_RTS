@@ -16,10 +16,10 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 1
-  tier: 3
-  Description: When you play a Unit, it gains +1/+0.
+  tier: 1
+  Description: When you play a Melee Unit, it gains +1/+0.
   CardImage: {fileID: 21300000, guid: 7514b30da6b2bc54b9df3413f0262279, type: 3}
-  MainCost: 3
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
@@ -38,9 +38,18 @@ MonoBehaviour:
   - EffectName: Swarming ! (Card Play)
     Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
     Trigger: 12
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: 5d584f19cebb4b4e8bf2b1fb42f46042, type: 2}
     Effectinfo:
-      effectTargets: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 1
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0
@@ -52,12 +61,21 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
-  - EffectName: Swarming ! (Token Created)
+  - EffectName: Swarming ! (Card Play)
     Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
     Trigger: 11
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: 5d584f19cebb4b4e8bf2b1fb42f46042, type: 2}
     Effectinfo:
-      effectTargets: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 1
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0

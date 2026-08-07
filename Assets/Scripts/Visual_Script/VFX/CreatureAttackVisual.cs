@@ -20,7 +20,7 @@ public class CreatureAttackVisual : MonoBehaviour
 
     void Awake()
     {
-        manager = GetComponent<OneCreatureManager>();    
+        manager = GetComponent<OneCreatureManager>();
         w = GetComponent<WhereIsTheCardOrCreature>();
     }
 
@@ -73,17 +73,44 @@ public class CreatureAttackVisual : MonoBehaviour
         AttackTargetType targetType = GetTargetType(targetUniqueID);
         float moveDur  = moveDuration / speedMultiplier;
         float postDel  = postDelay    / speedMultiplier;
+        float windupDur = (GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupDuration : 0.15f) / speedMultiplier;
+        float windupBack   = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupBack   : 0.3f;
+        float windupHeight = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupHeight : 0.35f;
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
         VisualStates tempState = w.VisualState;
         w.VisualState = VisualStates.Transition;
         Vector3 originalPosition = transform.position;
+
+        Vector3 flatDir = target.transform.position - originalPosition;
+        flatDir.y = 0f;
+        flatDir = flatDir.sqrMagnitude > 0.0001f ? flatDir.normalized : transform.forward;
+        Vector3 windupPosition = originalPosition - flatDir * windupBack + Vector3.up * windupHeight;
+
         bool moveDone = false;
-        transform.DOMove(target.transform.position, moveDur)
-            .SetLoops(2, LoopType.Yoyo)
-            .SetEase(Ease.InBack)
-            .SetLink(gameObject)
+        Sequence attackSeq = DOTween.Sequence();
+        attackSeq.SetLink(gameObject);
+        attackSeq.Append(transform.DOMove(windupPosition, windupDur).SetEase(Ease.OutSine));
+        attackSeq.Append(transform.DOMove(target.transform.position, moveDur).SetEase(Ease.InExpo));
+        attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
+
+        // Shake fires a little before the creature actually reaches the target (impact = windupDur + moveDur),
+        // not on the sequence's OnComplete (which only fires after the return move too) — otherwise it lands
+        // visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
+        if (damageTakenByTarget > 0)
+        {
+            IDHolder selfID = GetComponent<IDHolder>();
+            if (selfID != null)
+            {
+                int attackerUniqueID = selfID.UniqueID;
+                float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
+                float shakeTime = Mathf.Max(0f, windupDur + moveDur - leadTime);
+                attackSeq.InsertCallback(shakeTime, () => CameraController.Instance?.ShakeForAttackerID(attackerUniqueID));
+            }
+        }
+
+        attackSeq
             .OnComplete((TweenCallback)(() =>
             {
                 moveDone = true;

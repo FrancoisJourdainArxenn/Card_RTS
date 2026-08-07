@@ -37,10 +37,25 @@ public class GlobalSettings : MonoBehaviour
     public float CardTransitionTimeFast = 0.5f;
     public float AttackMoveDuration = 0.3f;   // durée du mouvement aller-retour
     public float AttackPostDelay = 0.3f;       // pause après chaque attaque
+    public float AttackWindupDuration = 0.15f; // durée de l'élan (recul + élévation) avant le coup
+    public float AttackWindupBack = 0.3f;      // distance de recul pendant l'élan
+    public float AttackWindupHeight = 0.35f;   // hauteur d'élévation pendant l'élan
 
     [Header("Pop Animation")]
     public float popStrength = 0.35f;
     public float popDuration = 0.35f;
+
+    [Header("Camera Shake (on damage dealt)")]
+    [Tooltip("How long (seconds) before the visual impact the camera shake starts, so it reads as landing on the hit instead of after it.")]
+    public float CameraShakeAnticipation = 0.05f;
+    [Tooltip("Attack stat threshold (X) at or above which a unit dealing damage triggers a light camera shake.")]
+    public int CameraShakeThresholdLight = 5;
+    public float CameraShakeStrengthLight = 0.15f;
+    public float CameraShakeDurationLight = 0.2f;
+    [Tooltip("Attack stat threshold (Y) at or above which a unit dealing damage triggers a strong camera shake.")]
+    public int CameraShakeThresholdStrong = 9;
+    public float CameraShakeStrengthStrong = 0.35f;
+    public float CameraShakeDurationStrong = 0.3f;
 
     [Header("Prefabs and Assets")]
     public GameObject NoTargetSpellCardPrefab;
