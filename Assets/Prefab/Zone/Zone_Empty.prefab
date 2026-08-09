@@ -349,7 +349,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &987836613537669655
 GameObject:
   m_ObjectHideFlags: 0
@@ -940,7 +939,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &3782735227854864916
 GameObject:
   m_ObjectHideFlags: 0
@@ -977,7 +975,6 @@ Transform:
   m_Children:
   - {fileID: 8339622242521025568}
   - {fileID: 2624751630286382382}
-  - {fileID: 187037439730835140}
   - {fileID: 4024336697706251302}
   - {fileID: 6616173186055545929}
   - {fileID: 6475762073816235112}
@@ -1060,37 +1057,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZoneEnemyIndicator
   indicatorObject: {fileID: 2987278122189864864}
---- !u!1 &5355683608950989853
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 187037439730835140}
-  m_Layer: 0
-  m_Name: BattlePoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &187037439730835140
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5355683608950989853}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.46}
-  m_LocalScale: {x: 16.004, y: 1, z: 7.9666}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3499865976678205738}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5554277563708777250
 GameObject:
   m_ObjectHideFlags: 0
@@ -1461,7 +1427,7 @@ MonoBehaviour:
   BasePosition: {fileID: 0}
   baseID: 0
   parentZone: {fileID: 0}
-  BattlePos: {fileID: 187037439730835140}
+  BattlePos: {fileID: 0}
   AreaHealthText: {fileID: 2382258568072171178}
 --- !u!114 &403595339840204762
 MonoBehaviour:
@@ -1735,7 +1701,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &7227586180219219434
 GameObject:
   m_ObjectHideFlags: 0
@@ -2319,7 +2284,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CenteredSlots
   Spacing: 2
-  MaxCreatures: 4
 --- !u!1 &8904245430221220410
 GameObject:
   m_ObjectHideFlags: 0
@@ -2376,7 +2340,7 @@ MonoBehaviour:
   BasePosition: {fileID: 0}
   baseID: 0
   parentZone: {fileID: 0}
-  BattlePos: {fileID: 187037439730835140}
+  BattlePos: {fileID: 0}
   AreaHealthText: {fileID: 4675038382742340861}
 --- !u!114 &7636775938359942866
 MonoBehaviour:
@@ -2587,7 +2551,7 @@ Transform:
   m_GameObject: {fileID: 9190417659712581448}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -1, y: 20, z: 0}
+  m_LocalPosition: {x: -1, y: 25, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

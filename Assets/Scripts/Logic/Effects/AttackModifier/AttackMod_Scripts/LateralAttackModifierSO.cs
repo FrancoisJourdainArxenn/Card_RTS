@@ -4,8 +4,9 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Lateral Attack")]
 public class LateralAttackModifierSO : AttackModifierSO
 {
-    public override void Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
     {
+        List<AttackHitResult> hits = new List<AttackHitResult>();
         List<CreatureLogic> adjacents = GetAdjacent(mainTarget);
         Debug.Log($"[LateralAttack] {attacker.DisplayName} → cible principale : {mainTarget.DisplayName} | voisins trouvés : {adjacents.Count}");
 
@@ -21,12 +22,14 @@ public class LateralAttackModifierSO : AttackModifierSO
             int effective = dmg - shieldAbs;
             int hpAfter = Mathf.Max(0, adj.Health - effective);
             Debug.Log($"[LateralAttack] Frappe {adj.DisplayName} — dégâts:{dmg} shield absorbé:{shieldAbs} effectif:{effective} HP avant:{adj.Health} HP après:{hpAfter}");
-            new DealDamageCommand(adj.UniqueCreatureID, dmg, hpAfter, attacker.UniqueCreatureID, null, attacker.AttackSpeedMultiplier).AddToQueue();
+            hits.Add(new AttackHitResult(adj.UniqueCreatureID, dmg, hpAfter));
             if (hpAfter <= 0)
                 adj.ScheduleBattleDeath();
             else
                 adj.Health -= effective;
         }
+
+        return hits;
     }
 
     private List<CreatureLogic> GetAdjacent(CreatureLogic target)

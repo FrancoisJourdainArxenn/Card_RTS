@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class CreatureAttackCommand : Command 
+public class CreatureAttackCommand : Command
 {
     // position of creature on enemy`s table that will be attacked
-    // if enemyindex == -1 , attack an enemy character 
+    // if enemyindex == -1 , attack an enemy character
     private int TargetUniqueID;
     private int AttackerUniqueID;
     private int AttackerHealthAfter;
@@ -12,9 +13,12 @@ public class CreatureAttackCommand : Command
     private int DamageTakenByAttacker;
     private int DamageTakenByTarget;
     private float SpeedMultiplier;
+    // Cibles secondaires touchées par les modificateurs d'attaque (Cone/Piercing/...) de l'attaquant,
+    // dégâts déjà appliqués en logique — jouées dans la même séquence visuelle que la cible principale.
+    private List<AttackHitResult> SecondaryHits;
 
 
-    public CreatureAttackCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f)
+    public CreatureAttackCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
     {
         this.TargetUniqueID = targetID;
         this.AttackerUniqueID = attackerID;
@@ -23,6 +27,7 @@ public class CreatureAttackCommand : Command
         this.DamageTakenByTarget = damageTakenByTarget;
         this.DamageTakenByAttacker = damageTakenByAttacker;
         this.SpeedMultiplier = speedMultiplier;
+        this.SecondaryHits = secondaryHits ?? new List<AttackHitResult>();
     }
 
     public override void StartCommandExecution()
@@ -34,7 +39,7 @@ public class CreatureAttackCommand : Command
         if (visual == null) { CommandExecutionComplete(); return; }
 
         void PlayAttack() =>
-            visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier);
+            visual.AttackTarget(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier, SecondaryHits);
 
         if (CameraController.Instance != null)
             CameraController.Instance.FocusBattleCamOn(attacker.transform.position, PlayAttack);

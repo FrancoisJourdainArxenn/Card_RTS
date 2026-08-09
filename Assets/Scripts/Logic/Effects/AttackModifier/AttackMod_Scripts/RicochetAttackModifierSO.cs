@@ -6,8 +6,9 @@ public class RicochetAttackModifierSO : AttackModifierSO
 {
     public int Bounces = 3;
 
-    public override void Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
     {
+        List<AttackHitResult> hits = new List<AttackHitResult>();
         HashSet<int> hit = new HashSet<int>();
         hit.Add(mainTarget.UniqueCreatureID);
 
@@ -26,9 +27,11 @@ public class RicochetAttackModifierSO : AttackModifierSO
             int seed = attacker.UniqueCreatureID ^ current.UniqueCreatureID ^ (i * 1000);
             CreatureLogic next = candidates[Mathf.Abs(seed) % candidates.Count];
             hit.Add(next.UniqueCreatureID);
-            DealDamage(attacker, next);
+            TryDealDamage(attacker, next, hits);
             current = next;
         }
+
+        return hits;
     }
 
     private List<CreatureLogic> GetAdjacentCandidates(CreatureLogic from, HashSet<int> alreadyHit)
@@ -60,14 +63,14 @@ public class RicochetAttackModifierSO : AttackModifierSO
             list.Add(c);
     }
 
-    private void DealDamage(CreatureLogic attacker, CreatureLogic target)
+    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
     {
         if (target.IsPendingDeath) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
-        new DealDamageCommand(target.UniqueCreatureID, dmg, hpAfter, attacker.UniqueCreatureID, null, attacker.AttackSpeedMultiplier).AddToQueue();
+        hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
         if (hpAfter <= 0)
             target.ScheduleBattleDeath();
         else

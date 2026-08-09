@@ -4,25 +4,27 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Row Attack")]
 public class RowAttackModifierSO : AttackModifierSO
 {
-    public override void Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
     {
+        List<AttackHitResult> hits = new List<AttackHitResult>();
         foreach (CreatureLogic c in mainTarget.owner.playedCards.Creatures)
         {
             if (c == mainTarget) continue;
             if (c.BaseID != mainTarget.BaseID) continue;
             if (mainTarget.IsMelee && !c.IsMelee) continue;
-            DealDamage(attacker, c);
+            TryDealDamage(attacker, c, hits);
         }
+        return hits;
     }
 
-    private void DealDamage(CreatureLogic attacker, CreatureLogic target)
+    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
     {
         if (target.IsPendingDeath) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
-        new DealDamageCommand(target.UniqueCreatureID, dmg, hpAfter, attacker.UniqueCreatureID, null, attacker.AttackSpeedMultiplier).AddToQueue();
+        hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
         if (hpAfter <= 0)
             target.ScheduleBattleDeath();
         else

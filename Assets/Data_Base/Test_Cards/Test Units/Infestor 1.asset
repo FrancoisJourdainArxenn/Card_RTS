@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>On Play:</b> I gain +1/+1 for each Unit in my zone.
+  Description: Cone Attack
   CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
   MainCost: 0
   IsHero: 0
@@ -25,11 +25,14 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 1
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 2
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:

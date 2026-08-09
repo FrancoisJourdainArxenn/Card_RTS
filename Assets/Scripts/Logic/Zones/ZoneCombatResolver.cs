@@ -368,9 +368,23 @@ public class ZoneCombatResolver : MonoBehaviour
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     // Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
 
+                    // Modificateurs d'attaque (Cone/Piercing/Circular/...) calculés avant d'empiler la commande
+                    // principale : leurs cibles secondaires sont transportées avec elle pour qu'un seul windup
+                    // visuel couvre toute la volée (cible principale + secondaires), au lieu de rejouer une
+                    // séquence complète indépendante par cible touchée.
+                    List<AttackHitResult> secondaryHits = new List<AttackHitResult>();
+                    if (attackerCreature != null)
+                        foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
+                        {
+                            if (mod == null) continue; // slot vide/cassé dans AttackModifiers — on l'ignore au lieu de planter tout le resolver
+                            Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
+                            List<AttackHitResult> modHits = mod.Apply(attackerCreature, target);
+                            if (modHits != null) secondaryHits.AddRange(modHits);
+                        }
+
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Creature — attaquant={step.attackerID} cible={target.UniqueCreatureID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
                     if (!step.attackerIsBuilding)
-                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f).AddToQueue();
+                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f, secondaryHits).AddToQueue();
                     else
                         new BuildingAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
 
@@ -397,14 +411,6 @@ public class ZoneCombatResolver : MonoBehaviour
                                 attackerBuilding.Health = attackerHealthAfter;
                         }
                     }
-                    if (attackerCreature != null)
-                    foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
-                    {
-                        if (mod == null) continue; // slot vide/cassé dans AttackModifiers — on l'ignore au lieu de planter tout le resolver
-                        Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
-                        mod.Apply(attackerCreature, target);
-                    }
-
                     break;
                 }
                 case TargetKind.Building:

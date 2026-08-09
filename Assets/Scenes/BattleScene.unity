@@ -2241,6 +2241,8 @@ MonoBehaviour:
   AttackWindupDuration: 0.4
   AttackWindupBack: 0.01
   AttackWindupHeight: 4
+  ProjectileSpeed: 7
+  ProjectileMinDuration: 0.5
   popStrength: 2
   popDuration: 0.5
   CameraShakeAnticipation: 0.05
@@ -2257,6 +2259,7 @@ MonoBehaviour:
   CreaturePrefab: {fileID: 126706081317096460, guid: 0c83baa8f0f3a2c42b0039d4e559f657, type: 3}
   DamageEffectPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
   ExplosionPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
+  RangedProjectilePrefab: {fileID: 5039141623757506213, guid: 4f4c8e726e0e24d46bc71c45623f7c94, type: 3}
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
   BuildingPrefab: {fileID: 126706081317096460, guid: a1d0ad6a13751354b993f8d8c8ec1cca, type: 3}
   CardTierIcons:
@@ -8404,9 +8407,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 99.944, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:
