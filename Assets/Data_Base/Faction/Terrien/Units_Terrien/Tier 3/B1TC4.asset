@@ -25,7 +25,7 @@ MonoBehaviour:
   Attack: 3
   MaxHealth: 7
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 2
+  AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0

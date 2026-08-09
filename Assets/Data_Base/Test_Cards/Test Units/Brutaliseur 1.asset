@@ -26,7 +26,7 @@ MonoBehaviour:
   MaxHealth: 50
   AttacksForOneTurn: 1
   melee: 0
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 4
   AttackModifiers:
   - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   MoveSpeed: 1

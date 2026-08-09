@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Battle Start:</b> +2 ATK to Units in my zone, until end of turn.
+  Description: 'Row Attacks & +2 Atk temp '
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 0
   IsHero: 0
@@ -25,12 +25,14 @@ MonoBehaviour:
   Attack: 2
   MaxHealth: 6
   AttacksForOneTurn: 1
-  melee: 0
-  AttackSpeedMultiplier: 1
+  AttackSpeedMultiplier: 2
   AttackModifiers:
   - {fileID: 11400000, guid: f3700aa79d9c73749b559ce573d874b1, type: 2}
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
