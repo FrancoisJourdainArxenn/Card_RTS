@@ -262,60 +262,37 @@ public class DragCreatureActions : DraggingActions {
         _skipSnapBack = true;
 
         GameObject creatureGO = IDHolder.GetGameObjectWithID(idHolder.UniqueID);
-        bool isMelee = originArea.tableVisual.MeleeCreaturesOnTable.Contains(creatureGO);
         originArea.tableVisual.ReorderCreature(creatureGO);
 
         // Reordonner N'IMPORTE QUELLE créature (ghost inclus) peut décaler la position relative de
-        // TOUS les ghosts de déplacement en attente présents dans la même rangée (ex : plusieurs
-        // déplacements en cours vers cette zone après un multi-select). Sans resynchroniser CHACUN
-        // d'eux — pas seulement celui qu'on vient de dragger — leur tablePos bufferisé reste périmé
-        // et leur créature atterrit à côté de l'endroit où son ghost avait été laissé.
-        SyncPendingGhostPositions(isMelee);
-
-        // Un ghost de déplacement en attente n'existe que localement : sa propre position bufferisée
-        // vient d'être mise à jour ci-dessus (via son PendingMoveSourceCreatureID) ; on ne relaie donc
-        // pas cette action via la synchro réseau normale de reorder (qui diffuserait à tort son ID à
-        // l'adversaire).
-        if (manager.IsPendingMoveGhost)
-            return;
-
-        if (NetworkSessionData.IsNetworkSession)
-        {
-            int[] meleeIDs  = ExtractIDs(originArea.tableVisual.MeleeCreaturesOnTable);
-            int[] rangedIDs = ExtractIDs(originArea.tableVisual.RangedCreaturesOnTable);
-            GameNetworkManager.Instance.ReorderCreaturesServerRpc(
-                playerOwner.playerIndex, originArea.baseID, meleeIDs, rangedIDs);
-        }
+        // TOUTES les créatures de la rangée — vraies créatures et ghosts de déplacement en attente
+        // confondus (ex : plusieurs déplacements en cours vers cette zone après un multi-select).
+        // On rediffuse donc l'ordre complet de la rangée à chaque reorder.
+        BroadcastRowOrder(originArea);
     }
 
-    // Parcourt la rangée et resynchronise la position bufferisée de TOUS les ghosts de déplacement en
-    // attente qui s'y trouvent (y compris celui qu'on vient de dragger, le cas échéant).
-    private void SyncPendingGhostPositions(bool isMelee)
+    // Diffuse l'ordre complet (IDs permanents, vraies créatures et ghosts de déplacement en attente
+    // mélangés — voir TableVisual.PermanentIDOf) de chaque rangée de area : au serveur puis à tous
+    // les clients en réseau (relayé via le mécanisme existant de reorder de créatures réelles), ou
+    // directement en local en solo différé (aucun autre client à informer). Appelé à chaque
+    // événement qui change la composition ou l'ordre visuel d'une rangée côté joueur local : spawn
+    // d'un nouveau ghost (Move) et reorder par drag (Reorder).
+    private void BroadcastRowOrder(PlayerArea area)
     {
-        List<GameObject> row = isMelee ? originArea.tableVisual.MeleeCreaturesOnTable : originArea.tableVisual.RangedCreaturesOnTable;
-        for (int i = 0; i < row.Count; i++)
-        {
-            GameObject go = row[i];
-            if (go == null) continue;
-            OneCreatureManager ghostManager = go.GetComponent<OneCreatureManager>();
-            if (ghostManager == null || !ghostManager.IsPendingMoveGhost) continue;
+        int[] meleeIDs  = ExtractIDs(area.tableVisual.MeleeCreaturesOnTable);
+        int[] rangedIDs = ExtractIDs(area.tableVisual.RangedCreaturesOnTable);
 
-            int newPos = originArea.tableVisual.ToNetworkTablePos(isMelee, i);
-            if (NetworkSessionData.IsNetworkSession)
-                GameNetworkManager.Instance.UpdatePendingMoveTablePosServerRpc(ghostManager.PendingMoveSourceCreatureID, playerOwner.playerIndex, newPos);
-            else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
-                TurnManager.Instance.UpdateSoloMoveTablePos(ghostManager.PendingMoveSourceCreatureID, newPos);
-        }
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.ReorderCreaturesServerRpc(playerOwner.playerIndex, area.baseID, meleeIDs, rangedIDs);
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+            area.tableVisual.ApplyCreatureOrder(meleeIDs, rangedIDs);
     }
 
     private static int[] ExtractIDs(List<GameObject> list)
     {
         int[] ids = new int[list.Count];
         for (int i = 0; i < list.Count; i++)
-        {
-            IDHolder holder = list[i] != null ? list[i].GetComponent<IDHolder>() : null;
-            ids[i] = holder != null ? holder.UniqueID : -1;
-        }
+            ids[i] = TableVisual.PermanentIDOf(list[i]);
         return ids;
     }
 
@@ -380,6 +357,7 @@ public class DragCreatureActions : DraggingActions {
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
+            BroadcastRowOrder(targetPlayerArea);
         }
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
@@ -387,6 +365,7 @@ public class DragCreatureActions : DraggingActions {
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
+            BroadcastRowOrder(targetPlayerArea);
         }
         else
         {
@@ -403,7 +382,7 @@ public class DragCreatureActions : DraggingActions {
     {
         manager.DestroyPendingMoveGhost(); // sécurité : jamais deux ghosts pour le même déplacement
 
-        int ghostID = IDFactory.GetUniqueID();
+        int ghostID = IDFactory.GetLocalOnlyID();
         targetArea.tableVisual.AddCreatureAtIndex(creatureLogic.ca, ghostID, tablePos, targetArea.baseID, completeCommand: false);
 
         GameObject ghostGO = IDHolder.GetGameObjectWithID(ghostID);

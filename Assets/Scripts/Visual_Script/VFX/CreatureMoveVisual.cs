@@ -35,9 +35,10 @@ public class CreatureMoveVisual : MonoBehaviour
         manager.BaseID = baseID;
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(id.UniqueID);
         startingArea.tableVisual.MoveCreatureAway(creatureToRemove);
-        // tablePos arrive en index logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : on le
-        // reconvertit en index de liste réel pour CE client, qui peut avoir ses propres ghosts encore
-        // en attente dans la même rangée (autres déplacements pas encore résolus ce tour-ci).
+        // tablePos arrive en index logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : ce
+        // n'est qu'une position de repli pour l'insertion initiale — MoveCreatureToIndex retrie
+        // ensuite la rangée selon le dernier ordre connu (voir TableVisual.ApplyCreatureOrder), qui
+        // seul détermine la position finale réelle.
         int rawTablePos = targetArea.tableVisual.FromNetworkTablePos(creatureLogic.IsMelee, tablePos);
         targetArea.tableVisual.MoveCreatureToIndex(gameObject, id.UniqueID, rawTablePos, baseID);
     }

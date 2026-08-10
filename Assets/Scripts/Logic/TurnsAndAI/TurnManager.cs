@@ -378,7 +378,7 @@ public class TurnManager : MonoBehaviour
     public void EnterPhase(TurnPhases phase)
     {
         bool isServer = NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer;
-        Debug.Log($"[EnterPhase] {currentPhase} → {phase} | round={currentRound} | role={(isServer ? "SERVER" : "CLIENT")} | frame={Time.frameCount}");
+        // Debug.Log($"[EnterPhase] {currentPhase} → {phase} | round={currentRound} | role={(isServer ? "SERVER" : "CLIENT")} | frame={Time.frameCount}");
         // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
         currentPhase = phase;
         OnPhaseEntered?.Invoke();
@@ -564,7 +564,7 @@ public class TurnManager : MonoBehaviour
     IEnumerator AutoAdvanceFromRegroup()
     {
         float t0 = Time.realtimeSinceStartup;
-        Debug.Log($"[Regroup] Entrée WaitWhile — round={currentRound} IsServer={(NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer)}");
+        // Debug.Log($"[Regroup] Entrée WaitWhile — round={currentRound} IsServer={(NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer)}");
         yield return new WaitWhile(() =>
         {
             bool stuck = !PhaseEffectPipeline.IsComplete || Command.playingQueue || Command.CardDrawPending();
@@ -572,7 +572,7 @@ public class TurnManager : MonoBehaviour
                 Debug.LogWarning($"[Regroup] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — IsComplete={PhaseEffectPipeline.IsComplete} playingQueue={Command.playingQueue} CardDrawPending={Command.CardDrawPending()}");
             return stuck;
         });
-        Debug.Log($"[Regroup] WaitWhile résolu après {Time.realtimeSinceStartup - t0:F1}s → EnterPhase(Command)");
+        // Debug.Log($"[Regroup] WaitWhile résolu après {Time.realtimeSinceStartup - t0:F1}s → EnterPhase(Command)");
         // yield return new WaitForSeconds(1.5f);
         if (currentPhase == TurnPhases.Regroup)
             EnterPhase(TurnPhases.Command);
@@ -683,19 +683,6 @@ public class TurnManager : MonoBehaviour
     public void CancelSoloMove(int creatureUniqueID)
     {
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
-    }
-
-    // Met à jour la position d'arrivée d'un déplacement en attente (ex: le joueur a réordonné le ghost
-    // dans la zone cible).
-    public void UpdateSoloMoveTablePos(int creatureUniqueID, int newTablePos)
-    {
-        for (int i = 0; i < _soloMoveBuffer.Count; i++)
-        {
-            var m = _soloMoveBuffer[i];
-            if (m.creatureUniqueID != creatureUniqueID) continue;
-            _soloMoveBuffer[i] = (m.creatureUniqueID, m.targetBaseID, newTablePos);
-            break;
-        }
     }
 
     private void FlushSoloMoveBuffer()

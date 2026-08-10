@@ -36,6 +36,13 @@ public class TableVisual : MonoBehaviour
     // annulation les remette instantanément en place. Liste (pas HashSet) pour garder un ordre d'attente stable.
     private readonly List<GameObject> _pendingRowEndCreatures = new List<GameObject>();
 
+    // Dernier ordre connu (IDs permanents, voir PermanentIDOf) pour chaque rangée, reçu via
+    // ApplyCreatureOrder. Réappliqué idempotemment à chaque arrivée d'une créature en attente
+    // (voir MoveCreatureToIndex) : la position finale d'une créature ne dépend jamais d'un index
+    // calculé de façon incrémentale, seulement de ce tri.
+    private int[] _lastKnownMeleeOrder = System.Array.Empty<int>();
+    private int[] _lastKnownRangedOrder = System.Array.Empty<int>();
+
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
         MeleeCreaturesOnTable.Concat(RangedCreaturesOnTable);
@@ -150,10 +157,14 @@ public class TableVisual : MonoBehaviour
             return;
         }
         creature.transform.SetParent(rowSlots.transform);
+        // Position de repli seulement : SortListByIDs ci-dessous, basé sur le dernier ordre connu de
+        // la rangée (voir ApplyCreatureOrder), est ce qui détermine réellement la position finale —
+        // idempotent, jamais un index recalculé de façon incrémentale (voir DragCreatureActions.BroadcastRowOrder).
         targetList.Insert(Mathf.Min(rowLocalPos, targetList.Count), creature);
+        SortListByIDs(targetList, isMelee ? _lastKnownMeleeOrder : _lastKnownRangedOrder);
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
-        w.Slot = rowLocalPos;
+        w.Slot = targetList.IndexOf(creature);
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
         creature.SetActive(!isFogged);
@@ -175,6 +186,11 @@ public class TableVisual : MonoBehaviour
     }
 
     // --- Traduction d'index réseau (ghost-free) ---
+    // Utilisées uniquement par le pipeline PlayCreature (DragCreatureOnTable, Player.NetworkPendingPlayCreature,
+    // PlayACreatureCommand) et comme position de repli avant insertion d'un MoveCreature
+    // (voir MoveCreatureToIndex) — l'ordre final d'une rangée avec des déplacements en attente est
+    // désormais piloté par ApplyCreatureOrder/SortListByIDs (voir DragCreatureActions.BroadcastRowOrder),
+    // pas par ces deux fonctions.
     // Les ghosts de déplacement/pose en attente (voir SpawnPendingMoveGhost / AddCreatureAtIndex
     // appelé depuis NetworkPendingPlayCreature) n'existent que localement, chez le joueur qui a
     // l'action en attente : ils occupent un slot dans MeleeCreaturesOnTable/RangedCreaturesOnTable
@@ -211,6 +227,31 @@ public class TableVisual : MonoBehaviour
     {
         OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
         return ocm != null && ocm.IsPendingMoveGhost;
+    }
+
+    // ID "permanent" d'un GameObject présent dans une rangée : celui de la créature réelle, ou —
+    // pour un ghost de déplacement en attente — l'ID permanent de la créature qu'il représente
+    // (CreatureLogic.UniqueCreatureID ne change jamais lors d'un déplacement). Contrairement à
+    // IDHolder.GetGameObjectWithID (registre global, un seul GameObject par ID), cette identité
+    // doit être résolue localement contre la rangée elle-même — voir SortListByIDs.
+    public static int PermanentIDOf(GameObject go)
+    {
+        if (go == null) return -1;
+        OneCreatureManager ocm = go.GetComponent<OneCreatureManager>();
+        if (ocm != null && ocm.IsPendingMoveGhost) return ocm.PendingMoveSourceCreatureID;
+        IDHolder holder = go.GetComponent<IDHolder>();
+        return holder != null ? holder.UniqueID : -1;
+    }
+
+    // Debug uniquement : noms lisibles d'une rangée, avec marqueur (ghost) pour les déplacements en attente.
+    private static string RowNames(List<GameObject> list)
+    {
+        return string.Join(",", list.ConvertAll(g =>
+        {
+            OneCreatureManager ocm = g != null ? g.GetComponent<OneCreatureManager>() : null;
+            string name = ocm?.cardAsset != null ? ocm.cardAsset.name : "?";
+            return ocm != null && ocm.IsPendingMoveGhost ? $"{name}(ghost)" : name;
+        }));
     }
 
     private int RowPosForMouse(int count, CenteredSlots rowSlots)
@@ -431,27 +472,46 @@ public class TableVisual : MonoBehaviour
 
     public void ApplyCreatureOrder(int[] meleeIDs, int[] rangedIDs)
     {
+        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} avant-melee=[{RowNames(MeleeCreaturesOnTable)}] avant-ranged=[{RowNames(RangedCreaturesOnTable)}] meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
+        _lastKnownMeleeOrder  = meleeIDs;
+        _lastKnownRangedOrder = rangedIDs;
         SortListByIDs(MeleeCreaturesOnTable, meleeIDs);
         SortListByIDs(RangedCreaturesOnTable, rangedIDs);
+        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} après-melee=[{RowNames(MeleeCreaturesOnTable)}] après-ranged=[{RowNames(RangedCreaturesOnTable)}]");
         PlaceCreaturesOnNewSlots();
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
     }
 
+    // Trie list selon l'ordre d'IDs permanents fourni (voir PermanentIDOf), mais UNIQUEMENT parmi les
+    // éléments couverts par ids : ils sont réordonnés entre eux (à leurs positions d'origine), tout
+    // le reste garde exactement sa position actuelle. Important pour ApplyCreatureOrder/MoveCreatureToIndex :
+    // ids peut être périmé par rapport à des créatures insérées entretemps par un pipeline indépendant
+    // (ex : une carte jouée depuis la main, voir PlayACreatureCommand) qui ne rafraîchit pas ce cache —
+    // un fallback "pousser les éléments inconnus en fin de liste" les déplacerait à tort.
+    // Résolution scoped à list elle-même (pas via le registre global IDHolder.GetGameObjectWithID) :
+    // un ghost de déplacement en attente partage son ID permanent avec la créature réelle qui l'a
+    // créé, ailleurs dans le jeu — seule la correspondance locale importe ici.
     private void SortListByIDs(List<GameObject> list, int[] ids)
     {
-        List<GameObject> sorted = new List<GameObject>(ids.Length);
-        foreach (int id in ids)
+        Dictionary<int, GameObject> byPermanentID = new Dictionary<int, GameObject>();
+        List<int> matchedSlots = new List<int>();
+        for (int i = 0; i < list.Count; i++)
         {
-            GameObject go = IDHolder.GetGameObjectWithID(id);
-            if (go != null && list.Contains(go))
-                sorted.Add(go);
+            int id = PermanentIDOf(list[i]);
+            if (id == -1 || System.Array.IndexOf(ids, id) < 0 || byPermanentID.ContainsKey(id))
+                continue;
+            byPermanentID[id] = list[i];
+            matchedSlots.Add(i);
         }
-        foreach (GameObject go in list)
-            if (!sorted.Contains(go))
-                sorted.Add(go);
-        list.Clear();
-        list.AddRange(sorted);
+
+        List<GameObject> orderedMatches = new List<GameObject>(matchedSlots.Count);
+        foreach (int id in ids)
+            if (byPermanentID.TryGetValue(id, out GameObject go))
+                orderedMatches.Add(go);
+
+        for (int k = 0; k < matchedSlots.Count; k++)
+            list[matchedSlots[k]] = orderedMatches[k];
     }
 
     public void ClearInsertPreview()

@@ -205,17 +205,17 @@ public static class EffectRegistry
 
     public static void Execute(CardEffectData data, EffectContext context)
     {
-        Debug.Log($"[EffectRegistry] Executing: {data.EffectName}");
+        // Debug.Log($"[EffectRegistry] Executing: {data.EffectName}");
 
         if (data.Effect == null)
         {
-            Debug.Log("[EffectRegistry] No EffectSO");
+            // Debug.Log("[EffectRegistry] No EffectSO");
             return;
         }
 
         if (data.Condition != null && !data.Condition.Evaluate(context))
         {
-            Debug.Log("[EffectRegistry] Condition not met");
+            // Debug.Log("[EffectRegistry] Condition not met");
             return;
         }
 
