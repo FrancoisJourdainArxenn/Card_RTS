@@ -32,7 +32,7 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 1
-  melee: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:

@@ -31,9 +31,10 @@ public class ConeAttackModifierSO : AttackModifierSO
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
         hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
-        if (hpAfter <= 0)
-            target.ScheduleBattleDeath();
-        else
+        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
+        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
+        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
+        if (hpAfter > 0)
             target.Health -= effective;
     }
 

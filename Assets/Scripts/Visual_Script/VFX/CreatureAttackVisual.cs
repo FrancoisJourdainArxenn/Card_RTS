@@ -85,6 +85,8 @@ public class CreatureAttackVisual : MonoBehaviour
         float projectileSpeed      = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileSpeed       : 18f;
         float projectileMinDur     = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileMinDuration : 0.12f;
         GameObject projectilePrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.RangedProjectilePrefab : null;
+        GameObject meleeMultiTargetVfxPrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxPrefab : null;
+        float meleeMultiTargetVfxLifetime = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxLifetime : 1.5f;
 
         // Durée de vol basée sur la distance réelle (vitesse constante), pas une durée fixe : sinon un
         // attaquant rapide (AttackSpeedMultiplier élevé) ou une cible éloignée finissait avec un vol trop
@@ -175,6 +177,23 @@ public class CreatureAttackVisual : MonoBehaviour
             }
         }
 
+        // Melee avec modificateur d'attaque (Cone/Piercing/...) uniquement : instancie le Melee VFX depuis la
+        // position actuelle de l'attaquant (au contact de sa cible principale, juste après la charge) vers
+        // chaque cible secondaire, une instance par cible orientée vers elle. Contrairement au projectile
+        // ranged, cet effet n'a pas besoin d'être piloté par code — il se joue et se détruit tout seul.
+        void FireMeleeVfxTo(GameObject hitTarget, AttackHitResult hit)
+        {
+            if (meleeMultiTargetVfxPrefab != null && hitTarget != null)
+            {
+                Vector3 origin = transform.position;
+                Vector3 dir = hitTarget.transform.position - origin;
+                Quaternion rot = dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir) : Quaternion.identity;
+                GameObject vfx = Instantiate(meleeMultiTargetVfxPrefab, origin, rot);
+                Destroy(vfx, meleeMultiTargetVfxLifetime);
+            }
+            ApplyHitFeedback(hit.TargetUniqueID, hit.Damage, hit.HealthAfter);
+        }
+
         bool moveDone = false;
         Sequence attackSeq = DOTween.Sequence();
         attackSeq.SetLink(gameObject);
@@ -216,6 +235,21 @@ public class CreatureAttackVisual : MonoBehaviour
             float shakeTime = Mathf.Max(0f, windupDur + moveDur - leadTime);
             attackSeq.InsertCallback(shakeTime, ShakeCamera);
 
+            // Attaque melee classique (sans modificateur) : comportement strictement inchangé.
+            // Avec modificateur : une fois la charge terminée (attaquant au contact de sa cible principale),
+            // le Melee VFX part vers chaque cible secondaire avant le retour à la position d'origine.
+            if (hits.Count > 0)
+            {
+                attackSeq.AppendCallback(() =>
+                {
+                    foreach (AttackHitResult hit in hits)
+                    {
+                        GameObject hitTargetGO = IDHolder.GetGameObjectWithID(hit.TargetUniqueID);
+                        FireMeleeVfxTo(hitTargetGO, hit);
+                    }
+                });
+            }
+
             attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
         }
 
@@ -233,11 +267,10 @@ public class CreatureAttackVisual : MonoBehaviour
 
                     if (!isRanged)
                     {
-                        // Melee : les impacts (cible principale + secondaires) sont révélés une fois
-                        // l'attaquant revenu à sa place, comme c'était déjà le cas pour la cible principale.
+                        // Melee : l'impact de la cible principale est révélé une fois l'attaquant revenu à sa
+                        // place, comme avant (comportement inchangé). Les cibles secondaires, elles, ont déjà
+                        // été révélées plus tôt, au moment où le Melee VFX est parti vers elles.
                         ApplyMainImpact();
-                        foreach (AttackHitResult hit in hits)
-                            ApplyHitFeedback(hit.TargetUniqueID, hit.Damage, hit.HealthAfter);
                     }
 
                     w.SetTableSortingOrder();

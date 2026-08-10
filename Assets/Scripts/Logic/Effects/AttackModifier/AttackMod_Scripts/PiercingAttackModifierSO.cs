@@ -25,9 +25,10 @@ public class PiercingAttackModifierSO : AttackModifierSO
         int hpAfter = Mathf.Max(0, pierced.Health - effective);
 
         hits.Add(new AttackHitResult(pierced.UniqueCreatureID, dmg, hpAfter));
-        if (hpAfter <= 0)
-            pierced.ScheduleBattleDeath();
-        else
+        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
+        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
+        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
+        if (hpAfter > 0)
             pierced.Health -= effective;
 
         return hits;

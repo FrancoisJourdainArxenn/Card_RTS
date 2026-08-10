@@ -23,9 +23,10 @@ public class LateralAttackModifierSO : AttackModifierSO
             int hpAfter = Mathf.Max(0, adj.Health - effective);
             Debug.Log($"[LateralAttack] Frappe {adj.DisplayName} — dégâts:{dmg} shield absorbé:{shieldAbs} effectif:{effective} HP avant:{adj.Health} HP après:{hpAfter}");
             hits.Add(new AttackHitResult(adj.UniqueCreatureID, dmg, hpAfter));
-            if (hpAfter <= 0)
-                adj.ScheduleBattleDeath();
-            else
+            // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
+            // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
+            // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
+            if (hpAfter > 0)
                 adj.Health -= effective;
         }
 

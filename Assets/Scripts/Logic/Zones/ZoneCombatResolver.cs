@@ -368,10 +368,14 @@ public class ZoneCombatResolver : MonoBehaviour
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     // Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
 
-                    // Modificateurs d'attaque (Cone/Piercing/Circular/...) calculés avant d'empiler la commande
-                    // principale : leurs cibles secondaires sont transportées avec elle pour qu'un seul windup
-                    // visuel couvre toute la volée (cible principale + secondaires), au lieu de rejouer une
-                    // séquence complète indépendante par cible touchée.
+                    // Cibles secondaires (Cone/Piercing/Circular/...) calculées avant d'empiler la commande
+                    // principale, pour que la liste transportée avec elle soit déjà complète — la commande peut
+                    // s'exécuter de façon synchrone dès AddToQueue() (file vide + caméra déjà en position), donc
+                    // la remplir après coup risquerait qu'elle soit lue vide par la séquence visuelle.
+                    // Important : les modificateurs (AttackModifierSO.Apply) mutent la vie des cibles secondaires
+                    // survivantes mais NE programment PAS leur mort — ScheduleBattleDeath() est appelé plus bas,
+                    // après avoir mis en file la commande d'attaque principale, pour que la CreatureDieCommand
+                    // d'une cible secondaire ne s'exécute jamais avant l'animation qui est censée la tuer.
                     List<AttackHitResult> secondaryHits = new List<AttackHitResult>();
                     if (attackerCreature != null)
                         foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
@@ -411,6 +415,15 @@ public class ZoneCombatResolver : MonoBehaviour
                                 attackerBuilding.Health = attackerHealthAfter;
                         }
                     }
+
+                    // Mort des cibles secondaires tuées par un modificateur — mise en file seulement maintenant,
+                    // après la CreatureAttackCommand principale (voir commentaire plus haut).
+                    foreach (AttackHitResult hit in secondaryHits)
+                    {
+                        if (hit.HealthAfter <= 0 && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(hit.TargetUniqueID, out CreatureLogic secondaryCreature))
+                            secondaryCreature.ScheduleBattleDeath();
+                    }
+
                     break;
                 }
                 case TargetKind.Building:

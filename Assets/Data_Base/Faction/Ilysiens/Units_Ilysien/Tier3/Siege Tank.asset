@@ -22,8 +22,8 @@ MonoBehaviour:
   MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
-  MaxHealth: 7
+  Attack: 4
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 4
   AttackModifiers:
