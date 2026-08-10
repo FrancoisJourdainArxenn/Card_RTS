@@ -30,6 +30,11 @@ public class TableVisual : MonoBehaviour
     private int _previewIndex = -1;
     private bool _previewIsMelee;
     private GameObject _movingCreature;
+    // Créatures dont le déplacement vers une autre zone est en attente (résolution en fin de phase Command) :
+    // affichées sur des slots fixes au-delà de la capacité max de la rangée (voir PlaceRowOnSlots), sans que
+    // leur position réelle dans MeleeCreaturesOnTable/RangedCreaturesOnTable ne soit modifiée, pour qu'une
+    // annulation les remette instantanément en place. Liste (pas HashSet) pour garder un ordre d'attente stable.
+    private readonly List<GameObject> _pendingRowEndCreatures = new List<GameObject>();
 
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
@@ -193,8 +198,26 @@ public class TableVisual : MonoBehaviour
     {
         if (!MeleeCreaturesOnTable.Remove(creature) && !RangedCreaturesOnTable.Remove(creature))
             Debug.LogWarning($"[MoveCreatureAway] GO '{creature?.name ?? "null"}' introuvable dans les listes de {ownerArea?.baseID}. Il pourrait rester dupliqué dans son ancienne zone.");
+        _pendingRowEndCreatures.Remove(creature);
         // ownerArea?.RefreshAreaStats();
         PlaceCreaturesOnNewSlots();
+    }
+
+    // Affiche la créature tout au bout de sa rangée tant que son déplacement vers une autre zone est en
+    // attente (résolution en fin de phase Command), sans modifier sa position réelle dans la liste.
+    public void MarkPendingMoveAtRowEnd(GameObject creature)
+    {
+        if (_pendingRowEndCreatures.Contains(creature)) return;
+        _pendingRowEndCreatures.Add(creature);
+        PlaceCreaturesOnNewSlots();
+    }
+
+    // Annule l'affichage "tout au bout" : la créature revient instantanément à sa position réelle,
+    // puisque celle-ci n'a jamais changé.
+    public void ClearPendingMoveRowEnd(GameObject creature)
+    {
+        if (_pendingRowEndCreatures.Remove(creature))
+            PlaceCreaturesOnNewSlots();
     }
 
     public void RemoveCreatureWithID(int IDToRemove)
@@ -223,13 +246,25 @@ public class TableVisual : MonoBehaviour
 
     // gapIndex : position du slot virtuel vide dans la rangée effective (sans excluded)
     // excluded : créature en cours de drag, exclue du calcul de slots
+    // Les créatures marquées "pending move" (voir _pendingRowEndCreatures) sont affichées tout au
+    // bout de la rangée sans que l'ordre réel dans `group` ne soit touché.
     void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1, GameObject excluded = null)
     {
-        int count = group.Count;
-        if (count == 0) return;
+        if (group.Count == 0) return;
 
-        bool hasExcluded = excluded != null && group.Contains(excluded);
-        int effectiveCount = count - (hasExcluded ? 1 : 0);
+        List<GameObject> displayOrder = new List<GameObject>(group.Count);
+        List<GameObject> pendingTail = new List<GameObject>();
+        foreach (GameObject go in group)
+        {
+            if (go == excluded) continue;
+            if (_pendingRowEndCreatures.Contains(go))
+                pendingTail.Add(go);
+            else
+                displayOrder.Add(go);
+        }
+        displayOrder.AddRange(pendingTail);
+
+        int effectiveCount = displayOrder.Count;
         bool hasGap = gapIndex >= 0;
         int virtualCount = effectiveCount + (hasGap ? 1 : 0);
         // On clamp pour éviter que gapIndex > effectiveCount ne décale rien (gap en fin de liste)
@@ -237,15 +272,12 @@ public class TableVisual : MonoBehaviour
 
         if (virtualCount == 0) return;
 
-        int effectivePos = 0;
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < effectiveCount; i++)
         {
-            if (group[i] == excluded) continue;
-            int virtualIndex = (hasGap && effectivePos >= clampedGap) ? effectivePos + 1 : effectivePos;
+            int virtualIndex = (hasGap && i >= clampedGap) ? i + 1 : i;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
-            group[i].transform.DOKill();
-            group[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
-            effectivePos++;
+            displayOrder[i].transform.DOKill();
+            displayOrder[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
         }
     }
 

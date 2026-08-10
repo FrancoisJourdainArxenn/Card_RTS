@@ -27,7 +27,13 @@ public class OneCreatureManager : OneLivableManager
 
     private void Update()
     {
-        if (!isArrowVisible || pendingMoveArrowMat == null) return;
+        if (!isArrowVisible) return;
+
+        // Le point de départ suit la créature (elle peut encore bouger tant que le déplacement est en
+        // attente, ex: replacée en bout de rangée) ; le point d'arrivée reste fixe sur la zone cible.
+        pendingMoveArrow.SetPosition(0, transform.position + arrowOriginOffset);
+
+        if (pendingMoveArrowMat == null) return;
         float offset = Time.time * arrowScrollSpeed;
         pendingMoveArrowMat.SetTextureOffset("_MainTex", new Vector2(-offset % 1f, 0f));
     }

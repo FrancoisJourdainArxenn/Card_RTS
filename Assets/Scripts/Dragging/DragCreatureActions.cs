@@ -29,7 +29,9 @@ public class DragCreatureActions : DraggingActions {
 
     [SerializeField] private float _elevationHeight = 2f;
     private Vector3 _originalManagerLocalPosition;
-    private bool _reorderDone = false;
+    // Empêche ResetDragElements de ramener la créature à sa position d'avant-drag quand elle a déjà
+    // été replacée ailleurs (reorder dans la même zone, ou déplacement vers une autre zone).
+    private bool _skipSnapBack = false;
     private bool _wasInOriginArea = true;
 
 
@@ -65,13 +67,17 @@ public class DragCreatureActions : DraggingActions {
     public override void OnStartDrag()
     {
         _wasInOriginArea = true;
+        _skipSnapBack = false;
 
-        if (GetCreatureLogic() != null)
+        CreatureLogic creatureLogicAtDragStart = GetCreatureLogic();
+        if (creatureLogicAtDragStart != null)
         {
             if (NetworkSessionData.IsNetworkSession)
                 GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
             else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
                 TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
+
+            playerOwner.GetPlayerAreaByID(creatureLogicAtDragStart.BaseID)?.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
         }
         manager.ClearPendingMoveArrow();
 
@@ -252,7 +258,7 @@ public class DragCreatureActions : DraggingActions {
 
     private void Reorder()
     {
-        _reorderDone = true;
+        _skipSnapBack = true;
 
         GameObject creatureGO = IDHolder.GetGameObjectWithID(idHolder.UniqueID);
         originArea.tableVisual.ReorderCreature(creatureGO);
@@ -316,16 +322,19 @@ public class DragCreatureActions : DraggingActions {
         {
             GameNetworkManager.Instance.MoveCreatureServerRpc(idHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
         }
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
             TurnManager.Instance.EnqueueSoloMove(idHolder.UniqueID, targetPlayerArea.baseID, tablePos);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
         }
         else
         {
             creatureLogic.Move(targetPlayerArea.baseID, tablePos);
         }
+        _skipSnapBack = true;
         return true;
 
     }
@@ -342,7 +351,7 @@ public class DragCreatureActions : DraggingActions {
         ResetAreaHighlights();
         originArea.tableVisual.ClearInsertPreview();
 
-        if (!_reorderDone)
+        if (!_skipSnapBack)
         {
             Vector3 worldOrigin = manager.transform.parent != null
                 ? manager.transform.parent.TransformPoint(_originalManagerLocalPosition)
@@ -350,7 +359,7 @@ public class DragCreatureActions : DraggingActions {
             manager.transform.DOKill();
             manager.transform.DOMove(worldOrigin, 0.3f).SetEase(Ease.OutQuad);
         }
-        _reorderDone = false;
+        _skipSnapBack = false;
 
         transform.SetLocalPositionAndRotation(originalLocalPosition, Quaternion.Euler(90f, 0f, 0f));
         sr.enabled = false;
@@ -433,6 +442,7 @@ public class DragCreatureActions : DraggingActions {
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
             TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
         manager.ClearPendingMoveArrow();
+        originArea.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
 
         return Move(targetPlayerArea, silent: true);
     }
