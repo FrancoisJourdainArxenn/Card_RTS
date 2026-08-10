@@ -519,7 +519,11 @@ public class Player : MonoBehaviour, ILivable
         // Créé AVANT les triggers pour que ModifyStatsCommand/VFX trouvent une cible valide (IDHolder déjà enregistré).
         if (this == GlobalSettings.Instance.localPlayer)
         {
-            targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
+            // tablePos est logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : on le
+            // reconvertit en index de liste réel avant d'insérer dans la rangée visuelle, qui peut
+            // contenir d'autres ghosts de déplacement en attente.
+            int rawTablePos = targetArea.tableVisual.FromNetworkTablePos(playedCard.ca.melee, tablePos);
+            targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, rawTablePos, baseID, completeCommand: false);
             GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
             if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
             {

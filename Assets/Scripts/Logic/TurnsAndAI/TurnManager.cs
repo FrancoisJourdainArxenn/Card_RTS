@@ -685,13 +685,29 @@ public class TurnManager : MonoBehaviour
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
     }
 
+    // Met à jour la position d'arrivée d'un déplacement en attente (ex: le joueur a réordonné le ghost
+    // dans la zone cible).
+    public void UpdateSoloMoveTablePos(int creatureUniqueID, int newTablePos)
+    {
+        for (int i = 0; i < _soloMoveBuffer.Count; i++)
+        {
+            var m = _soloMoveBuffer[i];
+            if (m.creatureUniqueID != creatureUniqueID) continue;
+            _soloMoveBuffer[i] = (m.creatureUniqueID, m.targetBaseID, newTablePos);
+            break;
+        }
+    }
+
     private void FlushSoloMoveBuffer()
     {
         foreach (var (id, baseID, pos) in _soloMoveBuffer)
         {
             GameObject creatureGO = IDHolder.GetGameObjectWithID(id);
             if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
+            {
                 ocm.ClearPendingMoveArrow();
+                ocm.DestroyPendingMoveGhost();
+            }
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
                 creature.Move(baseID, pos);
         }

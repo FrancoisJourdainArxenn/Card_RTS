@@ -62,9 +62,12 @@ MonoBehaviour:
   glow: {fileID: 7368865151671539246}
   MeleeImage: {fileID: 5506920404441326065}
   pendingMoveArrow: {fileID: 2621815310663996257}
-  arrowOriginOffset: {x: 0, y: 0, z: 0.5}
+  arrowOriginOffset: {x: 0, y: 0, z: 0}
   arrowScrollSpeed: 1
   isGhost: 0
+  IsPendingMoveGhost: 0
+  PendingMoveSourceCreatureID: -1
+  PendingMoveGhost: {fileID: 0}
 --- !u!114 &7802661973951423628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,7 +217,7 @@ GameObject:
   - component: {fileID: 8762338910572079985}
   - component: {fileID: 2621815310663996257}
   m_Layer: 0
-  m_Name: Buffer_MouvementFixed
+  m_Name: Buffer_MovementFixed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -230,7 +233,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0.02, z: 0}
-  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 7165418902205234437}

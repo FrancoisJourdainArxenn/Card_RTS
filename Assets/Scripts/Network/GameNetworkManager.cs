@@ -1031,7 +1031,9 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void MoveCreatureClientRpc(int creatureUniqueID, int targetBaseID, int tablePos)
     {
-        IDHolder.GetGameObjectWithID(creatureUniqueID)?.GetComponent<OneCreatureManager>()?.ClearPendingMoveArrow();
+        OneCreatureManager ocm = IDHolder.GetGameObjectWithID(creatureUniqueID)?.GetComponent<OneCreatureManager>();
+        ocm?.ClearPendingMoveArrow();
+        ocm?.DestroyPendingMoveGhost(); // no-op côté adversaire, qui n'en a jamais eu (ghost local uniquement)
 
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
         {
@@ -1039,6 +1041,23 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         creature.Move(targetBaseID, tablePos);
+    }
+
+    // Met à jour la position d'arrivée d'un déplacement en attente (le joueur a réordonné son ghost dans
+    // la zone cible). Reste privé côté serveur jusqu'au flush : aucun ClientRpc ici.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void UpdatePendingMoveTablePosServerRpc(int creatureUniqueID, int playerIndex, int newTablePos)
+    {
+        for (int i = 0; i < _actionBuffer.Count; i++)
+        {
+            PendingAction a = _actionBuffer[i];
+            if (a.type != ActionType.MoveCreature || a.playerIndex != playerIndex || a.param1 != creatureUniqueID)
+                continue;
+
+            a.param3 = newTablePos;
+            _actionBuffer[i] = a;
+            break;
+        }
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -1053,11 +1072,21 @@ public class GameNetworkManager : NetworkBehaviour
                 continue;
 
             int creatureID = a.param2;
-            int newPos = System.Array.IndexOf(meleeIDs, creatureID);
-            if (newPos < 0) newPos = System.Array.IndexOf(rangedIDs, creatureID);
-            if (newPos >= 0)
+            int[] row = System.Array.IndexOf(meleeIDs, creatureID) >= 0 ? meleeIDs : rangedIDs;
+            int rawPos = System.Array.IndexOf(row, creatureID);
+            if (rawPos >= 0)
             {
-                a.param3 = newPos;
+                // meleeIDs/rangedIDs incluent les ghosts locaux du client qui reorder (ils occupent un
+                // slot dans sa rangée visuelle — voir TableVisual.AddCreatureAtIndex). Le serveur n'a
+                // jamais créé ces IDs fantômes, donc CreaturesCreatedThisGame ne les contient pas : ça
+                // permet de les exclure pour retrouver l'index logique (ghost-free), le seul qui garde
+                // le même sens une fois bufferisé (voir TableVisual.ToNetworkTablePos).
+                int logicalPos = 0;
+                for (int j = 0; j < rawPos; j++)
+                    if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(row[j]))
+                        logicalPos++;
+
+                a.param3 = logicalPos;
                 _actionBuffer[i] = a;
             }
         }

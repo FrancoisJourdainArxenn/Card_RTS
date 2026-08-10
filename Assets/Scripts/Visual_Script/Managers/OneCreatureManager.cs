@@ -16,9 +16,38 @@ public class OneCreatureManager : OneLivableManager
     private bool isArrowVisible = false;
     public bool HasPendingMove => isArrowVisible;
 
+    // Ghost de déplacement en attente : placeholder visuel affiché dans la zone cible, permettant au
+    // joueur de choisir où l'unité s'insérera dans la rangée une fois le déplacement résolu.
+    // Sur le ghost lui-même :
+    [HideInInspector] public bool IsPendingMoveGhost = false;
+    [HideInInspector] public int PendingMoveSourceCreatureID = -1;
+    // Sur la créature réelle en cours de déplacement, référence vers son ghost dans la zone cible :
+    [HideInInspector] public GameObject PendingMoveGhost;
+
+    public void DestroyPendingMoveGhost()
+    {
+        if (PendingMoveGhost == null) return;
+        GameObject ghost = PendingMoveGhost;
+        PendingMoveGhost = null;
+
+        TableVisual ghostTable = ghost.GetComponentInParent<TableVisual>();
+        if (ghostTable != null)
+            ghostTable.RemovePendingMoveGhost(ghost);
+        else
+            Destroy(ghost);
+    }
+
+
+    // Ancre visuelle utilisée pour les flèches (pending move, ciblage...) : le centre réel de la carte,
+    // pas la racine du prefab (qui n'est pas centrée dessus). Même pattern que TargetedArrowManager.GetAnchor.
+    private Transform _centerPoint;
+    public Vector3 CenterPointPosition => _centerPoint.position;
 
     void Awake()
     {
+        Transform center = transform.Find("CenterPoint");
+        _centerPoint = center != null ? center : transform;
+
         if (cardAsset != null)
             ReadCreatureFromAsset();
         if (pendingMoveArrow != null)
@@ -30,8 +59,14 @@ public class OneCreatureManager : OneLivableManager
         if (!isArrowVisible) return;
 
         // Le point de départ suit la créature (elle peut encore bouger tant que le déplacement est en
-        // attente, ex: replacée en bout de rangée) ; le point d'arrivée reste fixe sur la zone cible.
-        pendingMoveArrow.SetPosition(0, transform.position + arrowOriginOffset);
+        // attente, ex: replacée en bout de rangée) ; le point d'arrivée suit le ghost dans la zone cible
+        // une fois créé (il peut lui aussi bouger si le joueur le réordonne), pour relier visuellement
+        // les deux éléments.
+        pendingMoveArrow.SetPosition(0, CenterPointPosition + arrowOriginOffset);
+        Vector3 targetPos = PendingMoveGhost != null
+            ? PendingMoveGhost.GetComponent<OneCreatureManager>().CenterPointPosition
+            : _pendingMoveArrowFallbackTarget;
+        pendingMoveArrow.SetPosition(1, targetPos);
 
         if (pendingMoveArrowMat == null) return;
         float offset = Time.time * arrowScrollSpeed;
@@ -115,11 +150,16 @@ public class OneCreatureManager : OneLivableManager
         // resolver?.TryRedirectDamageFrom(battleCreature);
     }
 
+    // Position de repli tant que le ghost n'existe pas encore (fenêtre très courte entre ShowPendingMoveArrow
+    // et la création du ghost par SpawnPendingMoveGhost).
+    private Vector3 _pendingMoveArrowFallbackTarget;
+
     public void ShowPendingMoveArrow(Vector3 targetWorldPos)
     {
         if (pendingMoveArrow == null) return;
+        _pendingMoveArrowFallbackTarget = targetWorldPos;
         pendingMoveArrow.enabled = true;
-        pendingMoveArrow.SetPosition(0, transform.position + arrowOriginOffset);
+        pendingMoveArrow.SetPosition(0, CenterPointPosition + arrowOriginOffset);
         pendingMoveArrow.SetPosition(1, targetWorldPos);
         pendingMoveArrow.enabled = true;
         isArrowVisible = true;

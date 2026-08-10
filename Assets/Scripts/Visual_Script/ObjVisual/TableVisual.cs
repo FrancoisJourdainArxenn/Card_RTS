@@ -39,13 +39,17 @@ public class TableVisual : MonoBehaviour
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>
         MeleeCreaturesOnTable.Concat(RangedCreaturesOnTable);
-    public bool RowHasSpace(bool isMelee)
+    // Nombre de créatures occupant réellement la rangée, en ignorant celles en pending move
+    // (déplacement en attente de résolution en fin de phase Command).
+    public int EffectiveRowCount(bool isMelee)
     {
         List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
-        int occupied = row.Count(go => go != null
+        return row.Count(go => go != null
             && !go.GetComponent<OneCreatureManager>().HasPendingMove);
-        return occupied < GlobalSettings.Instance.MaxCreaturePerRow;
     }
+
+    public bool RowHasSpace(bool isMelee) =>
+        EffectiveRowCount(isMelee) < GlobalSettings.Instance.MaxCreaturePerRow;
 
 
     public static bool CursorOverSomeTable
@@ -124,11 +128,12 @@ public class TableVisual : MonoBehaviour
         w.Slot = rowLocalPos;
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
-        PlaceCreaturesOnNewSlots();
-
         if (isFogged) creature.SetActive(false);
         // ownerArea?.RefreshAreaStats();
-        if (completeCommand) Command.CommandExecutionComplete();
+        if (completeCommand)
+            PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+        else
+            PlaceCreaturesOnNewSlots();
     }
 
     // rowLocalPos : 0 = le plus à gauche dans la rangée
@@ -151,15 +156,13 @@ public class TableVisual : MonoBehaviour
         w.Slot = rowLocalPos;
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
-        PlaceCreaturesOnNewSlots();
-
         creature.SetActive(!isFogged);
         // ownerArea?.RefreshAreaStats();
 
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
 
-        Command.CommandExecutionComplete();
+        PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
     }
 
     // Retourne la position dans la rangée (0 = le plus à gauche)
@@ -169,6 +172,45 @@ public class TableVisual : MonoBehaviour
         int count = isMelee ? MeleeCreaturesOnTable.Count : RangedCreaturesOnTable.Count;
         int rowPos = RowPosForMouse(count, rowSlots);
         return rowPos;
+    }
+
+    // --- Traduction d'index réseau (ghost-free) ---
+    // Les ghosts de déplacement/pose en attente (voir SpawnPendingMoveGhost / AddCreatureAtIndex
+    // appelé depuis NetworkPendingPlayCreature) n'existent que localement, chez le joueur qui a
+    // l'action en attente : ils occupent un slot dans MeleeCreaturesOnTable/RangedCreaturesOnTable
+    // sur CE client, mais jamais chez les autres. Un index de liste brut n'a donc pas le même sens
+    // d'un client à l'autre (ni d'un instant à l'autre, une fois d'autres ghosts créés/détruits).
+    // Tout tablePos qui transite par le réseau (ServerRpc/ClientRpc) ou par un buffer différé doit
+    // donc être exprimé en index "logique" (ne comptant que les créatures réelles) via
+    // ToNetworkTablePos avant l'envoi, puis reconverti en index de liste réel via
+    // FromNetworkTablePos juste avant l'insertion sur chaque client.
+    public int ToNetworkTablePos(bool isMelee, int rawVisualIndex)
+    {
+        List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+        int logical = 0;
+        for (int i = 0; i < rawVisualIndex && i < row.Count; i++)
+        {
+            if (!IsGhost(row[i])) logical++;
+        }
+        return logical;
+    }
+
+    public int FromNetworkTablePos(bool isMelee, int logicalIndex)
+    {
+        List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+        int seen = 0;
+        for (int i = 0; i < row.Count; i++)
+        {
+            if (seen == logicalIndex) return i;
+            if (!IsGhost(row[i])) seen++;
+        }
+        return row.Count;
+    }
+
+    private static bool IsGhost(GameObject go)
+    {
+        OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
+        return ocm != null && ocm.IsPendingMoveGhost;
     }
 
     private int RowPosForMouse(int count, CenteredSlots rowSlots)
@@ -220,6 +262,16 @@ public class TableVisual : MonoBehaviour
             PlaceCreaturesOnNewSlots();
     }
 
+    // Retire et détruit un ghost de déplacement en attente (annulation ou résolution du déplacement).
+    public void RemovePendingMoveGhost(GameObject ghost)
+    {
+        if (ghost == null) return;
+        MeleeCreaturesOnTable.Remove(ghost);
+        RangedCreaturesOnTable.Remove(ghost);
+        Destroy(ghost);
+        PlaceCreaturesOnNewSlots();
+    }
+
     public void RemoveCreatureWithID(int IDToRemove)
     {
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
@@ -227,12 +279,17 @@ public class TableVisual : MonoBehaviour
             RangedCreaturesOnTable.Remove(creatureToRemove);
         Destroy(creatureToRemove);
 
-        PlaceCreaturesOnNewSlots();
         // ownerArea?.RefreshAreaStats();
-        Command.CommandExecutionComplete();
+        // On attend la fin réelle du repositionnement (tween DOMove) avant de libérer la file de
+        // commandes : sinon la prochaine attaque de la queue peut démarrer alors que les créatures de
+        // la rangée sont encore en train de glisser vers leur nouveau slot, et l'attaquant vise à côté.
+        PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
     }
 
-    void PlaceCreaturesOnNewSlots()
+    // onComplete (optionnel) : appelé une fois que tous les tweens de repositionnement (mêlée + distance)
+    // sont réellement terminés — à utiliser avant de libérer la file de commandes (Command.CommandExecutionComplete),
+    // pour qu'une attaque suivante ne se déclenche jamais pendant qu'une créature glisse encore vers son slot.
+    void PlaceCreaturesOnNewSlots(System.Action onComplete = null)
     {
         int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
         int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;
@@ -240,17 +297,37 @@ public class TableVisual : MonoBehaviour
         GameObject meleeExcluded  = (_movingCreature != null && MeleeCreaturesOnTable.Contains(_movingCreature))  ? _movingCreature : null;
         GameObject rangedExcluded = (_movingCreature != null && RangedCreaturesOnTable.Contains(_movingCreature)) ? _movingCreature : null;
 
-        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded);
-        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap, rangedExcluded);
+        if (onComplete == null)
+        {
+            PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded);
+            PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap, rangedExcluded);
+            return;
+        }
+
+        // +1 le temps d'avoir lancé les deux rangées : évite un déclenchement prématuré si une des deux
+        // rangées se termine de façon synchrone (aucune créature à déplacer) avant que l'autre soit lancée.
+        int pending = 1;
+        void RowDone()
+        {
+            if (--pending <= 0) onComplete();
+        }
+
+        pending++;
+        PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded, RowDone);
+        pending++;
+        PlaceRowOnSlots(RangedCreaturesOnTable, rangedSlots,       rangedGap, rangedExcluded, RowDone);
+        RowDone();
     }
 
     // gapIndex : position du slot virtuel vide dans la rangée effective (sans excluded)
     // excluded : créature en cours de drag, exclue du calcul de slots
     // Les créatures marquées "pending move" (voir _pendingRowEndCreatures) sont affichées tout au
     // bout de la rangée sans que l'ordre réel dans `group` ne soit touché.
-    void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1, GameObject excluded = null)
+    // onComplete : appelé une fois que tous les DOMove de cette rangée sont terminés (ou tués, pour ne
+    // jamais bloquer la file de commandes si un tween est interrompu par un repositionnement suivant).
+    void PlaceRowOnSlots(List<GameObject> group, CenteredSlots rowSlots, int gapIndex = -1, GameObject excluded = null, System.Action onComplete = null)
     {
-        if (group.Count == 0) return;
+        if (group.Count == 0) { onComplete?.Invoke(); return; }
 
         List<GameObject> displayOrder = new List<GameObject>(group.Count);
         List<GameObject> pendingTail = new List<GameObject>();
@@ -270,14 +347,26 @@ public class TableVisual : MonoBehaviour
         // On clamp pour éviter que gapIndex > effectiveCount ne décale rien (gap en fin de liste)
         int clampedGap = hasGap ? Mathf.Min(gapIndex, effectiveCount) : -1;
 
-        if (virtualCount == 0) return;
+        if (virtualCount == 0 || effectiveCount == 0) { onComplete?.Invoke(); return; }
+
+        int pendingTweens = effectiveCount;
+        void TweenDone()
+        {
+            if (--pendingTweens <= 0) onComplete?.Invoke();
+        }
 
         for (int i = 0; i < effectiveCount; i++)
         {
             int virtualIndex = (hasGap && i >= clampedGap) ? i + 1 : i;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
             displayOrder[i].transform.DOKill();
-            displayOrder[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
+            Tween t = displayOrder[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
+            if (onComplete != null)
+            {
+                bool done = false;
+                t.OnComplete(() => { done = true; TweenDone(); });
+                t.OnKill(() => { if (!done) TweenDone(); });
+            }
         }
     }
 

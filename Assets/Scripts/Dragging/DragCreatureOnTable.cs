@@ -61,7 +61,11 @@ public class DragCreatureOnTable : DraggingActions {
             _isPlayed = true;
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool isMelee = manager.cardAsset.melee;
-            int tablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
+            // Index visuel brut → index logique (ghosts exclus) : c'est ce dernier qui doit transiter
+            // par le réseau / le buffer différé pour garder le même sens sur tous les clients
+            // (voir TableVisual.ToNetworkTablePos).
+            int visualTablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
+            int tablePos = selectedPArea.tableVisual.ToNetworkTablePos(isMelee, visualTablePos);
 
 
             if (NetworkSessionData.IsNetworkSession)
