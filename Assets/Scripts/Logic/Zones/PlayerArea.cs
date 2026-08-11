@@ -30,18 +30,6 @@ public class PlayerArea : MonoBehaviour
         if (tableVisual != null)
             tableVisual.ownerArea = this;
     }
-    void Update()
-    {
-        if (tableVisual == null || GlobalSettings.Instance == null) return;
-
-        int maxPerRow = GlobalSettings.Instance.MaxCreaturePerRow;
-
-        if (meleeCountText != null)
-            meleeCountText.text = $"{tableVisual.EffectiveRowCount(true)}/{maxPerRow} M";
-
-        if (rangedCountText != null)
-            rangedCountText.text = $"{tableVisual.EffectiveRowCount(false)}/{maxPerRow} R";
-    }
 
     public Player GetOwnerPlayer()
     {
