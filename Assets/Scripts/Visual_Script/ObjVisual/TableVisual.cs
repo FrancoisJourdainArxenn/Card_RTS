@@ -136,7 +136,6 @@ public class TableVisual : MonoBehaviour
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
         if (isFogged) creature.SetActive(false);
-        // ownerArea?.RefreshAreaStats();
         if (completeCommand)
             PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
         else
@@ -168,7 +167,6 @@ public class TableVisual : MonoBehaviour
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
         creature.SetActive(!isFogged);
-        // ownerArea?.RefreshAreaStats();
 
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
@@ -282,7 +280,6 @@ public class TableVisual : MonoBehaviour
         if (!MeleeCreaturesOnTable.Remove(creature) && !RangedCreaturesOnTable.Remove(creature))
             Debug.LogWarning($"[MoveCreatureAway] GO '{creature?.name ?? "null"}' introuvable dans les listes de {ownerArea?.baseID}. Il pourrait rester dupliqué dans son ancienne zone.");
         _pendingRowEndCreatures.Remove(creature);
-        // ownerArea?.RefreshAreaStats();
         PlaceCreaturesOnNewSlots();
     }
 
@@ -320,7 +317,6 @@ public class TableVisual : MonoBehaviour
             RangedCreaturesOnTable.Remove(creatureToRemove);
         Destroy(creatureToRemove);
 
-        // ownerArea?.RefreshAreaStats();
         // On attend la fin réelle du repositionnement (tween DOMove) avant de libérer la file de
         // commandes : sinon la prochaine attaque de la queue peut démarrer alors que les créatures de
         // la rangée sont encore en train de glisser vers leur nouveau slot, et l'attaquant vise à côté.

@@ -83,7 +83,6 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBuildingDamage.Clear();
             EnqueueBattleCommands(steps);
         }
-        RefreshAllAreaStats();
     }
 
     public void OnBattlePhaseEnd()
@@ -701,11 +700,6 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         return null;
     }
-    void RefreshAllAreaStats()
-    {
-        // foreach (PlayerArea pa in zoneView.subZones)
-        //     pa.RefreshAreaStats();
-    }
 
     // Called from OneCreatureManager click — finds which resolver owns a baseID
     public static ZoneCombatResolver FindForBase(int baseID)
@@ -874,8 +868,6 @@ public class ZoneCombatResolver : MonoBehaviour
             allResolvers[i].p1FreePool = p1Pools[i];
             allResolvers[i].p2FreePool = p2Pools[i];
         }
-        foreach (ZoneCombatResolver r in allResolvers)
-            r.RefreshAllAreaStats();
     }
 
     /// <summary>

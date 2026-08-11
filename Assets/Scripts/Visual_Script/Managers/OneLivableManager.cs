@@ -69,7 +69,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
         ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void HealDamage(int amount, int healthAfter)
@@ -81,7 +80,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         Debug.Log($"{cardAsset.name} heal {amount} damage. {healthAfter} left afterwards.");
         HealthText.text = healthAfter.ToString();
         ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void BuffStats(int attackAmount, int secondAmount, int attackAfter, int healthAfter)
@@ -100,7 +98,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
             ValuePopAnimation.Pop(HealthText.transform);
         }
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void SetVisible(bool visible)
