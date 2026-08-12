@@ -5241,15 +5241,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.14150941, g: 0.120817, b: 0.120817, a: 0.92156863}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: -1229343286, guid: 766b04156cabb7340b0ffe4b419dc729, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -6799,6 +6799,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   canvasRectTransform: {fileID: 744353341}
+  padding: {x: 15, y: 15}
 --- !u!1 &1604141141
 GameObject:
   m_ObjectHideFlags: 0
