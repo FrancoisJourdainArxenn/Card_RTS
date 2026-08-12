@@ -79,6 +79,8 @@ public class GlobalSettings : MonoBehaviour
     [Header("Row Keywords")]
     public Keyword MeleeRowKeyword;
     public Keyword RangedRowKeyword;
+    public Sprite MeleeIcon;
+    public Sprite RangedIcon;
 
     
     [Header("Other")]

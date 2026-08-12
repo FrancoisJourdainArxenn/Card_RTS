@@ -19,7 +19,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public TMP_Text DescriptionText;
     public TMP_Text HealthText;
     public TMP_Text AttackText;
-    public TMP_Text RowText;
     public GameObject ATK_BG;
     
     [Header("Image References")]
@@ -27,6 +26,8 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image FrameImage;
     public Image CardFaceGlowImage;
     public Image TierImage;
+    public Image RowIcon;
+
     public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
     private Color _originalAttackColor;
@@ -89,8 +90,9 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             AttackText.text = cardAsset.Attack.ToString();
         } else { if (ATK_BG != null) ATK_BG.SetActive(false); }
 
-        if (RowText != null)
-            RowText.text = cardAsset.melee ? "Melee" : "Ranged";
+        if (RowIcon != null && GlobalSettings.Instance != null)
+            RowIcon.sprite = cardAsset.melee ? GlobalSettings.Instance.MeleeIcon : GlobalSettings.Instance.RangedIcon;
+
     }
 
     public void OverrideStats(int? attack, int? health, int? maxHealth = null)
