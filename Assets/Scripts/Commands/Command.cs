@@ -10,7 +10,7 @@ public class Command
     public virtual void AddToQueue()
     {
         CommandQueue.Enqueue(this);
-        Debug.Log($"[Queue] Enqueue {GetType().Name} — taille file: {CommandQueue.Count} | playingQueue={playingQueue}");
+        // Debug.Log($"[Queue] Enqueue {GetType().Name} — taille file: {CommandQueue.Count} | playingQueue={playingQueue}");
         if (!playingQueue)
             PlayFirstCommandFromQueue();
     }
@@ -25,7 +25,7 @@ public class Command
 
     public static void CommandExecutionComplete()
     {
-        Debug.Log($"[Queue] CommandExecutionComplete — restants: {CommandQueue.Count}");
+        // Debug.Log($"[Queue] CommandExecutionComplete — restants: {CommandQueue.Count}");
         if (CommandQueue.Count > 0)
             PlayFirstCommandFromQueue();
         else
@@ -41,7 +41,7 @@ public class Command
     {
         playingQueue = true;
         Command next = CommandQueue.Dequeue();
-        Debug.Log($"[Queue] Démarre {next.GetType().Name} — restants après dequeue: {CommandQueue.Count}");
+        // Debug.Log($"[Queue] Démarre {next.GetType().Name} — restants après dequeue: {CommandQueue.Count}");
         next.StartCommandExecution();
     }
 

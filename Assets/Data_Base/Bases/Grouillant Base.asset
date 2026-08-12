@@ -26,7 +26,7 @@ MonoBehaviour:
     upgradeCostReductionPerTurn: 0
     drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
     drawCountBonus: 0
-    tierIcon: {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
+    tierIcon: {fileID: 21300000, guid: 32111d3fb07038e46b07f73f7af671f6, type: 3}
   - tier: 2
     incomeBonus: 1
     upgradeCost: 8
@@ -34,7 +34,7 @@ MonoBehaviour:
     upgradeCostReductionPerTurn: 1
     drawConfig: {fileID: 11400000, guid: 8e2ae10773eca11448c2e18269fae415, type: 2}
     drawCountBonus: 1
-    tierIcon: {fileID: 21300000, guid: 537405a30e1344843a2a7fff7adb858b, type: 3}
+    tierIcon: {fileID: 21300000, guid: 9cac8352d1196d048aa8c61e9d19d605, type: 3}
   - tier: 3
     incomeBonus: 2
     upgradeCost: 10
@@ -42,4 +42,4 @@ MonoBehaviour:
     upgradeCostReductionPerTurn: 1
     drawConfig: {fileID: 11400000, guid: 0ccfae11bda3cd9459d3249c2b0e1df5, type: 2}
     drawCountBonus: 1
-    tierIcon: {fileID: 21300000, guid: 996db40c8ee6838448d239518bae46aa, type: 3}
+    tierIcon: {fileID: 21300000, guid: 9f3142a73eb8ede4bbb600b7e7e5ffce, type: 3}

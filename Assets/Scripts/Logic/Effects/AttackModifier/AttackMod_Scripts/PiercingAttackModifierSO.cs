@@ -4,30 +4,34 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Piercing Attack")]
 public class PiercingAttackModifierSO : AttackModifierSO
 {
-    public override void Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
     {
+        List<AttackHitResult> hits = new List<AttackHitResult>();
         if (!mainTarget.IsMelee)
-            return;
+            return hits;
 
         List<CreatureLogic> rangedRow = GetRow(mainTarget, false);
         int idx = FindCrossRowIdx(mainTarget, rangedRow);
         if (idx < 0)
-            return;
+            return hits;
 
         CreatureLogic pierced = rangedRow[idx];
         if (pierced.IsPendingDeath)
-            return;
+            return hits;
 
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, pierced.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, pierced.Health - effective);
 
-        new DealDamageCommand(pierced.UniqueCreatureID, dmg, hpAfter, attacker.UniqueCreatureID, null, attacker.AttackSpeedMultiplier).AddToQueue();
-        if (hpAfter <= 0)
-            pierced.ScheduleBattleDeath();
-        else
+        hits.Add(new AttackHitResult(pierced.UniqueCreatureID, dmg, hpAfter));
+        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
+        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
+        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
+        if (hpAfter > 0)
             pierced.Health -= effective;
+
+        return hits;
     }
 
     private int FindCrossRowIdx(CreatureLogic from, List<CreatureLogic> targetRow)

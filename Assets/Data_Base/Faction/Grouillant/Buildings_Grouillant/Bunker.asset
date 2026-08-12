@@ -30,7 +30,7 @@ MonoBehaviour:
   MaxHealth: 2
   AttacksForOneTurn: 0
   melee: 1
-  AttackSpeedMultiplier: 1
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
   MoveSpeed: 0
   Celerity: 0

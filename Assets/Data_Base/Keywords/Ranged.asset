@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Ranged
   description: Not damaged by counter-attacks.
+  icon: {fileID: 21300000, guid: a23f951ac542bc54aa2d09aeb4c79571, type: 3}

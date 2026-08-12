@@ -22,7 +22,8 @@ public class CreatureMoveVisual : MonoBehaviour
             return;
         }
 
-        Player owner = CreatureLogic.CreaturesCreatedThisGame[id.UniqueID].owner;
+        CreatureLogic creatureLogic = CreatureLogic.CreaturesCreatedThisGame[id.UniqueID];
+        Player owner = creatureLogic.owner;
         PlayerArea startingArea = owner.GetPlayerAreaByID(manager.BaseID);
         PlayerArea targetArea = owner.GetPlayerAreaByID(baseID);
         if (targetArea == null)
@@ -30,10 +31,15 @@ public class CreatureMoveVisual : MonoBehaviour
             Debug.LogError($"CreatureMoveVisual: no PlayerArea found for baseID={baseID} on player {owner.name}");
             return;
         }
-        
+
         manager.BaseID = baseID;
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(id.UniqueID);
         startingArea.tableVisual.MoveCreatureAway(creatureToRemove);
-        targetArea.tableVisual.MoveCreatureToIndex(gameObject, id.UniqueID, tablePos, baseID);
+        // tablePos arrive en index logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : ce
+        // n'est qu'une position de repli pour l'insertion initiale — MoveCreatureToIndex retrie
+        // ensuite la rangée selon le dernier ordre connu (voir TableVisual.ApplyCreatureOrder), qui
+        // seul détermine la position finale réelle.
+        int rawTablePos = targetArea.tableVisual.FromNetworkTablePos(creatureLogic.IsMelee, tablePos);
+        targetArea.tableVisual.MoveCreatureToIndex(gameObject, id.UniqueID, rawTablePos, baseID);
     }
 }

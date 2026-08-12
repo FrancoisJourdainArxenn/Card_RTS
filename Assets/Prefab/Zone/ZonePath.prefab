@@ -63,8 +63,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PathVisual
   _resolution: 20
   _curveOffset: 0
-  _openColor: {r: 0, g: 0, b: 1, a: 1}
-  _blockedColor: {r: 1, g: 0, b: 0, a: 1}
+  _openColor: {r: 0, g: 0, b: 1, a: 0.47058824}
+  _blockedColor: {r: 1, g: 0, b: 0, a: 0.47058824}
 --- !u!120 &1053678456044556114
 LineRenderer:
   serializedVersion: 3
@@ -91,7 +91,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 079e8dc8f09671544b1d5cb725867760, type: 2}
+  - {fileID: 2100000, guid: 674916c7650d7bc47ad051fcb87e52f5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

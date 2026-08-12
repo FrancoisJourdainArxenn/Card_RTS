@@ -144,7 +144,7 @@ public class Player : MonoBehaviour, ILivable
     {
         get
         {
-            var zones = new HashSet<ZoneLogic>();
+            HashSet<ZoneLogic> zones = new HashSet<ZoneLogic>();
             foreach (PlayerArea pa in PAreas)
             {
                 if (pa == MainPArea
@@ -442,7 +442,7 @@ public class Player : MonoBehaviour, ILivable
         int matchCount = 0;
         for (int i = 0; i < playedCards.Creatures.Count; i++)
         {
-            var c = playedCards.Creatures[i];
+            CreatureLogic c = playedCards.Creatures[i];
             if (c.BaseID == baseID && c.IsMelee == isMelee)
             {
                 if (matchCount == rowLocalPos) return i;
@@ -464,17 +464,17 @@ public class Player : MonoBehaviour, ILivable
     // Resync l'ordre logique après un repositionnement visuel
     public void ResyncCreatureOrderForArea(int baseID, List<GameObject> meleeGOs, List<GameObject> rangedGOs)
     {
-        var ordered = new List<CreatureLogic>();
-        foreach (var go in meleeGOs)
+        List<CreatureLogic> ordered = new List<CreatureLogic>();
+        foreach (GameObject go in meleeGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
                 ordered.Add(cl);
         }
-        foreach (var go in rangedGOs)
+        foreach (GameObject go in rangedGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out var cl))
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
                 ordered.Add(cl);
         }
         // Créatures déjà présentes en logique dans cette zone mais pas encore visuellement
@@ -519,7 +519,11 @@ public class Player : MonoBehaviour, ILivable
         // Créé AVANT les triggers pour que ModifyStatsCommand/VFX trouvent une cible valide (IDHolder déjà enregistré).
         if (this == GlobalSettings.Instance.localPlayer)
         {
-            targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, tablePos, baseID, completeCommand: false);
+            // tablePos est logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : on le
+            // reconvertit en index de liste réel avant d'insérer dans la rangée visuelle, qui peut
+            // contenir d'autres ghosts de déplacement en attente.
+            int rawTablePos = targetArea.tableVisual.FromNetworkTablePos(playedCard.ca.melee, tablePos);
+            targetArea.tableVisual.AddCreatureAtIndex(playedCard.ca, creatureUniqueID, rawTablePos, baseID, completeCommand: false);
             GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureUniqueID);
             if (creatureGO != null && creatureGO.TryGetComponent(out OneCreatureManager ocm))
             {

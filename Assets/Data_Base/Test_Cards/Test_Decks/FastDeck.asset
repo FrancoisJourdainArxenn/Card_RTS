@@ -15,9 +15,8 @@ MonoBehaviour:
   deckName: Test Deck (Zerg)
   heroCard: {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
   cards:
+  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
   - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
-  - {fileID: 11400000, guid: dac5871494178b94a96abaeb09c87054, type: 2}
-  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
   buildings:
   - {fileID: 11400000, guid: 7e435039d49311b40b7797527b6db2df, type: 2}
   - {fileID: 11400000, guid: 0826368b770da794584a44c190288b63, type: 2}

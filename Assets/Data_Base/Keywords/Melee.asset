@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Melee
   description: Must be attacked first.
+  icon: {fileID: 21300000, guid: 3969d4dc91a8dcd4f849f5c6aec4a6cd, type: 3}

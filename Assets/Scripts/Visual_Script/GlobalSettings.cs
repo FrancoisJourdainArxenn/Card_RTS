@@ -40,6 +40,9 @@ public class GlobalSettings : MonoBehaviour
     public float AttackWindupDuration = 0.15f; // durée de l'élan (recul + élévation) avant le coup
     public float AttackWindupBack = 0.3f;      // distance de recul pendant l'élan
     public float AttackWindupHeight = 0.35f;   // hauteur d'élévation pendant l'élan
+    public float ProjectileSpeed = 18f;        // vitesse du projectile (unités/seconde) — la durée de vol dépend de la distance réelle à la cible
+    public float ProjectileMinDuration = 0.12f; // durée de vol plancher, pour qu'un tir à courte distance ou un attaquant très rapide reste visible
+    public float MeleeMultiTargetVfxLifetime = 1.5f; // délai avant destruction du Melee VFX (cibles secondaires), le temps qu'il finisse de se jouer
 
     [Header("Pop Animation")]
     public float popStrength = 0.35f;
@@ -65,6 +68,8 @@ public class GlobalSettings : MonoBehaviour
     public GameObject CreaturePrefab;
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;
+    public GameObject RangedProjectilePrefab;
+    public GameObject MeleeMultiTargetVfxPrefab;
     public GameObject NeutralBasePrefab;
     public GameObject BuildingPrefab;
 
@@ -74,6 +79,8 @@ public class GlobalSettings : MonoBehaviour
     [Header("Row Keywords")]
     public Keyword MeleeRowKeyword;
     public Keyword RangedRowKeyword;
+    public Sprite MeleeIcon;
+    public Sprite RangedIcon;
 
     
     [Header("Other")]

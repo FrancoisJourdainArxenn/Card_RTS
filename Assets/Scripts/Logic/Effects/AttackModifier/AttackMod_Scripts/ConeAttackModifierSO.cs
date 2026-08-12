@@ -4,33 +4,37 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Cone Attack")]
 public class ConeAttackModifierSO : AttackModifierSO
 {
-    public override void Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
     {
+        List<AttackHitResult> hits = new List<AttackHitResult>();
         if (!mainTarget.IsMelee)
-            return;
+            return hits;
 
         List<CreatureLogic> rangedRow = GetRow(mainTarget, false);
         int idx = FindCrossRowIdx(mainTarget, rangedRow);
         if (idx < 0)
-            return;
+            return hits;
 
-        DealDamage(attacker, rangedRow[idx]);
+        TryDealDamage(attacker, rangedRow[idx], hits);
 
-        if (idx > 0)                        DealDamage(attacker, rangedRow[idx - 1]);
-        if (idx < rangedRow.Count - 1)      DealDamage(attacker, rangedRow[idx + 1]);
+        if (idx > 0)                        TryDealDamage(attacker, rangedRow[idx - 1], hits);
+        if (idx < rangedRow.Count - 1)      TryDealDamage(attacker, rangedRow[idx + 1], hits);
+
+        return hits;
     }
 
-    private void DealDamage(CreatureLogic attacker, CreatureLogic target)
+    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
     {
         if (target.IsPendingDeath) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
-        new DealDamageCommand(target.UniqueCreatureID, dmg, hpAfter, attacker.UniqueCreatureID, null, attacker.AttackSpeedMultiplier).AddToQueue();
-        if (hpAfter <= 0)
-            target.ScheduleBattleDeath();
-        else
+        hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
+        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
+        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
+        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
+        if (hpAfter > 0)
             target.Health -= effective;
     }
 

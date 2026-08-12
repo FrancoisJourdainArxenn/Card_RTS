@@ -83,7 +83,6 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBuildingDamage.Clear();
             EnqueueBattleCommands(steps);
         }
-        RefreshAllAreaStats();
     }
 
     public void OnBattlePhaseEnd()
@@ -368,9 +367,27 @@ public class ZoneCombatResolver : MonoBehaviour
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     // Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
 
+                    // Cibles secondaires (Cone/Piercing/Circular/...) calculées avant d'empiler la commande
+                    // principale, pour que la liste transportée avec elle soit déjà complète — la commande peut
+                    // s'exécuter de façon synchrone dès AddToQueue() (file vide + caméra déjà en position), donc
+                    // la remplir après coup risquerait qu'elle soit lue vide par la séquence visuelle.
+                    // Important : les modificateurs (AttackModifierSO.Apply) mutent la vie des cibles secondaires
+                    // survivantes mais NE programment PAS leur mort — ScheduleBattleDeath() est appelé plus bas,
+                    // après avoir mis en file la commande d'attaque principale, pour que la CreatureDieCommand
+                    // d'une cible secondaire ne s'exécute jamais avant l'animation qui est censée la tuer.
+                    List<AttackHitResult> secondaryHits = new List<AttackHitResult>();
+                    if (attackerCreature != null)
+                        foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
+                        {
+                            if (mod == null) continue; // slot vide/cassé dans AttackModifiers — on l'ignore au lieu de planter tout le resolver
+                            Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
+                            List<AttackHitResult> modHits = mod.Apply(attackerCreature, target);
+                            if (modHits != null) secondaryHits.AddRange(modHits);
+                        }
+
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Creature — attaquant={step.attackerID} cible={target.UniqueCreatureID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
                     if (!step.attackerIsBuilding)
-                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f).AddToQueue();
+                        new CreatureAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f, secondaryHits).AddToQueue();
                     else
                         new BuildingAttackCommand(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter).AddToQueue();
 
@@ -397,12 +414,13 @@ public class ZoneCombatResolver : MonoBehaviour
                                 attackerBuilding.Health = attackerHealthAfter;
                         }
                     }
-                    if (attackerCreature != null)
-                    foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
+
+                    // Mort des cibles secondaires tuées par un modificateur — mise en file seulement maintenant,
+                    // après la CreatureAttackCommand principale (voir commentaire plus haut).
+                    foreach (AttackHitResult hit in secondaryHits)
                     {
-                        if (mod == null) continue; // slot vide/cassé dans AttackModifiers — on l'ignore au lieu de planter tout le resolver
-                        Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — application modificateur {mod.GetType().Name} sur {attackerCreature.DisplayName}");
-                        mod.Apply(attackerCreature, target);
+                        if (hit.HealthAfter <= 0 && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(hit.TargetUniqueID, out CreatureLogic secondaryCreature))
+                            secondaryCreature.ScheduleBattleDeath();
                     }
 
                     break;
@@ -682,11 +700,6 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         return null;
     }
-    void RefreshAllAreaStats()
-    {
-        // foreach (PlayerArea pa in zoneView.subZones)
-        //     pa.RefreshAreaStats();
-    }
 
     // Called from OneCreatureManager click — finds which resolver owns a baseID
     public static ZoneCombatResolver FindForBase(int baseID)
@@ -855,8 +868,6 @@ public class ZoneCombatResolver : MonoBehaviour
             allResolvers[i].p1FreePool = p1Pools[i];
             allResolvers[i].p2FreePool = p2Pools[i];
         }
-        foreach (ZoneCombatResolver r in allResolvers)
-            r.RefreshAllAreaStats();
     }
 
     /// <summary>

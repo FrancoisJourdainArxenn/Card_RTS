@@ -25,14 +25,14 @@ MonoBehaviour:
   Attack: 3
   MaxHealth: 6
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 4
   AttackModifiers:
   - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}

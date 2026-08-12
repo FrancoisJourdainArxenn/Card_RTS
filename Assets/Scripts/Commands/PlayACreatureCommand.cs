@@ -38,7 +38,9 @@ public class PlayACreatureCommand : Command
                 ? selectedPArea.tableVisual.MeleeCreaturesOnTable
                 : selectedPArea.tableVisual.RangedCreaturesOnTable;
             int currentVisualPos = visualList.IndexOf(existingCreature);
-            int resolvedPos = currentVisualPos >= 0 ? currentVisualPos : tablePos;
+            int resolvedPos = currentVisualPos >= 0
+                ? currentVisualPos
+                : selectedPArea.tableVisual.FromNetworkTablePos(isMelee, tablePos);
 
             selectedPArea.tableVisual.PendingCreaturesOnTable.Remove(existingCreature);
             selectedPArea.tableVisual.MeleeCreaturesOnTable.Remove(existingCreature);
@@ -48,7 +50,10 @@ public class PlayACreatureCommand : Command
         }
         else
         {
-            selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, tablePos, selectedPArea.baseID);
+            // tablePos est logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : on le
+            // reconvertit en index de liste réel pour CE client avant d'insérer.
+            int rawTablePos = selectedPArea.tableVisual.FromNetworkTablePos(cl.ca.melee, tablePos);
+            selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, rawTablePos, selectedPArea.baseID);
         }
         BuildSpotVisual.RefreshAll();
 

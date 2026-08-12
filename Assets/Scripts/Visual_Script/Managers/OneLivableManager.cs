@@ -16,7 +16,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     public GameObject artMask;
     public Image frame;
     public Image glow;
-    public Image MeleeImage;
+    public Image HeroSymbol;
 
     // [Header("Combat Indicators")]
     // public GameObject MarkedForDeathIndicator;
@@ -69,7 +69,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             VisualFeedbackEffect.CreateDamageEffect(transform.position, amount);
         HealthText.text = healthAfter.ToString();
         ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void HealDamage(int amount, int healthAfter)
@@ -81,7 +80,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         Debug.Log($"{cardAsset.name} heal {amount} damage. {healthAfter} left afterwards.");
         HealthText.text = healthAfter.ToString();
         ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void BuffStats(int attackAmount, int secondAmount, int attackAfter, int healthAfter)
@@ -100,7 +98,6 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
             ValuePopAnimation.Pop(HealthText.transform);
         }
-        // GetComponentInParent<TableVisual>()?.ownerArea?.RefreshAreaStats();
     }
 
     public void SetVisible(bool visible)
@@ -108,7 +105,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         if (artMask != null)    artMask.SetActive(visible);
         else if (art != null)   art.enabled        = visible;
         if (frame != null)      frame.enabled      = visible;
-        if (MeleeImage != null) MeleeImage.enabled = visible && cardAsset != null && cardAsset.melee;
+        if (HeroSymbol != null) HeroSymbol.enabled = visible && cardAsset != null && cardAsset.IsHero;
         if (AttackText != null) AttackText.enabled = visible;
         if (HealthText != null) HealthText.enabled = visible;
         if (glow != null && visible == false)

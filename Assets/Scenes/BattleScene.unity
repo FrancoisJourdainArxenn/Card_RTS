@@ -2241,6 +2241,9 @@ MonoBehaviour:
   AttackWindupDuration: 0.4
   AttackWindupBack: 0.01
   AttackWindupHeight: 4
+  ProjectileSpeed: 7
+  ProjectileMinDuration: 0.5
+  MeleeMultiTargetVfxLifetime: 1.5
   popStrength: 2
   popDuration: 0.5
   CameraShakeAnticipation: 0.05
@@ -2257,14 +2260,18 @@ MonoBehaviour:
   CreaturePrefab: {fileID: 126706081317096460, guid: 0c83baa8f0f3a2c42b0039d4e559f657, type: 3}
   DamageEffectPrefab: {fileID: 8646957825748758392, guid: 217365ffc7611ca468496335ff137e3d, type: 3}
   ExplosionPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
+  RangedProjectilePrefab: {fileID: 5039141623757506213, guid: 4f4c8e726e0e24d46bc71c45623f7c94, type: 3}
+  MeleeMultiTargetVfxPrefab: {fileID: 1879927966269859574, guid: 22516d64e58e79a419d8c55bd2654a02, type: 3}
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
   BuildingPrefab: {fileID: 126706081317096460, guid: a1d0ad6a13751354b993f8d8c8ec1cca, type: 3}
   CardTierIcons:
-  - {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
-  - {fileID: 21300000, guid: 537405a30e1344843a2a7fff7adb858b, type: 3}
-  - {fileID: 21300000, guid: 996db40c8ee6838448d239518bae46aa, type: 3}
+  - {fileID: 21300000, guid: 32111d3fb07038e46b07f73f7af671f6, type: 3}
+  - {fileID: 21300000, guid: 9cac8352d1196d048aa8c61e9d19d605, type: 3}
+  - {fileID: 21300000, guid: 9f3142a73eb8ede4bbb600b7e7e5ffce, type: 3}
   MeleeRowKeyword: {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
   RangedRowKeyword: {fileID: 11400000, guid: 30de3c4646fcc8248b6e8b9ba662238f, type: 2}
+  MeleeIcon: {fileID: 21300000, guid: 490c3bdbf66477548bb4e1f9171734a4, type: 3}
+  RangedIcon: {fileID: 21300000, guid: 174fde7754693ed4fbf4313494622be9, type: 3}
   ConfirmTargetingButton: {fileID: 162971764}
   baseApparitionPoint: {fileID: 1277380108}
   GameOverPanel: {fileID: 0}
@@ -2853,7 +2860,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: ce58267493771cd46802293f392aa62a, type: 2}
+  playerDeck: {fileID: 11400000, guid: 145ac47e3307ef34fabfe216c222adb7, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &636250719
 GameObject:
@@ -5236,15 +5243,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.14150941, g: 0.120817, b: 0.120817, a: 0.92156863}
+  m_Color: {r: 0.40741915, g: 0.40494835, b: 0.49056602, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: -107697345, guid: 766b04156cabb7340b0ffe4b419dc729, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -5601,7 +5608,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 71867805de3ec134d97b1ee77ac5c450, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6608,7 +6615,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 02027dc2b9c6c2e40a52f73c9fc7f6d5, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6794,6 +6801,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   canvasRectTransform: {fileID: 744353341}
+  padding: {x: 15, y: 15}
 --- !u!1 &1604141141
 GameObject:
   m_ObjectHideFlags: 0
@@ -8298,7 +8306,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 293, y: 193}
+  m_AnchoredPosition: {x: 293, y: 169}
   m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1941401938
@@ -8321,7 +8329,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 71867805de3ec134d97b1ee77ac5c450, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9135,6 +9143,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 744353341}
     m_Modifications:
+    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -70.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 62.344
+      objectReference: {fileID: 0}
     - target: {fileID: 1336542884024312976, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -9219,6 +9235,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: mainRessource_UI
       objectReference: {fileID: 0}
+    - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
     - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_RaycastTarget
       value: 0

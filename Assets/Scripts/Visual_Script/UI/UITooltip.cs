@@ -5,6 +5,7 @@ public class UITooltip : MonoBehaviour
 {
     public static UITooltip Instance { get; private set; }
     [SerializeField] private RectTransform canvasRectTransform;
+    [SerializeField] private Vector2 padding = new Vector2(8f, 8f); // Padding around the text
 
     private TextMeshProUGUI tooltipText;
     private RectTransform backgroundRectTransform;
@@ -28,8 +29,7 @@ public class UITooltip : MonoBehaviour
         tooltipText.ForceMeshUpdate();
 
         Vector2 textSize = tooltipText.GetRenderedValues(false);
-        Vector2 padding = new Vector2(8f, 8f); // Add some padding around the text
-        
+        Vector2 padding = this.padding; // Use the serialized padding value
         backgroundRectTransform.sizeDelta = textSize += padding;
     }
 

@@ -29,7 +29,9 @@ public class DragCreatureActions : DraggingActions {
 
     [SerializeField] private float _elevationHeight = 2f;
     private Vector3 _originalManagerLocalPosition;
-    private bool _reorderDone = false;
+    // Empêche ResetDragElements de ramener la créature à sa position d'avant-drag quand elle a déjà
+    // été replacée ailleurs (reorder dans la même zone, ou déplacement vers une autre zone).
+    private bool _skipSnapBack = false;
     private bool _wasInOriginArea = true;
 
 
@@ -65,15 +67,10 @@ public class DragCreatureActions : DraggingActions {
     public override void OnStartDrag()
     {
         _wasInOriginArea = true;
+        _skipSnapBack = false;
 
-        if (GetCreatureLogic() != null)
-        {
-            if (NetworkSessionData.IsNetworkSession)
-                GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
-            else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
-                TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
-        }
-        manager.ClearPendingMoveArrow();
+        if (idHolder == null)
+            idHolder = GetComponentInParent<IDHolder>();
 
         originArea = playerOwner.SelectedPArea();
         whereIsThisCreature.VisualState = VisualStates.Dragging;
@@ -252,39 +249,83 @@ public class DragCreatureActions : DraggingActions {
 
     private void Reorder()
     {
-        _reorderDone = true;
+        if (manager.HasPendingMove)
+        {
+            CreatureLogic creatureLogic = GetCreatureLogic();
+            if (creatureLogic != null && !originArea.tableVisual.RowHasSpace(creatureLogic.IsMelee))
+            {
+                new ShowMessageCommand("You can't control more units in that zone.", 1f).AddToQueue();
+                return;
+            }
+            CancelPendingMove();
+        }
+
+        _skipSnapBack = true;
 
         GameObject creatureGO = IDHolder.GetGameObjectWithID(idHolder.UniqueID);
         originArea.tableVisual.ReorderCreature(creatureGO);
 
+        // Reordonner N'IMPORTE QUELLE créature (ghost inclus) peut décaler la position relative de
+        // TOUTES les créatures de la rangée — vraies créatures et ghosts de déplacement en attente
+        // confondus (ex : plusieurs déplacements en cours vers cette zone après un multi-select).
+        // On rediffuse donc l'ordre complet de la rangée à chaque reorder.
+        BroadcastRowOrder(originArea);
+    }
+
+    // Annule le déplacement en attente de la créature en cours de drag (RPC serveur / buffer solo) et
+    // nettoie son état visuel (flèche, ghost dans la zone cible, affichage en bout de rangée). Sans
+    // effet si la créature n'a pas de déplacement en attente.
+    private void CancelPendingMove()
+    {
         if (NetworkSessionData.IsNetworkSession)
-        {
-            int[] meleeIDs  = ExtractIDs(originArea.tableVisual.MeleeCreaturesOnTable);
-            int[] rangedIDs = ExtractIDs(originArea.tableVisual.RangedCreaturesOnTable);
-            GameNetworkManager.Instance.ReorderCreaturesServerRpc(
-                playerOwner.playerIndex, originArea.baseID, meleeIDs, rangedIDs);
-        }
+            GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+            TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
+
+        originArea.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
+        manager.DestroyPendingMoveGhost();
+        manager.ClearPendingMoveArrow();
+    }
+
+    // Diffuse l'ordre complet (IDs permanents, vraies créatures et ghosts de déplacement en attente
+    // mélangés — voir TableVisual.PermanentIDOf) de chaque rangée de area : au serveur puis à tous
+    // les clients en réseau (relayé via le mécanisme existant de reorder de créatures réelles), ou
+    // directement en local en solo différé (aucun autre client à informer). Appelé à chaque
+    // événement qui change la composition ou l'ordre visuel d'une rangée côté joueur local : spawn
+    // d'un nouveau ghost (Move) et reorder par drag (Reorder).
+    private void BroadcastRowOrder(PlayerArea area)
+    {
+        int[] meleeIDs  = ExtractIDs(area.tableVisual.MeleeCreaturesOnTable);
+        int[] rangedIDs = ExtractIDs(area.tableVisual.RangedCreaturesOnTable);
+
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.ReorderCreaturesServerRpc(playerOwner.playerIndex, area.baseID, meleeIDs, rangedIDs);
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+            area.tableVisual.ApplyCreatureOrder(meleeIDs, rangedIDs);
     }
 
     private static int[] ExtractIDs(List<GameObject> list)
     {
         int[] ids = new int[list.Count];
         for (int i = 0; i < list.Count; i++)
-        {
-            IDHolder holder = list[i] != null ? list[i].GetComponent<IDHolder>() : null;
-            ids[i] = holder != null ? holder.UniqueID : -1;
-        }
+            ids[i] = TableVisual.PermanentIDOf(list[i]);
         return ids;
     }
 
-    private bool Move(PlayerArea targetPlayerArea, bool silent = false)
+    // explicitNetworkTablePos : utilisé par les déplacements groupés (multi-select), qui appellent Move
+    // plusieurs fois de suite dans la même frame pour la même zone cible. Sans ça, chaque appel
+    // rééchantillonnerait Input.mousePosition contre une rangée dont le compte grandit à chaque
+    // itération (un ghost de plus par unité déjà traitée) — la même position de souris ne mappe alors
+    // plus au même index relatif d'une unité à l'autre, et l'ordre du groupe devient imprévisible.
+    // Passer un slot logique explicite, assigné une fois par l'appelant, élimine cette dépendance.
+    private bool Move(PlayerArea targetPlayerArea, bool silent = false, int? explicitNetworkTablePos = null)
     {
         if (targetPlayerArea == null)
         {
             Debug.Log("target player area null");
             return false;
         }
-    
+
         if (targetPlayerArea == originArea)
         {
             Debug.Log("target player area is the same as the player area");
@@ -310,24 +351,77 @@ public class DragCreatureActions : DraggingActions {
         if (creatureLogic == null)
             return false;
 
-        int tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(creatureLogic.IsMelee);
+        if (!targetPlayerArea.tableVisual.RowHasSpace(creatureLogic.IsMelee))
+        {
+            if (!silent)
+                new ShowMessageCommand("You can't control more units in that zone.", 1f).AddToQueue();
+            return false;
+        }
+
+        CancelPendingMove();
+
+        // tablePos : index visuel brut (compte les ghosts locaux), utilisé pour placer le ghost
+        // exactement là où la souris pointe. networkTablePos : équivalent "logique" (ghosts exclus),
+        // seul index qui garde le même sens une fois envoyé sur le réseau / bufferisé (voir
+        // TableVisual.ToNetworkTablePos).
+        int tablePos, networkTablePos;
+        if (explicitNetworkTablePos.HasValue)
+        {
+            networkTablePos = explicitNetworkTablePos.Value;
+            tablePos = targetPlayerArea.tableVisual.FromNetworkTablePos(creatureLogic.IsMelee, networkTablePos);
+        }
+        else
+        {
+            tablePos = targetPlayerArea.tableVisual.TablePosForNewCreature(creatureLogic.IsMelee);
+            networkTablePos = targetPlayerArea.tableVisual.ToNetworkTablePos(creatureLogic.IsMelee, tablePos);
+        }
 
         if (NetworkSessionData.IsNetworkSession)
         {
-            GameNetworkManager.Instance.MoveCreatureServerRpc(idHolder.UniqueID, targetPlayerArea.baseID, tablePos, playerOwner.playerIndex);
+            GameNetworkManager.Instance.MoveCreatureServerRpc(idHolder.UniqueID, targetPlayerArea.baseID, networkTablePos, playerOwner.playerIndex);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
+            SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
+            BroadcastRowOrder(targetPlayerArea);
         }
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
-            TurnManager.Instance.EnqueueSoloMove(idHolder.UniqueID, targetPlayerArea.baseID, tablePos);
+            TurnManager.Instance.EnqueueSoloMove(idHolder.UniqueID, targetPlayerArea.baseID, networkTablePos);
             manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
+            SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
+            BroadcastRowOrder(targetPlayerArea);
         }
         else
         {
             creatureLogic.Move(targetPlayerArea.baseID, tablePos);
         }
+        _skipSnapBack = true;
         return true;
 
+    }
+
+    // Créature "placeholder" grisée dans la zone cible, représentant l'unité en attente de déplacement.
+    // Réordonnable dans sa rangée (voir Reorder()) pour laisser le joueur choisir sa place d'arrivée.
+    private void SpawnPendingMoveGhost(CreatureLogic creatureLogic, PlayerArea targetArea, int tablePos)
+    {
+        manager.DestroyPendingMoveGhost(); // sécurité : jamais deux ghosts pour le même déplacement
+
+        int ghostID = IDFactory.GetLocalOnlyID();
+        targetArea.tableVisual.AddCreatureAtIndex(creatureLogic.ca, ghostID, tablePos, targetArea.baseID, completeCommand: false);
+
+        GameObject ghostGO = IDHolder.GetGameObjectWithID(ghostID);
+        if (ghostGO == null) return;
+
+        OneCreatureManager ghostManager = ghostGO.GetComponent<OneCreatureManager>();
+        ghostManager.IsPendingMoveGhost = true;
+        ghostManager.PendingMoveSourceCreatureID = idHolder.UniqueID;
+        ghostManager.SetPending(true);
+        ghostManager.CanReorderNow = true;
+        ghostManager.CanMoveNow = false;
+        ghostManager.UpdateGlow();
+
+        manager.PendingMoveGhost = ghostGO;
     }
 
     private void ResetDragElements()
@@ -342,7 +436,7 @@ public class DragCreatureActions : DraggingActions {
         ResetAreaHighlights();
         originArea.tableVisual.ClearInsertPreview();
 
-        if (!_reorderDone)
+        if (!_skipSnapBack)
         {
             Vector3 worldOrigin = manager.transform.parent != null
                 ? manager.transform.parent.TransformPoint(_originalManagerLocalPosition)
@@ -350,7 +444,7 @@ public class DragCreatureActions : DraggingActions {
             manager.transform.DOKill();
             manager.transform.DOMove(worldOrigin, 0.3f).SetEase(Ease.OutQuad);
         }
-        _reorderDone = false;
+        _skipSnapBack = false;
 
         transform.SetLocalPositionAndRotation(originalLocalPosition, Quaternion.Euler(90f, 0f, 0f));
         sr.enabled = false;
@@ -420,7 +514,10 @@ public class DragCreatureActions : DraggingActions {
         }
     }
 
-    public bool TryGroupMoveTo(PlayerArea targetPlayerArea)
+    // explicitNetworkTablePos : slot logique (ghost-free) assigné par l'appelant (voir
+    // MultiSelectionManager.ConfirmGroupMove) plutôt que rééchantillonné depuis la souris — nécessaire
+    // dès que plusieurs unités sont déplacées vers la même zone dans la même frame (voir Move()).
+    public bool TryGroupMoveTo(PlayerArea targetPlayerArea, int explicitNetworkTablePos)
     {
         CreatureLogic creatureLogic = GetCreatureLogic();
         if (creatureLogic == null) return false;
@@ -428,13 +525,7 @@ public class DragCreatureActions : DraggingActions {
         originArea = playerOwner.GetPlayerAreaByID(creatureLogic.BaseID);
         if (originArea == null) return false;
 
-        if (NetworkSessionData.IsNetworkSession)
-            GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
-        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
-            TurnManager.Instance.CancelSoloMove(idHolder.UniqueID);
-        manager.ClearPendingMoveArrow();
-
-        return Move(targetPlayerArea, silent: true);
+        return Move(targetPlayerArea, silent: true, explicitNetworkTablePos: explicitNetworkTablePos);
     }
 
 }

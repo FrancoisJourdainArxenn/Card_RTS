@@ -200,12 +200,45 @@ public class MultiSelectionManager : MonoBehaviour
 
         if (targetArea != null && highlightedAreas.Contains(targetArea))
         {
+            // Ordre stable (gauche→droite dans leur rangée d'origine) au lieu de l'ordre de sélection :
+            // TryGroupMoveTo assigne des slots séquentiels selon CET ordre, donc le groupe arrive dans
+            // la zone cible en gardant l'agencement qu'il avait avant le déplacement.
+            List<OneCreatureManager> ordered = new List<OneCreatureManager>(CurrSelectedObjects);
+            ordered.Sort((a, b) => a.transform.position.x.CompareTo(b.transform.position.x));
+
+            // Un seul slot de base par rangée (mêlée / distance), calculé une fois depuis la position
+            // de la souris ; chaque unité suivante de cette rangée prend le slot suivant. Voir
+            // DragCreatureActions.Move() : rééchantillonner la souris à chaque unité (ancien comportement)
+            // produisait un ordre incohérent, la rangée cible grandissant d'un ghost à chaque itération.
+            int meleeBase = -1, rangedBase = -1;
+            int meleeOffset = 0, rangedOffset = 0;
             int movedCount = 0;
-            foreach (OneCreatureManager so in CurrSelectedObjects)
+
+            foreach (OneCreatureManager so in ordered)
             {
                 DragCreatureActions dca = so.GetComponentInChildren<DragCreatureActions>();
-                if (dca != null && dca.TryGroupMoveTo(targetArea))
+                if (dca == null) continue;
+
+                bool isMelee = so.cardAsset != null && so.cardAsset.melee;
+                int slot;
+                if (isMelee)
+                {
+                    if (meleeBase < 0)
+                        meleeBase = targetArea.tableVisual.ToNetworkTablePos(true, targetArea.tableVisual.TablePosForNewCreature(true));
+                    slot = meleeBase + meleeOffset;
+                }
+                else
+                {
+                    if (rangedBase < 0)
+                        rangedBase = targetArea.tableVisual.ToNetworkTablePos(false, targetArea.tableVisual.TablePosForNewCreature(false));
+                    slot = rangedBase + rangedOffset;
+                }
+
+                if (dca.TryGroupMoveTo(targetArea, slot))
+                {
                     movedCount++;
+                    if (isMelee) meleeOffset++; else rangedOffset++;
+                }
             }
             if (movedCount < CurrSelectedObjects.Count)
                 new ShowMessageCommand("Not all Units could reach that zone.", 1f).AddToQueue();

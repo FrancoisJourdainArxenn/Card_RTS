@@ -140,12 +140,12 @@ public class GameNetworkManager : NetworkBehaviour
         for (int i = 0; i < targetKinds.Length; i++)
         {
             switch (targetKinds[i]) { case 0: nCreature++; break; case 1: nBuilding++; break; case 2: nBase++; break; case 3: nPlayer++; break; }
-            Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Bât,2=Base,3=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+            // Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Bât,2=Base,3=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
         }
-        Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
+        // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
-        Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
+        // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }
 
@@ -914,14 +914,14 @@ public class GameNetworkManager : NetworkBehaviour
         if (!IsServer) return;
         int cardID = IDFactory.GetUniqueID();
         int finalSeed = DeckSeed + _drawSeedOffset++;
-        Debug.Log($"[BroadCastDrawCard] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
+        // Debug.Log($"[BroadCastDrawCard] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
         DrawAcardClientRpc(playerIndex, cardID, finalSeed, fast);
     }
 
     [ClientRpc]
     public void DrawAcardClientRpc(int playerIndex, int cardID, int finalSeed, bool fast)
     {
-        Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
+        // Debug.Log($"[DrawAcardClientRpc] joueur={playerIndex} cardID={cardID} finalSeed={finalSeed} fast={fast}");
         Player player = Player.Players[playerIndex];
         player.DrawACard(fast, cardID, finalSeed);
     }
@@ -930,7 +930,7 @@ public class GameNetworkManager : NetworkBehaviour
     {
         if (!IsServer) return;
         int cardID = IDFactory.GetUniqueID();
-        Debug.Log($"[BroadcastHeroReturnToHand] joueur={playerIndex} cardID={cardID}");
+        // Debug.Log($"[BroadcastHeroReturnToHand] joueur={playerIndex} cardID={cardID}");
         HeroReturnToHandClientRpc(playerIndex, cardID);
     }
 
@@ -1031,7 +1031,9 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void MoveCreatureClientRpc(int creatureUniqueID, int targetBaseID, int tablePos)
     {
-        IDHolder.GetGameObjectWithID(creatureUniqueID)?.GetComponent<OneCreatureManager>()?.ClearPendingMoveArrow();
+        OneCreatureManager ocm = IDHolder.GetGameObjectWithID(creatureUniqueID)?.GetComponent<OneCreatureManager>();
+        ocm?.ClearPendingMoveArrow();
+        ocm?.DestroyPendingMoveGhost(); // no-op côté adversaire, qui n'en a jamais eu (ghost local uniquement)
 
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
         {
@@ -1044,6 +1046,7 @@ public class GameNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void ReorderCreaturesServerRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
     {
+        Debug.Log($"[ReorderRpc][Server] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         // Update buffered tablePos so the flush sends creatures in the correct final order to remote clients.
         // Remote clients have no pending creatures, so the ClientRpc alone would sort an empty list — too early.
         for (int i = 0; i < _actionBuffer.Count; i++)
@@ -1053,11 +1056,26 @@ public class GameNetworkManager : NetworkBehaviour
                 continue;
 
             int creatureID = a.param2;
-            int newPos = System.Array.IndexOf(meleeIDs, creatureID);
-            if (newPos < 0) newPos = System.Array.IndexOf(rangedIDs, creatureID);
-            if (newPos >= 0)
+            int[] row = System.Array.IndexOf(meleeIDs, creatureID) >= 0 ? meleeIDs : rangedIDs;
+            int rawPos = System.Array.IndexOf(row, creatureID);
+            if (rawPos >= 0)
             {
-                a.param3 = newPos;
+                // meleeIDs/rangedIDs incluent maintenant aussi les IDs permanents des ghosts de
+                // déplacement en attente du client qui reorder (voir TableVisual.PermanentIDOf) : ce
+                // sont de vrais IDs présents dans CreaturesCreatedThisGame (une créature en déplacement
+                // reste "vivante" tout du long, seul son BaseID change, et seulement à la résolution —
+                // voir CreatureLogic.Move). On ne peut donc plus se fier à la seule présence dans ce
+                // dictionnaire pour exclure les entrées non résidentes : il faut vérifier que la
+                // créature réside VRAIMENT déjà dans cette rangée (BaseID == baseID) pour retrouver
+                // l'index logique ghost-free, le seul qui garde le même sens une fois bufferisé
+                // (voir TableVisual.ToNetworkTablePos).
+                int logicalPos = 0;
+                for (int j = 0; j < rawPos; j++)
+                    if (IsResidentCreature(row[j], baseID))
+                        logicalPos++;
+
+                Debug.Log($"[ReorderRpc][Server] patch PlayCreature creatureID={creatureID} rawPos={rawPos} → param3={logicalPos}");
+                a.param3 = logicalPos;
                 _actionBuffer[i] = a;
             }
         }
@@ -1065,9 +1083,13 @@ public class GameNetworkManager : NetworkBehaviour
         ReorderCreaturesClientRpc(playerIndex, baseID, meleeIDs, rangedIDs);
     }
 
+    private static bool IsResidentCreature(int creatureID, int baseID) =>
+        CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureID, out CreatureLogic cl) && cl.BaseID == baseID;
+
     [ClientRpc]
     void ReorderCreaturesClientRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
     {
+        Debug.Log($"[ReorderRpc][Client] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         Player.Players[playerIndex].NetworkApplyCreatureOrder(baseID, meleeIDs, rangedIDs);
     }
 

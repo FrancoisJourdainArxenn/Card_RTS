@@ -50,6 +50,8 @@ public class TokenGenerationSO : EffectSO
             int baseTablePos = tokenIsMelee
                 ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
                 : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+            // Occupation réelle de la rangée pour le check de capacité : ignore les créatures en pending move
+            int effectiveRowCount = targetArea.tableVisual.EffectiveRowCount(tokenIsMelee);
 
 
             for (int i = 0; i < TokenCount; i++)
@@ -60,9 +62,9 @@ public class TokenGenerationSO : EffectSO
                         GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
                         break;
                     case TokenPlacement.ToZone:
-                        if (baseTablePos + i >= GlobalSettings.Instance.MaxCreaturePerRow)
+                        if (effectiveRowCount + i >= GlobalSettings.Instance.MaxCreaturePerRow)
                         {
-                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({baseTablePos + i}/{GlobalSettings.Instance.MaxCreaturePerRow}), token {i + 1} annulé.");
+                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({effectiveRowCount + i}/{GlobalSettings.Instance.MaxCreaturePerRow}), token {i + 1} annulé.");
                             new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
                             continue;
                         }

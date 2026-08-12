@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 
 enum AttackTargetType
@@ -11,7 +12,7 @@ enum AttackTargetType
     Unknown
 }
 
-public class CreatureAttackVisual : MonoBehaviour 
+public class CreatureAttackVisual : MonoBehaviour
 {
     private OneCreatureManager manager;
     private WhereIsTheCardOrCreature w;
@@ -27,7 +28,7 @@ public class CreatureAttackVisual : MonoBehaviour
     private AttackTargetType GetTargetType(int targetUniqueID)
     {
         if (
-            targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID 
+            targetUniqueID == GlobalSettings.Instance.LowPlayer.PlayerID
             || targetUniqueID == GlobalSettings.Instance.TopPlayer.PlayerID
         )
         {
@@ -51,7 +52,9 @@ public class CreatureAttackVisual : MonoBehaviour
         return AttackTargetType.Unknown;
     }
 
-    public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f)
+    // secondaryHits : cibles touchées par les modificateurs d'attaque de l'attaquant (Cone/Piercing/...),
+    // dégâts déjà appliqués en logique — jouées dans la même séquence (même windup, même retour) que la cible principale.
+    public void AttackTarget(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
     {
         Debug.Log($"[AttackVisual] {gameObject.name} → cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
         // L'attaquant peut avoir été détruit entre l'enregistrement et l'exécution de la commande
@@ -70,12 +73,35 @@ public class CreatureAttackVisual : MonoBehaviour
             Command.CommandExecutionComplete();
             return;
         }
+
+        List<AttackHitResult> hits = secondaryHits ?? new List<AttackHitResult>();
+
         AttackTargetType targetType = GetTargetType(targetUniqueID);
         float moveDur  = moveDuration / speedMultiplier;
         float postDel  = postDelay    / speedMultiplier;
         float windupDur = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupDuration : 0.15f;
         float windupBack   = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupBack   : 0.3f;
         float windupHeight = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupHeight : 0.35f;
+        float projectileSpeed      = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileSpeed       : 18f;
+        float projectileMinDur     = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileMinDuration : 0.12f;
+        GameObject projectilePrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.RangedProjectilePrefab : null;
+        GameObject meleeMultiTargetVfxPrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxPrefab : null;
+        float meleeMultiTargetVfxLifetime = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxLifetime : 1.5f;
+
+        // Durée de vol basée sur la distance réelle (vitesse constante), pas une durée fixe : sinon un
+        // attaquant rapide (AttackSpeedMultiplier élevé) ou une cible éloignée finissait avec un vol trop
+        // court pour être visible. Le plancher garantit un minimum de temps de vol dans tous les cas.
+        float ProjectileDurationFor(Vector3 origin, Vector3 destination)
+        {
+            float distance = Vector3.Distance(origin, destination);
+            float baseDur = projectileSpeed > 0.01f ? distance / projectileSpeed : projectileMinDur;
+            return Mathf.Max(projectileMinDur, baseDur / speedMultiplier);
+        }
+
+        IDHolder selfID = GetComponent<IDHolder>();
+        bool isRanged = selfID != null
+            && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(selfID.UniqueID, out CreatureLogic selfLogic)
+            && selfLogic.IsRanged;
 
         // bring this creature to front sorting-wise.
         w.BringToFront();
@@ -88,26 +114,143 @@ public class CreatureAttackVisual : MonoBehaviour
         flatDir = flatDir.sqrMagnitude > 0.0001f ? flatDir.normalized : transform.forward;
         Vector3 windupPosition = originalPosition - flatDir * windupBack + Vector3.up * windupHeight;
 
+        void ShakeCamera()
+        {
+            if (damageTakenByTarget > 0 && selfID != null)
+                CameraController.Instance?.ShakeForAttackerID(selfID.UniqueID);
+        }
+
+        // Popup de dégâts + rafraîchissement du texte de vie pour une cible touchée.
+        void ApplyHitFeedback(int hitTargetID, int damage, int healthAfter)
+        {
+            GameObject hitTarget = IDHolder.GetGameObjectWithID(hitTargetID);
+            if (hitTarget == null) return;
+            if (damage > 0)
+                VisualFeedbackEffect.CreateDamageEffect(hitTarget.transform.position, damage);
+
+            switch (GetTargetType(hitTargetID))
+            {
+                case AttackTargetType.Player:
+                    hitTarget.GetComponent<MainBaseVisual>().HealthText.text = healthAfter.ToString();
+                    GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+                    break;
+                case AttackTargetType.Base:
+                    hitTarget.GetComponent<OneBaseManager>().HealthText.text = healthAfter.ToString();
+                    break;
+                case AttackTargetType.Creature:
+                    hitTarget.GetComponent<OneCreatureManager>().HealthText.text = healthAfter.ToString();
+                    break;
+                case AttackTargetType.Building:
+                    hitTarget.GetComponent<OneBuildingManager>().HealthText.text = healthAfter.ToString();
+                    break;
+                case AttackTargetType.Unknown:
+                    Debug.Log("Unknown target type: " + hitTargetID);
+                    break;
+            }
+        }
+
+        // Impact de la cible principale : popup cible + popup contre-attaque sur l'attaquant + texte de vie attaquant.
+        void ApplyMainImpact()
+        {
+            if (this == null) return;
+            ApplyHitFeedback(targetUniqueID, damageTakenByTarget, targetHealthAfter);
+            if (damageTakenByAttacker > 0)
+                VisualFeedbackEffect.CreateDamageEffect(transform.position, damageTakenByAttacker);
+            manager.HealthText.text = attackerHealthAfter.ToString();
+        }
+
+        // Instancie le prefab de projectile (Vfx_Projectile) et l'anime en ligne droite vers la cible ;
+        // sans prefab configuré ou cible déjà introuvable, applique l'impact immédiatement.
+        // La durée est calculée par l'appelant (avant d'être planifiée dans la séquence DOTween) et
+        // simplement rejouée ici, pour que le timing du tween et celui du projectile restent identiques.
+        void FireProjectileAt(Vector3 origin, GameObject hitTarget, float duration, System.Action onImpact)
+        {
+            if (projectilePrefab != null && hitTarget != null)
+            {
+                GameObject proj = Instantiate(projectilePrefab, origin, Quaternion.identity);
+                RangedProjectile projScript = proj.AddComponent<RangedProjectile>();
+                projScript.Play(origin, hitTarget.transform.position, duration, onImpact);
+            }
+            else
+            {
+                onImpact?.Invoke();
+            }
+        }
+
+        // Melee avec modificateur d'attaque (Cone/Piercing/...) uniquement : instancie le Melee VFX depuis la
+        // position actuelle de l'attaquant (au contact de sa cible principale, juste après la charge) vers
+        // chaque cible secondaire, une instance par cible orientée vers elle. Contrairement au projectile
+        // ranged, cet effet n'a pas besoin d'être piloté par code — il se joue et se détruit tout seul.
+        void FireMeleeVfxTo(GameObject hitTarget, AttackHitResult hit)
+        {
+            if (meleeMultiTargetVfxPrefab != null && hitTarget != null)
+            {
+                Vector3 origin = transform.position;
+                Vector3 dir = hitTarget.transform.position - origin;
+                Quaternion rot = dir.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(dir) : Quaternion.identity;
+                GameObject vfx = Instantiate(meleeMultiTargetVfxPrefab, origin, rot);
+                Destroy(vfx, meleeMultiTargetVfxLifetime);
+            }
+            ApplyHitFeedback(hit.TargetUniqueID, hit.Damage, hit.HealthAfter);
+        }
+
         bool moveDone = false;
         Sequence attackSeq = DOTween.Sequence();
         attackSeq.SetLink(gameObject);
         attackSeq.Append(transform.DOMove(windupPosition, windupDur).SetEase(Ease.OutSine));
-        attackSeq.Append(transform.DOMove(target.transform.position, moveDur).SetEase(Ease.InQuad));
-        attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
 
-        // Shake fires a little before the creature actually reaches the target (impact = windupDur + moveDur),
-        // not on the sequence's OnComplete (which only fires after the return move too) — otherwise it lands
-        // visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
-        if (damageTakenByTarget > 0)
+        if (isRanged)
         {
-            IDHolder selfID = GetComponent<IDHolder>();
-            if (selfID != null)
+            // Un seul windup : l'unité reste en position et tire un projectile sur la cible principale
+            // puis, sans revenir entre chaque tir, sur chaque cible secondaire (Cone/Piercing/...).
+            // Le retour à la position d'origine n'a lieu qu'à la toute fin, une fois tous les tirs résolus.
+            float mainProjectileDur = ProjectileDurationFor(windupPosition, target.transform.position);
+            attackSeq.AppendCallback(() =>
+                FireProjectileAt(windupPosition, target, mainProjectileDur, () => { ApplyMainImpact(); ShakeCamera(); }));
+            attackSeq.AppendInterval(mainProjectileDur);
+
+            foreach (AttackHitResult hit in hits)
             {
-                int attackerUniqueID = selfID.UniqueID;
-                float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
-                float shakeTime = Mathf.Max(0f, windupDur + moveDur - leadTime);
-                attackSeq.InsertCallback(shakeTime, () => CameraController.Instance?.ShakeForAttackerID(attackerUniqueID));
+                AttackHitResult capturedHit = hit;
+                GameObject hitTargetGO = IDHolder.GetGameObjectWithID(capturedHit.TargetUniqueID);
+                float hitProjectileDur = hitTargetGO != null ? ProjectileDurationFor(windupPosition, hitTargetGO.transform.position) : projectileMinDur;
+                attackSeq.AppendCallback(() =>
+                {
+                    GameObject liveHitTarget = IDHolder.GetGameObjectWithID(capturedHit.TargetUniqueID);
+                    FireProjectileAt(windupPosition, liveHitTarget, hitProjectileDur, () => ApplyHitFeedback(capturedHit.TargetUniqueID, capturedHit.Damage, capturedHit.HealthAfter));
+                });
+                attackSeq.AppendInterval(hitProjectileDur);
             }
+
+            attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
+        }
+        else
+        {
+            attackSeq.Append(transform.DOMove(target.transform.position, moveDur).SetEase(Ease.InQuad));
+
+            // Shake fires a little before the creature actually reaches the target (impact = windupDur + moveDur),
+            // not on the sequence's OnComplete (which only fires after the return move too) — otherwise it lands
+            // visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
+            float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
+            float shakeTime = Mathf.Max(0f, windupDur + moveDur - leadTime);
+            attackSeq.InsertCallback(shakeTime, ShakeCamera);
+
+            // Attaque melee classique (sans modificateur) : comportement strictement inchangé.
+            // Avec modificateur : une fois la charge terminée (attaquant au contact de sa cible principale),
+            // le Melee VFX part vers chaque cible secondaire avant le retour à la position d'origine.
+            if (hits.Count > 0)
+            {
+                attackSeq.AppendCallback(() =>
+                {
+                    foreach (AttackHitResult hit in hits)
+                    {
+                        GameObject hitTargetGO = IDHolder.GetGameObjectWithID(hit.TargetUniqueID);
+                        FireMeleeVfxTo(hitTargetGO, hit);
+                    }
+                });
+            }
+
+            attackSeq.Append(transform.DOMove(originalPosition, moveDur).SetEase(Ease.OutSine));
         }
 
         attackSeq
@@ -122,38 +265,17 @@ public class CreatureAttackVisual : MonoBehaviour
                         return;
                     }
 
-                    if (damageTakenByTarget > 0 && target != null)
-                        VisualFeedbackEffect.CreateDamageEffect(target.transform.position, damageTakenByTarget);
-                    if (damageTakenByAttacker > 0)
-                        VisualFeedbackEffect.CreateDamageEffect(transform.position, damageTakenByAttacker);
-
-                    if (target != null)
+                    if (!isRanged)
                     {
-                        switch (targetType)
-                        {
-                            case AttackTargetType.Player:
-                                target.GetComponent<MainBaseVisual>().HealthText.text = targetHealthAfter.ToString();
-                                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
-                                break;
-                            case AttackTargetType.Base:
-                                target.GetComponent<OneBaseManager>().HealthText.text = targetHealthAfter.ToString();
-                                break;
-                            case AttackTargetType.Creature:
-                                target.GetComponent<OneCreatureManager>().HealthText.text = targetHealthAfter.ToString();
-                                break;
-                            case AttackTargetType.Building:
-                                target.GetComponent<OneBuildingManager>().HealthText.text = targetHealthAfter.ToString();
-                                break;
-                            case AttackTargetType.Unknown:
-                                Debug.Log("Unknown target type: " + targetUniqueID);
-                                break;
-                        }
+                        // Melee : l'impact de la cible principale est révélé une fois l'attaquant revenu à sa
+                        // place, comme avant (comportement inchangé). Les cibles secondaires, elles, ont déjà
+                        // été révélées plus tôt, au moment où le Melee VFX est parti vers elles.
+                        ApplyMainImpact();
                     }
 
                     w.SetTableSortingOrder();
                     w.VisualState = tempState;
 
-                    manager.HealthText.text = attackerHealthAfter.ToString();
                     bool seqDone = false;
                     Sequence s = DOTween.Sequence();
                     s.AppendInterval(postDel);
@@ -171,5 +293,5 @@ public class CreatureAttackVisual : MonoBehaviour
             }))
             .OnKill(() => { if (!moveDone) Command.CommandExecutionComplete(); });
     }
-        
+
 }
