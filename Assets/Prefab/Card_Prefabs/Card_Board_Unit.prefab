@@ -60,7 +60,7 @@ MonoBehaviour:
   artMask: {fileID: 7369301651622043161}
   frame: {fileID: 3193365811603967444}
   glow: {fileID: 7368865151671539246}
-  MeleeImage: {fileID: 5506920404441326065}
+  HeroSymbol: {fileID: 5506920404441326065}
   pendingMoveArrow: {fileID: 2621815310663996257}
   arrowOriginOffset: {x: 0, y: 0, z: 0}
   arrowScrollSpeed: 1
@@ -165,8 +165,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.3313, y: 81.71}
-  m_SizeDelta: {x: -106.6, y: -443.83}
+  m_AnchoredPosition: {x: -0.69999695, y: 87.3}
+  m_SizeDelta: {x: -51.6, y: -434}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3043971834428753347
 CanvasRenderer:
@@ -183,7 +183,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1171568673166602895}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -498,8 +498,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -74.65, y: 18.1}
-  m_SizeDelta: {x: 168.42, y: 129.06}
+  m_AnchoredPosition: {x: -92.53, y: 35.4}
+  m_SizeDelta: {x: 132.66, y: 116.37}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4851054423817012751
 CanvasRenderer:
@@ -573,8 +573,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.79330486, y: 0.0877479}
   m_AnchorMax: {x: 0.9318499, y: 0.19169998}
-  m_AnchoredPosition: {x: -61.38, y: 50.5}
-  m_SizeDelta: {x: 110.14, y: 82.26}
+  m_AnchoredPosition: {x: -44.6, y: 47.6}
+  m_SizeDelta: {x: 114.34624, y: 83.57915}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6541985452900729748
 CanvasRenderer:
@@ -706,11 +706,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4099659347628509326}
+  - {fileID: 7881464220108302103}
   - {fileID: 6360091115081628077}
   - {fileID: 6802944640695840305}
-  - {fileID: 2353256405976631434}
   - {fileID: 5208678919839137871}
   - {fileID: 1466468343363887418}
+  - {fileID: 2353256405976631434}
   m_Father: {fileID: 3620167656825172104}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -813,7 +814,7 @@ GameObject:
   - component: {fileID: 8085841271319823513}
   - component: {fileID: 5506920404441326065}
   m_Layer: 5
-  m_Name: MeleeImage
+  m_Name: HeroSymbol
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -835,9 +836,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.44849566}
   m_AnchorMax: {x: 1, y: 0.846}
-  m_AnchoredPosition: {x: 0, y: -76.0455}
-  m_SizeDelta: {x: -370, y: -217.909}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 39.796, y: -80.97}
+  m_SizeDelta: {x: -343.08, y: -161.94}
+  m_Pivot: {x: 0.37332705, y: 0.5}
 --- !u!222 &8085841271319823513
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -866,7 +867,82 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1b030b316196c6e4a9fe9e28734a6074, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 4f0c3d73d4d490843815a2a9ad3c1907, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!1 &5072306051338185131
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7881464220108302103}
+  - component: {fileID: 2926199008234194999}
+  - component: {fileID: 7079829818647847413}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &7881464220108302103
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5072306051338185131}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4635061962066779402}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.22, y: 19.76}
+  m_SizeDelta: {x: 298.37, y: 60.49}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2926199008234194999
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5072306051338185131}
+  m_CullTransparentMesh: 1
+--- !u!114 &7079829818647847413
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5072306051338185131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.2627451, g: 0.56078434, b: 0.7176471, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1375,7 +1451,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6542306610679007067}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.000000007450581}
+  m_LocalPosition: {x: 0, y: 0, z: 0.000000022351742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1384,8 +1460,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 75.42, y: 18.099998}
-  m_SizeDelta: {x: 169.29, y: 129.06}
+  m_AnchoredPosition: {x: 90.6, y: 35.39901}
+  m_SizeDelta: {x: 138.93, y: 116.37}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5026371715750091021
 CanvasRenderer:
@@ -1459,8 +1535,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.08384804, y: 0.081}
   m_AnchorMax: {x: 0.22229469, y: 0.19034548}
-  m_AnchoredPosition: {x: 54.1, y: 47.1}
-  m_SizeDelta: {x: 96.1, y: 74.8}
+  m_AnchoredPosition: {x: 39.402, y: 42.397}
+  m_SizeDelta: {x: 101.05084, y: 76.18759}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4367404943766338588
 CanvasRenderer:

@@ -48,10 +48,11 @@ public class OneBuildingManager : OneLivableManager
             AttackText.text = cardAsset.Attack.ToString();
         }
 
-        if(cardAsset.melee)
+        if(cardAsset.IsHero)
         {
-            MeleeImage.enabled = true;
+            HeroSymbol.enabled = true;
         }
+
 
         if (PreviewManager != null)
         {

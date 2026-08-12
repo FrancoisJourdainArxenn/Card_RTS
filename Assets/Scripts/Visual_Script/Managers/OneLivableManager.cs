@@ -16,7 +16,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     public GameObject artMask;
     public Image frame;
     public Image glow;
-    public Image MeleeImage;
+    public Image HeroSymbol;
 
     // [Header("Combat Indicators")]
     // public GameObject MarkedForDeathIndicator;
@@ -105,7 +105,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         if (artMask != null)    artMask.SetActive(visible);
         else if (art != null)   art.enabled        = visible;
         if (frame != null)      frame.enabled      = visible;
-        if (MeleeImage != null) MeleeImage.enabled = visible && cardAsset != null && cardAsset.melee;
+        if (HeroSymbol != null) HeroSymbol.enabled = visible && cardAsset != null && cardAsset.IsHero;
         if (AttackText != null) AttackText.enabled = visible;
         if (HealthText != null) HealthText.enabled = visible;
         if (glow != null && visible == false)

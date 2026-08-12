@@ -80,10 +80,10 @@ public class OneCreatureManager : OneLivableManager
 
         AttackText.text = cardAsset.Attack.ToString();
         HealthText.text = cardAsset.MaxHealth.ToString();
-
-        if(cardAsset.melee)
+        
+        if(cardAsset.IsHero)
         {
-            MeleeImage.enabled = true;
+            HeroSymbol.enabled = true;
         }
 
         if (PreviewManager != null)
