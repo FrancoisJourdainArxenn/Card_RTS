@@ -2265,9 +2265,9 @@ MonoBehaviour:
   NeutralBasePrefab: {fileID: 8434494526590664003, guid: 1170600840e732e408212508fcf1b4fb, type: 3}
   BuildingPrefab: {fileID: 126706081317096460, guid: a1d0ad6a13751354b993f8d8c8ec1cca, type: 3}
   CardTierIcons:
-  - {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
-  - {fileID: 21300000, guid: 537405a30e1344843a2a7fff7adb858b, type: 3}
-  - {fileID: 21300000, guid: 996db40c8ee6838448d239518bae46aa, type: 3}
+  - {fileID: 21300000, guid: 32111d3fb07038e46b07f73f7af671f6, type: 3}
+  - {fileID: 21300000, guid: 9cac8352d1196d048aa8c61e9d19d605, type: 3}
+  - {fileID: 21300000, guid: 9f3142a73eb8ede4bbb600b7e7e5ffce, type: 3}
   MeleeRowKeyword: {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
   RangedRowKeyword: {fileID: 11400000, guid: 30de3c4646fcc8248b6e8b9ba662238f, type: 2}
   ConfirmTargetingButton: {fileID: 162971764}
@@ -5606,7 +5606,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 71867805de3ec134d97b1ee77ac5c450, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -6613,7 +6613,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 11e4ead27f3cff84d827fe805023a000, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 02027dc2b9c6c2e40a52f73c9fc7f6d5, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8303,7 +8303,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 293, y: 193}
+  m_AnchoredPosition: {x: 293, y: 169}
   m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1941401938
@@ -8326,7 +8326,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 71867805de3ec134d97b1ee77ac5c450, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9140,6 +9140,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 744353341}
     m_Modifications:
+    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -70.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 62.344
+      objectReference: {fileID: 0}
     - target: {fileID: 1336542884024312976, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -9224,6 +9232,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: mainRessource_UI
       objectReference: {fileID: 0}
+    - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: c1808e35f85e891448a3250b94ccfcbb, type: 3}
     - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_RaycastTarget
       value: 0
