@@ -4678,7 +4678,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 1355120736
+  GlobalObjectIdHash: 1342718857
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -9441,20 +9441,12 @@ PrefabInstance:
     m_TransformParent: {fileID: 744353341}
     m_Modifications:
     - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 125
-      objectReference: {fileID: 0}
-    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 125
-      objectReference: {fileID: 0}
-    - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -72.8
+      value: -70.6
       objectReference: {fileID: 0}
     - target: {fileID: 774719172058161907, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 74
+      value: 62.344
       objectReference: {fileID: 0}
     - target: {fileID: 1336542884024312976, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_Pivot.x
@@ -9540,10 +9532,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: mainRessource_UI
       objectReference: {fileID: 0}
-    - target: {fileID: 4991274674260218430, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
-      propertyPath: m_fontSize
-      value: 9.4
-      objectReference: {fileID: 0}
     - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -9551,14 +9539,6 @@ PrefabInstance:
     - target: {fileID: 7010348414008172706, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_RaycastTarget
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7165347499249184950, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 150
-      objectReference: {fileID: 0}
-    - target: {fileID: 7165347499249184950, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 150
       objectReference: {fileID: 0}
     - target: {fileID: 7165347499249184950, guid: 8120c6089b7e66e48b72b4b4c2f03771, type: 3}
       propertyPath: m_LocalPosition.z

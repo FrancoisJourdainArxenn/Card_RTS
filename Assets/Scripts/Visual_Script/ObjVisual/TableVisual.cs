@@ -42,6 +42,8 @@ public class TableVisual : MonoBehaviour
     // calculé de façon incrémentale, seulement de ce tri.
     private int[] _lastKnownMeleeOrder = System.Array.Empty<int>();
     private int[] _lastKnownRangedOrder = System.Array.Empty<int>();
+    public IReadOnlyList<int> LastKnownMeleeOrder => _lastKnownMeleeOrder;
+    public IReadOnlyList<int> LastKnownRangedOrder => _lastKnownRangedOrder;
 
     // list[0] = leftmost = attaque en premier
     public IEnumerable<GameObject> AllCreaturesOnTable =>

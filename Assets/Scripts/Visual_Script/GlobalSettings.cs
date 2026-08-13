@@ -139,8 +139,16 @@ public class GlobalSettings : MonoBehaviour
             n.SetOwnerColor(NeutralColor);
         }
 
-        TopPlayer.PAreas = MapManager.Current.TopPlayerAreas;
-        LowPlayer.PAreas = MapManager.Current.LowPlayerAreas;
+        // FindObjectsByType(..., FindObjectsSortMode.None) n'est pas stable entre host et client
+        // (même remarque que Player.Awake()) — on trie par chemin de hiérarchie pour garantir un
+        // ordre identique partout, puisque Player.InitBaseIDs() attribue les baseID par position
+        // dans ce tableau : un ordre différent entre machines attribuerait un baseID différent à
+        // la même PlayerArea physique, et tout ce qui s'échange des baseID par réseau désyncerait.
+        PlayerArea[] allAreas = FindObjectsByType<PlayerArea>(FindObjectsSortMode.None);
+        System.Array.Sort(allAreas, (a, b) =>
+            string.CompareOrdinal(GetHierarchyPath(a.transform), GetHierarchyPath(b.transform)));
+        TopPlayer.PAreas = System.Array.FindAll(allAreas, a => a.owner == AreaPosition.Top);
+        LowPlayer.PAreas = System.Array.FindAll(allAreas, a => a.owner == AreaPosition.Low);
 
         ZoneManager topZone = MapManager.Current.TopPlayerBaseSpawn.GetComponentInParent<ZoneManager>();
         if (topZone != null)
@@ -153,6 +161,17 @@ public class GlobalSettings : MonoBehaviour
 
         SpawnMainBase(TopPlayer, MapManager.Current.TopPlayerBaseSpawn);
         SpawnMainBase(LowPlayer, MapManager.Current.LowPlayerBaseSpawn);
+    }
+
+    private static string GetHierarchyPath(Transform t)
+    {
+        string path = t.name;
+        while (t.parent != null)
+        {
+            t = t.parent;
+            path = t.name + "/" + path;
+        }
+        return path;
     }
 
     void SpawnMainBase(Player player, Transform spawnPoint)

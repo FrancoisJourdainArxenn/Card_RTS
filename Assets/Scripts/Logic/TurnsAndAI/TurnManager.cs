@@ -408,7 +408,6 @@ public class TurnManager : MonoBehaviour
                 break;
             case TurnPhases.Command:
                 // new ShowMessageCommand("Command", 1.5f).AddToQueue();
-                CommandMoveTracker.Clear();
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
@@ -658,12 +657,22 @@ public class TurnManager : MonoBehaviour
                 CreatureLogic.ProcessPendingDeaths();
             List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
             Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
+
+            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
+            if (crossingDispatch.Relocations.Count > 0)
+            {
+                CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
+                GameNetworkManager.Instance.BroadcastCrossingDispatch(crossingDispatch);
+            }
+
             GameNetworkManager.Instance.BroadcastDeathDrain(events, TurnPhases.EndTurn);
             // La transition vers EndTurn est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
         }
         else
         {
             yield return StartCoroutine(DrainPendingDeaths());
+            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
+            CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
             EnterPhase(TurnPhases.EndTurn);
         }
     }
@@ -687,6 +696,23 @@ public class TurnManager : MonoBehaviour
 
     private void FlushSoloMoveBuffer()
     {
+        List<CommandMoveTracker.PendingMoveInfo> pending = new();
+        foreach (var (id, baseID, pos) in _soloMoveBuffer)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
+                continue;
+            pending.Add(new CommandMoveTracker.PendingMoveInfo
+            {
+                creatureID = id,
+                originBaseID = creature.BaseID,
+                targetBaseID = baseID,
+                tablePos = pos,
+                owner = creature.owner
+            });
+        }
+        CommandMoveTracker.CrossingRedirectResult crossingResult = CommandMoveTracker.ResolveCrossings(pending);
+        Dictionary<int, int> redirects = crossingResult.Redirects;
+
         foreach (var (id, baseID, pos) in _soloMoveBuffer)
         {
             GameObject creatureGO = IDHolder.GetGameObjectWithID(id);
@@ -696,7 +722,10 @@ public class TurnManager : MonoBehaviour
                 ocm.DestroyPendingMoveGhost();
             }
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
-                creature.Move(baseID, pos);
+            {
+                int finalBaseID = redirects.TryGetValue(id, out int redirectedBaseID) ? redirectedBaseID : baseID;
+                creature.Move(finalBaseID, pos);
+            }
         }
         _soloMoveBuffer.Clear();
     }
