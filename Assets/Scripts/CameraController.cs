@@ -54,6 +54,10 @@ public class CameraController : MonoBehaviour
     ZoneCameraAnchor _battleCamAnchor;
     Vector3 _preBattlePanPosition;
 
+    [Header("Battle Cam")]
+    [Tooltip("Délai après une transition vers une nouvelle zone avant que le combat ne démarre, pour laisser le temps de repérer la situation.")]
+    public float battleCamSettleDelay = 1.5f;
+
     [Header("Camera Shake")]
     public int shakeVibrato = 20;
     public float shakeRandomness = 90f;
@@ -372,7 +376,19 @@ public class CameraController : MonoBehaviour
             return;
         }
         _battleCamAnchor = anchor;
-        TransitionTo(anchor.transform.position, anchor.transform.rotation, () => { _state = State.BattleCam; onArrived?.Invoke(); });
+        TransitionTo(anchor.transform.position, anchor.transform.rotation, () =>
+        {
+            _state = State.BattleCam;
+            StartCoroutine(SettleBeforeArrival(onArrived));
+        });
+    }
+
+    // Laisse le temps au joueur de repérer la zone avant que le combat ne démarre,
+    // une fois la caméra effectivement arrivée sur la nouvelle ancre.
+    IEnumerator SettleBeforeArrival(System.Action onArrived)
+    {
+        yield return new WaitForSeconds(battleCamSettleDelay);
+        onArrived?.Invoke();
     }
 
     public void ExitBattleCam()
