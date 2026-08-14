@@ -1873,15 +1873,13 @@ GameObject:
   - component: {fileID: 398100639}
   - component: {fileID: 398100643}
   - component: {fileID: 398100642}
-  - component: {fileID: 398100641}
-  - component: {fileID: 398100640}
   m_Layer: 5
-  m_Name: BlackFadeIn
+  m_Name: FadePanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &398100639
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1901,34 +1899,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &398100640
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 398100638}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17ff033e53bfedd48a480c3dcdf0ac3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  canvasGroup: {fileID: 398100641}
-  fadeOutDuration: 0.35
-  fadeInDuration: 0.35
-  fadeEase: 4
---- !u!225 &398100641
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 398100638}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!114 &398100642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1941,8 +1911,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.122641504, g: 0.11165005, b: 0.11165005, a: 1}
+  m_Material: {fileID: 2100000, guid: 00259c430eca3a546a3f526bd09a7c0e, type: 2}
+  m_Color: {r: 0.066037714, g: 0.03956033, b: 0.03956033, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3310,6 +3280,7 @@ GameObject:
   - component: {fileID: 744353342}
   - component: {fileID: 744353343}
   - component: {fileID: 744353344}
+  - component: {fileID: 744353345}
   m_Layer: 5
   m_Name: Canvas_UI
   m_TagString: Untagged
@@ -3465,6 +3436,24 @@ MonoBehaviour:
   groupMoveArrow: {fileID: 336908203}
   AllSelectableObjects: []
   CurrSelectedObjects: []
+--- !u!114 &744353345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744353337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ff033e53bfedd48a480c3dcdf0ac3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFade
+  fadePanel: {fileID: 398100638}
+  fadeImage: {fileID: 398100642}
+  fadeMaterialTemplate: {fileID: 2100000, guid: 00259c430eca3a546a3f526bd09a7c0e, type: 2}
+  fadeOutDuration: 0.6
+  fadeInDuration: 0.8
+  fadeEase: 22
 --- !u!1 &754122965
 GameObject:
   m_ObjectHideFlags: 0

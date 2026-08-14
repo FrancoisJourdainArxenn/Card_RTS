@@ -1,34 +1,48 @@
 using System;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
-// Overlay plein écran (CanvasGroup) utilisé pour masquer les coupures de caméra
-// (changement d'ancre BattleCam / Crossing Combat) derrière un fondu au noir.
+// Doit être posé sur un objet TOUJOURS actif (le Canvas racine), pour que Awake()
+// s'exécute et que Instance soit prêt même si le panneau visuel est désactivé
+// par défaut dans la scène.
 public class ScreenFade : MonoBehaviour
 {
     public static ScreenFade Instance { get; private set; }
 
-    [SerializeField] CanvasGroup canvasGroup;
-    [Tooltip("Durée du fondu vers le noir, avant que la caméra ne soit repositionnée.")]
-    public float fadeOutDuration = 0.35f;
-    [Tooltip("Durée du fondu depuis le noir, une fois la caméra en place.")]
-    public float fadeInDuration = 0.35f;
+    [Header("Panneau (désactivé par défaut dans la scène)")]
+    [SerializeField] GameObject fadePanel;
+    [SerializeField] Image fadeImage;
+    [SerializeField] Material fadeMaterialTemplate;
+
+    [Header("Timing")]
+    public float fadeOutDuration = 0.6f;
+    public float fadeInDuration = 0.6f;
     public Ease fadeEase = Ease.InOutSine;
 
+    static readonly int ProgressID = Shader.PropertyToID("_Progress");
+
+    Material _fadeMaterial;
     Tween _fadeTween;
 
     void Awake()
     {
         Instance = this;
-        canvasGroup.alpha = 0f;
-        canvasGroup.blocksRaycasts = false;
+        // Instance propre du material pour ne pas modifier l'asset partagé.
+        _fadeMaterial = Instantiate(fadeMaterialTemplate);
+        fadeImage.material = _fadeMaterial;
+        _fadeMaterial.SetFloat(ProgressID, 0f);
     }
 
     public void FadeOut(Action onComplete)
     {
         _fadeTween?.Kill();
-        canvasGroup.blocksRaycasts = true;
-        _fadeTween = canvasGroup.DOFade(1f, fadeOutDuration)
+        fadePanel.SetActive(true);
+        _fadeMaterial.SetFloat(ProgressID, 0f);
+        _fadeTween = DOTween.To(
+                () => _fadeMaterial.GetFloat(ProgressID),
+                v => _fadeMaterial.SetFloat(ProgressID, v),
+                1f, fadeOutDuration)
             .SetEase(fadeEase)
             .OnComplete(() => onComplete?.Invoke());
     }
@@ -36,11 +50,14 @@ public class ScreenFade : MonoBehaviour
     public void FadeIn(Action onComplete = null)
     {
         _fadeTween?.Kill();
-        _fadeTween = canvasGroup.DOFade(0f, fadeInDuration)
+        _fadeTween = DOTween.To(
+                () => _fadeMaterial.GetFloat(ProgressID),
+                v => _fadeMaterial.SetFloat(ProgressID, v),
+                0f, fadeInDuration)
             .SetEase(fadeEase)
             .OnComplete(() =>
             {
-                canvasGroup.blocksRaycasts = false;
+                fadePanel.SetActive(false);
                 onComplete?.Invoke();
             });
     }
