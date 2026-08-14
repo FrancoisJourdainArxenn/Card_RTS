@@ -376,12 +376,21 @@ public class CameraController : MonoBehaviour
             return;
         }
         _battleCamAnchor = anchor;
-        TransitionTo(anchor.transform.position, anchor.transform.rotation, () =>
+        _state = State.Transitioning;
+        transform.DOKill(true);
+
+        ScreenFade.Instance.FadeOut(() =>
         {
-            _state = State.BattleCam;
-            StartCoroutine(SettleBeforeArrival(onArrived));
+            transform.position = anchor.transform.position;
+            transform.rotation = anchor.transform.rotation;
+            ScreenFade.Instance.FadeIn(() =>
+            {
+                _state = State.BattleCam;
+                StartCoroutine(SettleBeforeArrival(onArrived));
+            });
         });
     }
+
 
     // Laisse le temps au joueur de repérer la zone avant que le combat ne démarre,
     // une fois la caméra effectivement arrivée sur la nouvelle ancre.
