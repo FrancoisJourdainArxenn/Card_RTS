@@ -66,4 +66,31 @@ public class CrossingZoneSlot : MonoBehaviour
         intendedTargetBaseID = -1;
         return false;
     }
+
+    // Point milieu et direction horizontale (XZ) du trajet origine -> destination d'un des
+    // joueurs impliqués dans ce croisement, pour donner à la caméra un vrai point de mire sur
+    // le chemin (distinct du cadrage serré de l'ancre de combat) plutôt qu'une direction arbitraire.
+    public bool TryGetCrossingPath(out Vector3 midpoint, out Vector3 direction)
+    {
+        foreach (var kvp in memory)
+        {
+            Player player = kvp.Key;
+            PlayerArea originArea = player.GetPlayerAreaByID(kvp.Value.originBaseID);
+            PlayerArea targetArea = player.GetPlayerAreaByID(kvp.Value.intendedTargetBaseID);
+            if (originArea == null || targetArea == null)
+                continue;
+
+            Vector3 delta = targetArea.transform.position - originArea.transform.position;
+            delta.y = 0f;
+            if (delta.sqrMagnitude > 0.0001f)
+            {
+                midpoint = (originArea.transform.position + targetArea.transform.position) * 0.5f;
+                direction = delta.normalized;
+                return true;
+            }
+        }
+        midpoint = Vector3.zero;
+        direction = Vector3.zero;
+        return false;
+    }
 }

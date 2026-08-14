@@ -1505,7 +1505,10 @@ MonoBehaviour:
   panInertiaDamping: 4
   panInertiaMinSpeed: 0.05
   panVelocitySampleWindow: 0.15
-  battleCamSettleDelay: 1.5
+  battleCamSettleDelay: 1.2
+  crossingZoomPullback: 0
+  crossingZoomDuration: 0.8
+  crossingZoomFadeDelay: 0.2
   shakeVibrato: 20
   shakeRandomness: 90
 --- !u!4 &336908202 stripped
