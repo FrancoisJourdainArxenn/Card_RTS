@@ -394,14 +394,14 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
                     else
-                        target.Health -= step.damage;
+                        target.Health -= effectiveDamage;
 
                     if (!step.attackerIsBuilding && attackerCreature != null)
                     {
                         if (attackerHealthAfter <= 0)
                             attackerCreature.ScheduleBattleDeath();
                         else
-                            attackerCreature.Health -= counterDamage;
+                            attackerCreature.Health -= effectiveCounterDamage;
                     }
                     else if (step.attackerIsBuilding)
                     {
