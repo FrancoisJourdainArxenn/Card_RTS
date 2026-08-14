@@ -52,7 +52,18 @@ public class CameraController : MonoBehaviour
     ZoneCameraAnchor _hoveredAnchor;
 
     ZoneCameraAnchor _battleCamAnchor;
-    Vector3 _preBattlePanPosition;
+    Vector3 _sceneStartPosition;
+    float _sceneStartZoomT;
+
+    [Header("Battle Cam")]
+    [Tooltip("Délai après une transition vers une nouvelle zone avant que le combat ne démarre, pour laisser le temps de repérer la situation.")]
+    public float battleCamSettleDelay = 1.5f;
+    [Tooltip("Recul horizontal du point d'approche par rapport au point milieu du chemin (le long de celui-ci), au premier Crossing Combat d'un enchaînement.")]
+    public float crossingZoomPullback = 6f;
+    [Tooltip("Durée du zoom visible vers le chemin du croisement, avant que le fondu au noir ne prenne le relais.")]
+    public float crossingZoomDuration = 1f;
+    [Tooltip("Délai après le début du zoom avant que le fondu au noir ne démarre (doit rester <= crossingZoomDuration).")]
+    public float crossingZoomFadeDelay = 0.3f;
 
     [Header("Camera Shake")]
     public int shakeVibrato = 20;
@@ -82,7 +93,9 @@ public class CameraController : MonoBehaviour
     {
         Vector3 pos = transform.position;
         _panPosition = pos;
+        _sceneStartPosition = pos;
         _zoomT = 0.5f;
+        _sceneStartZoomT = _zoomT;
         float startHeight = Mathf.Lerp(MapManager.Current.cameraHeight, MapManager.Current.topHeight, _zoomT);
         transform.position = new Vector3(pos.x, startHeight, pos.z);
         _defaultRotation = transform.rotation;
@@ -349,7 +362,6 @@ public class CameraController : MonoBehaviour
         if (_state == State.BattleCam)
             return;
         SetHoveredAnchor(null);
-        _preBattlePanPosition = _panPosition;
         _battleCamAnchor = null;
         _state = State.BattleCam;
     }
@@ -371,18 +383,117 @@ public class CameraController : MonoBehaviour
             onArrived?.Invoke();
             return;
         }
+
+        // Le fondu au noir ne marque que les frontières d'un enchaînement de Crossing
+        // Combat (première entrée / dernière sortie) : les transitions Crossing -> Crossing,
+        // comme les transitions entre zones normales, restent un déplacement caméra classique.
+        bool enteringCrossing = IsCrossingAnchor(anchor) && !IsCrossingAnchor(_battleCamAnchor);
+        bool exitingCrossing = !IsCrossingAnchor(anchor) && IsCrossingAnchor(_battleCamAnchor);
+
         _battleCamAnchor = anchor;
-        TransitionTo(anchor.transform.position, anchor.transform.rotation, () => { _state = State.BattleCam; onArrived?.Invoke(); });
+        _state = State.Transitioning;
+        transform.DOKill(true);
+
+        if (enteringCrossing)
+        {
+            Vector3 targetPos = anchor.transform.position;
+            Quaternion targetRot = anchor.transform.rotation;
+
+            // Point d'approche par défaut si le chemin n'est pas trouvable : recul devant
+            // l'ancre, mieux que rien mais sans repère de chemin particulier.
+            Vector3 approachPos = targetPos;
+
+            CrossingZoneSlot slot = anchor.GetComponentInParent<CrossingZoneSlot>();
+            if (slot != null && slot.TryGetCrossingPath(out Vector3 midpoint, out Vector3 pathDir))
+                approachPos = midpoint - pathDir * crossingZoomPullback;
+
+            // Rotation inchangée du début à la fin (vue top constante) : seule la position
+            // bouge, ce qui donne un zoom pur plutôt qu'un mouvement de caméra 3D.
+            StartCoroutine(EnterCrossingCombat(approachPos, targetPos, targetRot, onArrived));
+        }
+        else if (exitingCrossing)
+        {
+            ScreenFade.Instance.FadeOut(() =>
+            {
+                transform.position = anchor.transform.position;
+                transform.rotation = anchor.transform.rotation;
+                ScreenFade.Instance.FadeIn(() =>
+                {
+                    _state = State.BattleCam;
+                    StartCoroutine(SettleBeforeArrival(onArrived));
+                });
+            });
+        }
+        else
+        {
+            TransitionTo(anchor.transform.position, anchor.transform.rotation, () =>
+            {
+                _state = State.BattleCam;
+                StartCoroutine(SettleBeforeArrival(onArrived));
+            });
+        }
+    }
+
+    // Premier Crossing Combat d'un enchaînement : lance un zoom visible vers le chemin du
+    // croisement, laisse le fondu au noir démarrer en cours de route, puis une fois l'écran
+    // noir, coupe le zoom et place la caméra exactement sur l'ancre avant de révéler la scène.
+    IEnumerator EnterCrossingCombat(Vector3 approachPos, Vector3 finalPos, Quaternion finalRot, System.Action onArrived)
+    {
+        transform.DOMove(approachPos, crossingZoomDuration).SetEase(transitionEase);
+        transform.DORotateQuaternion(finalRot, crossingZoomDuration).SetEase(transitionEase);
+
+        yield return new WaitForSeconds(crossingZoomFadeDelay);
+
+        ScreenFade.Instance.FadeOut(() =>
+        {
+            transform.DOKill();
+            transform.position = finalPos;
+            transform.rotation = finalRot;
+            ScreenFade.Instance.FadeIn(() =>
+            {
+                _state = State.BattleCam;
+                StartCoroutine(SettleBeforeArrival(onArrived));
+            });
+        });
+    }
+
+    static bool IsCrossingAnchor(ZoneCameraAnchor anchor)
+        => anchor != null && anchor.GetComponentInParent<CrossingZoneSlot>() != null;
+
+
+    // Laisse le temps au joueur de repérer la zone avant que le combat ne démarre,
+    // une fois la caméra effectivement arrivée sur la nouvelle ancre.
+    IEnumerator SettleBeforeArrival(System.Action onArrived)
+    {
+        yield return new WaitForSeconds(battleCamSettleDelay);
+        onArrived?.Invoke();
     }
 
     public void ExitBattleCam()
     {
         if (_state != State.BattleCam && _state != State.Transitioning)
             return;
+        bool wasCrossing = IsCrossingAnchor(_battleCamAnchor);
         _battleCamAnchor = null;
-        _panPosition = _preBattlePanPosition;
-        Vector3 middlePos = new Vector3(_preBattlePanPosition.x, MapManager.Current.cameraHeight, _preBattlePanPosition.z);
-        TransitionTo(middlePos, _defaultRotation, () => { _state = State.Overview; _zoomT = 0f; CurrentAnchor = null; });
+        _panPosition = _sceneStartPosition;
+        float startHeight = Mathf.Lerp(MapManager.Current.cameraHeight, MapManager.Current.topHeight, _sceneStartZoomT);
+        Vector3 startPos = new Vector3(_sceneStartPosition.x, startHeight, _sceneStartPosition.z);
+
+        if (wasCrossing)
+        {
+            transform.DOKill(true);
+            _state = State.Transitioning;
+            ScreenFade.Instance.FadeOut(() =>
+            {
+                transform.position = startPos;
+                transform.rotation = _defaultRotation;
+                ScreenFade.Instance.FadeIn(() => { _state = State.Overview; _zoomT = _sceneStartZoomT; CurrentAnchor = null; });
+            });
+        }
+        else
+        {
+            TransitionTo(startPos, _defaultRotation, () => { _state = State.Overview; _zoomT = _sceneStartZoomT; CurrentAnchor = null; });
+        }
     }
 
     void MoveCameraToClosestBase(Vector3 pos, Vector3? direction = null)

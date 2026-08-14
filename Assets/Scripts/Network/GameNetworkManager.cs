@@ -486,6 +486,8 @@ public class GameNetworkManager : NetworkBehaviour
     {
         Debug.Log($"[Buffer] Flush de {_actionBuffer.Count} action(s)");
 
+        ResolveCrossingRedirects();
+
         // Sort: player 0's actions come before player 1's, preserving relative order within each player
         List<PendingAction> p0Actions = _actionBuffer.FindAll(a => a.playerIndex == 0);
         List<PendingAction> p1Actions = _actionBuffer.FindAll(a => a.playerIndex == 1);
@@ -494,6 +496,94 @@ public class GameNetworkManager : NetworkBehaviour
         foreach (PendingAction action in p1Actions) ExecuteAction(action);
 
         _actionBuffer.Clear();
+    }
+
+    /// <summary>
+    /// Serveur uniquement. Détecte les croisements d'armées parmi les MoveCreature bufferisés
+    /// et redirige leur targetBaseID (param2) vers un CrossingZoneSlot avant exécution — les
+    /// clients reçoivent directement le baseID déjà corrigé via MoveCreatureClientRpc.
+    /// </summary>
+    private void ResolveCrossingRedirects()
+    {
+        List<CommandMoveTracker.PendingMoveInfo> pending = new();
+        foreach (PendingAction action in _actionBuffer)
+        {
+            if (action.type != ActionType.MoveCreature) continue;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(action.param1, out CreatureLogic creature)) continue;
+            pending.Add(new CommandMoveTracker.PendingMoveInfo
+            {
+                creatureID = action.param1,
+                originBaseID = creature.BaseID,
+                targetBaseID = action.param2,
+                tablePos = action.param3,
+                owner = creature.owner
+            });
+        }
+
+        CommandMoveTracker.CrossingRedirectResult crossingResult = CommandMoveTracker.ResolveCrossings(pending);
+        if (crossingResult.Redirects.Count == 0) return;
+
+        for (int i = 0; i < _actionBuffer.Count; i++)
+        {
+            PendingAction a = _actionBuffer[i];
+            if (a.type == ActionType.MoveCreature && crossingResult.Redirects.TryGetValue(a.param1, out int redirectedBaseID))
+            {
+                Debug.Log($"[Crossing][Server] MoveCreature redirigé — créature={a.param1} targetBaseID {a.param2}→{redirectedBaseID} tablePos={a.param3}");
+                a.param2 = redirectedBaseID;
+                _actionBuffer[i] = a;
+            }
+        }
+
+        // Le serveur a déjà appliqué ces ordres localement (CommandMoveTracker.ResolveCrossings) —
+        // on les diffuse ici pour que les clients trient leur TableVisual de la même façon.
+        BroadcastOrderUpdates(crossingResult.OrderUpdates);
+    }
+
+    private void BroadcastOrderUpdates(List<CommandMoveTracker.CrossingOrderUpdate> orderUpdates)
+    {
+        foreach (CommandMoveTracker.CrossingOrderUpdate update in orderUpdates)
+        {
+            int playerIndex = System.Array.IndexOf(Player.Players, update.owner);
+            if (playerIndex < 0)
+            {
+                Debug.LogError($"[Crossing][Server] BroadcastOrderUpdates: owner {update.owner?.name} introuvable dans Player.Players — ordre NON diffusé.");
+                continue;
+            }
+            Debug.Log($"[Crossing][Server] Broadcast ordre — playerIndex={playerIndex} baseID={update.baseID} meleeIDs=[{string.Join(",", update.meleeIDs)}] rangedIDs=[{string.Join(",", update.rangedIDs)}]");
+            ReorderCreaturesClientRpc(playerIndex, update.baseID, update.meleeIDs, update.rangedIDs);
+        }
+    }
+
+    /// <summary>
+    /// Serveur uniquement. Le serveur a déjà appliqué le dispatch (relocalisation + ordre)
+    /// localement (voir TurnManager.AutoAdvanceFromEndBattle) — ceci le réplique aux clients.
+    /// </summary>
+    public void BroadcastCrossingDispatch(CommandMoveTracker.CrossingDispatchResult dispatch)
+    {
+        if (!IsServer) return;
+        BroadcastOrderUpdates(dispatch.OrderUpdates);
+
+        int n = dispatch.Relocations.Count;
+        int[] creatureIDs = new int[n];
+        int[] baseIDs = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            creatureIDs[i] = dispatch.Relocations[i].creatureID;
+            baseIDs[i] = dispatch.Relocations[i].baseID;
+        }
+        BroadcastCrossingDispatchClientRpc(creatureIDs, baseIDs);
+    }
+
+    [ClientRpc]
+    void BroadcastCrossingDispatchClientRpc(int[] creatureIDs, int[] baseIDs)
+    {
+        if (IsServer) return; // le serveur a déjà appliqué directement.
+        Debug.Log($"[Crossing][Client] Dispatch reçu — créatures=[{string.Join(",", creatureIDs)}] baseIDs=[{string.Join(",", baseIDs)}]");
+        for (int i = 0; i < creatureIDs.Length; i++)
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+                creature.RelocateAfterCombat(baseIDs[i], 0);
+            else
+                Debug.LogError($"[Crossing][Client] Dispatch: créature introuvable id={creatureIDs[i]}");
     }
 
     private void ExecuteAction(PendingAction action)

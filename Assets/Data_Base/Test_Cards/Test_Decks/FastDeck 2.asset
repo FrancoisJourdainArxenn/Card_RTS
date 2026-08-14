@@ -16,7 +16,6 @@ MonoBehaviour:
   heroCard: {fileID: 11400000, guid: 0cfd8c47834179d46bd536fdb5cde6b3, type: 2}
   cards:
   - {fileID: 11400000, guid: 47d9edc581f78c148b7417ac42d9536f, type: 2}
-  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
   - {fileID: 11400000, guid: 3b54f27a14a1ec941b966fe842860f8f, type: 2}
   - {fileID: 11400000, guid: 8adcbd0f71c38e84d868c07eb2c874f8, type: 2}
   - {fileID: 11400000, guid: dac5871494178b94a96abaeb09c87054, type: 2}

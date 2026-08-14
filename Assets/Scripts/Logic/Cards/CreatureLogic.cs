@@ -304,13 +304,22 @@ public void GoFace()
 
     public void Move(int baseID, int tablePos)
     {
-        ZoneLogic sourceZone = owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
         MovementsLeftThisTurn--;
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
-        ZoneLogic destZone = owner.GetPlayerAreaByID(baseID)?.parentZone.Logic;
-        CommandMoveTracker.RegisterMove(sourceZone, destZone, owner);
+    }
+
+    /// <summary>
+    /// Repositionne une créature après la résolution d'un combat de croisement (survivant qui
+    /// continue vers sa destination, ou qui rentre à son origine). Ne consomme pas de mouvement
+    /// du tour (déjà consommé lors du Move() initial) — ce n'est pas un déplacement du joueur.
+    /// </summary>
+    public void RelocateAfterCombat(int baseID, int tablePos)
+    {
+        BaseID = baseID;
+        FogOfWarManager.Refresh();
+        new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 
     public static void ProcessPendingDeaths()
