@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -57,9 +58,31 @@ public class NetworkMenu : MonoBehaviour
         NetworkManager.Singleton.StartHost();
     }
 
+    private Coroutine _connectRoutine;
+
     public void StartClient()
     {
+        if (_connectRoutine != null)
+            StopCoroutine(_connectRoutine);
+
         string ip = ipInputField.text.Trim();
+        _connectRoutine = StartCoroutine(ConnectClientRoutine(ip));
+    }
+
+    private IEnumerator ConnectClientRoutine(string ip)
+    {
+        // Si une tentative précédente (mauvaise IP, timeout en cours...) tourne encore,
+        // NetworkManager refuse silencieusement un nouveau StartClient() tant qu'elle
+        // n'est pas totalement arrêtée. On force donc l'arrêt et on attend la fin réelle
+        // du shutdown (différé de quelques frames en interne) avant de relancer.
+        if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.ShutdownInProgress)
+        {
+            statusText.text = "Annulation de la tentative précédente...";
+            NetworkManager.Singleton.Shutdown();
+            yield return new WaitUntil(() =>
+                !NetworkManager.Singleton.ShutdownInProgress && !NetworkManager.Singleton.IsListening);
+        }
+
         statusText.text = $"Connexion vers {ip}...";
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
         NetworkSessionData.SelectedDeckPresetIndex = (deckDropdown != null) ? deckDropdown.value : -1;
@@ -67,6 +90,7 @@ public class NetworkMenu : MonoBehaviour
         NetworkManager.Singleton.StartClient();
         mapDropdown.gameObject.SetActive(false);
 
+        _connectRoutine = null;
     }
 
     void OnServerStarted() =>
