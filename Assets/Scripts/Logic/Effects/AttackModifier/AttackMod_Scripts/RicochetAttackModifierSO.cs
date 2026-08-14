@@ -6,35 +6,40 @@ public class RicochetAttackModifierSO : AttackModifierSO
 {
     public int Bounces = 3;
 
-    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> ResolveTargets(CreatureLogic attacker, CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
     {
         List<AttackHitResult> hits = new List<AttackHitResult>();
+        foreach (CreatureLogic target in ComputeBouncePath(attacker, mainTarget, isDead))
+            TryAddHit(attacker, target, hits, isDead);
+        return hits;
+    }
+
+    private List<CreatureLogic> ComputeBouncePath(CreatureLogic attacker, CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
+    {
+        List<CreatureLogic> path = new List<CreatureLogic>();
         HashSet<int> hit = new HashSet<int>();
         hit.Add(mainTarget.UniqueCreatureID);
 
         CreatureLogic current = mainTarget;
         for (int i = 0; i < Bounces; i++)
         {
-            List<CreatureLogic> candidates = GetAdjacentCandidates(current, hit);
+            List<CreatureLogic> candidates = GetAdjacentCandidates(current, hit, isDead);
             if (candidates.Count == 0) break;
 
-            // Seed déterministe pour éviter la désync réseau : Random.Range indépendant sur chaque client
-            // produirait des chemins différents. La seed garantit le même résultat des deux côtés.
-            // Dépendance résiduelle : FindCrossRowIdx lit des transform.position, ce qui est safe tant
-            // qu'aucune animation ne démarre avant la fin de EnqueueBattleCommands (c'est le cas aujourd'hui).
-            // Solution robuste future : pré-calculer le chemin complet côté serveur dans BuildAutoBattleSequence
-            // et le sérialiser comme BattleStepRecords supplémentaires, évitant toute dépendance au visuel.
+            // Seed déterministe (au lieu de Random.Range) : la résolution ne tourne plus qu'une seule fois,
+            // côté serveur, pendant la planification — mais garder un choix reproductible reste utile pour
+            // le debug/replay et ne coûte rien.
             int seed = attacker.UniqueCreatureID ^ current.UniqueCreatureID ^ (i * 1000);
             CreatureLogic next = candidates[Mathf.Abs(seed) % candidates.Count];
             hit.Add(next.UniqueCreatureID);
-            TryDealDamage(attacker, next, hits);
+            path.Add(next);
             current = next;
         }
 
-        return hits;
+        return path;
     }
 
-    private List<CreatureLogic> GetAdjacentCandidates(CreatureLogic from, HashSet<int> alreadyHit)
+    private List<CreatureLogic> GetAdjacentCandidates(CreatureLogic from, HashSet<int> alreadyHit, System.Func<CreatureLogic, bool> isDead)
     {
         List<CreatureLogic> sameRow = GetRow(from, from.IsMelee);
         int idx = sameRow.IndexOf(from);
@@ -42,8 +47,8 @@ public class RicochetAttackModifierSO : AttackModifierSO
 
         List<CreatureLogic> candidates = new List<CreatureLogic>();
 
-        if (idx > 0)                    TryAdd(candidates, sameRow[idx - 1], alreadyHit);
-        if (idx < sameRow.Count - 1)   TryAdd(candidates, sameRow[idx + 1], alreadyHit);
+        if (idx > 0)                    TryAdd(candidates, sameRow[idx - 1], alreadyHit, isDead);
+        if (idx < sameRow.Count - 1)   TryAdd(candidates, sameRow[idx + 1], alreadyHit, isDead);
 
         List<CreatureLogic> otherRow = GetRow(from, !from.IsMelee);
         int otherIdx = FindCrossRowIdx(from, otherRow);
@@ -51,31 +56,26 @@ public class RicochetAttackModifierSO : AttackModifierSO
             for (int i = otherIdx - 1; i <= otherIdx + 1; i++)
             {
                 if (i < 0 || i >= otherRow.Count) continue;
-                TryAdd(candidates, otherRow[i], alreadyHit);
+                TryAdd(candidates, otherRow[i], alreadyHit, isDead);
             }
 
         return candidates;
     }
 
-    private void TryAdd(List<CreatureLogic> list, CreatureLogic c, HashSet<int> alreadyHit)
+    private void TryAdd(List<CreatureLogic> list, CreatureLogic c, HashSet<int> alreadyHit, System.Func<CreatureLogic, bool> isDead)
     {
-        if (!c.IsPendingDeath && !alreadyHit.Contains(c.UniqueCreatureID))
+        if (!isDead(c) && !alreadyHit.Contains(c.UniqueCreatureID))
             list.Add(c);
     }
 
-    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
+    private void TryAddHit(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits, System.Func<CreatureLogic, bool> isDead)
     {
-        if (target.IsPendingDeath) return;
+        if (isDead(target)) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
         hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
-        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
-        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
-        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
-        if (hpAfter > 0)
-            target.Health -= effective;
     }
 
     private int FindCrossRowIdx(CreatureLogic from, List<CreatureLogic> targetRow)

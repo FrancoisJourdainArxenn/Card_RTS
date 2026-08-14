@@ -116,10 +116,12 @@ public class GameNetworkManager : NetworkBehaviour
         ZoneCombatResolver.SerializeAllBattleSteps(
             out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
-            out int[] stepOwnerPlayerIDs);
+            out int[] stepOwnerPlayerIDs,
+            out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages);
         BroadcastBattleStepsClientRpc(
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
-            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs);
+            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
+            stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages);
 
         // La transition vers EndBattle est désormais déclenchée depuis ReportBattleAnimationsDoneServerRpc,
         // une fois que CHAQUE client a confirmé que sa file de commandes locale a fini de jouer les
@@ -134,7 +136,8 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void BroadcastBattleStepsClientRpc(
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
-        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
+        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
+        int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages)
     {
         int nCreature = 0, nBuilding = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
@@ -144,7 +147,8 @@ public class GameNetworkManager : NetworkBehaviour
         }
         // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
-            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
+            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
+            secondaryCounts, secondaryTargetIDs, secondaryDamages);
         // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }

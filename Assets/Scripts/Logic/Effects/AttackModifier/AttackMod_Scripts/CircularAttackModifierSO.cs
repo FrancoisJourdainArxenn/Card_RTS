@@ -4,17 +4,25 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Circular Attack")]
 public class CircularAttackModifierSO : AttackModifierSO
 {
-    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> ResolveTargets(CreatureLogic attacker, CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
     {
         List<AttackHitResult> hits = new List<AttackHitResult>();
+        foreach (CreatureLogic t in GetCircularTargets(mainTarget))
+            TryAddHit(attacker, t, hits, isDead);
+        return hits;
+    }
+
+    private List<CreatureLogic> GetCircularTargets(CreatureLogic mainTarget)
+    {
+        List<CreatureLogic> targets = new List<CreatureLogic>();
         List<CreatureLogic> sameRow = GetRow(mainTarget, mainTarget.IsMelee);
         int idx = sameRow.IndexOf(mainTarget);
-        if (idx < 0) return hits;
+        if (idx < 0) return targets;
 
         if (idx > 0)
-            TryDealDamage(attacker, sameRow[idx - 1], hits);
+            targets.Add(sameRow[idx - 1]);
         if (idx < sameRow.Count - 1)
-            TryDealDamage(attacker, sameRow[idx + 1], hits);
+            targets.Add(sameRow[idx + 1]);
 
         if (mainTarget.IsMelee)
         {
@@ -24,26 +32,21 @@ public class CircularAttackModifierSO : AttackModifierSO
                 for (int i = rangedIdx - 1; i <= rangedIdx + 1; i++)
                 {
                     if (i < 0 || i >= rangedRow.Count) continue;
-                    TryDealDamage(attacker, rangedRow[i], hits);
+                    targets.Add(rangedRow[i]);
                 }
         }
 
-        return hits;
+        return targets;
     }
 
-    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
+    private void TryAddHit(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits, System.Func<CreatureLogic, bool> isDead)
     {
-        if (target.IsPendingDeath) return;
+        if (isDead(target)) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
         hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
-        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
-        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
-        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
-        if (hpAfter > 0)
-            target.Health -= effective;
     }
 
     private int FindCrossRowIdx(CreatureLogic from, List<CreatureLogic> targetRow)

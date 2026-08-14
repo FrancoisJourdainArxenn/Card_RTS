@@ -4,31 +4,34 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Row Attack")]
 public class RowAttackModifierSO : AttackModifierSO
 {
-    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> ResolveTargets(CreatureLogic attacker, CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
     {
         List<AttackHitResult> hits = new List<AttackHitResult>();
+        foreach (CreatureLogic t in GetRowTargets(mainTarget))
+            TryAddHit(attacker, t, hits, isDead);
+        return hits;
+    }
+
+    private List<CreatureLogic> GetRowTargets(CreatureLogic mainTarget)
+    {
+        List<CreatureLogic> targets = new List<CreatureLogic>();
         foreach (CreatureLogic c in mainTarget.owner.playedCards.Creatures)
         {
             if (c == mainTarget) continue;
             if (c.BaseID != mainTarget.BaseID) continue;
             if (mainTarget.IsMelee && !c.IsMelee) continue;
-            TryDealDamage(attacker, c, hits);
+            targets.Add(c);
         }
-        return hits;
+        return targets;
     }
 
-    private void TryDealDamage(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits)
+    private void TryAddHit(CreatureLogic attacker, CreatureLogic target, List<AttackHitResult> hits, System.Func<CreatureLogic, bool> isDead)
     {
-        if (target.IsPendingDeath) return;
+        if (isDead(target)) return;
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, target.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, target.Health - effective);
         hits.Add(new AttackHitResult(target.UniqueCreatureID, dmg, hpAfter));
-        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
-        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
-        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
-        if (hpAfter > 0)
-            target.Health -= effective;
     }
 }
