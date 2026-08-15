@@ -117,13 +117,30 @@ public class GameNetworkManager : NetworkBehaviour
             onDeathSeeds[i]      = onDeathReplays[i].Seed;
         }
 
+        List<ZoneCombatResolver.OnBattleStartReplay> onBattleStartReplays = ZoneCombatResolver.DrainOnBattleStartReplays();
+        int[] battleStartZoneKeys   = new int[onBattleStartReplays.Count];
+        int[] battleStartSourceIDs  = new int[onBattleStartReplays.Count];
+        int[] battleStartIsBuilding = new int[onBattleStartReplays.Count];
+        int[] battleStartEffectIdxs = new int[onBattleStartReplays.Count];
+        int[] battleStartSeeds      = new int[onBattleStartReplays.Count];
+        for (int i = 0; i < onBattleStartReplays.Count; i++)
+        {
+            battleStartZoneKeys[i]   = onBattleStartReplays[i].ZoneDeferKey;
+            battleStartSourceIDs[i]  = onBattleStartReplays[i].SourceID;
+            battleStartIsBuilding[i] = onBattleStartReplays[i].IsBuilding ? 1 : 0;
+            battleStartEffectIdxs[i] = onBattleStartReplays[i].EffectIndex;
+            battleStartSeeds[i]      = onBattleStartReplays[i].Seed;
+        }
+
         ApplyCanonicalBattleAssignmentClientRpc(
             canonical.CreatureIDs,     canonical.CreatureDamages,
             canonical.BaseIDs,         canonical.BaseDamages,
             canonical.TargetPlayerIDs, canonical.PlayerDamages,
             canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
-            onDeathSourceIDs,          onDeathEffectIdxs,          onDeathSeeds
+            onDeathSourceIDs,          onDeathEffectIdxs,          onDeathSeeds,
+            battleStartZoneKeys,       battleStartSourceIDs,       battleStartIsBuilding,
+            battleStartEffectIdxs,     battleStartSeeds
         );
 
         ZoneCombatResolver.SerializeAllBattleSteps(
@@ -216,12 +233,21 @@ public class GameNetworkManager : NetworkBehaviour
         int[] targetPlayerIDs, int[] playerDamages,
         int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
-        int[] onDeathSourceIDs, int[] onDeathEffectIndexes, int[] onDeathSeeds)
+        int[] onDeathSourceIDs, int[] onDeathEffectIndexes, int[] onDeathSeeds,
+        int[] battleStartZoneKeys, int[] battleStartSourceIDs, int[] battleStartIsBuilding,
+        int[] battleStartEffectIndexes, int[] battleStartSeeds)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
             targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
         ZoneCombatResolver.ApplyCanonicalPools(p1Pools, p2Pools);
+
+        // OnBattleStart précède logiquement les dégâts/morts de combat : rejoué en premier.
+        if (!IsServer)
+            for (int i = 0; i < battleStartSourceIDs.Length; i++)
+                ZoneCombatResolver.ReplayOnBattleStartEffect(
+                    battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
+                    battleStartEffectIndexes[i], battleStartSeeds[i]);
 
         // Le serveur a déjà résolu ces OnDeath réellement pendant sa propre planification
         // (CreatureLogic.ResolvePredictedBattleDeath) — seuls les autres clients rejouent, avec

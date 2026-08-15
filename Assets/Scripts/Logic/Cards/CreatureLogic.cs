@@ -372,7 +372,81 @@ public class CreatureLogic: ILivable
         }
     }
 
-public void GoFace()
+// Résout OnBattleStart pour cette créature au tout début de la planification de sa zone
+    // (voir ZoneCombatResolver.ResolveOnBattleStartEffects, appelé avant BuildAutoBattleSequence).
+    // zoneDeferKey identifie la zone (IDFactory.GetLocalOnlyID(), voir ZoneCombatResolver.zoneDeferKey) :
+    // les commandes visuelles sont reportées (Command.RunDeferred) jusqu'à ce que cette zone
+    // commence réellement à jouer ses propres commandes de combat — flush dans
+    // ZoneCombatResolver.EnqueueBattleCommands — pour ne pas afficher un buff/dégât avant que la
+    // BattleCam n'ait atteint la zone concernée.
+    public void ResolveBattleStartEffects(int zoneDeferKey)
+    {
+        if (IsPendingDeath) return; // tuée par un OnBattleStart précédent dans la même zone
+        if (ca.Effects == null) return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnBattleStart) continue;
+
+            try
+            {
+                if (!NetworkSessionData.IsNetworkSession)
+                {
+                    Command.RunDeferred(zoneDeferKey, () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
+                else if (isNetworkServer)
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        Command.RunDeferred(zoneDeferKey, () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        EffectSO.ClearNetworkRng();
+                    }
+                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueCreatureID, false, i, seed);
+                }
+                // Client réseau : ne résout rien ici — rejoué via ReplayBattleStartEffect
+                // à partir des triplets diffusés par le serveur.
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnBattleStart] Exception pendant l'effet #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+            }
+        }
+    }
+
+    // Rejeu côté client d'un effet OnBattleStart déjà résolu par le serveur (même mécanisme
+    // déterministe que ReplayOnDeathBattleEffect).
+    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed)
+    {
+        if (ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) return;
+        CardEffectData data = ca.Effects[effectIndex];
+        if (data.Trigger != TriggerType.OnBattleStart) return;
+
+        try
+        {
+            EffectSO.SetNetworkRng(new System.Random(seed));
+            Command.RunDeferred(zoneDeferKey, () =>
+                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[OnBattleStart][Replay] Exception pendant le rejeu de l'effet #{effectIndex} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+        }
+        finally
+        {
+            EffectSO.ClearNetworkRng();
+        }
+    }
+
+    public void GoFace()
     {
         AttacksLeftThisTurn--;
         int targetHealthAfter = owner.otherPlayer.TakeDamage(Attack);

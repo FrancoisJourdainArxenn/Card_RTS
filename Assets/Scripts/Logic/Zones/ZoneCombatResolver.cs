@@ -22,6 +22,11 @@ public class ZoneCombatResolver : MonoBehaviour
     private List<(int attack, bool isBuilding, int id)> _planningQueueP1;
     private List<(int attack, bool isBuilding, int id)> _planningQueueP2;
 
+    // ID dédié à cette zone pour Command.RunDeferred/FlushDeferredCommands côté OnBattleStart —
+    // IDFactory.GetLocalOnlyID() garantit qu'il ne collisionne jamais avec un ID réel de créature/
+    // bâtiment (toujours positif).
+    private int zoneDeferKey;
+
     // Triplets (source, index d'effet, seed) accumulés côté serveur pendant
     // BuildAutoBattleSequence, pour chaque OnDeath résolu par anticipation en planification
     // (CreatureLogic.ResolvePredictedBattleDeath) — diffusés aux clients pour rejeu déterministe
@@ -49,6 +54,46 @@ public class ZoneCombatResolver : MonoBehaviour
         return snapshot;
     }
 
+    // Triplets accumulés côté serveur pendant ResolveOnBattleStartEffects, pour rejeu déterministe
+    // côté client (même mécanisme que OnDeathBattleReplay ci-dessus).
+    public struct OnBattleStartReplay
+    {
+        public int ZoneDeferKey;
+        public int SourceID;
+        public bool IsBuilding;
+        public int EffectIndex;
+        public int Seed;
+    }
+    private static readonly List<OnBattleStartReplay> _pendingOnBattleStartReplays = new();
+
+    public static void RecordOnBattleStartReplay(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    {
+        _pendingOnBattleStartReplays.Add(new OnBattleStartReplay
+            { ZoneDeferKey = zoneDeferKey, SourceID = sourceID, IsBuilding = isBuilding, EffectIndex = effectIndex, Seed = seed });
+    }
+
+    public static List<OnBattleStartReplay> DrainOnBattleStartReplays()
+    {
+        List<OnBattleStartReplay> snapshot = new List<OnBattleStartReplay>(_pendingOnBattleStartReplays);
+        _pendingOnBattleStartReplays.Clear();
+        return snapshot;
+    }
+
+    // Appelé côté client par GameNetworkManager.ApplyCanonicalBattleAssignmentClientRpc.
+    public static void ReplayOnBattleStartEffect(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    {
+        if (isBuilding)
+        {
+            if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceID, out BuildingLogic b))
+                b.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+        }
+        else
+        {
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out CreatureLogic c))
+                c.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+        }
+    }
+
     private enum TargetKind { Creature, Building, Base, Player }
     private struct BattleStepRecord
     {
@@ -71,6 +116,7 @@ public class ZoneCombatResolver : MonoBehaviour
     void Awake()
     {
         zoneView = GetComponent<ZoneManager>();
+        zoneDeferKey = IDFactory.GetLocalOnlyID();
         allResolvers.Add(this);
     }
 
@@ -114,10 +160,14 @@ public class ZoneCombatResolver : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             if (Unity.Netcode.NetworkManager.Singleton.IsServer)
+            {
+                ResolveOnBattleStartEffects();
                 _lastBattleSteps = BuildAutoBattleSequence(zoneView);
+            }
         }
         else
         {
+            ResolveOnBattleStartEffects();
             List<BattleStepRecord> steps = BuildAutoBattleSequence(zoneView);
             pendingDamage.Clear();
             pendingBaseDamage.Clear();
@@ -125,6 +175,29 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBuildingDamage.Clear();
             EnqueueBattleCommands(steps);
         }
+    }
+
+    // Résout OnBattleStart pour toutes les créatures/bâtiments des DEUX joueurs présents dans
+    // cette zone, avant toute planification — pour que buffs, dégâts, boucliers et morts éventuelles
+    // soient déjà reflétés dans l'état lu par BuildAutoBattleSequence.
+    void ResolveOnBattleStartEffects()
+    {
+        if (!HasPossibleCombat()) return;
+
+        Player p1 = GlobalSettings.Instance.LowPlayer;
+        Player p2 = GlobalSettings.Instance.TopPlayer;
+
+        List<CreatureLogic> creatures = new List<CreatureLogic>();
+        creatures.AddRange(GetCreaturesInMyZone(p1, zoneView));
+        creatures.AddRange(GetCreaturesInMyZone(p2, zoneView));
+        foreach (CreatureLogic c in creatures)
+            c.ResolveBattleStartEffects(zoneDeferKey);
+
+        List<BuildingLogic> buildings = new List<BuildingLogic>();
+        buildings.AddRange(GetAllBuildingsInMyZone(p1, zoneView));
+        buildings.AddRange(GetAllBuildingsInMyZone(p2, zoneView));
+        foreach (BuildingLogic b in buildings)
+            b.ResolveBattleStartEffects(zoneDeferKey);
     }
 
     public void OnBattlePhaseEnd()
@@ -442,6 +515,16 @@ public class ZoneCombatResolver : MonoBehaviour
 
     void EnqueueBattleCommands(List<BattleStepRecord> steps)
     {
+        // Les popups OnBattleStart différés (voir ResolveOnBattleStartEffects/zoneDeferKey) doivent
+        // être enqueue ICI, de façon synchrone et AVANT les commandes d'attaque ci-dessous — sinon
+        // ils se retrouvent après elles dans la file (voir ZoneBattleStartRevealCommand). La barrière
+        // ne fait qu'attendre l'arrivée de la BattleCam sur la zone avant de laisser la LECTURE de la
+        // file continuer ; elle ne retarde jamais l'ajout des popups eux-mêmes.
+        if (Command.HasDeferredCommands(zoneDeferKey))
+        {
+            new ZoneBattleStartRevealCommand(zoneView.transform.position).AddToQueue();
+            Command.FlushDeferredCommands(zoneDeferKey);
+        }
         Debug.Log($"[Enqueue:{zoneView.name}] Traitement de {steps.Count} step(s)");
         int stepIdx = 0;
         foreach (BattleStepRecord step in steps)

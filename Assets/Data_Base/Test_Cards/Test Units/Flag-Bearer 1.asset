@@ -17,9 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: '<b>Melee</b>
-
-    <b>On Regroup:</b> Gives +1/+1 to a Unit.'
+  Description: <b>Start of Combat:</b> Gives +1/+1 to a Soldier.
   CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
   MainCost: 0
   IsHero: 0
@@ -27,17 +25,19 @@ MonoBehaviour:
   Attack: 1
   MaxHealth: 3
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 2
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: Inspire
-    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
-    Trigger: 2
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -52,14 +52,14 @@ MonoBehaviour:
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 0
+        includesTarget: 1
         includesSource: 0
         includesEventSubject: 0
         queries:
         - team: 1
           statusFilter: 0
           zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
+          cardFilter: {fileID: 0}
       repartition: 3
       useScalingCount: 0
       scalingQuery:

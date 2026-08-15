@@ -26,4 +26,8 @@ public enum TriggerType
     //Reactions
     OnCardPlayed,
     OnRessourceSpent,
+    // Zone (déclenché par zone, au moment où CETTE zone commence son combat — pas à l'entrée
+    // de phase comme OnBeginCombat). Ajouté en dernier pour ne pas décaler les valeurs des
+    // triggers existants déjà sérialisés sur les cartes.
+    OnBattleStart,
 }

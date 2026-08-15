@@ -25,17 +25,19 @@ MonoBehaviour:
   Attack: 1
   MaxHealth: 2
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 2
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: Snipe
-    Effect: {fileID: 11400000, guid: dd53d2e9daa92f34d999c8f2cdb4f171, type: 2}
-    Trigger: 4
+    Effect: {fileID: 11400000, guid: 07b517e1542336d4e8d96bfe79e29bdc, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

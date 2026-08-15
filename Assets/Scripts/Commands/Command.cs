@@ -86,6 +86,10 @@ public class Command
             action();
     }
 
+    // Permet à un appelant (ex: ZoneCombatResolver.EnqueueBattleCommands) de savoir s'il y a
+    // quelque chose à révéler pour cette clé avant de décider d'attendre la caméra ou non.
+    public static bool HasDeferredCommands(int sourceID) => _deferredBySource.ContainsKey(sourceID);
+
     public virtual void StartCommandExecution()
     {
         // list of everything that we have to do with this command (draw a card, play a card, play spell effect, etc...)
