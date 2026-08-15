@@ -1,3 +1,4 @@
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -112,24 +113,27 @@ public class TokenGenerationSO : EffectSO
         PlayerArea targetArea = ResolveTargetArea(context);
 
         bool tokenIsMelee = TokenToSummon.melee;
-        int currentCount  = tokenIsMelee
-            ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-            : targetArea.tableVisual.RangedCreaturesOnTable.Count;
         CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
             ? targetArea.tableVisual.meleeSlots
             : targetArea.tableVisual.rangedSlots;
 
-        int effectiveCount = targetArea.tableVisual.EffectiveRowCount(tokenIsMelee);
-        // La créature source d'un OnDeath résolu par anticipation en combat occupe encore
-        // visuellement sa place à cet instant (sa mort réelle n'est appliquée que plus tard,
-        // voir CreatureLogic.ScheduleBattleDeath).
-        if (context.Source is CreatureLogic dyingSource
-            && dyingSource.BaseID == targetArea.baseID
-            && dyingSource.IsMelee == tokenIsMelee
-            && !ZoneCombatResolver.WouldSurvive(dyingSource))
-        {
-            effectiveCount--;
-        }
+        // Compte logique (caster.playedCards.Creatures), pas visuel (tableVisual) : mis à jour de
+        // façon synchrone dès qu'un token/créature est inséré, quel que soit le trigger qui l'a
+        // créé (OnDeath, OnBattleStart, ETB...) — contrairement au visuel, dont l'affichage peut
+        // être différé pendant une résolution anticipée de combat (Command.DeferForBattleReplay).
+        // Plusieurs triggers résolus l'un après l'autre dans la même passe de planification (ex :
+        // Broodling qui meurt PUIS Queen qui déclenche son OnBattleStart) se voient donc l'un
+        // l'autre sans qu'aucun site d'appel n'ait à s'en soucier.
+        bool InRow(CreatureLogic cr) => cr.BaseID == targetArea.baseID && cr.IsMelee == tokenIsMelee;
+        int currentCount = caster.playedCards.Creatures.Count(InRow);
+
+        // Une créature de CETTE rangée déjà vouée à mourir pendant la bataille en cours (marquée
+        // IsPendingDeath, ou dégâts en attente >= vie restante — voir ZoneCombatResolver.WouldSurvive)
+        // occupe encore logiquement sa place ici : son retrait de playedCards.Creatures n'a lieu que
+        // bien plus tard (CreatureLogic.Die, via ProcessPendingDeaths en fin de Battle). Sans ce
+        // filtre, la capacité resterait figée à l'état "plein" pour le reste du combat dès qu'une
+        // première créature meurt, même si d'autres meurent ensuite et libèrent d'autres places.
+        int effectiveCount = caster.playedCards.Creatures.Count(cr => InRow(cr) && ZoneCombatResolver.WouldSurvive(cr));
 
         if (effectiveCount >= GlobalSettings.Instance.MaxCreaturePerRow)
         {
@@ -143,6 +147,12 @@ public class TokenGenerationSO : EffectSO
         tokenCard.owner = caster;
 
         CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID, creatureID);
+        // Capturé tout de suite, avant qu'aucun dégât de CE combat ne soit appliqué : EnqueueBattleCommands
+        // mute déjà toutes les Health de la bataille de façon synchrone avant que PlayACreatureCommand
+        // (mis en file plus bas) ne s'exécute réellement — lire cl.Health à ce moment-là donnerait la
+        // vie de FIN de combat plutôt que la vie de spawn (voir TableVisual.CreateCreatureGO).
+        int spawnAttack = newCreature.Attack;
+        int spawnHealth = newCreature.Health;
         tablePos         = currentCount; // position row-locale : on ajoute à la fin de la rangée
         int logicalIndex = caster.GetLogicalInsertIndex(TokenToSummon.melee, targetArea.baseID, tablePos);
         caster.playedCards.Creatures.Insert(logicalIndex, newCreature);
@@ -164,7 +174,7 @@ public class TokenGenerationSO : EffectSO
             }
         }
 
-        new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
+        new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea, spawnAttack, spawnHealth).AddToQueue();
 
         EffectRegistry.ETB(TokenToSummon, new EffectContext
         {

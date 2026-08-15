@@ -9,14 +9,21 @@ public class PlayACreatureCommand : Command
     private Player p;
     private int creatureID;
     private PlayerArea selectedPArea;
+    // Stats de spawn capturées AVANT toute mutation de combat (voir TokenGenerationSO.SpawnToZone) —
+    // utilisées à la place de CreatureLogic.Attack/Health "live", déjà potentiellement mutés par
+    // EnqueueBattleCommands au moment où cette commande s'exécute réellement.
+    private int? spawnAttack;
+    private int? spawnHealth;
 
-    public PlayACreatureCommand(CardLogic cl, Player p, int tablePos, int creatureID, PlayerArea selectedPArea)
+    public PlayACreatureCommand(CardLogic cl, Player p, int tablePos, int creatureID, PlayerArea selectedPArea, int? spawnAttack = null, int? spawnHealth = null)
     {
         this.p = p;
         this.cl = cl;
         this.tablePos = tablePos;
         this.creatureID = creatureID;
         this.selectedPArea = selectedPArea;
+        this.spawnAttack = spawnAttack;
+        this.spawnHealth = spawnHealth;
     }
 
     public override void StartCommandExecution()
@@ -53,7 +60,7 @@ public class PlayACreatureCommand : Command
             // tablePos est logique (ghosts exclus, voir TableVisual.ToNetworkTablePos) : on le
             // reconvertit en index de liste réel pour CE client avant d'insérer.
             int rawTablePos = selectedPArea.tableVisual.FromNetworkTablePos(cl.ca.melee, tablePos);
-            selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, rawTablePos, selectedPArea.baseID);
+            selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, rawTablePos, selectedPArea.baseID, overrideAttack: spawnAttack, overrideHealth: spawnHealth);
         }
         BuildSpotVisual.RefreshAll();
 

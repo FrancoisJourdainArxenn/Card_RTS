@@ -22,9 +22,16 @@ public class ZoneCombatResolver : MonoBehaviour
     private List<(int attack, bool isBuilding, int id)> _planningQueueP1;
     private List<(int attack, bool isBuilding, int id)> _planningQueueP2;
 
-    // ID dédié à cette zone pour Command.RunDeferred/FlushDeferredCommands côté OnBattleStart —
-    // IDFactory.GetLocalOnlyID() garantit qu'il ne collisionne jamais avec un ID réel de créature/
-    // bâtiment (toujours positif).
+    // ID dédié à cette zone pour Command.RunDeferred/FlushDeferredCommands côté OnBattleStart.
+    // Doit être IDENTIQUE entre le serveur et les clients (il est diffusé tel quel via
+    // RecordOnBattleStartReplay/ReplayOnBattleStartEffect, voir GameNetworkManager) — impossible
+    // d'utiliser IDFactory.GetLocalOnlyID() ici : ce compteur est purement local par machine (ex:
+    // fantômes de déplacement créés par les interactions UI du joueur local) et diverge donc entre
+    // deux clients. Dérivé à la place de l'index d'enregistrement dans allResolvers, exactement
+    // comme SerializeAllBattleSteps/EnqueueAllReconstructedBattleCommands corrèlent déjà les zones
+    // entre pairs réseau — décalé loin de tout ID réel (toujours positif) et de la plage locale
+    // de IDFactory (autour de -1 000 000) pour ne jamais entrer en collision.
+    private const int ZoneDeferKeyBase = -2_000_000_000;
     private int zoneDeferKey;
 
     // Triplets (source, index d'effet, seed) accumulés côté serveur pendant
@@ -116,7 +123,7 @@ public class ZoneCombatResolver : MonoBehaviour
     void Awake()
     {
         zoneView = GetComponent<ZoneManager>();
-        zoneDeferKey = IDFactory.GetLocalOnlyID();
+        zoneDeferKey = ZoneDeferKeyBase - allResolvers.Count;
         allResolvers.Add(this);
     }
 

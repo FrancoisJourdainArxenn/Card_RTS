@@ -337,6 +337,10 @@ public class Player : MonoBehaviour, ILivable
         int logicalIndex  = GetLogicalInsertIndex(tokenAsset.melee, baseID, rowLocalPos);
 
         CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
+        // Capturé tout de suite, avant que le replay des dégâts de CE combat ne soit appliqué —
+        // voir TokenGenerationSO.SpawnToZone pour le même souci côté hôte.
+        int spawnAttack = newCreature.Attack;
+        int spawnHealth = newCreature.Health;
         playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
@@ -362,7 +366,7 @@ public class Player : MonoBehaviour, ILivable
                 }
             }
 
-            new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
+            new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea, spawnAttack, spawnHealth).AddToQueue();
             EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
             EffectRegistry.NotifyTokenCreated(this, newCreature);
         }

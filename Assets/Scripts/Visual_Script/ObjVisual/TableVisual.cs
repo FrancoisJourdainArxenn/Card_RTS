@@ -119,7 +119,7 @@ public class TableVisual : MonoBehaviour
     }
 
     // rowLocalPos : 0 = le plus à gauche dans la rangée
-    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int rowLocalPos, int baseID, bool completeCommand = true)
+    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int rowLocalPos, int baseID, bool completeCommand = true, int? overrideAttack = null, int? overrideHealth = null)
     {
         bool isMelee = ca.melee;
         CenteredSlots rowSlots      = GetRowSlots(isMelee);
@@ -129,7 +129,7 @@ public class TableVisual : MonoBehaviour
         int newCount  = targetList.Count + 1;
         Vector3 spawnPos = rowSlots.GetSlotPosition(listIndex, newCount);
 
-        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
+        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos, overrideAttack, overrideHealth);
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
 
@@ -539,7 +539,7 @@ public class TableVisual : MonoBehaviour
     private CenteredSlots GetRowSlots(bool isMelee) =>
         (isMelee && meleeSlots != null) ? meleeSlots : rangedSlots;
 
-    private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position)
+    private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position, int? overrideAttack = null, int? overrideHealth = null)
     {
         GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
@@ -551,10 +551,19 @@ public class TableVisual : MonoBehaviour
         IDHolder id = creature.AddComponent<IDHolder>();
         id.UniqueID = uniqueID;
 
+        // Stats de spawn explicites (ex: token créé pendant la planification d'un combat, voir
+        // TokenGenerationSO/PlayACreatureCommand) : prioritaires sur la lecture "live" ci-dessous,
+        // qui peut déjà refléter la vie de FIN de combat si EnqueueBattleCommands a tourné avant que
+        // cette commande de spawn ne s'exécute.
+        if (overrideAttack.HasValue || overrideHealth.HasValue)
+        {
+            manager.AttackText.text = (overrideAttack ?? ca.Attack).ToString();
+            manager.HealthText.text = (overrideHealth ?? ca.MaxHealth).ToString();
+        }
         // Si la logique existe déjà et a été modifiée avant que ce visuel soit créé
         // (ex: reveal différé côté réseau, buffs OnPlay résolus avant l'affichage),
         // on affiche les stats actuelles plutôt que les stats imprimées de la carte.
-        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
+        else if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
         {
             manager.AttackText.text = cl.Attack.ToString();
             manager.HealthText.text = cl.Health.ToString();
