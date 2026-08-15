@@ -31,6 +31,7 @@ public class VisualFeedbackEffect : MonoBehaviour
         var go = Instantiate(_manager.damagePrefab, position, Quaternion.Euler(90, 0, 0));
         var de = go.GetComponent<VisualFeedbackEffect>();
         de.amountText.text = "-" + amount;
+        ValuePopAnimation.Pop(de.transform);
         de.StartCoroutine(de.ShowFeedbackEffect());
     }
 
@@ -47,10 +48,10 @@ public class VisualFeedbackEffect : MonoBehaviour
     private IEnumerator ShowFeedbackEffect()
     {
         cg.alpha = 1f;
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(.5f);
         while (cg.alpha > 0)
         {
-            cg.alpha -= 0.05f;
+            cg.alpha -= 0.1f;
             yield return new WaitForSeconds(0.05f);
         }
         Destroy(gameObject);
