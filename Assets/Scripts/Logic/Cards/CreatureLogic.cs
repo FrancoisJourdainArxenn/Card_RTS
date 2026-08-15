@@ -48,14 +48,12 @@ public class CreatureLogic: ILivable
 
                 if (inCombatPhase)
                 {
-                    health = 0;
-                    IsPendingDeath = true;
-                    PendingDeathList.Add(this);
+                    MarkPendingDeath();
                     string pendingRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
                     UnityEngine.Debug.Log($"[Death]{pendingRole} PENDING — {DisplayName} (ID:{UniqueCreatureID}) | PendingDeathList taille: {PendingDeathList.Count}");
                     VfxManager vfx = Vfx;
                     if (vfx != null)
-                        vfx.ShowDeathPending();
+                        Command.DeferAction(() => vfx.ShowDeathPending());
                 }
                 else
                 {
@@ -71,6 +69,11 @@ public class CreatureLogic: ILivable
 
     public bool IsPendingDeath { get; private set; }
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
+
+    // True once OnDeath has already been resolved ahead of time during battle planning
+    // (see ResolvePredictedBattleDeath). Prevents NotifyCreatureDied from firing OnDeath
+    // a second time when the real Die() eventually runs (end of phase / drain).
+    public bool OnDeathResolvedInBattle { get; private set; }
 
     public int ShieldValue { get; private set; } = 0;
 
@@ -262,10 +265,111 @@ public class CreatureLogic: ILivable
     public void ScheduleBattleDeath()
     {
         if (IsPendingDeath) return;
+        MarkPendingDeath();
+    }
+
+    // Marque cette créature comme mourante pendant le combat : figé une seule fois (voir garde
+    // IsPendingDeath des deux appelants), aussi bien depuis ScheduleBattleDeath (mort via une
+    // BattleStepRecord planifiée) que depuis le setter de Health (mort via des dégâts directs,
+    // ex: un effet OnDeath comme "Acid Explosion" qui tue une autre créature pendant la
+    // planification). Les deux chemins doivent enqueue la même CreatureDieCommand et flush les
+    // mêmes commandes différées — sans ça, une mort par dégâts directs ne joue jamais visuellement
+    // et laisse d'éventuelles commandes différées orphelines dans Command._deferredBySource.
+    private void MarkPendingDeath()
+    {
         health = 0;
         IsPendingDeath = true;
         PendingDeathList.Add(this);
         new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+        Command.FlushDeferredCommands(UniqueCreatureID);
+    }
+
+    // Résout OnDeath immédiatement, à l'instant où ZoneCombatResolver prédit cette mort
+    // pendant la planification du combat (avant qu'aucune attaque suivante de la séquence
+    // ne soit assignée) — pas d'attente de la fin de la phase Battle. Permet à un effet du
+    // type "OnDeath: allié +1/+1" d'affecter les dégâts et la survie du reste du combat.
+    // Ne touche ni Health/IsPendingDeath/PendingDeathList (toujours gérés par
+    // ScheduleBattleDeath/Die en Phase B, inchangés) : seule l'exécution de l'effet avance.
+    public void ResolvePredictedBattleDeath()
+    {
+        if (OnDeathResolvedInBattle) return;
+        OnDeathResolvedInBattle = true;
+
+        if (ca.Effects == null) return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnDeath) continue;
+
+            // try/catch : une exception ici (ex: un effet OnDeath mal configuré) ne doit ni
+            // interrompre la planification du combat pour le reste de la partie, ni — surtout —
+            // laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués à leur valeur
+            // "en cours" : ce sont des flags statiques globaux, donc s'ils ne sont jamais remis à
+            // leur état normal, TOUTE commande visuelle du jeu (attaques, morts, pioches...) se
+            // retrouve reportée indéfiniment nulle part — symptôme observé : "le combat bloque"
+            // après la mort d'une créature dont l'effet OnDeath a levé une exception.
+            try
+            {
+                if (!NetworkSessionData.IsNetworkSession)
+                {
+                    Command.RunDeferred(UniqueCreatureID, () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
+                else if (isNetworkServer)
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        Command.RunDeferred(UniqueCreatureID, () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        EffectSO.ClearNetworkRng();
+                    }
+                    ZoneCombatResolver.RecordOnDeathBattleReplay(UniqueCreatureID, i, seed);
+                }
+                // Client réseau : ne résout rien ici — rejoué via ReplayOnDeathBattleEffect
+                // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnDeath] Exception pendant l'effet OnDeath #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+            }
+        }
+    }
+
+    // Rejeu côté client (jamais côté serveur, qui a déjà résolu l'effet réellement dans
+    // ResolvePredictedBattleDeath) d'un triplet (source, index d'effet, seed) diffusé par le
+    // serveur — même mécanisme déterministe que PhaseEffectPipeline.ApplyCanonicalResolution :
+    // la seed reproduit exactement le même ciblage aléatoire, donc pas besoin de sérialiser la
+    // cible ni le delta appliqué séparément.
+    public static void ReplayOnDeathBattleEffect(int sourceCreatureID, int effectIndex, int seed)
+    {
+        if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
+        if (creature.ca.Effects == null || effectIndex < 0 || effectIndex >= creature.ca.Effects.Count) return;
+
+        CardEffectData data = creature.ca.Effects[effectIndex];
+        if (data.Trigger != TriggerType.OnDeath) return;
+
+        creature.OnDeathResolvedInBattle = true;
+        try
+        {
+            EffectSO.SetNetworkRng(new System.Random(seed));
+            Command.RunDeferred(sourceCreatureID, () =>
+                EffectRegistry.Execute(data, new EffectContext { Caster = creature.owner, Source = creature }));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[OnDeath][Replay] Exception pendant le rejeu de l'effet OnDeath #{effectIndex} ({data.EffectName}) sur {creature.DisplayName} (ID:{sourceCreatureID}) : {e}");
+        }
+        finally
+        {
+            EffectSO.ClearNetworkRng();
+        }
     }
 
 public void GoFace()

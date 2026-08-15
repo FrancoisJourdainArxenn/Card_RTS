@@ -33,18 +33,14 @@ public class PiercingAttackModifierSO : AttackModifierSO
 
     private CreatureLogic FindClosestAliveCrossRow(CreatureLogic from, List<CreatureLogic> targetRow, System.Func<CreatureLogic, bool> isDead)
     {
-        GameObject fromGO = IDHolder.GetGameObjectWithID(from.UniqueCreatureID);
-        if (fromGO == null) return null;
-        float fromX = fromGO.transform.position.x;
+        float fromX = GetEffectiveWorldX(from);
 
         CreatureLogic closest = null;
         float minDist = float.MaxValue;
         foreach (CreatureLogic c in targetRow)
         {
             if (isDead(c)) continue;
-            GameObject go = IDHolder.GetGameObjectWithID(c.UniqueCreatureID);
-            if (go == null) continue;
-            float dist = Mathf.Abs(go.transform.position.x - fromX);
+            float dist = Mathf.Abs(GetEffectiveWorldX(c) - fromX);
             if (dist < minDist) { minDist = dist; closest = c; }
         }
         return closest;

@@ -80,16 +80,13 @@ public class RicochetAttackModifierSO : AttackModifierSO
 
     private int FindCrossRowIdx(CreatureLogic from, List<CreatureLogic> targetRow)
     {
-        GameObject fromGO = IDHolder.GetGameObjectWithID(from.UniqueCreatureID);
-        if (fromGO == null || targetRow.Count == 0) return -1;
-        float fromX = fromGO.transform.position.x;
+        if (targetRow.Count == 0) return -1;
+        float fromX = GetEffectiveWorldX(from);
         int closest = 0;
         float minDist = float.MaxValue;
         for (int i = 0; i < targetRow.Count; i++)
         {
-            GameObject go = IDHolder.GetGameObjectWithID(targetRow[i].UniqueCreatureID);
-            if (go == null) continue;
-            float dist = Mathf.Abs(go.transform.position.x - fromX);
+            float dist = Mathf.Abs(GetEffectiveWorldX(targetRow[i]) - fromX);
             if (dist < minDist) { minDist = dist; closest = i; }
         }
         return closest;

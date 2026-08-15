@@ -33,6 +33,31 @@ MonoBehaviour:
   Celerity: 1
   melee: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
-  Effects: []
+  Keywords: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 3
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

@@ -17,9 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>Melee</b>
-
-    <b>Death :</b> Deals 2 Damage randomly.'
+  Description: <b>Death :</b> Deals 2 Damage randomly.
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
   MainCost: 0
   IsHero: 0
@@ -27,11 +25,13 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 1
   AttacksForOneTurn: 1
-  melee: 1
   AttackSpeedMultiplier: 2
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}

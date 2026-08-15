@@ -324,7 +324,7 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
-    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, EffectVisualData visualData = null)
+    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, int sourceEntityID, bool deferUntilSourceDeath, EffectVisualData visualData = null)
     {
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) { Debug.LogError($"[Token] PlayerArea introuvable baseID={baseID}"); return; }
@@ -340,30 +340,44 @@ public class Player : MonoBehaviour, ILivable
         playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
-        if (visualData?.vfxPrefab != null)
+        void QueueVisuals()
         {
-            ZoneManager targetZone = targetArea.parentZone;
-            bool isVisible = targetZone == null || FogOfWarManager.Instance == null
-                             || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
-
-            if (isVisible)
+            if (visualData?.vfxPrefab != null)
             {
-                CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
-                    ? targetArea.tableVisual.meleeSlots
-                    : targetArea.tableVisual.rangedSlots;
-                int currentCount = tokenIsMelee
-                    ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-                    : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-                Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
-                new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
-                new DelayCommand(0.9f).AddToQueue();
+                ZoneManager targetZone = targetArea.parentZone;
+                bool isVisible = targetZone == null || FogOfWarManager.Instance == null
+                                 || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
+
+                if (isVisible)
+                {
+                    CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                        ? targetArea.tableVisual.meleeSlots
+                        : targetArea.tableVisual.rangedSlots;
+                    int currentCount = tokenIsMelee
+                        ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                        : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+                    Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
+                    new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
+                    new DelayCommand(0.9f).AddToQueue();
+                }
             }
+
+            new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
+            EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
+            EffectRegistry.NotifyTokenCreated(this, newCreature);
         }
 
-        new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
-        EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
-        EffectRegistry.NotifyTokenCreated(this, newCreature);
-
+        // Ce ClientRpc peut arriver AVANT le déroulé animé de la bataille (voir BroadcastBattleStepsClientRpc) —
+        // sans report, ces Command joueraient immédiatement à la réception, donc en tête de combat,
+        // au lieu d'attendre le moment où la créature source (sourceEntityID) meurt réellement à
+        // l'écran, comme côté hôte (voir CreatureLogic.ScheduleBattleDeath / Command.FlushDeferredCommands).
+        // Ne s'applique que si le serveur était réellement en train de résoudre un OnDeath par
+        // anticipation en combat (deferUntilSourceDeath) ; sinon (ex: ETB normal à la pose), le
+        // visuel doit s'afficher immédiatement, comme côté hôte.
+        if (deferUntilSourceDeath && sourceEntityID >= 0)
+            Command.RunDeferred(sourceEntityID, QueueVisuals);
+        else
+            QueueVisuals();
     }
 
 

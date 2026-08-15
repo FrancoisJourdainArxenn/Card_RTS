@@ -15,6 +15,10 @@ public interface ILivable: IIdentifiable
 
     public bool IsDamaged => Health < MaxHealth;
     public bool IsPendingDeath => false;
+    // True once this entity's OnDeath has already been resolved ahead of time during battle
+    // planning (see CreatureLogic.ResolvePredictedBattleDeath) — excluded from targeting just
+    // like IsPendingDeath, even though the "real" death hasn't been applied yet.
+    public bool OnDeathResolvedInBattle => false;
     public bool IsMelee => false;
     public bool IsRanged => false;
     public int Attack { get; set; }

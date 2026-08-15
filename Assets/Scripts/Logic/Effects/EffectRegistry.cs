@@ -89,7 +89,9 @@ public static class EffectRegistry
 
     public static void NotifyCreatureDied(CreatureLogic died, Player dyingOwner)
     {
-        if (died.ca.Effects != null)
+        // OnDeath déjà résolu plus tôt pendant la planification de combat
+        // (ResolvePredictedBattleDeath) — ne pas le redéclencher ici.
+        if (!died.OnDeathResolvedInBattle && died.ca.Effects != null)
             foreach (CardEffectData data in died.ca.Effects)
             {
                 if (data.Trigger != TriggerType.OnDeath)
@@ -221,10 +223,18 @@ public static class EffectRegistry
 
         CurrentSourceID = context.Source?.ID ?? -1;
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
-        CurrentSourceID = -1;
 
+        // Passe par la file de commandes (comme ModifyStatsCommand etc.) au lieu de lever
+        // l'event directement : pendant une résolution OnDeath anticipée en combat
+        // (Command.DeferForBattleReplay), AddToQueue() la reporte et la rejoue au bon moment
+        // (voir CreatureLogic.ScheduleBattleDeath) — sinon la popup "carte d'effet" apparaîtrait
+        // dès la planification, avant même que la créature ne meure visuellement. Doit rester
+        // AVANT la remise à -1 de CurrentSourceID ci-dessous : c'est elle qui sert de clé de
+        // report dans Command.AddToQueue().
         if (!data.RequiresPlayerInput)
-            TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
+            new RaiseEffectVisualCommand(data, context).AddToQueue();
+
+        CurrentSourceID = -1;
     }
 
     // ── Utilitaire ────────────────────────────────────────────────────────────

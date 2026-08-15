@@ -15,6 +15,40 @@ public class ZoneCombatResolver : MonoBehaviour
     private int p2FreePool;
     private List<BattleStepRecord> _lastBattleSteps;
 
+    // Files d'attaque en cours de planification (non nulles seulement pendant l'exécution de
+    // BuildAutoBattleSequence) — permet à un token créé à la volée (TokenGenerationSO, via un
+    // OnDeath résolu par anticipation, voir CreatureLogic.ResolvePredictedBattleDeath) de
+    // rejoindre CETTE bataille au lieu d'attendre le prochain combat.
+    private List<(int attack, bool isBuilding, int id)> _planningQueueP1;
+    private List<(int attack, bool isBuilding, int id)> _planningQueueP2;
+
+    // Triplets (source, index d'effet, seed) accumulés côté serveur pendant
+    // BuildAutoBattleSequence, pour chaque OnDeath résolu par anticipation en planification
+    // (CreatureLogic.ResolvePredictedBattleDeath) — diffusés aux clients pour rejeu déterministe
+    // via EffectRegistry.Execute (même mécanisme que PhaseEffectPipeline.ApplyCanonicalResolution).
+    public struct OnDeathBattleReplay
+    {
+        public int SourceCreatureID;
+        public int EffectIndex;
+        public int Seed;
+    }
+    private static readonly List<OnDeathBattleReplay> _pendingOnDeathReplays = new();
+
+    public static void RecordOnDeathBattleReplay(int sourceCreatureID, int effectIndex, int seed)
+    {
+        _pendingOnDeathReplays.Add(new OnDeathBattleReplay
+            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed });
+    }
+
+    // Consommé une seule fois par SubmitBattleAssignmentServerRpc, juste après que toute la
+    // planification (tous resolvers) soit terminée, pour sérialiser vers les clients.
+    public static List<OnDeathBattleReplay> DrainOnDeathBattleReplays()
+    {
+        List<OnDeathBattleReplay> snapshot = new List<OnDeathBattleReplay>(_pendingOnDeathReplays);
+        _pendingOnDeathReplays.Clear();
+        return snapshot;
+    }
+
     private enum TargetKind { Creature, Building, Base, Player }
     private struct BattleStepRecord
     {
@@ -27,6 +61,11 @@ public class ZoneCombatResolver : MonoBehaviour
         // Cibles secondaires (AttackModifierSO) déjà résolues pendant la planification — ID + dégât brut.
         // Diffusées telles quelles à tous les clients ; EnqueueBattleCommands ne recalcule plus aucun ciblage.
         public List<AttackHitResult> secondaryHits;
+        // Contre-dégâts subis par l'attaquant, figés au moment de la planification (même valeur que
+        // celle passée à AddPendingCreatureDamage pour prédire une éventuelle mort de l'attaquant).
+        // EnqueueBattleCommands ne relit plus target.Attack en direct : ça appliquerait à une contre-
+        // attaque déjà causalement figée un buff/debuff survenu plus tard dans la séquence planifiée.
+        public int counterDamage;
     }
 
     void Awake()
@@ -114,6 +153,8 @@ public class ZoneCombatResolver : MonoBehaviour
 
         List<(int attack, bool isBuilding, int id)> queue1 = BuildAttackQueue(p1, zone);
         List<(int attack, bool isBuilding, int id)> queue2 = BuildAttackQueue(p2, zone);
+        _planningQueueP1 = queue1;
+        _planningQueueP2 = queue2;
 
         int p1ZoneUnitCount = GetCreaturesInMyZone(p1, zone).Count;
         int p2ZoneUnitCount = GetCreaturesInMyZone(p2, zone).Count;
@@ -167,7 +208,26 @@ public class ZoneCombatResolver : MonoBehaviour
             else p1Turn = p1CanAct;
         }
         Debug.Log($"[Sequence:{zoneView.name}] {steps.Count} step(s) générés au total");
+        _planningQueueP1 = null;
+        _planningQueueP2 = null;
         return steps;
+    }
+
+    // Appelé par TokenGenerationSO quand un token est créé à la volée. Si ce baseID est
+    // couvert par un resolver actuellement en train de planifier sa bataille (voir
+    // BuildAutoBattleSequence / _planningQueueP1-P2), le token rejoint la file d'attaque de son
+    // propriétaire pour pouvoir encore attaquer dans cette même bataille.
+    public static void NotifyCreatureAddedDuringPlanning(CreatureLogic creature)
+    {
+        if (creature.Attack <= 0) return;
+        ZoneCombatResolver resolver = FindForBase(creature.BaseID);
+        if (resolver == null) return;
+
+        List<(int attack, bool isBuilding, int id)> queue =
+            creature.owner == GlobalSettings.Instance.LowPlayer ? resolver._planningQueueP1
+            : creature.owner == GlobalSettings.Instance.TopPlayer ? resolver._planningQueueP2
+            : null;
+        queue?.Add((creature.Attack, false, creature.UniqueCreatureID));
     }
 
     // Ordre : mêlée créatures → non-mêlée créatures → mêlée bâtiments → non-mêlée bâtiments
@@ -202,7 +262,11 @@ public class ZoneCombatResolver : MonoBehaviour
     // Priorité : mêlée bâtiment → mêlée créature → ranged créature → ranged bâtiment → base → joueur
     (int, BattleStepRecord?) AssignSingleAttack((int attack, bool isBuilding, int id) attacker, Player defender, ZoneManager zone)
     {
-        int dmg = attacker.attack;
+        // Lecture live (pas la valeur figée dans le tuple attacker au tout début de la zone) :
+        // si cet attaquant a été buffé par un OnDeath résolu plus tôt dans cette même
+        // planification (voir AddPendingCreatureDamage), les dégâts qu'il inflige doivent déjà
+        // le refléter tant qu'il n'a pas encore été traité par cette méthode.
+        int dmg = GetLiveAttack(attacker.id, attacker.isBuilding, attacker.attack);
         List<CreatureLogic> creatures = GetCreaturesInMyZone(defender, zone);
         List<BuildingLogic> buildings = GetAllBuildingsInMyZone(defender, zone);
 
@@ -220,20 +284,19 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier1:BâtimentMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
+            int counter1 = 0;
             if (b.Attack > 0 && IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
+                counter1 = b.Attack;
                 if (!attacker.isBuilding)
-                {
-                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                    pendingDamage[attacker.id] = attackerExisting + b.Attack;
-                }
+                    AddPendingCreatureDamage(attacker.id, b.Attack);
                 else
                 {
                     pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
                     pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
                 }
             }
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
+            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID, counterDamage = counter1 });
         }
 
         // Tier 2 : créatures mêlée
@@ -248,15 +311,14 @@ public class ZoneCombatResolver : MonoBehaviour
             CreatureLogic t = eligibleMeleeCreatures[UnityEngine.Random.Range(0, eligibleMeleeCreatures.Count)];
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
-            pendingDamage[t.UniqueCreatureID] = existing + assign;
+            AddPendingCreatureDamage(t.UniqueCreatureID, assign);
             Debug.Log($"[Assign:{zoneView.name}][Tier2:CréatureMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
+            int counter2 = 0;
             if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
+                counter2 = t.Attack;
                 if (!attacker.isBuilding)
-                {
-                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                    pendingDamage[attacker.id] = attackerExisting + t.Attack;
-                }
+                    AddPendingCreatureDamage(attacker.id, t.Attack);
                 else
                 {
                     pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
@@ -264,7 +326,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
             }
             List<AttackHitResult> tier2SecondaryHits = ResolveAndReserveModifierHits(attacker.id, attacker.isBuilding, t);
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier2SecondaryHits });
+            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier2SecondaryHits, counterDamage = counter2 });
         }
 
         // Tier 3 : créatures ranged
@@ -279,15 +341,14 @@ public class ZoneCombatResolver : MonoBehaviour
             CreatureLogic t = eligibleRangedCreatures[UnityEngine.Random.Range(0, eligibleRangedCreatures.Count)];
             pendingDamage.TryGetValue(t.UniqueCreatureID, out int existing);
             int assign = Mathf.Min(dmg, t.Health + t.ShieldValue - existing);
-            pendingDamage[t.UniqueCreatureID] = existing + assign;
+            AddPendingCreatureDamage(t.UniqueCreatureID, assign);
             Debug.Log($"[Assign:{zoneView.name}][Tier3:CréatureRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
+            int counter3 = 0;
             if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
+                counter3 = t.Attack;
                 if (!attacker.isBuilding)
-                {
-                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                    pendingDamage[attacker.id] = attackerExisting + t.Attack;
-                }
+                    AddPendingCreatureDamage(attacker.id, t.Attack);
                 else
                 {
                     pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
@@ -295,7 +356,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
             }
             List<AttackHitResult> tier3SecondaryHits = ResolveAndReserveModifierHits(attacker.id, attacker.isBuilding, t);
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier3SecondaryHits });
+            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier3SecondaryHits, counterDamage = counter3 });
         }
 
         // Tier 4 : bâtiments ranged
@@ -312,20 +373,19 @@ public class ZoneCombatResolver : MonoBehaviour
             int assign = Mathf.Min(dmg, b.Health - existing);
             pendingBuildingDamage[b.UniqueBuildingID] = existing + assign;
             Debug.Log($"[Assign:{zoneView.name}][Tier4:BâtimentRanged] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible bât={b.UniqueBuildingID}({b.DisplayName}) dégâts={assign} overflow={dmg - assign}");
+            int counter4 = 0;
             if (b.Attack > 0 && IsMeleeAttacker(attacker.id, attacker.isBuilding))
             {
+                counter4 = b.Attack;
                 if (!attacker.isBuilding)
-                {
-                    pendingDamage.TryGetValue(attacker.id, out int attackerExisting);
-                    pendingDamage[attacker.id] = attackerExisting + b.Attack;
-                }
+                    AddPendingCreatureDamage(attacker.id, b.Attack);
                 else
                 {
                     pendingBuildingDamage.TryGetValue(attacker.id, out int attackerExisting);
                     pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
                 }
             }
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID });
+            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID, counterDamage = counter4 });
         }
 
         BaseLogic defenderBase = FindDefenderBaseInZone(defender);
@@ -372,7 +432,7 @@ public class ZoneCombatResolver : MonoBehaviour
             foreach (AttackHitResult hit in resolved)
             {
                 pendingDamage.TryGetValue(hit.TargetUniqueID, out int existing);
-                pendingDamage[hit.TargetUniqueID] = existing + hit.Damage;
+                AddPendingCreatureDamage(hit.TargetUniqueID, hit.Damage);
                 allHits.Add(hit);
                 Debug.Log($"[Resolve:{zoneView.name}] {mod.GetType().Name} — attaquant={attackerID}({attackerCreature.DisplayName}) → cible={hit.TargetUniqueID} dégâts={hit.Damage} (pendingDamage: {existing} → {existing + hit.Damage})");
             }
@@ -395,11 +455,20 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out CreatureLogic target)) continue;
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature);
 
-                    if (!step.attackerIsBuilding && attackerCreature != null && attackerCreature.IsPendingDeath)
-                    {
-                        Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} ignoré — attaquant {step.attackerID} déjà IsPendingDeath");
-                        continue;
-                    }
+                    // Un attaquant déjà IsPendingDeath ici peut avoir deux causes : (1) il est mort lors
+                    // d'un step ANTÉRIEUR de cette même liste — son tour ne doit alors plus s'exécuter
+                    // (comportement historique) — ou (2) il vient de mourir EN RÉTORSION, pendant la
+                    // construction même de CE step : l'OnDeath de sa propre cible, résolu par
+                    // anticipation dans AssignSingleAttack/AddPendingCreatureDamage (voir
+                    // CreatureLogic.ResolvePredictedBattleDeath), l'a tué avant même que ce
+                    // BattleStepRecord ne soit construit. Dans ce second cas, l'attaque a bel et bien
+                    // eu lieu — c'est elle qui a déclenché la mort de la cible et donc son OnDeath — et
+                    // sauter tout le step empêcherait target.ScheduleBattleDeath() de jamais s'exécuter,
+                    // laissant la cible "vivante" pour de bon et son report différé (Command.DeferForBattleReplay)
+                    // bloqué indéfiniment. On ne peut pas distinguer les deux cas ici, mais laisser le
+                    // step s'exécuter normalement est sans risque dans les deux cas : les mutations de
+                    // l'attaquant plus bas (ScheduleBattleDeath/Health) sont déjà protégées par son
+                    // propre IsPendingDeath et no-opent proprement s'il est déjà mort.
                     if (target.IsPendingDeath)
                         Debug.LogWarning($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} — cible {target.UniqueCreatureID}({target.DisplayName}) DÉJÀ IsPendingDeath au moment du traitement (tuée par un effet secondaire ?) — contre-attaque fantôme possible");
 
@@ -408,7 +477,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
                     // Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield: {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
 
-                    int counterDamage = IsMeleeAttacker(step.attackerID, step.attackerIsBuilding) ? target.Attack : 0;
+                    int counterDamage = step.counterDamage;
                     int attackerShieldAbsorbed = (!step.attackerIsBuilding && attackerCreature != null)
                         ? Mathf.Min(counterDamage, attackerCreature.ShieldValue) : 0;
                     int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
@@ -485,7 +554,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 {
                     if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.targetID, out BuildingLogic target)) continue;
                     int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
-                    int counterDamage = IsMeleeAttacker(step.attackerID, step.attackerIsBuilding) ? target.Attack : 0;
+                    int counterDamage = step.counterDamage;
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - counterDamage);
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic atkCr);
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Building — attaquant={step.attackerID} cible bât={target.UniqueBuildingID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
@@ -580,13 +649,15 @@ public class ZoneCombatResolver : MonoBehaviour
     public static void SerializeAllBattleSteps(
         out int[] resolverIdxs, out int[] attackerIDs, out int[] isBuilding,
         out int[] targetIDs, out int[] targetKinds, out int[] damages, out int[] ownerPlayerIDs,
-        out int[] secondaryCounts, out int[] secondaryTargetIDs, out int[] secondaryDamages)
+        out int[] secondaryCounts, out int[] secondaryTargetIDs, out int[] secondaryDamages,
+        out int[] counterDamages)
     {
         List<int> ri = new(); List<int> ai = new();
         List<int> ib = new(); List<int> ti = new();
         List<int> tk = new(); List<int> dg = new();
         List<int> op = new();
         List<int> scnt = new(); List<int> stid = new(); List<int> sdmg = new();
+        List<int> cd = new();
 
         for (int i = 0; i < allResolvers.Count; i++)
         {
@@ -599,6 +670,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 tk.Add((int)s.targetKind);
                 dg.Add(s.damage);
                 op.Add(s.targetOwnerPlayerID);
+                cd.Add(s.counterDamage);
 
                 int secCount = s.secondaryHits?.Count ?? 0;
                 scnt.Add(secCount);
@@ -617,12 +689,14 @@ public class ZoneCombatResolver : MonoBehaviour
         secondaryCounts    = scnt.ToArray();
         secondaryTargetIDs = stid.ToArray();
         secondaryDamages   = sdmg.ToArray();
+        counterDamages     = cd.ToArray();
     }
 
     public static void EnqueueAllReconstructedBattleCommands(
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
-        int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages)
+        int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
+        int[] counterDamages)
     {
         Dictionary<int, List<BattleStepRecord>> stepsByResolver = new();
         int secCursor = 0;
@@ -648,7 +722,8 @@ public class ZoneCombatResolver : MonoBehaviour
                 targetKind          = (TargetKind)targetKinds[i],
                 damage              = damages[i],
                 targetOwnerPlayerID = ownerPlayerIDs[i],
-                secondaryHits       = secondaryHits
+                secondaryHits       = secondaryHits,
+                counterDamage       = (counterDamages != null && i < counterDamages.Length) ? counterDamages[i] : 0
             });
         }
 
@@ -693,6 +768,41 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         if (!BuildingLogic.BuildingsCreatedThisGame.TryGetValue(attacker.id, out BuildingLogic b)) return true;
         return IsEffectivelyDeadBuilding(b);
+    }
+
+    // Valeur d'attaque actuelle (live) d'un attaquant identifié par ID — reflète un éventuel
+    // buff OnDeath déjà résolu plus tôt dans cette même planification. fallbackValue est utilisé
+    // si l'entité est introuvable (ne devrait pas arriver, garde défensive).
+    int GetLiveAttack(int id, bool isBuilding, int fallbackValue)
+    {
+        if (!isBuilding)
+            return CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c) ? c.Attack : fallbackValue;
+        return BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic b) ? b.Attack : fallbackValue;
+    }
+
+    // Ajoute `amount` aux dégâts prédits (pendingDamage) de la créature `creatureID`. Si cette
+    // mise à jour la fait franchir le seuil de mort prédite pour la première fois, résout son
+    // OnDeath immédiatement (voir CreatureLogic.ResolvePredictedBattleDeath) — avant qu'aucune
+    // attaque suivante de la séquence ne soit assignée, pour que le buff éventuel s'applique
+    // aux dégâts et à la survie du reste du combat.
+    void AddPendingCreatureDamage(int creatureID, int amount)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureID, out CreatureLogic creature))
+        {
+            pendingDamage.TryGetValue(creatureID, out int existingFallback);
+            pendingDamage[creatureID] = existingFallback + amount;
+            return;
+        }
+
+        bool wasAliveBefore = !IsEffectivelyDead(creature);
+        pendingDamage.TryGetValue(creatureID, out int existing);
+        pendingDamage[creatureID] = existing + amount;
+
+        if (wasAliveBefore && IsEffectivelyDead(creature) && !creature.OnDeathResolvedInBattle)
+        {
+            Debug.Log($"[OnDeath:{zoneView.name}] Mort prédite en planification — {creature.DisplayName}(ID:{creature.UniqueCreatureID}) — résolution immédiate de OnDeath");
+            creature.ResolvePredictedBattleDeath();
+        }
     }
 
     // IsPendingDeath couvre les morts de BattleStart ; pendingDamage >= Health couvre les morts en séquence de Battle
