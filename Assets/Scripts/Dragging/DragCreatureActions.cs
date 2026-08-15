@@ -73,6 +73,12 @@ public class DragCreatureActions : DraggingActions {
             idHolder = GetComponentInParent<IDHolder>();
 
         originArea = playerOwner.SelectedPArea();
+        if (originArea == null)
+        {
+            CreatureLogic startDragCreatureLogic = GetCreatureLogic();
+            if (startDragCreatureLogic != null)
+                originArea = playerOwner.GetPlayerAreaByID(startDragCreatureLogic.BaseID);
+        }
         whereIsThisCreature.VisualState = VisualStates.Dragging;
         
         // enable target graphic
