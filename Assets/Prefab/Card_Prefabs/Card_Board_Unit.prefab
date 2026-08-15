@@ -64,9 +64,13 @@ MonoBehaviour:
   pendingMoveArrow: {fileID: 2621815310663996257}
   arrowOriginOffset: {x: 0, y: 0, z: 0}
   arrowScrollSpeed: 1
+  pendingMoveDarkenAmount: 0.3
+  pendingMoveArrowVisibleDuration: 1
+  pendingMoveArrowFadeDuration: 3
   isGhost: 0
   IsPendingMoveGhost: 0
   PendingMoveSourceCreatureID: -1
+  PendingMoveOrigin: {fileID: 0}
   PendingMoveGhost: {fileID: 0}
 --- !u!114 &7802661973951423628
 MonoBehaviour:
@@ -1854,6 +1858,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3144538611243498523, guid: 1145597884bafd5488c2423527404361, type: 3}
       propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661540824057357452, guid: 1145597884bafd5488c2423527404361, type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3661540824057357452, guid: 1145597884bafd5488c2423527404361, type: 3}
+      propertyPath: m_DynamicOccludee
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3661540824057357452, guid: 1145597884bafd5488c2423527404361, type: 3}

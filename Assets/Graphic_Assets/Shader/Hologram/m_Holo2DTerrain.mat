@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: m_Holo2D-PlayerBorders
+  m_Name: m_Holo2DTerrain
   m_Shader: {fileID: -6465566751694194690, guid: b03e36b938d1dce41a179928f8bb95d7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -40,7 +40,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SacnTex:
-        m_Texture: {fileID: 2800000, guid: 510bfdbebb3d0bc45afe603760c40049, type: 3}
+        m_Texture: {fileID: 2800000, guid: 717727c5be5347c47b18ea9d6287f227, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ScanLineTexture2D:
@@ -81,9 +81,9 @@ Material:
     - _ZWriteControl: 0
     m_Colors:
     - _FlickerStrengh: {r: 0.05, g: 0.05, b: 0, a: 0}
-    - _FresnelColor: {r: 0, g: 4.8037834, b: 7.4642644, a: 1}
-    - _ScanLineSpeed: {r: 0.05, g: 0.05, b: 0, a: 0}
-    - _ScanLineTilling: {r: 0.9, g: 0.9, b: 0, a: 0}
+    - _FresnelColor: {r: 0, g: 2.7268713, b: 4.2370954, a: 1}
+    - _ScanLineSpeed: {r: 0, g: 0, b: 0, a: 0}
+    - _ScanLineTilling: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &5874985346560445716

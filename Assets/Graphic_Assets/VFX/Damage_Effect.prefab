@@ -58,14 +58,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6603774, g: 0.21493416, b: 0.21493416, a: 1}
+  m_Color: {r: 1, g: 0.33895904, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -583723805, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1e1d8c36b99788e4fbb5776cbdf996c3, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -149,8 +149,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282795756
-  m_fontColor: {r: 0.9245283, g: 0.2747419, b: 0.2747419, a: 1}
+    rgba: 4278979647
+  m_fontColor: {r: 0.24528301, g: 0.047436804, b: 0.047436804, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -376,23 +376,11 @@ MonoBehaviour:
   damagePrefab: {fileID: 0}
   textPrefab: {fileID: 0}
   splashes:
-  - {fileID: -583723805, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -583723805, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 630426766, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 227918025, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 1702095689, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 1450930260, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 1559792411, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -780562160, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -731116327, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 880040156, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -812875051, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 1033875831, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 459527160, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: 1717083276, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -1141703174, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -2007088051, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
-  - {fileID: -1232208374, guid: aa331541fbbc2cd48bbf68fb4fa9c991, type: 3}
+  - {fileID: 21300000, guid: 910a87312ba4108419022ea774c18d05, type: 3}
+  - {fileID: 21300000, guid: 1e1d8c36b99788e4fbb5776cbdf996c3, type: 3}
+  - {fileID: 21300000, guid: a3433cec50cc88c49ab72034b0496f70, type: 3}
+  - {fileID: 21300000, guid: 22b1e5f8133c2394b8c092e28fe6d9df, type: 3}
+  - {fileID: 21300000, guid: ed609a5c586cdd4498cbe92e7c1b26d5, type: 3}
   damageImage: {fileID: 1331067025434292697}
   cg: {fileID: 938873067984362573}
   amountText: {fileID: 647838653913987161}

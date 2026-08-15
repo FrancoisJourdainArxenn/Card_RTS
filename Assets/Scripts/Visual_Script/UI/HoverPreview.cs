@@ -60,6 +60,7 @@ public class HoverPreview : MonoBehaviour
         if (BuildingShopVisual.IsOpen) return;
         OverCollider = true;
         TryActivateEnemyGlow();
+        GetComponentInParent<OneCreatureManager>()?.SetHovered(true);
         if (PreviewsAllowed && ThisPreviewEnabled)
         {
             PreviewThisObject();
@@ -71,6 +72,7 @@ public class HoverPreview : MonoBehaviour
     {
         OverCollider = false;
         TryDeactivateEnemyGlow();
+        GetComponentInParent<OneCreatureManager>()?.SetHovered(false);
         if (!PreviewingSomeCard())
             StopAllPreviews();
     }

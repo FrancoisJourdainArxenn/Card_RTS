@@ -416,12 +416,13 @@ public class DragCreatureActions : DraggingActions {
         OneCreatureManager ghostManager = ghostGO.GetComponent<OneCreatureManager>();
         ghostManager.IsPendingMoveGhost = true;
         ghostManager.PendingMoveSourceCreatureID = idHolder.UniqueID;
-        ghostManager.SetPending(true);
+        ghostManager.PendingMoveOrigin = manager;
         ghostManager.CanReorderNow = true;
         ghostManager.CanMoveNow = false;
         ghostManager.UpdateGlow();
 
         manager.PendingMoveGhost = ghostGO;
+        manager.SetPending(true); // la carte d'origine s'assombrit tant que le déplacement est en attente, le ghost reste net
     }
 
     private void ResetDragElements()
