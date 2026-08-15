@@ -8,8 +8,9 @@ public class DealDamageCommand : Command
     private int healthAfter;
     private EffectVisualData visualData;
     private float speedMultiplier;
+    private Vector3? originPosition;
 
-    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1, EffectVisualData visualData = null, float speedMultiplier = 1f)
+    public DealDamageCommand(int targetID, int amount, int healthAfter, int sourceID = -1, EffectVisualData visualData = null, float speedMultiplier = 1f, Vector3? originPosition = null)
     {
         this.targetID = targetID;
         this.amount = amount;
@@ -17,6 +18,7 @@ public class DealDamageCommand : Command
         this.sourceID = sourceID;
         this.visualData = visualData;
         this.speedMultiplier = speedMultiplier;
+        this.originPosition = originPosition;
     }
 
     public override void StartCommandExecution()
@@ -27,7 +29,18 @@ public class DealDamageCommand : Command
 
         if (visualData != null)
         {
-            target.GetComponent<VfxManager>()?.Play(visualData, amount);
+            VfxManager vfxManager = target.GetComponent<VfxManager>();
+            if (visualData.travelFromSource && originPosition.HasValue && vfxManager != null)
+            {
+                vfxManager.PlayProjectile(visualData, amount, originPosition.Value, () =>
+                {
+                    ApplyDamageVisual(target);
+                    CommandExecutionComplete();
+                });
+                return;
+            }
+
+            vfxManager?.Play(visualData, amount);
             ApplyDamageVisual(target);
             CommandExecutionComplete();
             return;
@@ -60,6 +73,8 @@ public class DealDamageCommand : Command
 
     private void ApplyDamageVisual(GameObject target)
     {
+        if (target == null) return;
+
         bool isPlayer = targetID == GlobalSettings.Instance.LowPlayer.PlayerID
                      || targetID == GlobalSettings.Instance.TopPlayer.PlayerID;
         if (isPlayer)

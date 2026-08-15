@@ -47,6 +47,31 @@ public class VfxManager : MonoBehaviour
         }
     }
 
+    public void PlayProjectile(EffectVisualData data, int amount, Vector3 origin, System.Action onImpact)
+    {
+        if (data == null || data.vfxPrefab == null) { onImpact?.Invoke(); return; }
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null || !FogOfWarManager.Instance.IsZoneFogged(zone);
+        if (!isVisible) { onImpact?.Invoke(); return; }
+
+        Vector3 destination = transform.position;
+        float speed = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileSpeed : 18f;
+        float minDur = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileMinDuration : 0.12f;
+        float distance = Vector3.Distance(origin, destination);
+        float duration = Mathf.Max(minDur, speed > 0.01f ? distance / speed : minDur);
+
+        GameObject vfx = Instantiate(data.vfxPrefab, origin, Quaternion.identity);
+        RangedProjectile projScript = vfx.AddComponent<RangedProjectile>();
+        projScript.Play(origin, destination, duration, () =>
+        {
+            var config = vfx.GetComponent<VfxAmountConfig>();
+            if (config != null)
+                VisualFeedbackEffect.CreateTextEffect(destination, amount, config.textColor, config.prefix);
+            onImpact?.Invoke();
+        });
+    }
+
     public void PlaySecond(EffectVisualData data, int amount)
     {
         if (data == null || data.vfxPrefab == null) return;
