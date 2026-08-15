@@ -36,6 +36,13 @@ public class TableVisual : MonoBehaviour
     // annulation les remette instantanément en place. Liste (pas HashSet) pour garder un ordre d'attente stable.
     private readonly List<GameObject> _pendingRowEndCreatures = new List<GameObject>();
 
+    // Relayout(s) reçus pendant qu'une attaque était en vol (voir CreatureAttackVisual.AnyAttackInFlight) :
+    // rejoués une seule fois, avec la position à jour de toutes les créatures, dès que la dernière
+    // attaque en vol se termine — pour ne jamais faire glisser une cible sous une charge/un projectile
+    // déjà lancé vers sa position figée.
+    private bool _relayoutPending = false;
+    private readonly List<System.Action> _pendingRelayoutCallbacks = new List<System.Action>();
+
     // Dernier ordre connu (IDs permanents, voir PermanentIDOf) pour chaque rangée, reçu via
     // ApplyCreatureOrder. Réappliqué idempotemment à chaque arrivée d'une créature en attente
     // (voir MoveCreatureToIndex) : la position finale d'une créature ne dépend jamais d'un index
@@ -75,6 +82,16 @@ public class TableVisual : MonoBehaviour
     void Awake()
     {
         col = GetComponent<BoxCollider>();
+    }
+
+    void OnEnable()
+    {
+        CreatureAttackVisual.OnAllAttacksResolved += FlushPendingRelayout;
+    }
+
+    void OnDisable()
+    {
+        CreatureAttackVisual.OnAllAttacksResolved -= FlushPendingRelayout;
     }
 
     public void RefreshSlotsPositions() => PlaceCreaturesOnNewSlots();
@@ -329,6 +346,36 @@ public class TableVisual : MonoBehaviour
     // sont réellement terminés — à utiliser avant de libérer la file de commandes (Command.CommandExecutionComplete),
     // pour qu'une attaque suivante ne se déclenche jamais pendant qu'une créature glisse encore vers son slot.
     void PlaceCreaturesOnNewSlots(System.Action onComplete = null)
+    {
+        if (CreatureAttackVisual.AnyAttackInFlight)
+        {
+            // Une attaque est en vol quelque part (peu importe la table) : on ne bouge personne
+            // tant qu'elle n'est pas résolue, sinon sa cible pourrait glisser sous la charge/le
+            // projectile déjà lancé vers une position figée. Rejoué par FlushPendingRelayout.
+            _relayoutPending = true;
+            if (onComplete != null) _pendingRelayoutCallbacks.Add(onComplete);
+            return;
+        }
+
+        DoPlaceCreaturesOnNewSlots(onComplete);
+    }
+
+    private void FlushPendingRelayout()
+    {
+        if (!_relayoutPending) return;
+        _relayoutPending = false;
+
+        List<System.Action> callbacks = new List<System.Action>(_pendingRelayoutCallbacks);
+        _pendingRelayoutCallbacks.Clear();
+
+        DoPlaceCreaturesOnNewSlots(() =>
+        {
+            foreach (System.Action callback in callbacks)
+                callback();
+        });
+    }
+
+    private void DoPlaceCreaturesOnNewSlots(System.Action onComplete)
     {
         int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
         int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;

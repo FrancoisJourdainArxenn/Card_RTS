@@ -15,6 +15,7 @@ public class SceneReloader: MonoBehaviour {
         BuildingLogic.BuildingsCreatedThisGame.Clear();
         Command.CommandQueue.Clear();
         Command.CommandExecutionComplete();
+        CreatureAttackVisual.ResetFlightCounter();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

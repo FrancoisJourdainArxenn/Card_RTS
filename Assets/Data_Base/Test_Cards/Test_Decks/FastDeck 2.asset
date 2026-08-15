@@ -15,8 +15,7 @@ MonoBehaviour:
   deckName: Test Deck (2)
   heroCard: {fileID: 11400000, guid: 0cfd8c47834179d46bd536fdb5cde6b3, type: 2}
   cards:
-  - {fileID: 11400000, guid: 47d9edc581f78c148b7417ac42d9536f, type: 2}
-  - {fileID: 11400000, guid: 7d8aa53131a4fe24d97c8dda6ad114f8, type: 2}
+  - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
   - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}
   - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
   - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}

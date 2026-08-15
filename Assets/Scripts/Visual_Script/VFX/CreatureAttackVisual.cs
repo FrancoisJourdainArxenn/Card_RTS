@@ -19,6 +19,28 @@ public class CreatureAttackVisual : MonoBehaviour
     float moveDuration = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackMoveDuration : 0.4f;
     float postDelay    = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackPostDelay : 0.8f;
 
+    // Nombre d'attaques actuellement "en vol" (windup → impact → retour), tous attaquants confondus.
+    // Tant qu'au moins une attaque est en vol, TableVisual ne doit pas repositionner ses rangées :
+    // la charge/le projectile vise une position figée au moment de la construction de la séquence,
+    // un relayout pendant ce laps de temps la ferait viser un slot vide ou une autre créature.
+    private static int _attacksInFlight = 0;
+    public static bool AnyAttackInFlight => _attacksInFlight > 0;
+    public static event System.Action OnAllAttacksResolved;
+
+    private static void BeginFlight() => _attacksInFlight++;
+
+    private static void EndFlight()
+    {
+        _attacksInFlight = Mathf.Max(0, _attacksInFlight - 1);
+        if (_attacksInFlight == 0)
+            OnAllAttacksResolved?.Invoke();
+    }
+
+    // À appeler quand une partie se termine anormalement (reload de scène) : sans ça, une attaque
+    // interrompue en plein vol laisserait le compteur bloqué > 0, gelant les relayouts de toutes
+    // les tables de la partie suivante jusqu'au relancement de l'appli.
+    public static void ResetFlightCounter() => _attacksInFlight = 0;
+
     void Awake()
     {
         manager = GetComponent<OneCreatureManager>();
@@ -195,6 +217,7 @@ public class CreatureAttackVisual : MonoBehaviour
         }
 
         bool moveDone = false;
+        BeginFlight();
         Sequence attackSeq = DOTween.Sequence();
         attackSeq.SetLink(gameObject);
         attackSeq.Append(transform.DOMove(windupPosition, windupDur).SetEase(Ease.OutSine));
@@ -257,6 +280,7 @@ public class CreatureAttackVisual : MonoBehaviour
             .OnComplete((TweenCallback)(() =>
             {
                 moveDone = true;
+                EndFlight();
                 try
                 {
                     if (this == null)
@@ -291,7 +315,14 @@ public class CreatureAttackVisual : MonoBehaviour
                     Command.CommandExecutionComplete();
                 }
             }))
-            .OnKill(() => { if (!moveDone) Command.CommandExecutionComplete(); });
+            .OnKill(() =>
+            {
+                if (!moveDone)
+                {
+                    EndFlight();
+                    Command.CommandExecutionComplete();
+                }
+            });
     }
 
 }

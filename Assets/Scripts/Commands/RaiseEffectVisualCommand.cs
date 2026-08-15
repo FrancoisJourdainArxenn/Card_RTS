@@ -14,6 +14,6 @@ public class RaiseEffectVisualCommand : Command
     public override void StartCommandExecution()
     {
         TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
-        DOVirtual.DelayedCall(1.5f, CommandExecutionComplete);
+        DOVirtual.DelayedCall(1f, CommandExecutionComplete);
     }
 }
