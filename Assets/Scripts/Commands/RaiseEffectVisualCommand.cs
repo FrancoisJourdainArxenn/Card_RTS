@@ -1,3 +1,5 @@
+using DG.Tweening;
+
 public class RaiseEffectVisualCommand : Command
 {
     readonly CardEffectData data;
@@ -12,6 +14,6 @@ public class RaiseEffectVisualCommand : Command
     public override void StartCommandExecution()
     {
         TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
-        CommandExecutionComplete();
+        DOVirtual.DelayedCall(1.5f, CommandExecutionComplete);
     }
 }
