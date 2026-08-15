@@ -14,6 +14,9 @@ public class Command
     // la CreatureDieCommand de la créature qui meurt (voir CreatureLogic.ScheduleBattleDeath).
     public static bool DeferForBattleReplay = false;
     private static readonly Dictionary<int, List<Action>> _deferredBySource = new();
+    // Actions de mort (CreatureDieCommand) mises à part de _deferredBySource et rejouées APRÈS
+    // celui-ci pour la même clé (voir FlushDeferredCommands) — voir CreatureLogic.MarkPendingDeath.
+    private static readonly Dictionary<int, List<Action>> _deferredDeathsBySource = new();
     // Source explicite pour RunDeferred (appelants hors EffectRegistry.Execute, ex: rejeu réseau
     // d'un token — voir Player.NetworkSpawnTokenToZone) — prioritaire sur EffectRegistry.CurrentSourceID.
     private static int? _explicitDeferSourceID;
@@ -23,10 +26,18 @@ public class Command
         if (DeferForBattleReplay)
         {
             int sourceID = _explicitDeferSourceID ?? EffectRegistry.CurrentSourceID;
-            Defer(sourceID, () => AddToQueue());
+            Defer(sourceID, AddToQueueImmediate);
             return;
         }
 
+        AddToQueueImmediate();
+    }
+
+    // Corps non différé d'AddToQueue — extrait pour que CreatureLogic.MarkPendingDeath puisse
+    // enqueue la CreatureDieCommand directement une fois qu'elle a déjà décidé, elle-même, de la
+    // reporter via DeferDeath plutôt que via le report générique (voir DeferDeath ci-dessous).
+    public void AddToQueueImmediate()
+    {
         CommandQueue.Enqueue(this);
         // Debug.Log($"[Queue] Enqueue {GetType().Name} — taille file: {CommandQueue.Count} | playingQueue={playingQueue}");
         if (!playingQueue)
@@ -37,6 +48,23 @@ public class Command
     {
         if (!_deferredBySource.TryGetValue(sourceID, out List<Action> list))
             _deferredBySource[sourceID] = list = new List<Action>();
+        list.Add(action);
+    }
+
+    // Report spécifique à la mort d'une créature (voir CreatureLogic.MarkPendingDeath) : une action
+    // normale (dégâts, projectile, popup...) et la mort qu'elle cause peuvent toutes deux être
+    // résolues pendant la MÊME résolution différée (ex: Sniper — On Battle Start: 2 dégâts à une
+    // cible aléatoire — tue sa cible avant même que le DealDamageCommand n'ait été mis en file,
+    // puisque TakeDamage/MarkPendingDeath s'exécute AVANT que l'appelant n'enqueue sa propre
+    // commande). Sans séparation, la mort se retrouve avant sa cause dans _deferredBySource, dans
+    // l'ordre où le code les a exécutées — la créature "meurt" à l'écran avant que le missile qui
+    // la tue n'ait eu la chance de partir. En gardant les morts dans une liste à part, rejouée
+    // seulement APRÈS la liste normale de la même clé (voir FlushDeferredCommands), la cause joue
+    // toujours avant sa conséquence, quel que soit l'ordre d'exécution du code qui les a émises.
+    public static void DeferDeath(int sourceID, Action action)
+    {
+        if (!_deferredDeathsBySource.TryGetValue(sourceID, out List<Action> list))
+            _deferredDeathsBySource[sourceID] = list = new List<Action>();
         list.Add(action);
     }
 
@@ -80,15 +108,35 @@ public class Command
 
     public static void FlushDeferredCommands(int sourceID)
     {
-        if (!_deferredBySource.TryGetValue(sourceID, out List<Action> list)) return;
-        _deferredBySource.Remove(sourceID);
-        foreach (Action action in list)
-            action();
+        if (_deferredBySource.TryGetValue(sourceID, out List<Action> list))
+        {
+            _deferredBySource.Remove(sourceID);
+            foreach (Action action in list)
+                action();
+        }
+
+        // Les morts de cette même clé rejouent APRÈS leurs causes ci-dessus — voir DeferDeath.
+        if (_deferredDeathsBySource.TryGetValue(sourceID, out List<Action> deaths))
+        {
+            _deferredDeathsBySource.Remove(sourceID);
+            foreach (Action action in deaths)
+                action();
+        }
     }
 
     // Permet à un appelant (ex: ZoneCombatResolver.EnqueueBattleCommands) de savoir s'il y a
     // quelque chose à révéler pour cette clé avant de décider d'attendre la caméra ou non.
-    public static bool HasDeferredCommands(int sourceID) => _deferredBySource.ContainsKey(sourceID);
+    public static bool HasDeferredCommands(int sourceID) =>
+        _deferredBySource.ContainsKey(sourceID) || _deferredDeathsBySource.ContainsKey(sourceID);
+
+    // Clé de report actuellement active (celle passée au RunDeferred englobant), ou null si on
+    // n'est pas dans un tel contexte. Utilisé par TokenGenerationSO.Execute pour transmettre la
+    // BONNE clé à travers le réseau (BroadCastTokenToZone → NetworkSpawnTokenToZone) — sans ça,
+    // le client ne peut pas savoir sous quelle clé re-différer le spawn du token : la clé dépend
+    // du trigger d'origine (ID de créature pour OnDeath, zoneDeferKey pour OnBattleStart, etc.),
+    // pas d'une seule convention fixe.
+    public static int? CurrentDeferSourceID =>
+        DeferForBattleReplay ? (_explicitDeferSourceID ?? EffectRegistry.CurrentSourceID) : (int?)null;
 
     public virtual void StartCommandExecution()
     {

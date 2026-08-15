@@ -63,7 +63,15 @@ public class TokenGenerationSO : EffectSO
                         int creatureID = IDFactory.GetUniqueID();
                         CreatureLogic spawned = SpawnToZone(context, visualData, out int tablePos, creatureID, cardID);
                         if (spawned != null)
-                            GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, Command.DeferForBattleReplay);
+                        {
+                            // La clé de report active dépend du trigger d'origine (ID de créature pour
+                            // OnDeath, zoneDeferKey pour OnBattleStart...) — voir Command.CurrentDeferSourceID.
+                            // int.MinValue sert de sentinelle "pas de report" (aucune clé réelle n'y arrive :
+                            // ni un UniqueCreatureID, toujours positif, ni un zoneDeferKey, toujours proche de
+                            // -2 000 000 000 mais jamais égal à int.MinValue).
+                            int deferKey = Command.CurrentDeferSourceID ?? int.MinValue;
+                            GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey);
+                        }
                         break;
                 }
             }

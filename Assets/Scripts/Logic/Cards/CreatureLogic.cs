@@ -280,7 +280,20 @@ public class CreatureLogic: ILivable
         health = 0;
         IsPendingDeath = true;
         PendingDeathList.Add(this);
-        new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+
+        CreatureDieCommand dieCommand = new CreatureDieCommand(UniqueCreatureID, owner);
+        // Si cette mort est causée PENDANT la résolution différée d'un effet (ex: Sniper — On Battle
+        // Start: dégâts à une cible aléatoire qui s'avère mortelle), la commande qui l'a causée
+        // (DealDamageCommand, etc.) n'a pas encore été mise en file par son propre appelant — TakeDamage/
+        // le setter Health s'exécute AVANT que le code de l'effet ne reprenne la main pour enqueue sa
+        // commande. La déférer via le report générique (AddToQueue) la placerait donc AVANT sa cause
+        // dans la même liste. DeferDeath la met de côté séparément pour qu'elle rejoue seulement après
+        // (voir Command.FlushDeferredCommands) — la créature ne "meurt" jamais avant l'action qui la tue.
+        if (Command.DeferForBattleReplay)
+            Command.DeferDeath(Command.CurrentDeferSourceID ?? UniqueCreatureID, dieCommand.AddToQueueImmediate);
+        else
+            dieCommand.AddToQueue();
+
         Command.FlushDeferredCommands(UniqueCreatureID);
     }
 

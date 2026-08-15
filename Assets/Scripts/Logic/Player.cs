@@ -324,7 +324,7 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
-    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, int sourceEntityID, bool deferUntilSourceDeath, EffectVisualData visualData = null)
+    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, int deferKey, EffectVisualData visualData = null)
     {
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) { Debug.LogError($"[Token] PlayerArea introuvable baseID={baseID}"); return; }
@@ -373,13 +373,15 @@ public class Player : MonoBehaviour, ILivable
 
         // Ce ClientRpc peut arriver AVANT le déroulé animé de la bataille (voir BroadcastBattleStepsClientRpc) —
         // sans report, ces Command joueraient immédiatement à la réception, donc en tête de combat,
-        // au lieu d'attendre le moment où la créature source (sourceEntityID) meurt réellement à
-        // l'écran, comme côté hôte (voir CreatureLogic.ScheduleBattleDeath / Command.FlushDeferredCommands).
-        // Ne s'applique que si le serveur était réellement en train de résoudre un OnDeath par
-        // anticipation en combat (deferUntilSourceDeath) ; sinon (ex: ETB normal à la pose), le
-        // visuel doit s'afficher immédiatement, comme côté hôte.
-        if (deferUntilSourceDeath && sourceEntityID >= 0)
-            Command.RunDeferred(sourceEntityID, QueueVisuals);
+        // au lieu d'attendre le même moment que côté hôte : la mort de la créature source pour un
+        // token OnDeath (Command.FlushDeferredCommands(UniqueCreatureID), voir
+        // CreatureLogic.ScheduleBattleDeath), ou l'arrivée de la BattleCam sur la zone pour un token
+        // OnBattleStart (Command.FlushDeferredCommands(zoneDeferKey), voir
+        // ZoneCombatResolver.EnqueueBattleCommands). deferKey (== int.MinValue si pas de report,
+        // voir Command.CurrentDeferSourceID) porte déjà la bonne clé, quel que soit le trigger
+        // d'origine — pas besoin de la deviner ici.
+        if (deferKey != int.MinValue)
+            Command.RunDeferred(deferKey, QueueVisuals);
         else
             QueueVisuals();
     }

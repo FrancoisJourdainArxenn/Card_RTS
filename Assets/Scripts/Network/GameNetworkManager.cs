@@ -1388,13 +1388,15 @@ public class GameNetworkManager : NetworkBehaviour
 
     // cardID/creatureID sont déjà alloués par l'appelant (TokenGenerationSO.Execute), qui a créé
     // la créature en autorité serveur AVANT cet appel — voir TokenToZoneClientRpc ci-dessous.
-    // deferUntilSourceDeath reflète Command.DeferForBattleReplay au moment de l'appel serveur :
-    // le visuel ne doit être différé jusqu'à la mort de sourceEntityID que si le token provient
-    // d'un OnDeath résolu par anticipation en combat, pas d'un ETB normal à la pose.
-    public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, bool deferUntilSourceDeath)
+    // deferKey reflète Command.CurrentDeferSourceID au moment de l'appel serveur (int.MinValue =
+    // pas de report) : le visuel ne doit être différé que si le token provient d'un trigger résolu
+    // par anticipation en combat (OnDeath → ID de créature, OnBattleStart → zoneDeferKey, etc.),
+    // pas d'un ETB normal à la pose. La clé elle-même dépend du trigger d'origine, pas d'une seule
+    // convention fixe — voir Command.CurrentDeferSourceID.
+    public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, int deferKey)
     {
         if (!IsServer) return;
-        TokenToZoneClientRpc(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID, deferUntilSourceDeath);
+        TokenToZoneClientRpc(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID, deferKey);
     }
 
     // Le serveur a déjà créé cette créature localement, en autorité, dans TokenGenerationSO.SpawnToZone
@@ -1402,13 +1404,13 @@ public class GameNetworkManager : NetworkBehaviour
     // voir ZoneCombatResolver.NotifyCreatureAddedDuringPlanning). L'hôte reçoit aussi ce ClientRpc
     // (il est son propre client) mais ne doit PAS recréer la créature ; seuls les autres clients le font.
     [ClientRpc]
-    void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, bool deferUntilSourceDeath)
+    void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, int deferKey)
     {
         if (IsServer) return;
         CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
-        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID, sourceEntityID, deferUntilSourceDeath, visualData);
+        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID, deferKey, visualData);
     }
 
 
