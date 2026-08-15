@@ -95,16 +95,7 @@ public class BuildingLogic : ILivable
     {
         owner.playedCards.Buildings.Remove(this);
         EffectRegistry.NotifyBuildingDied(this, owner);
-
-        BuildingDieCommand dieCommand = new BuildingDieCommand(UniqueBuildingID);
-        // Même raison que CreatureLogic.MarkPendingDeath : si ce bâtiment meurt PENDANT la
-        // résolution différée d'un effet (ex: un OnBattleStart qui lui inflige des dégâts mortels),
-        // la commande qui l'a tué n'a pas encore été mise en file par son propre appelant — router
-        // via DeferDeath garantit qu'elle rejoue après sa cause plutôt qu'avant.
-        if (Command.DeferForBattleReplay)
-            Command.DeferDeath(Command.CurrentDeferSourceID ?? UniqueBuildingID, dieCommand.AddToQueueImmediate);
-        else
-            dieCommand.AddToQueue();
+        new BuildingDieCommand(UniqueBuildingID).AddToQueue();
     }
 
     // Équivalent de CreatureLogic.ResolveBattleStartEffects, pour les bâtiments. Pas de notion
