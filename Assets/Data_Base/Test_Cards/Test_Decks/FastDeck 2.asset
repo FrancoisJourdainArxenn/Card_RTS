@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: FastDeck 2
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Test Deck (2)
+  difficultyLevel: 0
+  deckTooltip: OnDeath
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
   - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
   - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}
   - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
-  - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
+  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
   buildings: []

@@ -374,7 +374,7 @@ public class Player : MonoBehaviour, ILivable
         // Ce ClientRpc peut arriver AVANT le déroulé animé de la bataille (voir BroadcastBattleStepsClientRpc) —
         // sans report, ces Command joueraient immédiatement à la réception, donc en tête de combat,
         // au lieu d'attendre le même moment que côté hôte : la mort de la créature source pour un
-        // token OnDeath (Command.FlushDeferredCommands(UniqueCreatureID), voir
+        // token OnDeath (Command.FlushDeferredCommands(CreatureLogic.OnDeathDeferKey(...)), voir
         // CreatureLogic.ScheduleBattleDeath), ou l'arrivée de la BattleCam sur la zone pour un token
         // OnBattleStart (Command.FlushDeferredCommands(zoneDeferKey), voir
         // ZoneCombatResolver.EnqueueBattleCommands). deferKey (== int.MinValue si pas de report,
@@ -672,8 +672,6 @@ public class Player : MonoBehaviour, ILivable
                 continue;
             }
             creatureManager.CanReorderNow = canMove && !removeAllHighlights;
-            Debug.Log($"[Celerity] Highlight refresh pour {crl.DisplayName} (ID:{crl.UniqueCreatureID}) — canMove={canMove}, MovementsLeftThisTurn={crl.MovementsLeftThisTurn}");
-
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
         }

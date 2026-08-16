@@ -4,30 +4,29 @@ public enum TriggerType
     // Passive,
     // OnActivation,
     // Card Lifecycle
-    OnPlay,
+    OnPlay = 0,
     // OnAmbush,
     // OnAttack,
     // OnTakeDamage,
-    OnDeath,
+    OnDeath = 1,
     // Phases
-    OnRegroup,
-    OnCommand,
-    OnBeginCombat,
-    OnBattleEnd,
-    OnEndTurn,
+    OnRegroup = 2,
+    OnCommand = 3,
+    OnBeginCombat = 4,
+    OnBattleStart = 14, // déclenché par zone, au moment où CETTE zone commence son combat — pas à l'entrée de phase comme OnBeginCombat
+    OnBattleEnd = 5,
+    OnEndTurn = 6,
+   
     // Other objects dying
-    OnFriendlyCreatureDies,
-    OnEnemyCreatureDies,
-    OnFriendlyBuildingDies,
-    OnEnemyBuildingDies,
+    OnFriendlyCreatureDies = 7,
+    OnEnemyCreatureDies = 8,
+    OnFriendlyBuildingDies = 9,
+    OnEnemyBuildingDies = 10,
 
     // Token
-    OnTokenCreated,
+    OnTokenCreated = 11,
+    
     //Reactions
-    OnCardPlayed,
-    OnRessourceSpent,
-    // Zone (déclenché par zone, au moment où CETTE zone commence son combat — pas à l'entrée
-    // de phase comme OnBeginCombat). Ajouté en dernier pour ne pas décaler les valeurs des
-    // triggers existants déjà sérialisés sur les cartes.
-    OnBattleStart,
+    OnCardPlayed = 12,
+    OnRessourceSpent = 13,
 }

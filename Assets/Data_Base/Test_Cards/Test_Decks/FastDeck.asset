@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: FastDeck
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Test Deck (Zerg)
+  difficultyLevel: 0
+  deckTooltip: OnAttack
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
   - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
   - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
-  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
   - {fileID: 11400000, guid: 76b2768144f9fbb46b668ff29ff161c8, type: 2}
   buildings:
   - {fileID: 11400000, guid: 7e435039d49311b40b7797527b6db2df, type: 2}
