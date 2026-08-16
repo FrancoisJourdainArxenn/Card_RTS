@@ -329,7 +329,7 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
     }
 
-    public void RemoveCreatureWithID(int IDToRemove)
+    public void RemoveCreatureWithID(int IDToRemove, float reorderDelay = 0f)
     {
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
         if (!MeleeCreaturesOnTable.Remove(creatureToRemove))
@@ -339,7 +339,22 @@ public class TableVisual : MonoBehaviour
         // On attend la fin réelle du repositionnement (tween DOMove) avant de libérer la file de
         // commandes : sinon la prochaine attaque de la queue peut démarrer alors que les créatures de
         // la rangée sont encore en train de glisser vers leur nouveau slot, et l'attaquant vise à côté.
-        PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+        // reorderDelay (durée du VFX de mort de la créature qui vient d'être détruite ci-dessus)
+        // retarde uniquement ce re-order, jamais la disparition elle-même.
+        if (reorderDelay <= 0f)
+        {
+            PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+            return;
+        }
+
+        bool fired = false;
+        DOVirtual.DelayedCall(reorderDelay, () =>
+            {
+                fired = true;
+                PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+            })
+            .SetLink(gameObject)
+            .OnKill(() => { if (!fired) Command.CommandExecutionComplete(); });
     }
 
     // onComplete (optionnel) : appelé une fois que tous les tweens de repositionnement (mêlée + distance)

@@ -69,6 +69,7 @@ public class CreatureLogic: ILivable
 
     public bool IsPendingDeath { get; private set; }
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
+    private bool _deathVisualQueued;
 
     // True once OnDeath has already been resolved ahead of time during battle planning
     // (see ResolvePredictedBattleDeath). Prevents NotifyCreatureDied from firing OnDeath
@@ -272,16 +273,50 @@ public class CreatureLogic: ILivable
     // IsPendingDeath des deux appelants), aussi bien depuis ScheduleBattleDeath (mort via une
     // BattleStepRecord planifiée) que depuis le setter de Health (mort via des dégâts directs,
     // ex: un effet OnDeath comme "Acid Explosion" qui tue une autre créature pendant la
-    // planification). Les deux chemins doivent enqueue la même CreatureDieCommand et flush les
-    // mêmes commandes différées — sans ça, une mort par dégâts directs ne joue jamais visuellement
-    // et laisse d'éventuelles commandes différées orphelines dans Command._deferredBySource.
+    // planification).
+    //
+    // Si on est DANS un Command.RunDeferred (résolution anticipée OnBattleStart/OnDeath), la clé de
+    // report et la décision de reporter doivent être capturées MAINTENANT, à l'instant exact de la
+    // mort — pas plus tard dans QueuePendingDeathVisuals() : entre les deux, un tout AUTRE contexte
+    // (une autre zone, un autre RunDeferred) peut s'exécuter et changer Command.DeferForBattleReplay/
+    // CurrentDeferSourceID, ce qui ferait rejouer cette mort EN DIRECT au lieu de la laisser reportée
+    // — détruisant la créature avant que sa propre zone n'ait fini de révéler ses effets OnBattleStart
+    // (symptôme observé : désync réseau + ShowDeathPending sur un GameObject déjà détruit).
     private void MarkPendingDeath()
     {
         health = 0;
         IsPendingDeath = true;
         PendingDeathList.Add(this);
-        new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
-        Command.FlushDeferredCommands(UniqueCreatureID);
+
+        if (Command.DeferForBattleReplay)
+        {
+            int deferKey = Command.CurrentDeferSourceID ?? UniqueCreatureID;
+            Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) DIFFÉRÉE sous clé {deferKey}");
+            CreatureDieCommand dieCommand = new CreatureDieCommand(UniqueCreatureID, owner);
+            Command.DeferDeath(deferKey, dieCommand.AddToQueueImmediate);
+            Command.DeferDeath(deferKey, () => Command.FlushDeferredCommands(UniqueCreatureID));
+            _deathVisualQueued = true;
+        }
+        else
+        {
+            Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) EN DIRECT (pas de RunDeferred actif) — sera flush par QueuePendingDeathVisuals");
+        }
+    }
+
+    // Met en file la CreatureDieCommand de toute créature marquée mourante EN DEHORS d'un contexte
+    // différé (les morts survenues À L'INTÉRIEUR d'un Command.RunDeferred sont déjà prises en charge
+    // à l'instant même de la mort, voir MarkPendingDeath ci-dessus). Appelé par l'orchestrateur juste
+    // après avoir mis en file ses propres commandes "cause" (voir Command.FlushPendingDeaths).
+    public static void QueuePendingDeathVisuals()
+    {
+        foreach (CreatureLogic creature in PendingDeathList)
+        {
+            if (creature._deathVisualQueued) continue;
+            creature._deathVisualQueued = true;
+            Debug.Log($"[DBG][QueuePendingDeathVisuals] mise en file EN DIRECT de {creature.DisplayName}(ID:{creature.UniqueCreatureID}) — DeferForBattleReplay actuel={Command.DeferForBattleReplay}");
+            new CreatureDieCommand(creature.UniqueCreatureID, creature.owner).AddToQueue();
+            Command.FlushDeferredCommands(creature.UniqueCreatureID);
+        }
     }
 
     // Résout OnDeath immédiatement, à l'instant où ZoneCombatResolver prédit cette mort

@@ -527,6 +527,7 @@ public class ZoneCombatResolver : MonoBehaviour
         // ils se retrouvent après elles dans la file (voir ZoneBattleStartRevealCommand). La barrière
         // ne fait qu'attendre l'arrivée de la BattleCam sur la zone avant de laisser la LECTURE de la
         // file continuer ; elle ne retarde jamais l'ajout des popups eux-mêmes.
+        Debug.Log($"[DBG][EnqueueBattleCommands] zone={zoneView.name} zoneDeferKey={zoneDeferKey} HasDeferredCommands={Command.HasDeferredCommands(zoneDeferKey)}");
         if (Command.HasDeferredCommands(zoneDeferKey))
         {
             new ZoneBattleStartRevealCommand(zoneView.transform.position).AddToQueue();
@@ -714,6 +715,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     break;
                 }
             }
+            Command.FlushPendingDeaths();
         }
         Debug.Log($"[Enqueue:{zoneView.name}] Terminé — {steps.Count} step(s) traité(s), file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
     }
@@ -817,18 +819,29 @@ public class ZoneCombatResolver : MonoBehaviour
             });
         }
 
-        foreach (KeyValuePair<int, List<BattleStepRecord>> kvp in stepsByResolver)
+        // Boucle sur TOUS les resolvers enregistrés, pas seulement ceux présents dans stepsByResolver :
+        // une zone entièrement vidée par un effet OnBattleStart (plus aucun défenseur à combattre) n'a
+        // aucun BattleStepRecord et n'apparaîtrait donc jamais ici — or c'est justement EnqueueBattleCommands
+        // qui déclenche le flush des commandes OnBattleStart différées de cette zone (popup, projectile,
+        // ShowDeathPending, CreatureDieCommand). Sans cet appel, elles restent bloquées dans
+        // Command._deferredBySource/_deferredDeathsBySource pour toujours : l'effet s'applique bien en
+        // logique (la cible meurt), mais rien ne se voit jamais (symptôme observé avec Sniper 1).
+        // EnqueueBattleCommands([]) est un no-op sûr pour une zone sans rien à révéler (garde
+        // Command.HasDeferredCommands en tout début de méthode).
+        for (int resolverIdx = 0; resolverIdx < allResolvers.Count; resolverIdx++)
         {
-            if (kvp.Key < 0 || kvp.Key >= allResolvers.Count) continue;
+            List<BattleStepRecord> steps = stepsByResolver.TryGetValue(resolverIdx, out List<BattleStepRecord> found)
+                ? found : new List<BattleStepRecord>();
+            Debug.Log($"[DBG][EnqueueAllReconstructed] traitement resolver #{resolverIdx} ({allResolvers[resolverIdx].name}) — {steps.Count} step(s)");
             try
             {
-                allResolvers[kvp.Key].EnqueueBattleCommands(kvp.Value);
+                allResolvers[resolverIdx].EnqueueBattleCommands(steps);
             }
             catch (System.Exception e)
             {
-                // Sans ce filet, une exception ici saute tous les resolvers suivants dans ce dictionnaire
-                // (donc leurs combats entiers) côté client, pour la même raison que dans TurnManager.DelayedBattleStart.
-                Debug.LogError($"[EnqueueAllReconstructed] EXCEPTION pour resolver #{kvp.Key} — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
+                // Sans ce filet, une exception ici saute tous les resolvers suivants (donc leurs combats
+                // entiers) côté client, pour la même raison que dans TurnManager.DelayedBattleStart.
+                Debug.LogError($"[EnqueueAllReconstructed] EXCEPTION pour resolver #{resolverIdx} — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
             }
         }
     }

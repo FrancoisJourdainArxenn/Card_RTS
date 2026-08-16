@@ -234,6 +234,10 @@ public static class EffectRegistry
         if (!data.RequiresPlayerInput)
             new RaiseEffectVisualCommand(data, context).AddToQueue();
 
+        // Met en file les morts déclenchées par cet effet seulement maintenant, après ses propres
+        // commandes "cause" ci-dessus — voir Command.FlushPendingDeaths.
+        Command.FlushPendingDeaths();
+
         CurrentSourceID = -1;
     }
 

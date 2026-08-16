@@ -245,16 +245,22 @@ public class GameNetworkManager : NetworkBehaviour
         // OnBattleStart précède logiquement les dégâts/morts de combat : rejoué en premier.
         if (!IsServer)
             for (int i = 0; i < battleStartSourceIDs.Length; i++)
+            {
+                Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
                 ZoneCombatResolver.ReplayOnBattleStartEffect(
                     battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
                     battleStartEffectIndexes[i], battleStartSeeds[i]);
+            }
 
         // Le serveur a déjà résolu ces OnDeath réellement pendant sa propre planification
         // (CreatureLogic.ResolvePredictedBattleDeath) — seuls les autres clients rejouent, avec
         // la même seed, pour obtenir exactement le même ciblage/résultat.
         if (!IsServer)
             for (int i = 0; i < onDeathSourceIDs.Length; i++)
+            {
+                Debug.Log($"[DBG][ApplyCanonical] OnDeath replay #{i} — sourceID={onDeathSourceIDs[i]} effectIdx={onDeathEffectIndexes[i]}");
                 CreatureLogic.ReplayOnDeathBattleEffect(onDeathSourceIDs[i], onDeathEffectIndexes[i], onDeathSeeds[i]);
+            }
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)

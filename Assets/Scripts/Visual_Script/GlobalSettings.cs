@@ -43,6 +43,7 @@ public class GlobalSettings : MonoBehaviour
     public float ProjectileSpeed = 18f;        // vitesse du projectile (unités/seconde) — la durée de vol dépend de la distance réelle à la cible
     public float ProjectileMinDuration = 0.12f; // durée de vol plancher, pour qu'un tir à courte distance ou un attaquant très rapide reste visible
     public float MeleeMultiTargetVfxLifetime = 1.5f; // délai avant destruction du Melee VFX (cibles secondaires), le temps qu'il finisse de se jouer
+    public float RaiseEffectVisualDelay = 0.5f; // délai avant que RaiseEffectVisualCommand ne se termine
 
     [Header("Pop Animation")]
     public float popStrength = 0.35f;

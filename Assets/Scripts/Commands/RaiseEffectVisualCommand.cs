@@ -1,3 +1,4 @@
+using UnityEngine;
 using DG.Tweening;
 
 public class RaiseEffectVisualCommand : Command
@@ -14,6 +15,6 @@ public class RaiseEffectVisualCommand : Command
     public override void StartCommandExecution()
     {
         TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
-        DOVirtual.DelayedCall(1f, CommandExecutionComplete);
+        DOVirtual.DelayedCall(GlobalSettings.Instance.RaiseEffectVisualDelay, CommandExecutionComplete);
     }
 }

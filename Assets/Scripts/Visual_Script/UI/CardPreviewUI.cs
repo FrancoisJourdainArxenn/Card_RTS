@@ -43,7 +43,7 @@ public class CardPreviewUI : MonoBehaviour
     private List<GameObject> _autoEffectPreviews = new List<GameObject>();
     private Coroutine _autoEffectDismissCoroutine;
     private bool _batchActive = false;
-    [SerializeField] private float autoEffectDisplayDuration = 1f;
+    [SerializeField] private float autoEffectDisplayDuration = 0f;
 
     void Awake()
     {

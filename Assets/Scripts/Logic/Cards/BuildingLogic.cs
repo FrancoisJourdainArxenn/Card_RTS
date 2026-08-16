@@ -91,11 +91,36 @@ public class BuildingLogic : ILivable
         ActivationLeftThisTurn = activationForOneTurn;
     }
 
+    public static List<BuildingLogic> PendingDeathVisualQueue = new List<BuildingLogic>();
+
+    // Comme CreatureLogic.MarkPendingDeath : si on est dans un Command.RunDeferred (OnBattleStart),
+    // la clé de report doit être capturée MAINTENANT, pas au moment où QueuePendingDeathVisuals()
+    // sera éventuellement appelée par une autre zone — voir le commentaire détaillé sur MarkPendingDeath.
     public void Die()
     {
         owner.playedCards.Buildings.Remove(this);
         EffectRegistry.NotifyBuildingDied(this, owner);
-        new BuildingDieCommand(UniqueBuildingID).AddToQueue();
+
+        if (Command.DeferForBattleReplay)
+        {
+            int deferKey = Command.CurrentDeferSourceID ?? UniqueBuildingID;
+            BuildingDieCommand dieCommand = new BuildingDieCommand(UniqueBuildingID);
+            Command.DeferDeath(deferKey, dieCommand.AddToQueueImmediate);
+        }
+        else
+        {
+            PendingDeathVisualQueue.Add(this);
+        }
+    }
+
+    // Met en file la BuildingDieCommand de tout bâtiment marqué mort EN DEHORS d'un contexte différé
+    // depuis le dernier appel. Appelé par l'orchestrateur juste après avoir mis en file ses propres
+    // commandes "cause" (voir Command.FlushPendingDeaths).
+    public static void QueuePendingDeathVisuals()
+    {
+        foreach (BuildingLogic building in PendingDeathVisualQueue)
+            new BuildingDieCommand(building.UniqueBuildingID).AddToQueue();
+        PendingDeathVisualQueue.Clear();
     }
 
     // Équivalent de CreatureLogic.ResolveBattleStartEffects, pour les bâtiments. Pas de notion

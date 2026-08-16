@@ -147,20 +147,25 @@ public class VfxManager : MonoBehaviour
     public void ShowDeathPending()
     {
         if (deathPendingMaterial == null) return;
+        Debug.Log($"[DBG][ShowDeathPending] {gameObject.name} (instanceID={gameObject.GetInstanceID()}) this={(this != null)} effectOverlay={(effectOverlay != null)} effectOverlayImage={(effectOverlayImage != null)}");
         effectOverlayImage.material = deathPendingMaterial;
         effectOverlay.SetActive(true);
     }
 
-    public void PlayDeath()
+    // Retourne la durée du VFX joué (0 si rien n'a été joué), pour que l'appelant (CreatureDieCommand)
+    // puisse retarder le re-order de la rangée sans retarder la disparition de la créature elle-même.
+    public float PlayDeath()
     {
-        if (deathVfxPrefab == null) return;
+        if (deathVfxPrefab == null) return 0f;
 
         ZoneManager zone = GetComponentInParent<ZoneManager>();
         bool isVisible = zone == null || FogOfWarManager.Instance == null
                         || !FogOfWarManager.Instance.IsZoneFogged(zone);
-        if (!isVisible) return;
+        if (!isVisible) return 0f;
 
         GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
-        Destroy(vfx, GetParticleLifetime(vfx));
+        float lifetime = GetParticleLifetime(vfx);
+        Destroy(vfx, lifetime);
+        return lifetime;
     }
 }

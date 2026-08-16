@@ -21,8 +21,8 @@ public class CreatureDieCommand : Command
             return;
         }
 
-        creatureToRemove.GetComponent<VfxManager>()?.PlayDeath();
-
+        VfxManager vfx = creatureToRemove.GetComponent<VfxManager>();
+        float deathVfxDuration = vfx != null ? vfx.PlayDeath() : 0f;
 
         if (p.PAreas != null)
         {
@@ -34,8 +34,10 @@ public class CreatureDieCommand : Command
                 if (area.tableVisual.MeleeCreaturesOnTable.Contains(creatureToRemove) ||
                     area.tableVisual.RangedCreaturesOnTable.Contains(creatureToRemove))
                 {
-                    // RemoveCreatureWithID calls CommandExecutionComplete internally via its tween OnComplete.
-                    area.tableVisual.RemoveCreatureWithID(DeadCreatureID);
+                    // La créature disparaît immédiatement ; seul le re-order de la rangée attend la
+                    // durée du VFX de mort (voir TableVisual.RemoveCreatureWithID), qui appelle
+                    // CommandExecutionComplete lui-même une fois le repositionnement terminé.
+                    area.tableVisual.RemoveCreatureWithID(DeadCreatureID, deathVfxDuration);
                     return;
                 }
             }

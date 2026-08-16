@@ -14,6 +14,10 @@ public class Command
     // la CreatureDieCommand de la créature qui meurt (voir CreatureLogic.ScheduleBattleDeath).
     public static bool DeferForBattleReplay = false;
     private static readonly Dictionary<int, List<Action>> _deferredBySource = new();
+    // Bucket séparé pour les commandes de mort (CreatureDieCommand/BuildingDieCommand) — toujours
+    // rejoué APRÈS _deferredBySource pour la même clé (voir FlushDeferredCommands), pour qu'une mort
+    // ne soit jamais rejouée avant les commandes "cause" qui doivent la précéder visuellement.
+    private static readonly Dictionary<int, List<Action>> _deferredDeathsBySource = new();
     // Source explicite pour RunDeferred (appelants hors EffectRegistry.Execute, ex: rejeu réseau
     // d'un token — voir Player.NetworkSpawnTokenToZone) — prioritaire sur EffectRegistry.CurrentSourceID.
     private static int? _explicitDeferSourceID;
@@ -27,6 +31,14 @@ public class Command
             return;
         }
 
+        AddToQueueImmediate();
+    }
+
+    // Enqueue réel, sans passer par le contrôle DeferForBattleReplay — utilisé par les actions déjà
+    // explicitement reportées (voir DeferDeath) au moment où elles rejouent : à ce stade on veut
+    // l'enqueue direct, pas un nouveau report.
+    public void AddToQueueImmediate()
+    {
         CommandQueue.Enqueue(this);
         // Debug.Log($"[Queue] Enqueue {GetType().Name} — taille file: {CommandQueue.Count} | playingQueue={playingQueue}");
         if (!playingQueue)
@@ -37,6 +49,14 @@ public class Command
     {
         if (!_deferredBySource.TryGetValue(sourceID, out List<Action> list))
             _deferredBySource[sourceID] = list = new List<Action>();
+        list.Add(action);
+    }
+
+    // Comme Defer(), mais dans le bucket "morts" — voir _deferredDeathsBySource.
+    public static void DeferDeath(int sourceID, Action action)
+    {
+        if (!_deferredDeathsBySource.TryGetValue(sourceID, out List<Action> list))
+            _deferredDeathsBySource[sourceID] = list = new List<Action>();
         list.Add(action);
     }
 
@@ -80,15 +100,31 @@ public class Command
 
     public static void FlushDeferredCommands(int sourceID)
     {
-        if (!_deferredBySource.TryGetValue(sourceID, out List<Action> list)) return;
-        _deferredBySource.Remove(sourceID);
-        foreach (Action action in list)
-            action();
+        int causeCount = _deferredBySource.TryGetValue(sourceID, out List<Action> dbgCauseList) ? dbgCauseList.Count : 0;
+        int deathCount = _deferredDeathsBySource.TryGetValue(sourceID, out List<Action> dbgDeathList) ? dbgDeathList.Count : 0;
+        if (causeCount > 0 || deathCount > 0)
+            Debug.Log($"[DBG][FlushDeferredCommands] clé={sourceID} causes={causeCount} morts={deathCount}");
+        // Le bucket "causes" est TOUJOURS rejoué avant le bucket "morts" pour la même clé, quel que
+        // soit l'ordre dans lequel Defer()/DeferDeath() ont été appelés — sinon une CreatureDieCommand
+        // pourrait rejouer avant la commande censée la précéder (voir CreatureLogic.MarkPendingDeath).
+        if (_deferredBySource.TryGetValue(sourceID, out List<Action> causeList))
+        {
+            _deferredBySource.Remove(sourceID);
+            foreach (Action action in causeList)
+                action();
+        }
+        if (_deferredDeathsBySource.TryGetValue(sourceID, out List<Action> deathList))
+        {
+            _deferredDeathsBySource.Remove(sourceID);
+            foreach (Action action in deathList)
+                action();
+        }
     }
 
     // Permet à un appelant (ex: ZoneCombatResolver.EnqueueBattleCommands) de savoir s'il y a
     // quelque chose à révéler pour cette clé avant de décider d'attendre la caméra ou non.
-    public static bool HasDeferredCommands(int sourceID) => _deferredBySource.ContainsKey(sourceID);
+    public static bool HasDeferredCommands(int sourceID) =>
+        _deferredBySource.ContainsKey(sourceID) || _deferredDeathsBySource.ContainsKey(sourceID);
 
     // Clé de report actuellement active (celle passée au RunDeferred englobant), ou null si on
     // n'est pas dans un tel contexte. Utilisé par TokenGenerationSO.Execute pour transmettre la
@@ -98,6 +134,17 @@ public class Command
     // pas d'une seule convention fixe.
     public static int? CurrentDeferSourceID =>
         DeferForBattleReplay ? (_explicitDeferSourceID ?? EffectRegistry.CurrentSourceID) : (int?)null;
+
+    // Point d'entrée unique pour transformer les morts logiques accumulées (CreatureLogic/BuildingLogic)
+    // en commandes visuelles. À appeler explicitement par l'orchestrateur (EffectRegistry.Execute,
+    // ZoneCombatResolver.EnqueueBattleCommands, ...) juste APRÈS avoir mis en file ses propres commandes
+    // "cause" — jamais automatiquement depuis le setter Health, pour garantir que la CreatureDieCommand/
+    // BuildingDieCommand d'une cible n'entre jamais dans la file avant l'animation censée la tuer.
+    public static void FlushPendingDeaths()
+    {
+        CreatureLogic.QueuePendingDeathVisuals();
+        BuildingLogic.QueuePendingDeathVisuals();
+    }
 
     public virtual void StartCommandExecution()
     {
