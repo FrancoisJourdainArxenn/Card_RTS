@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: FastDeck 2
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Test Deck (2)
-  heroCard: {fileID: 11400000, guid: 0cfd8c47834179d46bd536fdb5cde6b3, type: 2}
+  heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
   - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
   - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}

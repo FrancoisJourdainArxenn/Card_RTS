@@ -246,7 +246,7 @@ public class GameNetworkManager : NetworkBehaviour
         if (!IsServer)
             for (int i = 0; i < battleStartSourceIDs.Length; i++)
             {
-                Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
+                // Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
                 ZoneCombatResolver.ReplayOnBattleStartEffect(
                     battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
                     battleStartEffectIndexes[i], battleStartSeeds[i]);
@@ -258,7 +258,7 @@ public class GameNetworkManager : NetworkBehaviour
         if (!IsServer)
             for (int i = 0; i < onDeathSourceIDs.Length; i++)
             {
-                Debug.Log($"[DBG][ApplyCanonical] OnDeath replay #{i} — sourceID={onDeathSourceIDs[i]} effectIdx={onDeathEffectIndexes[i]}");
+                // Debug.Log($"[DBG][ApplyCanonical] OnDeath replay #{i} — sourceID={onDeathSourceIDs[i]} effectIdx={onDeathEffectIndexes[i]}");
                 CreatureLogic.ReplayOnDeathBattleEffect(onDeathSourceIDs[i], onDeathEffectIndexes[i], onDeathSeeds[i]);
             }
     }

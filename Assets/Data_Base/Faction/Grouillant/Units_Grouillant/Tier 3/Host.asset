@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Infestor
+  m_Name: Host
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Infestor
+  Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>On Play:</b> I gain +1/+1 for each Unit in my zone.
-  CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
+  Description: <b>On Death:</b> Create two Guardians in my zone.
+  CardImage: {fileID: 21300000, guid: 9a2eafb1b366c68448f42999fa927f83, type: 3}
   MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 1
+  Attack: 2
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -35,24 +35,33 @@ MonoBehaviour:
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Upgrade
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 0
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: cf1927b8786e179439007cfef31b6793, type: 2}
+    Trigger: 1
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
-        includesEventSubject: 0
-        queries: []
-      repartition: 0
-      useScalingCount: 1
-      scalingQuery:
-        targetType: 0
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
         queries:
-        - team: 1
+        - team: 0
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 0
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

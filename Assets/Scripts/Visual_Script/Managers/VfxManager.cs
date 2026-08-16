@@ -147,7 +147,7 @@ public class VfxManager : MonoBehaviour
     public void ShowDeathPending()
     {
         if (deathPendingMaterial == null) return;
-        Debug.Log($"[DBG][ShowDeathPending] {gameObject.name} (instanceID={gameObject.GetInstanceID()}) this={(this != null)} effectOverlay={(effectOverlay != null)} effectOverlayImage={(effectOverlayImage != null)}");
+        // Debug.Log($"[DBG][ShowDeathPending] {gameObject.name} (instanceID={gameObject.GetInstanceID()}) this={(this != null)} effectOverlay={(effectOverlay != null)} effectOverlayImage={(effectOverlayImage != null)}");
         effectOverlayImage.material = deathPendingMaterial;
         effectOverlay.SetActive(true);
     }

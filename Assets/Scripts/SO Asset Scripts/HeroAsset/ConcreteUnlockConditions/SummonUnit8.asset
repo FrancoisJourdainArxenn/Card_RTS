@@ -9,6 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb3bc99e5a2422f41970b1016eefa7fa, type: 3}
-  m_Name: LateralAttack
-  m_EditorClassIdentifier: Assembly-CSharp::LateralAttackModifierSO
+  m_Script: {fileID: 11500000, guid: 1803b7996b93605489e54de52222cd0f, type: 3}
+  m_Name: SummonUnit8
+  m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockConditionSO
+  Stat: 3
+  Threshold: 8

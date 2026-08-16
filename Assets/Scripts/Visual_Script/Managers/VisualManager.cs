@@ -22,6 +22,7 @@ public class VisualManager : MonoBehaviour
     public float ProjectileMinDuration = 0.5f; // durée de vol plancher, pour qu'un tir à courte distance ou un attaquant très rapide reste visible
     public float MeleeMultiTargetVfxLifetime = 1.5f; // délai avant destruction du Melee VFX (cibles secondaires), le temps qu'il finisse de se jouer
     public float RaiseEffectVisualDelay = 0.5f; // délai avant que RaiseEffectVisualCommand ne se termine
+    public float RowReorderDuration = 0.3f; // durée du glissement des créatures vers leur nouveau slot après une mort
 
     [Header("Pop Animation")]
     public float popStrength = 2f;

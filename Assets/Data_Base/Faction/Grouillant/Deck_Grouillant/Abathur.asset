@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: Zagara
+  m_Name: Abathur
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Zagara, Queen of the Swarm
-  heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
+  heroCard: {fileID: 11400000, guid: 9c8745fd772bc6440a2e1b3b85fdfd45, type: 2}
   cards:
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
   - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}

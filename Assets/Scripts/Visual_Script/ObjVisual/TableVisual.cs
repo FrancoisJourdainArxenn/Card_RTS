@@ -461,7 +461,8 @@ public class TableVisual : MonoBehaviour
             int virtualIndex = (hasGap && i >= clampedGap) ? i + 1 : i;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
             displayOrder[i].transform.DOKill();
-            Tween t = displayOrder[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
+            float reorderDuration = VisualManager.Instance != null ? VisualManager.Instance.RowReorderDuration : 0.3f;
+            Tween t = displayOrder[i].transform.DOMove(targetPos, reorderDuration).SetEase(Ease.OutQuad);
             if (onComplete != null)
             {
                 bool done = false;

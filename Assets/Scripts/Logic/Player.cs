@@ -672,6 +672,8 @@ public class Player : MonoBehaviour, ILivable
                 continue;
             }
             creatureManager.CanReorderNow = canMove && !removeAllHighlights;
+            Debug.Log($"[Celerity] Highlight refresh pour {crl.DisplayName} (ID:{crl.UniqueCreatureID}) — canMove={canMove}, MovementsLeftThisTurn={crl.MovementsLeftThisTurn}");
+
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
         }

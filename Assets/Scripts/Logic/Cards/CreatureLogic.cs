@@ -83,6 +83,16 @@ public class CreatureLogic: ILivable
         ShieldValue = Mathf.Max(ShieldValue, value);
     }
 
+    public void GrantCelerity()
+    {
+        MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
+        Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
+
+        TurnManager.RefreshAllPlayableHighlights();
+
+    }
+
+
     public int TakeDamage(int dmg)
     {
         if (ShieldValue > 0)
@@ -291,7 +301,7 @@ public class CreatureLogic: ILivable
         if (Command.DeferForBattleReplay)
         {
             int deferKey = Command.CurrentDeferSourceID ?? UniqueCreatureID;
-            Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) DIFFÉRÉE sous clé {deferKey}");
+            // Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) DIFFÉRÉE sous clé {deferKey}");
             CreatureDieCommand dieCommand = new CreatureDieCommand(UniqueCreatureID, owner);
             Command.DeferDeath(deferKey, dieCommand.AddToQueueImmediate);
             Command.DeferDeath(deferKey, () => Command.FlushDeferredCommands(UniqueCreatureID));
@@ -299,7 +309,7 @@ public class CreatureLogic: ILivable
         }
         else
         {
-            Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) EN DIRECT (pas de RunDeferred actif) — sera flush par QueuePendingDeathVisuals");
+            // Debug.Log($"[DBG][MarkPendingDeath] {DisplayName}(ID:{UniqueCreatureID}) EN DIRECT (pas de RunDeferred actif) — sera flush par QueuePendingDeathVisuals");
         }
     }
 
@@ -313,7 +323,7 @@ public class CreatureLogic: ILivable
         {
             if (creature._deathVisualQueued) continue;
             creature._deathVisualQueued = true;
-            Debug.Log($"[DBG][QueuePendingDeathVisuals] mise en file EN DIRECT de {creature.DisplayName}(ID:{creature.UniqueCreatureID}) — DeferForBattleReplay actuel={Command.DeferForBattleReplay}");
+            // Debug.Log($"[DBG][QueuePendingDeathVisuals] mise en file EN DIRECT de {creature.DisplayName}(ID:{creature.UniqueCreatureID}) — DeferForBattleReplay actuel={Command.DeferForBattleReplay}");
             new CreatureDieCommand(creature.UniqueCreatureID, creature.owner).AddToQueue();
             Command.FlushDeferredCommands(creature.UniqueCreatureID);
         }

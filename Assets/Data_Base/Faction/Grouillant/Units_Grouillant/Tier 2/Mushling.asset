@@ -17,7 +17,8 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: When a Unit is created in my zone, give +1/+1 to a unit in my zone.
+  Description: When a <b>token Unit is created</b> in my zone, give +1/+1 to a unit
+    in my zone.
   CardImage: {fileID: 21300000, guid: 11a7b4b220bf0c8438c37bd5a05dda22, type: 3}
   MainCost: 2
   IsHero: 0

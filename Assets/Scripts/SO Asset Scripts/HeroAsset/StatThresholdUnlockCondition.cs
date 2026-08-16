@@ -18,6 +18,10 @@ public class StatThresholdUnlockCondition : HeroUnlockConditionSO
             MatchStatType.RessourcesSpent => $"Spend {remaining} Ressources to Unlock me.",
             MatchStatType.CardsPlayed     => $"Play {remaining} Cards to Unlock me.",
             MatchStatType.UnitsSummoned   => $"Summon {remaining} Units to Unlock me.",
+            MatchStatType.TokensCreated   => $"Create {remaining} Tokens to Unlock me.",
+            MatchStatType.UnitsDied       => $"Wait for {remaining} Units to die to Unlock me.",
+            MatchStatType.AllyUnitsDied   => $"Lose {remaining} Units to Unlock me.",
+            MatchStatType.EnemyUnitsDied  => $"Kill {remaining} Enemy Units to Unlock me.",
             _ => $"{Stat} : {remaining}"
         };
     }

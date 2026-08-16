@@ -102,8 +102,8 @@ public class Command
     {
         int causeCount = _deferredBySource.TryGetValue(sourceID, out List<Action> dbgCauseList) ? dbgCauseList.Count : 0;
         int deathCount = _deferredDeathsBySource.TryGetValue(sourceID, out List<Action> dbgDeathList) ? dbgDeathList.Count : 0;
-        if (causeCount > 0 || deathCount > 0)
-            Debug.Log($"[DBG][FlushDeferredCommands] clé={sourceID} causes={causeCount} morts={deathCount}");
+        // if (causeCount > 0 || deathCount > 0)
+        //     Debug.Log($"[DBG][FlushDeferredCommands] clé={sourceID} causes={causeCount} morts={deathCount}");
         // Le bucket "causes" est TOUJOURS rejoué avant le bucket "morts" pour la même clé, quel que
         // soit l'ordre dans lequel Defer()/DeferDeath() ont été appelés — sinon une CreatureDieCommand
         // pourrait rejouer avant la commande censée la précéder (voir CreatureLogic.MarkPendingDeath).

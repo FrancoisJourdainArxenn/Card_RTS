@@ -108,6 +108,13 @@ public static class EffectRegistry
         FireListeners(TriggerType.OnEnemyCreatureDies, eventCtx,
             re => re.ContextFactory().Caster != dyingOwner);
 
+        // Progression des conditions de déblocage héros (All / Ally / Enemy)
+        foreach (Player p in Player.Players)
+        {
+            p.matchStats.Add(MatchStatType.UnitsDied);
+            p.matchStats.Add(p == dyingOwner ? MatchStatType.AllyUnitsDied : MatchStatType.EnemyUnitsDied);
+        }
+
         TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
@@ -139,6 +146,8 @@ public static class EffectRegistry
     // ── Triggers de token ─────────────────────────────────────────────────────
     public static void NotifyTokenCreated(Player creatingPlayer, CreatureLogic tokenOnBoard)
     {
+        creatingPlayer.matchStats.Add(MatchStatType.TokensCreated);
+
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = tokenOnBoard };
 
         FireListeners(TriggerType.OnTokenCreated, eventCtx,

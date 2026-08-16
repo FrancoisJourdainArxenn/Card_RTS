@@ -527,13 +527,13 @@ public class ZoneCombatResolver : MonoBehaviour
         // ils se retrouvent après elles dans la file (voir ZoneBattleStartRevealCommand). La barrière
         // ne fait qu'attendre l'arrivée de la BattleCam sur la zone avant de laisser la LECTURE de la
         // file continuer ; elle ne retarde jamais l'ajout des popups eux-mêmes.
-        Debug.Log($"[DBG][EnqueueBattleCommands] zone={zoneView.name} zoneDeferKey={zoneDeferKey} HasDeferredCommands={Command.HasDeferredCommands(zoneDeferKey)}");
+        // Debug.Log($"[DBG][EnqueueBattleCommands] zone={zoneView.name} zoneDeferKey={zoneDeferKey} HasDeferredCommands={Command.HasDeferredCommands(zoneDeferKey)}");
         if (Command.HasDeferredCommands(zoneDeferKey))
         {
             new ZoneBattleStartRevealCommand(zoneView.transform.position).AddToQueue();
             Command.FlushDeferredCommands(zoneDeferKey);
         }
-        Debug.Log($"[Enqueue:{zoneView.name}] Traitement de {steps.Count} step(s)");
+        // Debug.Log($"[Enqueue:{zoneView.name}] Traitement de {steps.Count} step(s)");
         int stepIdx = 0;
         foreach (BattleStepRecord step in steps)
         {
@@ -832,7 +832,7 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             List<BattleStepRecord> steps = stepsByResolver.TryGetValue(resolverIdx, out List<BattleStepRecord> found)
                 ? found : new List<BattleStepRecord>();
-            Debug.Log($"[DBG][EnqueueAllReconstructed] traitement resolver #{resolverIdx} ({allResolvers[resolverIdx].name}) — {steps.Count} step(s)");
+            // Debug.Log($"[DBG][EnqueueAllReconstructed] traitement resolver #{resolverIdx} ({allResolvers[resolverIdx].name}) — {steps.Count} step(s)");
             try
             {
                 allResolvers[resolverIdx].EnqueueBattleCommands(steps);
