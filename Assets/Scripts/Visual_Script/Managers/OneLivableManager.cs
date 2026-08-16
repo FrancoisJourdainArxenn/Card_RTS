@@ -37,9 +37,9 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
 
     protected void ApplyStatColor(TMP_Text text, int current, int baseValue, Color originalColor)
     {
-        if (text == null || GlobalSettings.Instance == null) return;
-        text.color = current > baseValue ? GlobalSettings.Instance.statBuffColor
-                   : current < baseValue ? GlobalSettings.Instance.statDebuffColor
+        if (text == null || VisualManager.Instance == null) return;
+        text.color = current > baseValue ? VisualManager.Instance.statBuffColor
+                   : current < baseValue ? VisualManager.Instance.statDebuffColor
                    : originalColor;
     }
 

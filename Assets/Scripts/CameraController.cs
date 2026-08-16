@@ -535,7 +535,7 @@ public class CameraController : MonoBehaviour
 
     public void ShakeForAttackValue(int attackValue)
     {
-        GlobalSettings gs = GlobalSettings.Instance;
+        VisualManager gs = VisualManager.Instance;
         if (gs == null)
             return;
 

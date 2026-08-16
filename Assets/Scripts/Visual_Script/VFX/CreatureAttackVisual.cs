@@ -16,8 +16,8 @@ public class CreatureAttackVisual : MonoBehaviour
 {
     private OneCreatureManager manager;
     private WhereIsTheCardOrCreature w;
-    float moveDuration = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackMoveDuration : 0.4f;
-    float postDelay    = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackPostDelay : 0.8f;
+    float moveDuration = VisualManager.Instance != null ? VisualManager.Instance.AttackMoveDuration : 0.4f;
+    float postDelay    = VisualManager.Instance != null ? VisualManager.Instance.AttackPostDelay : 0.8f;
 
     // Nombre d'attaques actuellement "en vol" (windup → impact → retour), tous attaquants confondus.
     // Tant qu'au moins une attaque est en vol, TableVisual ne doit pas repositionner ses rangées :
@@ -101,14 +101,14 @@ public class CreatureAttackVisual : MonoBehaviour
         AttackTargetType targetType = GetTargetType(targetUniqueID);
         float moveDur  = moveDuration / speedMultiplier;
         float postDel  = postDelay    / speedMultiplier;
-        float windupDur = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupDuration : 0.15f;
-        float windupBack   = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupBack   : 0.3f;
-        float windupHeight = GlobalSettings.Instance != null ? GlobalSettings.Instance.AttackWindupHeight : 0.35f;
-        float projectileSpeed      = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileSpeed       : 18f;
-        float projectileMinDur     = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileMinDuration : 0.12f;
+        float windupDur = VisualManager.Instance != null ? VisualManager.Instance.AttackWindupDuration : 0.15f;
+        float windupBack   = VisualManager.Instance != null ? VisualManager.Instance.AttackWindupBack   : 0.3f;
+        float windupHeight = VisualManager.Instance != null ? VisualManager.Instance.AttackWindupHeight : 0.35f;
+        float projectileSpeed      = VisualManager.Instance != null ? VisualManager.Instance.ProjectileSpeed       : 18f;
+        float projectileMinDur     = VisualManager.Instance != null ? VisualManager.Instance.ProjectileMinDuration : 0.12f;
         GameObject projectilePrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.RangedProjectilePrefab : null;
         GameObject meleeMultiTargetVfxPrefab = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxPrefab : null;
-        float meleeMultiTargetVfxLifetime = GlobalSettings.Instance != null ? GlobalSettings.Instance.MeleeMultiTargetVfxLifetime : 1.5f;
+        float meleeMultiTargetVfxLifetime = VisualManager.Instance != null ? VisualManager.Instance.MeleeMultiTargetVfxLifetime : 1.5f;
 
         // Durée de vol basée sur la distance réelle (vitesse constante), pas une durée fixe : sinon un
         // attaquant rapide (AttackSpeedMultiplier élevé) ou une cible éloignée finissait avec un vol trop
@@ -254,7 +254,7 @@ public class CreatureAttackVisual : MonoBehaviour
             // Shake fires a little before the creature actually reaches the target (impact = windupDur + moveDur),
             // not on the sequence's OnComplete (which only fires after the return move too) — otherwise it lands
             // visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
-            float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
+            float leadTime = VisualManager.Instance != null ? VisualManager.Instance.CameraShakeAnticipation : 0.05f;
             float shakeTime = Mathf.Max(0f, windupDur + moveDur - leadTime);
             attackSeq.InsertCallback(shakeTime, ShakeCamera);
 

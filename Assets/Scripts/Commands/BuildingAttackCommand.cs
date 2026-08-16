@@ -43,7 +43,7 @@ public class BuildingAttackCommand : Command
             // it lands visibly late. Only the attacker's own hit shakes the camera, never the defender's counter-damage.
             if (damageTakenByTarget > 0)
             {
-                float leadTime = GlobalSettings.Instance != null ? GlobalSettings.Instance.CameraShakeAnticipation : 0.05f;
+                float leadTime = VisualManager.Instance != null ? VisualManager.Instance.CameraShakeAnticipation : 0.05f;
                 float shakeDelay = Mathf.Max(0f, moveDuration - leadTime);
                 DOVirtual.DelayedCall(shakeDelay, () => CameraController.Instance?.ShakeForAttackerID(attackerID))
                     .SetLink(attackerGO);

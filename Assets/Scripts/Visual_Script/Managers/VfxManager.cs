@@ -56,8 +56,8 @@ public class VfxManager : MonoBehaviour
         if (!isVisible) { onImpact?.Invoke(); return; }
 
         Vector3 destination = transform.position;
-        float speed = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileSpeed : 18f;
-        float minDur = GlobalSettings.Instance != null ? GlobalSettings.Instance.ProjectileMinDuration : 0.12f;
+        float speed = VisualManager.Instance != null ? VisualManager.Instance.ProjectileSpeed : 18f;
+        float minDur = VisualManager.Instance != null ? VisualManager.Instance.ProjectileMinDuration : 0.12f;
         float distance = Vector3.Distance(origin, destination);
         float duration = Mathf.Max(minDur, speed > 0.01f ? distance / speed : minDur);
 

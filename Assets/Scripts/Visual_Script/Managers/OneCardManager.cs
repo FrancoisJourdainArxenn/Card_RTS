@@ -70,11 +70,11 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         DescriptionText.text = cardAsset.Description.ToString();
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
-        if (TierImage != null && GlobalSettings.Instance != null)
+        if (TierImage != null && VisualManager.Instance != null)
         {
             int tierIndex = (int)cardAsset.tier - 1;
-            if (tierIndex >= 0 && tierIndex < GlobalSettings.Instance.CardTierIcons.Length)
-                TierImage.sprite = GlobalSettings.Instance.CardTierIcons[tierIndex];
+            if (tierIndex >= 0 && tierIndex < VisualManager.Instance.CardTierIcons.Length)
+                TierImage.sprite = VisualManager.Instance.CardTierIcons[tierIndex];
         }
 
         _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
@@ -97,8 +97,8 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void OverrideStats(int? attack, int? health, int? maxHealth = null)
     {
-        Color buffColor   = GlobalSettings.Instance != null ? GlobalSettings.Instance.statBuffColor   : Color.blue;
-        Color debuffColor = GlobalSettings.Instance != null ? GlobalSettings.Instance.statDebuffColor : Color.red;
+        Color buffColor   = VisualManager.Instance != null ? VisualManager.Instance.statBuffColor   : Color.blue;
+        Color debuffColor = VisualManager.Instance != null ? VisualManager.Instance.statDebuffColor : Color.red;
 
         if (AttackText != null)
         {
@@ -155,8 +155,8 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     private void PopCard()
     {
-        float strength = GlobalSettings.Instance != null ? GlobalSettings.Instance.popStrength : 1f;
-        float duration = GlobalSettings.Instance != null ? GlobalSettings.Instance.popDuration : 1f;
+        float strength = VisualManager.Instance != null ? VisualManager.Instance.popStrength : 1f;
+        float duration = VisualManager.Instance != null ? VisualManager.Instance.popDuration : 1f;
         transform.DOKill();
         transform.localScale = originalScale;
         transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
