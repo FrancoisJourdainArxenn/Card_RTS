@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Abathur
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Zagara, Queen of the Swarm
+  Name: Abathur, Perfection Seeker
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 1
-  tier: 3
+  tier: 1
   Description: When you <b>play or create</b> a Melee Unit, it gains +1/+2.
   CardImage: {fileID: 21300000, guid: 7514b30da6b2bc54b9df3413f0262279, type: 3}
   MainCost: 0

@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Raynor
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Raynor, Rebel Leader
+  difficultyLevel: 1
+  deckTooltip: <b>Soldiers</b> together strong !
   heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
   cards:
   - {fileID: 11400000, guid: 87284c4a2dd80f847add3870cb94dcff, type: 2}

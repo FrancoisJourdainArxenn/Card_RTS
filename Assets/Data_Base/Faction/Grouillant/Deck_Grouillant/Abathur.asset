@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
   m_Name: Abathur
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Zagara, Queen of the Swarm
+  deckName: Abathur, Perfection Seeker
+  difficultyLevel: 2
+  deckTooltip: Take the upper hand with strong Melee units.
   heroCard: {fileID: 11400000, guid: 9c8745fd772bc6440a2e1b3b85fdfd45, type: 2}
   cards:
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}

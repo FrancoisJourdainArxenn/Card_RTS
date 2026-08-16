@@ -265,6 +265,7 @@ public class CreatureLogic: ILivable
     {
         Debug.Log($"[Death][Client] SILENT_DIE — {DisplayName} (ID:{UniqueCreatureID})");
         bool wasInList = owner.playedCards.Creatures.Remove(this);
+        EffectRegistry.NotifyCreatureDeathStats(owner);
         TempEffectTracker.Unregister(UniqueCreatureID);
         EffectRegistry.UnregisterEntity(UniqueCreatureID);
         if (wasInList)

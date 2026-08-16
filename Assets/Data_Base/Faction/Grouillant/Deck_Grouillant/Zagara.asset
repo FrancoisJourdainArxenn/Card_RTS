@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Zagara
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Zagara, Queen of the Swarm
+  difficultyLevel: 3
+  deckTooltip: Overwhelm your opponent under a flood of tokens units.
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}

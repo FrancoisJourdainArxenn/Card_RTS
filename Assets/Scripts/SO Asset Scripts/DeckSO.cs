@@ -6,6 +6,9 @@ using System.Collections.Generic;
 public class DeckSO : ScriptableObject
 {
     public string deckName;
+    public int difficultyLevel;
+    [TextArea(2,3)]
+    public string deckTooltip;
     
     [Header("Hero")]
     public CardAsset heroCard;

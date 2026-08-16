@@ -19,7 +19,6 @@ public class NetworkMenu : MonoBehaviour
     [Header("Selectable")]
     [SerializeField] MenuRegistry menuRegistry;
     [SerializeField] TMP_Dropdown mapDropdown;
-    [SerializeField] TMP_Dropdown deckDropdown;
 
 
     [Header("Scene")]
@@ -40,15 +39,15 @@ public class NetworkMenu : MonoBehaviour
             options.Add(new(prefab.name));
         mapDropdown.ClearOptions();
         mapDropdown.AddOptions(options);
+    }
 
-        if (deckDropdown != null)
-        {
-            List<TMP_Dropdown.OptionData> deckOptions = new List<TMP_Dropdown.OptionData>();
-            foreach (DeckSO deck in menuRegistry.decks)
-                deckOptions.Add(new(deck.deckName));
-            deckDropdown.ClearOptions();
-            deckDropdown.AddOptions(deckOptions);
-        }
+    private int GetSelectedDeckPresetIndex()
+    {
+        DeckSO selected = HeroPortrait.SelectedDeck;
+        if (selected == null)
+            return -1;
+
+        return System.Array.IndexOf(menuRegistry.decks, selected);
     }
 
     public void StartHost()
@@ -85,7 +84,7 @@ public class NetworkMenu : MonoBehaviour
 
         statusText.text = $"Connexion vers {ip}...";
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
-        NetworkSessionData.SelectedDeckPresetIndex = (deckDropdown != null) ? deckDropdown.value : -1;
+        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
 
         NetworkManager.Singleton.StartClient();
         mapDropdown.gameObject.SetActive(false);
@@ -109,8 +108,7 @@ public class NetworkMenu : MonoBehaviour
                 ? Random.Range(0, menuRegistry.maps.Length)
                 : idx - 1;
             
-            int deckIdx = (deckDropdown != null) ? deckDropdown.value : -1;
-            NetworkSessionData.SelectedDeckPresetIndex = deckIdx;
+            NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
             NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }

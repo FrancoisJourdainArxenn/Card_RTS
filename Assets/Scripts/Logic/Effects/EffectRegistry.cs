@@ -108,17 +108,26 @@ public static class EffectRegistry
         FireListeners(TriggerType.OnEnemyCreatureDies, eventCtx,
             re => re.ContextFactory().Caster != dyingOwner);
 
-        // Progression des conditions de déblocage héros (All / Ally / Enemy)
-        foreach (Player p in Player.Players)
-        {
-            p.matchStats.Add(MatchStatType.UnitsDied);
-            p.matchStats.Add(p == dyingOwner ? MatchStatType.AllyUnitsDied : MatchStatType.EnemyUnitsDied);
-        }
+        NotifyCreatureDeathStats(dyingOwner);
 
         TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
 
+    }
+
+    // Progression des conditions de déblocage héros (All / Ally / Enemy). Séparé de
+    // NotifyCreatureDied pour pouvoir être rejoué côté client par SilentDie(), qui ne
+    // redéclenche pas les effets OnDeath/triggers mais doit quand même faire avancer
+    // ces compteurs — sinon les conditions de héros basées sur les morts ne progressent
+    // jamais côté client en session réseau.
+    public static void NotifyCreatureDeathStats(Player dyingOwner)
+    {
+        foreach (Player p in Player.Players)
+        {
+            p.matchStats.Add(MatchStatType.UnitsDied);
+            p.matchStats.Add(p == dyingOwner ? MatchStatType.AllyUnitsDied : MatchStatType.EnemyUnitsDied);
+        }
     }
 
     public static void NotifyBuildingDied(BuildingLogic died, Player dyingOwner)
