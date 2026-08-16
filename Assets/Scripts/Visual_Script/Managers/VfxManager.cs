@@ -147,7 +147,6 @@ public class VfxManager : MonoBehaviour
     public void ShowDeathPending()
     {
         if (deathPendingMaterial == null) return;
-        // Debug.Log($"[DBG][ShowDeathPending] {gameObject.name} (instanceID={gameObject.GetInstanceID()}) this={(this != null)} effectOverlay={(effectOverlay != null)} effectOverlayImage={(effectOverlayImage != null)}");
         effectOverlayImage.material = deathPendingMaterial;
         effectOverlay.SetActive(true);
     }
@@ -165,6 +164,7 @@ public class VfxManager : MonoBehaviour
 
         GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
         float lifetime = GetParticleLifetime(vfx);
+        Debug.Log($"[DBG][Timing] PlayDeath {gameObject.name} lifetime={lifetime:F3} @ {Time.realtimeSinceStartup:F3}");
         Destroy(vfx, lifetime);
         return lifetime;
     }

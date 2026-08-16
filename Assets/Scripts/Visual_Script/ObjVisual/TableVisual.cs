@@ -341,6 +341,7 @@ public class TableVisual : MonoBehaviour
         // la rangée sont encore en train de glisser vers leur nouveau slot, et l'attaquant vise à côté.
         // reorderDelay (durée du VFX de mort de la créature qui vient d'être détruite ci-dessus)
         // retarde uniquement ce re-order, jamais la disparition elle-même.
+        Debug.Log($"[DBG][Timing] RemoveCreatureWithID reorderDelay={reorderDelay:F3} @ {Time.realtimeSinceStartup:F3}");
         if (reorderDelay <= 0f)
         {
             PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
@@ -351,6 +352,7 @@ public class TableVisual : MonoBehaviour
         DOVirtual.DelayedCall(reorderDelay, () =>
             {
                 fired = true;
+                Debug.Log($"[DBG][Timing] reorderDelay écoulé, lancement du re-order @ {Time.realtimeSinceStartup:F3}");
                 PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
             })
             .SetLink(gameObject)

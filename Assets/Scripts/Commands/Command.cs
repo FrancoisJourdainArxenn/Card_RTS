@@ -100,10 +100,6 @@ public class Command
 
     public static void FlushDeferredCommands(int sourceID)
     {
-        int causeCount = _deferredBySource.TryGetValue(sourceID, out List<Action> dbgCauseList) ? dbgCauseList.Count : 0;
-        int deathCount = _deferredDeathsBySource.TryGetValue(sourceID, out List<Action> dbgDeathList) ? dbgDeathList.Count : 0;
-        // if (causeCount > 0 || deathCount > 0)
-        //     Debug.Log($"[DBG][FlushDeferredCommands] clé={sourceID} causes={causeCount} morts={deathCount}");
         // Le bucket "causes" est TOUJOURS rejoué avant le bucket "morts" pour la même clé, quel que
         // soit l'ordre dans lequel Defer()/DeferDeath() ont été appelés — sinon une CreatureDieCommand
         // pourrait rejouer avant la commande censée la précéder (voir CreatureLogic.MarkPendingDeath).
@@ -156,7 +152,7 @@ public class Command
 
     public static void CommandExecutionComplete()
     {
-        // Debug.Log($"[Queue] CommandExecutionComplete — restants: {CommandQueue.Count}");
+        Debug.Log($"[DBG][Timing] COMPLETE @ {Time.realtimeSinceStartup:F3} — restants: {CommandQueue.Count}");
         if (CommandQueue.Count > 0)
             PlayFirstCommandFromQueue();
         else
@@ -172,7 +168,7 @@ public class Command
     {
         playingQueue = true;
         Command next = CommandQueue.Dequeue();
-        // Debug.Log($"[Queue] Démarre {next.GetType().Name} — restants après dequeue: {CommandQueue.Count}");
+        Debug.Log($"[DBG][Timing] START {next.GetType().Name} @ {Time.realtimeSinceStartup:F3}");
         next.StartCommandExecution();
     }
 
