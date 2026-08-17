@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>On Play & Regroup :</b> Create a 1/1 Zergling in my zone.
+  Description: <b>On Play & Start of turn:</b> Create a 1/1 Zergling.
   CardImage: {fileID: 21300000, guid: 4ef6c30508eb17b4398da7d6a60ccc13, type: 3}
   MainCost: 3
   IsHero: 0

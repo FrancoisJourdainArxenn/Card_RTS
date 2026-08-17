@@ -168,4 +168,17 @@ public class VfxManager : MonoBehaviour
         Destroy(vfx, lifetime);
         return lifetime;
     }
+
+    public void PlayTriggerVfx(GameObject prefab)
+    {
+        if (prefab == null) return;
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null
+                        || !FogOfWarManager.Instance.IsZoneFogged(zone);
+        if (!isVisible) return;
+
+        GameObject vfx = Instantiate(prefab, transform.position, Quaternion.identity);
+        Destroy(vfx, GetParticleLifetime(vfx));
+    }
 }

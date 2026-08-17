@@ -10,42 +10,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Reaper Commando
+  m_Name: Blacksmith
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
   tier: 2
-  Description: '<b>Celerity.
-
-    On Play:</b> Create two Reapers in my zone.'
-  CardImage: {fileID: 21300000, guid: 11e0f2832c9cda54e9b892d01ff38357, type: 3}
-  MainCost: 3
+  Description: When you play a Soldier <i>(in my zone)</i>, it gains +1/+0.
+  CardImage: {fileID: 21300000, guid: ca5f52a1754e23b498e588b0c860c40d, type: 3}
+  MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 1
+  Attack: 0
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
+  Celerity: 0
   melee: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
-  - {fileID: 11400000, guid: 27b6c8b242879e1498f49af0873bccfc, type: 2}
+  Keywords: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: 8ed378f4c44ab224f995c1070fb9b095, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 12
+    Condition: {fileID: 11400000, guid: e760ac52042b2af4e883555d7bf15669, type: 2}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

@@ -10,42 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Sergent
+  m_Name: Flag-Bearer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
-  tier: 1
-  Description: <b>On Play:</b> Create a Marine in your hand.
-  CardImage: {fileID: 21300000, guid: 43bc8e2893fd0b540be56f1b2ebab9cf, type: 3}
-  MainCost: 2
+  tier: 2
+  Description: <b>Commander.</b>
+  CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
+  MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 3
+  Attack: 2
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 0
+  Commandement: 1
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 1
   ActivationsForOneTurn: 0
   Keywords:
-  - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
-  - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
-  Effects:
-  - EffectName: Garnison
-    Effect: {fileID: 11400000, guid: 6997254306650b84a97bc1e413d3c30d, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
+  Effects: []

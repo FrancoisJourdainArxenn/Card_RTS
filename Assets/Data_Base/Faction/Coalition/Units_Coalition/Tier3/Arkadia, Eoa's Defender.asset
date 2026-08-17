@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Sniper
+  m_Name: Arkadia, Eoa's Defender
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Faction: {fileID: 0}
   Type: 0
   subType: 0
-  tier: 2
-  Description: <b>Begin Battle:</b> Deal 2 to a random Unit.
-  CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
+  tier: 3
+  Description: '<b>On Attack</b>: Create a Marine.'
+  CardImage: {fileID: 21300000, guid: f3b858e207f6de642bf29bbc994164a7, type: 3}
   MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
-  MaxHealth: 4
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -31,13 +31,14 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
   Effects:
-  - EffectName: Snipe
-    Effect: {fileID: 11400000, guid: dd53d2e9daa92f34d999c8f2cdb4f171, type: 2}
-    Trigger: 4
+  - EffectName: Commander's Call
+    Effect: {fileID: 11400000, guid: b0d77298486287740aebc822775deb14, type: 2}
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -45,7 +46,7 @@ MonoBehaviour:
         includesSource: 0
         onlySource: 0
         queries:
-        - team: 2
+        - team: 0
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
@@ -56,11 +57,11 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries:
-        - team: 2
+        - team: 0
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

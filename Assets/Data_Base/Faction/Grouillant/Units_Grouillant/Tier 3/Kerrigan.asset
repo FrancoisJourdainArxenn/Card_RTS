@@ -20,7 +20,7 @@ MonoBehaviour:
   Description: '<b>Arcing Attacks.
 
     On Battle Start:</b> I gain +1/+0 for each
-    Unit in my zone for this turn.'
+    Unit in my zone until end of turn.'
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
   MainCost: 6
   IsHero: 0

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>On Death:</b> Create two Guardians in my zone.
+  Description: <b>On Death:</b> Create two Guardians.
   CardImage: {fileID: 21300000, guid: 9a2eafb1b366c68448f42999fa927f83, type: 3}
   MainCost: 4
   IsHero: 0

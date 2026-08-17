@@ -240,6 +240,13 @@ public static class EffectRegistry
         }
 
         CurrentSourceID = context.Source?.ID ?? -1;
+
+        // Enfilée avant la résolution de l'effet (et non dans RaiseEffectVisualCommand ci-dessous)
+        // pour que le VFX de trigger se joue avant que les dégâts/soins/etc. ne soient révélés,
+        // tout en restant soumis au même report de combat (Command.DeferForBattleReplay) que le
+        // reste — indispensable pour qu'il attende la caméra de bataille comme les autres commandes.
+        new PlayTriggerAnimationCommand(data.Trigger, context).AddToQueue();
+
         data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
 
         // Passe par la file de commandes (comme ModifyStatsCommand etc.) au lieu de lever

@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Devourer
+  m_Name: Primordial Mystic
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 1
-  tier: 2
-  Description: <b>On Play:</b> Gives +2/+0 to Melee Units.
-  CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
-  MainCost: 3
+  subType: 5
+  tier: 3
+  Description: <b>On Battle Start:</b> Gives +1/+1 to Soldiers until end of turn.
+  CardImage: {fileID: 21300000, guid: 56317cd230f9a0742b3aeb9c3c86aa10, type: 3}
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 2
+  Attack: 3
+  MaxHealth: 5
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 4
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
@@ -36,8 +36,8 @@ MonoBehaviour:
   Keywords: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: 8f5fa8d87ed089d43a48b4dabb4f0393, type: 2}
-    Trigger: 0
+    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -46,20 +46,16 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 1
+          statusFilter: 0
           zoneFilter: 1
-          cardFilter: {fileID: 0}
+          cardFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1
         includesSource: 0
         includesEventSubject: 0
-        queries:
-        - team: 1
-          statusFilter: 1
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

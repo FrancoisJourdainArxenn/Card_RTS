@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: When you <b>play or create</b> a Melee Unit, it gains +1/+2.
+  Description: When you play or create <b>ANY</b> Melee Unit, it gains +1/+2.
   CardImage: {fileID: 21300000, guid: 7514b30da6b2bc54b9df3413f0262279, type: 3}
   MainCost: 0
   IsHero: 1

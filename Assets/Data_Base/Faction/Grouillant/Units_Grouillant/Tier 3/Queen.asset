@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>Regroup:</b> Create a Zergling and a Hydralisk in my zone.
+  Description: <b>Start of turn:</b> Create a Zergling and a Hydralisk in my zone.
   CardImage: {fileID: 21300000, guid: 503ccc0175f91a049a1cec19c9968b0e, type: 3}
   MainCost: 5
   IsHero: 0

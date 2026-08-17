@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Medic
+  m_Name: Sniper
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
-  tier: 1
-  Description: <b>Battle End:</b> Heals a unit for 2.
-  CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
-  MainCost: 1
+  tier: 2
+  Description: <b>Begin Battle:</b> Deal 2 to a random Unit.
+  CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
+  MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 3
+  Attack: 2
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -33,12 +33,11 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
+  Keywords: []
   Effects:
-  - EffectName: Heal
-    Effect: {fileID: 11400000, guid: 2bb29b9f06c94a74ea05a43bd9a3eba5, type: 2}
-    Trigger: 5
+  - EffectName: Snipe
+    Effect: {fileID: 11400000, guid: dd53d2e9daa92f34d999c8f2cdb4f171, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -46,19 +45,19 @@ MonoBehaviour:
         includesSource: 0
         onlySource: 0
         queries:
-        - team: 1
-          statusFilter: 4
+        - team: 2
+          statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 1
+        includesTarget: 0
         includesSource: 0
         includesEventSubject: 0
         queries:
-        - team: 1
-          statusFilter: 4
+        - team: 2
+          statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
       repartition: 3
