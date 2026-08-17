@@ -6,9 +6,9 @@ public enum TriggerType
     // Card Lifecycle
     OnPlay = 0,
     // OnAmbush,
-    // OnAttack,
     // OnTakeDamage,
     OnDeath = 1,
+    OnAttack = 15, // déclenché au milieu de l'animation d'attaque, entre le wind-up et la charge/le projectile
     // Phases
     OnRegroup = 2,
     OnCommand = 3,

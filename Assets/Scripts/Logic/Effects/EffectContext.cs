@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 public partial class EffectContext
 {
@@ -87,7 +88,17 @@ public partial class EffectContext
                 var subject = GetEventSubjectByType(affectedElement.affectedElementType);
                 if (subject != null) elements.Add(subject);
             }
-            elements.AddRange(ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone));
+
+            List<IIdentifiable> queried = ResolveByType(affectedElement.affectedElementType, affectedElement.queries, targetZone);
+            // Symétrique avec GetEligibleTargets (premier stage de ciblage) : sans includesSource, la
+            // source ne doit pas se retrouver dans le pool via les queries de repartition (ex: un
+            // effet "ally, same zone as source" repêchait la source elle-même ici, faute d'exclusion —
+            // absente uniquement de CE second stage, jamais du premier). Observé concrètement sur
+            // Flag-Bearer 1 (OnAttack "Inspire", RandomSingleTarget) : le pool éligible incluait
+            // Flag-Bearer lui-même en plus de ses alliés, faussant le tirage aléatoire.
+            if (!affectedElement.includesSource && Source != null)
+                queried = queried.Where(e => !Equals(e, Source)).ToList();
+            elements.AddRange(queried);
         }
         return elements;
     }

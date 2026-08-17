@@ -70,7 +70,20 @@ public class TokenGenerationSO : EffectSO
                             // ni un UniqueCreatureID, toujours positif, ni un zoneDeferKey, toujours proche de
                             // -2 000 000 000 mais jamais égal à int.MinValue).
                             int deferKey = Command.CurrentDeferSourceID ?? int.MinValue;
-                            GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey);
+
+                            // Pendant la résolution d'un trigger prédit (OnDeath/OnAttack — voir
+                            // ZoneCombatResolver.IsResolvingPredictedTrigger), NE PAS diffuser tout de suite :
+                            // ce ClientRpc arriverait, pour TOUS les tokens de TOUTE la bataille, avant l'unique
+                            // ApplyCanonicalBattleAssignmentClientRpc envoyé une fois la planification terminée —
+                            // un effet à ciblage aléatoire plus tard dans la même bataille verrait alors ce token
+                            // côté client alors qu'il n'existait pas encore côté hôte au même point chronologique
+                            // (désync constaté sur Flag-Bearer "Inspire" + un Zergling Token de Broodling). On
+                            // enregistre à la place ce spawn, tagué par (sourceEntityID, effectIndex) — rejoué au
+                            // bon moment relatif dans la boucle de ApplyCanonicalBattleAssignmentClientRpc.
+                            if (ZoneCombatResolver.IsResolvingPredictedTrigger)
+                                ZoneCombatResolver.RecordPredictedTokenSpawn(sourceEntityID, effectIndex, playerIndex, cardID, creatureID, tablePos, spawned.BaseID, deferKey);
+                            else
+                                GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey);
                         }
                         break;
                 }

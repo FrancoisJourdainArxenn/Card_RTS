@@ -25,14 +25,15 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 2
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
+  Keywords: []
   Effects:
   - EffectName: Heal
     Effect: {fileID: 11400000, guid: 2bb29b9f06c94a74ea05a43bd9a3eba5, type: 2}

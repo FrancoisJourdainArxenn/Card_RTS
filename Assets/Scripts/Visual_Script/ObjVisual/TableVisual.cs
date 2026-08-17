@@ -462,6 +462,19 @@ public class TableVisual : MonoBehaviour
         {
             int virtualIndex = (hasGap && i >= clampedGap) ? i + 1 : i;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
+
+            // Créature actuellement figée entre le wind-up et la résolution de son attaque (voir
+            // CreatureAttackVisual.IsPausedMidAttack) : comptée normalement dans l'effectif/le centrage
+            // de la rangée (donc dans virtualCount/targetPos ci-dessus), mais son propre tween est sauté
+            // pour qu'elle reste visuellement à sa position de recul jusqu'à ce que sa charge/son tir
+            // reprenne, au lieu d'être tirée vers son slot par un repositionnement causé par un effet
+            // OnAttack qui se déclenche pendant cet intervalle (ex: spawn d'un token dans sa propre rangée).
+            if (CreatureAttackVisual.IsPausedMidAttack(displayOrder[i]))
+            {
+                TweenDone();
+                continue;
+            }
+
             displayOrder[i].transform.DOKill();
             float reorderDuration = VisualManager.Instance != null ? VisualManager.Instance.RowReorderDuration : 0.3f;
             Tween t = displayOrder[i].transform.DOMove(targetPos, reorderDuration).SetEase(Ease.OutQuad);

@@ -335,9 +335,28 @@ public class CreatureLogic: ILivable
         if (OnDeathResolvedInBattle) return;
         OnDeathResolvedInBattle = true;
 
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+
+        // OnDeathResolvedInBattle sert aussi de signal générique "cette créature est déjà morte dans le
+        // combat prédictif en cours" pour les requêtes de ciblage d'AUTRES effets (voir
+        // TargetFunctions.GetTargetsByTeam, qui exclut IsPendingDeath || OnDeathResolvedInBattle) — pas
+        // seulement pour empêcher son propre OnDeath de se redéclencher. Il faut donc le propager au
+        // client MÊME quand cette créature n'a elle-même AUCUN effet OnDeath (ca.Effects vide/sans
+        // TriggerType.OnDeath) : sinon le client ne l'apprend que bien plus tard, via son propre passage
+        // [Enqueue:X] (ScheduleBattleDeath), largement après que d'autres triggers prédits (ex: un OnDeath
+        // à ciblage aléatoire d'une autre créature) aient déjà lu son pool de cibles — elle y apparaît
+        // alors encore "vivante" côté client alors qu'elle est déjà exclue côté hôte. Repro concret :
+        // Flag-Bearer (aucun OnDeath) meurt en contre-attaque puis Baneling meurt et déclenche Acid
+        // Explosion (ciblage aléatoire, exclut les IsPendingDeath/OnDeathResolvedInBattle) — côté hôte
+        // Flag-Bearer est déjà exclue, côté client elle apparaît encore comme cible éligible → la
+        // répartition aléatoire (même seed, pool de taille différente) touche une créature différente.
+        // effectIndex=-1 est un sentinel "rien à exécuter, juste marquer OnDeathResolvedInBattle" — géré
+        // dans ReplayPredictedTriggerEffect avant la résolution normale d'un CardEffectData.
+        if (isNetworkServer)
+            ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, -1, 0);
+
         if (ca.Effects == null) return;
 
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
         for (int i = 0; i < ca.Effects.Count; i++)
         {
             CardEffectData data = ca.Effects[i];
@@ -363,16 +382,18 @@ public class CreatureLogic: ILivable
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(UniqueCreatureID, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
                     }
                     finally
                     {
+                        ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.ClearNetworkRng();
                     }
-                    ZoneCombatResolver.RecordOnDeathBattleReplay(UniqueCreatureID, i, seed);
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed);
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayOnDeathBattleEffect
+                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                 // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
             }
             catch (System.Exception e)
@@ -382,29 +403,122 @@ public class CreatureLogic: ILivable
         }
     }
 
+    // Clé de report dédiée à OnAttack, distincte de UniqueCreatureID (utilisé tel quel comme clé par
+    // OnDeath). Nécessaire parce qu'une créature peut être prédictivement tuée par une contre-attaque
+    // PENDANT sa propre résolution d'attaque (AddPendingCreatureDamage → ResolvePredictedBattleDeath,
+    // appelé sur l'ATTAQUANT lui-même) : son bucket OnDeath se retrouverait alors sous la même clé que
+    // celle que CreatureAttackCommand.EnqueueAttack flush entre le wind-up et la résolution — le flush
+    // OnAttack viderait alors PRÉMATURÉMENT le bucket OnDeath (token/buff affichés en plein wind-up, au
+    // lieu de juste avant la CreatureDieCommand ultérieure), cassant à la fois l'ordre visuel et la
+    // seconde tentative de flush plus tard dans CreatureLogic.QueuePendingDeathVisuals (bucket déjà vidé,
+    // donc silencieusement no-op). Décalage choisi pour ne collisionner ni avec les IDs réels (toujours
+    // positifs, IDFactory.GetUniqueID), ni avec la plage des IDs locaux (~-1 000 000, IDFactory.GetLocalOnlyID),
+    // ni avec celle de zoneDeferKey (~-2 000 000 000, ZoneCombatResolver.ZoneDeferKeyBase).
+    private const int OnAttackDeferKeyBase = -1_500_000_000;
+    public static int OnAttackDeferKey(int creatureID) => OnAttackDeferKeyBase - creatureID;
+
+    // Résout OnAttack immédiatement, à l'instant où ZoneCombatResolver assigne effectivement une
+    // cible à cette attaque pendant la planification (AssignSingleAttack) — pas d'attente du
+    // déroulé visuel. Contrairement à ResolvePredictedBattleDeath, pas besoin de flag "déjà résolu" :
+    // AssignSingleAttack n'appelle chaque attaquant qu'une seule fois par bataille de zone
+    // (BuildAttackQueue n'ajoute chaque créature qu'une fois à la file d'attaque).
+    public void ResolvePredictedOnAttack()
+    {
+        if (ca.Effects == null) return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnAttack) continue;
+
+            Debug.Log($"[OnAttack] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
+
+            // try/catch : même raison que ResolvePredictedBattleDeath ci-dessus — une exception ici
+            // ne doit jamais laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués.
+            try
+            {
+                if (!NetworkSessionData.IsNetworkSession)
+                {
+                    Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
+                else if (isNetworkServer)
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                        Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        ZoneCombatResolver.EndResolvingPredictedTrigger();
+                        EffectSO.ClearNetworkRng();
+                    }
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed);
+                }
+                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnAttack] Exception pendant l'effet OnAttack #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+            }
+        }
+    }
+
     // Rejeu côté client (jamais côté serveur, qui a déjà résolu l'effet réellement dans
-    // ResolvePredictedBattleDeath) d'un triplet (source, index d'effet, seed) diffusé par le
-    // serveur — même mécanisme déterministe que PhaseEffectPipeline.ApplyCanonicalResolution :
+    // ResolvePredictedBattleDeath/ResolvePredictedOnAttack) d'un triplet (source, index d'effet, seed)
+    // diffusé par le serveur — même mécanisme déterministe que PhaseEffectPipeline.ApplyCanonicalResolution :
     // la seed reproduit exactement le même ciblage aléatoire, donc pas besoin de sérialiser la
     // cible ni le delta appliqué séparément.
-    public static void ReplayOnDeathBattleEffect(int sourceCreatureID, int effectIndex, int seed)
+    //
+    // Généralisé pour OnDeath ET OnAttack (auparavant ReplayOnDeathBattleEffect, filtré sur
+    // TriggerType.OnDeath) : l'effectIndex désigne déjà un CardEffectData précis, dont le Trigger
+    // est connu des deux côtés (même carte) — pas besoin de le vérifier ni de le transporter. Les
+    // deux triggers partagent une seule liste de replay, rejouée dans l'ordre chronologique réel
+    // (voir le commentaire sur ZoneCombatResolver.PredictedTriggerReplay) : rejouer OnDeath et
+    // OnAttack comme deux boucles séparées risquerait de trahir cet ordre pour un effet à ciblage
+    // aléatoire dont le pool de cibles dépend d'un état de vie/mort pas encore rejoué.
+    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed)
     {
         if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
+
+        // effectIndex=-1 : sentinel posé par ResolvePredictedBattleDeath pour une créature morte en
+        // planification SANS effet OnDeath propre — rien à exécuter, juste propager le flag au client
+        // (voir le commentaire sur ce sentinel dans ResolvePredictedBattleDeath).
+        if (effectIndex == -1)
+        {
+            creature.OnDeathResolvedInBattle = true;
+            return;
+        }
+
         if (creature.ca.Effects == null || effectIndex < 0 || effectIndex >= creature.ca.Effects.Count) return;
 
         CardEffectData data = creature.ca.Effects[effectIndex];
-        if (data.Trigger != TriggerType.OnDeath) return;
 
-        creature.OnDeathResolvedInBattle = true;
+        // OnDeathResolvedInBattle sert aussi de garde-fou pour empêcher NotifyCreatureDied de
+        // re-déclencher OnDeath plus tard (voir Die()) — pertinent uniquement pour ce trigger précis
+        // (le cas générique, sans effet propre, est couvert par le sentinel ci-dessus).
+        if (data.Trigger == TriggerType.OnDeath)
+            creature.OnDeathResolvedInBattle = true;
+
+        // OnAttack utilise une clé de report dédiée (voir OnAttackDeferKey) — jamais UniqueCreatureID
+        // tel quel, sous peine de collisionner avec un éventuel bucket OnDeath de cette même créature.
+        int deferKey = data.Trigger == TriggerType.OnAttack ? OnAttackDeferKey(sourceCreatureID) : sourceCreatureID;
+
         try
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
-            Command.RunDeferred(sourceCreatureID, () =>
+            Command.RunDeferred(deferKey, () =>
                 EffectRegistry.Execute(data, new EffectContext { Caster = creature.owner, Source = creature }));
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[OnDeath][Replay] Exception pendant le rejeu de l'effet OnDeath #{effectIndex} ({data.EffectName}) sur {creature.DisplayName} (ID:{sourceCreatureID}) : {e}");
+            Debug.LogError($"[{data.Trigger}][Replay] Exception pendant le rejeu de l'effet #{effectIndex} ({data.EffectName}) sur {creature.DisplayName} (ID:{sourceCreatureID}) : {e}");
         }
         finally
         {
@@ -463,7 +577,7 @@ public class CreatureLogic: ILivable
     }
 
     // Rejeu côté client d'un effet OnBattleStart déjà résolu par le serveur (même mécanisme
-    // déterministe que ReplayOnDeathBattleEffect).
+    // déterministe que ReplayPredictedTriggerEffect).
     public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed)
     {
         if (ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) return;

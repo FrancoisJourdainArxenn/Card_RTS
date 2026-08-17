@@ -37,7 +37,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Snipe
     Effect: {fileID: 11400000, guid: 07b517e1542336d4e8d96bfe79e29bdc, type: 2}
-    Trigger: 14
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

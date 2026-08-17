@@ -37,7 +37,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Inspire
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 14
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
