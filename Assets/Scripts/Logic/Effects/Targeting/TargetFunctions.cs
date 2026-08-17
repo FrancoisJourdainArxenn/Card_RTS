@@ -21,7 +21,7 @@ public partial class EffectContext
                 _                   => Enumerable.Empty<IIdentifiable>()
             };
 
-            candidates = candidates.Where(t => !(t is ILivable l && l.IsPendingDeath));
+            candidates = candidates.Where(t => !(t is ILivable l && (l.IsPendingDeath || l.OnDeathResolvedInBattle)));
 
             candidates = query.statusFilter switch
             {

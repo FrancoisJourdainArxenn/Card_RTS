@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: J4CK
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: J4CK, Master of Machines
+  difficultyLevel: 2
+  deckTooltip: You will need to hold on long enough to collect the Ressources you
+    need, but once that is done you will be unstoppable.
   heroCard: {fileID: 11400000, guid: 14173477f42014544949c602731c7f33, type: 2}
   cards:
   - {fileID: 11400000, guid: 5c9e22e9fd9c70743bc74e90faed160a, type: 2}

@@ -6,5 +6,5 @@ public class EffectVisualData
     public GameObject vfxPrefab;
     public Material overlayMaterial;
     public float OverrideOverlayDuration = 0f;
-
+    public bool travelFromSource = false;
 }

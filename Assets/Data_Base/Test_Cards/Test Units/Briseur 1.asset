@@ -17,10 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 2
   tier: 1
-  Description: '<b>Begin Battle:</b> Deal 1 to enemy Units.
-
-    <b>Battle End:</b>
-    Deal 1 to enemy Units.'
+  Description: <b>Start of Combat:</b> Deal 1 to enemy Units.
   CardImage: {fileID: 21300000, guid: be9c17079b0d8f049bc86f6268da86a9, type: 3}
   MainCost: 0
   IsHero: 0
@@ -28,47 +25,19 @@ MonoBehaviour:
   Attack: 0
   MaxHealth: 6
   AttacksForOneTurn: 1
-  melee: 0
   AttackSpeedMultiplier: 2
   AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 1
+  melee: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: Canon
-    Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
-    Trigger: 4
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 2
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 2
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-  - EffectName: Canon
-    Effect: {fileID: 11400000, guid: 5786b1a78d9a264448539d3cf44f2f56, type: 2}
-    Trigger: 5
+    Effect: {fileID: 11400000, guid: 07b517e1542336d4e8d96bfe79e29bdc, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

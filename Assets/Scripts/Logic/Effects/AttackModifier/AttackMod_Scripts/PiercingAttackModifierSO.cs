@@ -4,49 +4,44 @@ using System.Collections.Generic;
 [CreateAssetMenu(menuName = "Attack Modifiers/Piercing Attack")]
 public class PiercingAttackModifierSO : AttackModifierSO
 {
-    public override List<AttackHitResult> Apply(CreatureLogic attacker, CreatureLogic mainTarget)
+    public override List<AttackHitResult> ResolveTargets(CreatureLogic attacker, CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
     {
         List<AttackHitResult> hits = new List<AttackHitResult>();
-        if (!mainTarget.IsMelee)
-            return hits;
-
-        List<CreatureLogic> rangedRow = GetRow(mainTarget, false);
-        int idx = FindCrossRowIdx(mainTarget, rangedRow);
-        if (idx < 0)
-            return hits;
-
-        CreatureLogic pierced = rangedRow[idx];
-        if (pierced.IsPendingDeath)
-            return hits;
+        CreatureLogic pierced = GetPiercedTarget(mainTarget, isDead);
+        if (pierced == null) return hits;
 
         int dmg = attacker.Attack;
         int shieldAbs = Mathf.Min(dmg, pierced.ShieldValue);
         int effective = dmg - shieldAbs;
         int hpAfter = Mathf.Max(0, pierced.Health - effective);
-
         hits.Add(new AttackHitResult(pierced.UniqueCreatureID, dmg, hpAfter));
-        // La mort (ScheduleBattleDeath) est mise en file par l'appelant (ZoneCombatResolver), après la
-        // commande d'attaque principale — sinon CreatureDieCommand pourrait s'exécuter avant l'animation
-        // d'attaque et la cible disparaîtrait avant même que le coup ne soit joué visuellement.
-        if (hpAfter > 0)
-            pierced.Health -= effective;
-
         return hits;
     }
 
-    private int FindCrossRowIdx(CreatureLogic from, List<CreatureLogic> targetRow)
+    // Cible la créature ranged la plus proche (par position) qui n'est pas déjà morte à ce point de la
+    // résolution — au lieu de toujours prendre la plus proche tout court. Sans ça, si la créature la plus
+    // proche a déjà été tuée par un Piercing précédent dans la même passe, l'attaque ne fait rien du tout
+    // au lieu de percer jusqu'à la prochaine créature vivante.
+    private CreatureLogic GetPiercedTarget(CreatureLogic mainTarget, System.Func<CreatureLogic, bool> isDead)
     {
-        GameObject fromGO = IDHolder.GetGameObjectWithID(from.UniqueCreatureID);
-        if (fromGO == null || targetRow.Count == 0) return -1;
-        float fromX = fromGO.transform.position.x;
-        int closest = 0;
+        if (!mainTarget.IsMelee)
+            return null;
+
+        List<CreatureLogic> rangedRow = GetRow(mainTarget, false);
+        return FindClosestAliveCrossRow(mainTarget, rangedRow, isDead);
+    }
+
+    private CreatureLogic FindClosestAliveCrossRow(CreatureLogic from, List<CreatureLogic> targetRow, System.Func<CreatureLogic, bool> isDead)
+    {
+        float fromX = GetEffectiveWorldX(from);
+
+        CreatureLogic closest = null;
         float minDist = float.MaxValue;
-        for (int i = 0; i < targetRow.Count; i++)
+        foreach (CreatureLogic c in targetRow)
         {
-            GameObject go = IDHolder.GetGameObjectWithID(targetRow[i].UniqueCreatureID);
-            if (go == null) continue;
-            float dist = Mathf.Abs(go.transform.position.x - fromX);
-            if (dist < minDist) { minDist = dist; closest = i; }
+            if (isDead(c)) continue;
+            float dist = Mathf.Abs(GetEffectiveWorldX(c) - fromX);
+            if (dist < minDist) { minDist = dist; closest = c; }
         }
         return closest;
     }

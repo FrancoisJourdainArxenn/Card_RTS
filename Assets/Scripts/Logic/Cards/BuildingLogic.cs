@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
+using Unity.Netcode;
 
 [System.Serializable]
 public class BuildingLogic : ILivable
@@ -89,11 +91,102 @@ public class BuildingLogic : ILivable
         ActivationLeftThisTurn = activationForOneTurn;
     }
 
+    public static List<BuildingLogic> PendingDeathVisualQueue = new List<BuildingLogic>();
+
+    // Comme CreatureLogic.MarkPendingDeath : si on est dans un Command.RunDeferred (OnBattleStart),
+    // la clé de report doit être capturée MAINTENANT, pas au moment où QueuePendingDeathVisuals()
+    // sera éventuellement appelée par une autre zone — voir le commentaire détaillé sur MarkPendingDeath.
     public void Die()
     {
         owner.playedCards.Buildings.Remove(this);
         EffectRegistry.NotifyBuildingDied(this, owner);
-        new BuildingDieCommand(UniqueBuildingID).AddToQueue();
+
+        if (Command.DeferForBattleReplay)
+        {
+            int deferKey = Command.CurrentDeferSourceID ?? UniqueBuildingID;
+            BuildingDieCommand dieCommand = new BuildingDieCommand(UniqueBuildingID);
+            Command.DeferDeath(deferKey, dieCommand.AddToQueueImmediate);
+        }
+        else
+        {
+            PendingDeathVisualQueue.Add(this);
+        }
+    }
+
+    // Met en file la BuildingDieCommand de tout bâtiment marqué mort EN DEHORS d'un contexte différé
+    // depuis le dernier appel. Appelé par l'orchestrateur juste après avoir mis en file ses propres
+    // commandes "cause" (voir Command.FlushPendingDeaths).
+    public static void QueuePendingDeathVisuals()
+    {
+        foreach (BuildingLogic building in PendingDeathVisualQueue)
+            new BuildingDieCommand(building.UniqueBuildingID).AddToQueue();
+        PendingDeathVisualQueue.Clear();
+    }
+
+    // Équivalent de CreatureLogic.ResolveBattleStartEffects, pour les bâtiments. Pas de notion
+    // de "pending death" côté bâtiment (Die() est immédiat) : on vérifie juste que ce bâtiment
+    // est toujours dans playedCards.Buildings avant de résoudre son effet.
+    public void ResolveBattleStartEffects(int zoneDeferKey)
+    {
+        if (!owner.playedCards.Buildings.Contains(this)) return; // tué par un OnBattleStart précédent
+        if (ca.Effects == null) return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnBattleStart) continue;
+
+            try
+            {
+                if (!NetworkSessionData.IsNetworkSession)
+                {
+                    Command.RunDeferred(zoneDeferKey, () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
+                else if (isNetworkServer)
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        Command.RunDeferred(zoneDeferKey, () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        EffectSO.ClearNetworkRng();
+                    }
+                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueBuildingID, true, i, seed);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnBattleStart] Exception pendant l'effet #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueBuildingID}) : {e}");
+            }
+        }
+    }
+
+    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed)
+    {
+        if (ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) return;
+        CardEffectData data = ca.Effects[effectIndex];
+        if (data.Trigger != TriggerType.OnBattleStart) return;
+
+        try
+        {
+            EffectSO.SetNetworkRng(new System.Random(seed));
+            Command.RunDeferred(zoneDeferKey, () =>
+                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[OnBattleStart][Replay] Exception pendant le rejeu de l'effet #{effectIndex} ({data.EffectName}) sur {DisplayName} (ID:{UniqueBuildingID}) : {e}");
+        }
+        finally
+        {
+            EffectSO.ClearNetworkRng();
+        }
     }
 
     // public void AttackCreature(CreatureLogic target)

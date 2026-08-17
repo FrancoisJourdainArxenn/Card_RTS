@@ -13,22 +13,24 @@ MonoBehaviour:
   m_Name: Zagara
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Zagara, Queen of the Swarm
-  heroCard: {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
+  difficultyLevel: 3
+  deckTooltip: Overwhelm your opponent under a flood of tokens units.
+  heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
-  - {fileID: 11400000, guid: 9c8745fd772bc6440a2e1b3b85fdfd45, type: 2}
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
   - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}
-  - {fileID: 11400000, guid: 2ec079382b2e6a34db34e09516677b36, type: 2}
-  - {fileID: 11400000, guid: 478394346c8c613428556f359e52f037, type: 2}
   - {fileID: 11400000, guid: 1c962ece523e3c1479439a5a12255cca, type: 2}
-  - {fileID: 11400000, guid: 934cdef1eba6d4b4b8685c2301457b30, type: 2}
-  - {fileID: 11400000, guid: cb5b8e5571cc61b43a62a420a72e1f31, type: 2}
-  - {fileID: 11400000, guid: fd6daaf4727090345b9ad461bc3ee6dc, type: 2}
-  - {fileID: 11400000, guid: f4101c1205d4fdb46a9816e3c341291a, type: 2}
+  - {fileID: 11400000, guid: 9f412b180eea7be4db7eb38e286c34dd, type: 2}
   - {fileID: 11400000, guid: f01c93db45d9f87428921f110cec8624, type: 2}
-  - {fileID: 11400000, guid: ecac3d1eac14865458f113cf57ec705a, type: 2}
-  - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
   - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
   - {fileID: 11400000, guid: 1cd4064ce16628d43bfea2fc7792e35e, type: 2}
   - {fileID: 11400000, guid: 31d255cea446e3848afce91b9a4a85f3, type: 2}
+  - {fileID: 11400000, guid: 2ec079382b2e6a34db34e09516677b36, type: 2}
+  - {fileID: 11400000, guid: fd6daaf4727090345b9ad461bc3ee6dc, type: 2}
+  - {fileID: 11400000, guid: f4101c1205d4fdb46a9816e3c341291a, type: 2}
+  - {fileID: 11400000, guid: ecac3d1eac14865458f113cf57ec705a, type: 2}
+  - {fileID: 11400000, guid: 478394346c8c613428556f359e52f037, type: 2}
+  - {fileID: 11400000, guid: 934cdef1eba6d4b4b8685c2301457b30, type: 2}
+  - {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
+  - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
   buildings: []

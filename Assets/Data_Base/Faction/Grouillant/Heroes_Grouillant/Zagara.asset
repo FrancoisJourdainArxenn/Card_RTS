@@ -13,53 +13,61 @@ MonoBehaviour:
   m_Name: Zagara
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: Zagara, Queen of the Swarm
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
   tier: 1
   Description: '<b>Commander.</b>
 
-    <b>Regroup:</b> Create a Zergling and a Hydralisk
-    in my zone.'
+    Units you <b>create</b> gain +1/+0 and <b>Celerity.</b>'
   CardImage: {fileID: 21300000, guid: 1303c21eaf505a542a808ee910221ab0, type: 3}
   MainCost: 0
   IsHero: 1
-  UnlockCondition: {fileID: 11400000, guid: 2c776b9e50920024eb56abdf9df7be92, type: 2}
-  Attack: 4
-  MaxHealth: 8
+  UnlockCondition: {fileID: 11400000, guid: fa2f6803aa13af24ab4d9b8d029fce63, type: 2}
+  Attack: 3
+  MaxHealth: 6
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 0
+  Commandement: 1
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 0
   ActivationsForOneTurn: 0
   Keywords:
-  - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
-  - {fileID: 11400000, guid: fbbc36a1ce50c3742a461bffa9e1b278, type: 2}
-  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
+  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
   Effects:
-  - EffectName: Zagara's Army (Zergling)
-    Effect: {fileID: 11400000, guid: 0339fd8f4a0d630408f7f5f7f8bad261, type: 2}
-    Trigger: 2
+  - EffectName: Onslaught
+    Effect: {fileID: 11400000, guid: 8fdbac8da54e74d4fb05677bc5398815, type: 2}
+    Trigger: 11
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
-  - EffectName: Zagara's Army (Hydralisk)
-    Effect: {fileID: 11400000, guid: 2b73375ed59fa58409311268e5a6a065, type: 2}
-    Trigger: 2
+  - EffectName: Onslaught
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 11
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

@@ -18,12 +18,12 @@ MonoBehaviour:
   subType: 1
   tier: 1
   Description: <b>Scout.</b>
-  CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
+  CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 1
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -31,7 +31,7 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: a5416abf016aec34eacb915942ab6efd, type: 2}

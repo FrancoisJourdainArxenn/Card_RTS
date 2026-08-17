@@ -38,7 +38,7 @@ MonoBehaviour:
   Effects:
   - EffectName: For the Swarm
     Effect: {fileID: 11400000, guid: 65afb0eee6b092d4885aa56e08c924bc, type: 2}
-    Trigger: 4
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

@@ -17,13 +17,13 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>On Play:</b> Gives +2/+0 to Melee Units in my zone.
+  Description: <b>On Play:</b> Gives +2/+0 to Melee Units.
   CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
   MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 3
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -42,7 +42,7 @@ MonoBehaviour:
     Effectinfo:
       effectTargets:
       - targetType: 0
-        includesSource: 1
+        includesSource: 0
         onlySource: 0
         queries:
         - team: 1
@@ -53,7 +53,7 @@ MonoBehaviour:
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1
-        includesSource: 1
+        includesSource: 0
         includesEventSubject: 0
         queries:
         - team: 1

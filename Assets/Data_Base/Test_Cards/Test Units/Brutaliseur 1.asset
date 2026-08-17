@@ -17,16 +17,17 @@ MonoBehaviour:
   Type: 0
   subType: 2
   tier: 1
-  Description: 
+  Description: "C\xF4ne"
   CardImage: {fileID: 21300000, guid: be9c17079b0d8f049bc86f6268da86a9, type: 3}
   MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 1
   MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 4
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1

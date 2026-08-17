@@ -324,7 +324,7 @@ public class Player : MonoBehaviour, ILivable
         }
     }
 
-    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, EffectVisualData visualData = null)
+    public void NetworkSpawnTokenToZone(CardAsset tokenAsset, int cardID, int creatureID, int tablePos, int baseID, int deferKey, EffectVisualData visualData = null)
     {
         PlayerArea targetArea = GetPlayerAreaByID(baseID);
         if (targetArea == null) { Debug.LogError($"[Token] PlayerArea introuvable baseID={baseID}"); return; }
@@ -337,33 +337,53 @@ public class Player : MonoBehaviour, ILivable
         int logicalIndex  = GetLogicalInsertIndex(tokenAsset.melee, baseID, rowLocalPos);
 
         CreatureLogic newCreature = new CreatureLogic(this, tokenAsset, baseID, creatureID);
+        // Capturé tout de suite, avant que le replay des dégâts de CE combat ne soit appliqué —
+        // voir TokenGenerationSO.SpawnToZone pour le même souci côté hôte.
+        int spawnAttack = newCreature.Attack;
+        int spawnHealth = newCreature.Health;
         playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
 
-        if (visualData?.vfxPrefab != null)
+        void QueueVisuals()
         {
-            ZoneManager targetZone = targetArea.parentZone;
-            bool isVisible = targetZone == null || FogOfWarManager.Instance == null
-                             || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
-
-            if (isVisible)
+            if (visualData?.vfxPrefab != null)
             {
-                CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
-                    ? targetArea.tableVisual.meleeSlots
-                    : targetArea.tableVisual.rangedSlots;
-                int currentCount = tokenIsMelee
-                    ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-                    : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-                Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
-                new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
-                new DelayCommand(0.9f).AddToQueue();
+                ZoneManager targetZone = targetArea.parentZone;
+                bool isVisible = targetZone == null || FogOfWarManager.Instance == null
+                                 || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
+
+                if (isVisible)
+                {
+                    CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
+                        ? targetArea.tableVisual.meleeSlots
+                        : targetArea.tableVisual.rangedSlots;
+                    int currentCount = tokenIsMelee
+                        ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
+                        : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+                    Vector3 spawnPos = rowSlots.GetSlotPosition(rowLocalPos, currentCount + 1);
+                    new SpawnVFXCommand(visualData.vfxPrefab, spawnPos).AddToQueue();
+                    new DelayCommand(0.9f).AddToQueue();
+                }
             }
+
+            new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea, spawnAttack, spawnHealth).AddToQueue();
+            EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
+            EffectRegistry.NotifyTokenCreated(this, newCreature);
         }
 
-        new PlayACreatureCommand(tokenCard, this, rowLocalPos, creatureID, targetArea).AddToQueue();
-        EffectRegistry.ETB(tokenAsset, new EffectContext { Caster = this, Source = newCreature });
-        EffectRegistry.NotifyTokenCreated(this, newCreature);
-
+        // Ce ClientRpc peut arriver AVANT le déroulé animé de la bataille (voir BroadcastBattleStepsClientRpc) —
+        // sans report, ces Command joueraient immédiatement à la réception, donc en tête de combat,
+        // au lieu d'attendre le même moment que côté hôte : la mort de la créature source pour un
+        // token OnDeath (Command.FlushDeferredCommands(CreatureLogic.OnDeathDeferKey(...)), voir
+        // CreatureLogic.ScheduleBattleDeath), ou l'arrivée de la BattleCam sur la zone pour un token
+        // OnBattleStart (Command.FlushDeferredCommands(zoneDeferKey), voir
+        // ZoneCombatResolver.EnqueueBattleCommands). deferKey (== int.MinValue si pas de report,
+        // voir Command.CurrentDeferSourceID) porte déjà la bonne clé, quel que soit le trigger
+        // d'origine — pas besoin de la deviner ici.
+        if (deferKey != int.MinValue)
+            Command.RunDeferred(deferKey, QueueVisuals);
+        else
+            QueueVisuals();
     }
 
 

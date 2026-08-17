@@ -162,21 +162,21 @@ public class HandVisual : MonoBehaviour
         if (!fast)
         {
             // Debug.Log ("Not fast!!!");
-            s.Append(card.transform.DOMove(DrawPreviewSpot.position, GlobalSettings.Instance.CardTransitionTime));
+            s.Append(card.transform.DOMove(DrawPreviewSpot.position, VisualManager.Instance.CardTransitionTime));
             if (TakeCardsOpenly)
-                s.Insert(0f, card.transform.DORotate(Vector3.zero, GlobalSettings.Instance.CardTransitionTime)); 
-            //else 
-                //s.Insert(0f, card.transform.DORotate(new Vector3(0f, 0f, 179f), GlobalSettings.Instance.CardTransitionTime)); 
-            s.AppendInterval(GlobalSettings.Instance.CardPreviewTime);
+                s.Insert(0f, card.transform.DORotate(Vector3.zero, VisualManager.Instance.CardTransitionTime));
+            //else
+                //s.Insert(0f, card.transform.DORotate(new Vector3(0f, 0f, 179f), VisualManager.Instance.CardTransitionTime));
+            s.AppendInterval(VisualManager.Instance.CardPreviewTime);
             // displace the card so that we can select it in the scene easier.
-            s.Append(card.transform.DOLocalMove(slots.Children[0].transform.localPosition, GlobalSettings.Instance.CardTransitionTime));
+            s.Append(card.transform.DOLocalMove(slots.Children[0].transform.localPosition, VisualManager.Instance.CardTransitionTime));
         }
         else
         {
             // displace the card so that we can select it in the scene easier.
-            s.Append(card.transform.DOLocalMove(slots.Children[0].transform.localPosition, GlobalSettings.Instance.CardTransitionTimeFast));
-            if (TakeCardsOpenly)    
-                s.Insert(0f,card.transform.DORotate(Vector3.zero, GlobalSettings.Instance.CardTransitionTimeFast)); 
+            s.Append(card.transform.DOLocalMove(slots.Children[0].transform.localPosition, VisualManager.Instance.CardTransitionTimeFast));
+            if (TakeCardsOpenly)
+                s.Insert(0f,card.transform.DORotate(Vector3.zero, VisualManager.Instance.CardTransitionTimeFast));
         }
 
         s.OnComplete(()=>ChangeLastCardStatusToInHand(card, w));

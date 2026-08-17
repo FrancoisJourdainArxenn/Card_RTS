@@ -89,7 +89,9 @@ public static class EffectRegistry
 
     public static void NotifyCreatureDied(CreatureLogic died, Player dyingOwner)
     {
-        if (died.ca.Effects != null)
+        // OnDeath déjà résolu plus tôt pendant la planification de combat
+        // (ResolvePredictedBattleDeath) — ne pas le redéclencher ici.
+        if (!died.OnDeathResolvedInBattle && died.ca.Effects != null)
             foreach (CardEffectData data in died.ca.Effects)
             {
                 if (data.Trigger != TriggerType.OnDeath)
@@ -106,10 +108,26 @@ public static class EffectRegistry
         FireListeners(TriggerType.OnEnemyCreatureDies, eventCtx,
             re => re.ContextFactory().Caster != dyingOwner);
 
+        NotifyCreatureDeathStats(dyingOwner);
+
         TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
 
+    }
+
+    // Progression des conditions de déblocage héros (All / Ally / Enemy). Séparé de
+    // NotifyCreatureDied pour pouvoir être rejoué côté client par SilentDie(), qui ne
+    // redéclenche pas les effets OnDeath/triggers mais doit quand même faire avancer
+    // ces compteurs — sinon les conditions de héros basées sur les morts ne progressent
+    // jamais côté client en session réseau.
+    public static void NotifyCreatureDeathStats(Player dyingOwner)
+    {
+        foreach (Player p in Player.Players)
+        {
+            p.matchStats.Add(MatchStatType.UnitsDied);
+            p.matchStats.Add(p == dyingOwner ? MatchStatType.AllyUnitsDied : MatchStatType.EnemyUnitsDied);
+        }
     }
 
     public static void NotifyBuildingDied(BuildingLogic died, Player dyingOwner)
@@ -137,6 +155,8 @@ public static class EffectRegistry
     // ── Triggers de token ─────────────────────────────────────────────────────
     public static void NotifyTokenCreated(Player creatingPlayer, CreatureLogic tokenOnBoard)
     {
+        creatingPlayer.matchStats.Add(MatchStatType.TokensCreated);
+
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = tokenOnBoard };
 
         FireListeners(TriggerType.OnTokenCreated, eventCtx,
@@ -220,11 +240,30 @@ public static class EffectRegistry
         }
 
         CurrentSourceID = context.Source?.ID ?? -1;
-        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
-        CurrentSourceID = -1;
 
+        // Enfilée avant la résolution de l'effet (et non dans RaiseEffectVisualCommand ci-dessous)
+        // pour que le VFX de trigger se joue avant que les dégâts/soins/etc. ne soient révélés,
+        // tout en restant soumis au même report de combat (Command.DeferForBattleReplay) que le
+        // reste — indispensable pour qu'il attende la caméra de bataille comme les autres commandes.
+        new PlayTriggerAnimationCommand(data.Trigger, context).AddToQueue();
+
+        data.Effect.Execute(data.EffectName, context, data.Effectinfo, data.Effect.EffectVisual);
+
+        // Passe par la file de commandes (comme ModifyStatsCommand etc.) au lieu de lever
+        // l'event directement : pendant une résolution OnDeath anticipée en combat
+        // (Command.DeferForBattleReplay), AddToQueue() la reporte et la rejoue au bon moment
+        // (voir CreatureLogic.ScheduleBattleDeath) — sinon la popup "carte d'effet" apparaîtrait
+        // dès la planification, avant même que la créature ne meure visuellement. Doit rester
+        // AVANT la remise à -1 de CurrentSourceID ci-dessous : c'est elle qui sert de clé de
+        // report dans Command.AddToQueue().
         if (!data.RequiresPlayerInput)
-            TargetingVisualEvents.RaiseAutoEffectTriggered(data, context);
+            new RaiseEffectVisualCommand(data, context).AddToQueue();
+
+        // Met en file les morts déclenchées par cet effet seulement maintenant, après ses propres
+        // commandes "cause" ci-dessus — voir Command.FlushPendingDeaths.
+        Command.FlushPendingDeaths();
+
+        CurrentSourceID = -1;
     }
 
     // ── Utilitaire ────────────────────────────────────────────────────────────

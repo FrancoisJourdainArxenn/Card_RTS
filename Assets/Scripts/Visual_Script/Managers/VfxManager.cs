@@ -47,6 +47,31 @@ public class VfxManager : MonoBehaviour
         }
     }
 
+    public void PlayProjectile(EffectVisualData data, int amount, Vector3 origin, System.Action onImpact)
+    {
+        if (data == null || data.vfxPrefab == null) { onImpact?.Invoke(); return; }
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null || !FogOfWarManager.Instance.IsZoneFogged(zone);
+        if (!isVisible) { onImpact?.Invoke(); return; }
+
+        Vector3 destination = transform.position;
+        float speed = VisualManager.Instance != null ? VisualManager.Instance.ProjectileSpeed : 18f;
+        float minDur = VisualManager.Instance != null ? VisualManager.Instance.ProjectileMinDuration : 0.12f;
+        float distance = Vector3.Distance(origin, destination);
+        float duration = Mathf.Max(minDur, speed > 0.01f ? distance / speed : minDur);
+
+        GameObject vfx = Instantiate(data.vfxPrefab, origin, Quaternion.identity);
+        RangedProjectile projScript = vfx.AddComponent<RangedProjectile>();
+        projScript.Play(origin, destination, duration, () =>
+        {
+            var config = vfx.GetComponent<VfxAmountConfig>();
+            if (config != null)
+                VisualFeedbackEffect.CreateTextEffect(destination, amount, config.textColor, config.prefix);
+            onImpact?.Invoke();
+        });
+    }
+
     public void PlaySecond(EffectVisualData data, int amount)
     {
         if (data == null || data.vfxPrefab == null) return;
@@ -126,16 +151,34 @@ public class VfxManager : MonoBehaviour
         effectOverlay.SetActive(true);
     }
 
-    public void PlayDeath()
+    // Retourne la durée du VFX joué (0 si rien n'a été joué), pour que l'appelant (CreatureDieCommand)
+    // puisse retarder le re-order de la rangée sans retarder la disparition de la créature elle-même.
+    public float PlayDeath()
     {
-        if (deathVfxPrefab == null) return;
+        if (deathVfxPrefab == null) return 0f;
+
+        ZoneManager zone = GetComponentInParent<ZoneManager>();
+        bool isVisible = zone == null || FogOfWarManager.Instance == null
+                        || !FogOfWarManager.Instance.IsZoneFogged(zone);
+        if (!isVisible) return 0f;
+
+        GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
+        float lifetime = GetParticleLifetime(vfx);
+        Debug.Log($"[DBG][Timing] PlayDeath {gameObject.name} lifetime={lifetime:F3} @ {Time.realtimeSinceStartup:F3}");
+        Destroy(vfx, lifetime);
+        return lifetime;
+    }
+
+    public void PlayTriggerVfx(GameObject prefab)
+    {
+        if (prefab == null) return;
 
         ZoneManager zone = GetComponentInParent<ZoneManager>();
         bool isVisible = zone == null || FogOfWarManager.Instance == null
                         || !FogOfWarManager.Instance.IsZoneFogged(zone);
         if (!isVisible) return;
 
-        GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
+        GameObject vfx = Instantiate(prefab, transform.position, Quaternion.identity);
         Destroy(vfx, GetParticleLifetime(vfx));
     }
 }

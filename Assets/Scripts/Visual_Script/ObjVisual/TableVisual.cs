@@ -36,6 +36,13 @@ public class TableVisual : MonoBehaviour
     // annulation les remette instantanément en place. Liste (pas HashSet) pour garder un ordre d'attente stable.
     private readonly List<GameObject> _pendingRowEndCreatures = new List<GameObject>();
 
+    // Relayout(s) reçus pendant qu'une attaque était en vol (voir CreatureAttackVisual.AnyAttackInFlight) :
+    // rejoués une seule fois, avec la position à jour de toutes les créatures, dès que la dernière
+    // attaque en vol se termine — pour ne jamais faire glisser une cible sous une charge/un projectile
+    // déjà lancé vers sa position figée.
+    private bool _relayoutPending = false;
+    private readonly List<System.Action> _pendingRelayoutCallbacks = new List<System.Action>();
+
     // Dernier ordre connu (IDs permanents, voir PermanentIDOf) pour chaque rangée, reçu via
     // ApplyCreatureOrder. Réappliqué idempotemment à chaque arrivée d'une créature en attente
     // (voir MoveCreatureToIndex) : la position finale d'une créature ne dépend jamais d'un index
@@ -75,6 +82,16 @@ public class TableVisual : MonoBehaviour
     void Awake()
     {
         col = GetComponent<BoxCollider>();
+    }
+
+    void OnEnable()
+    {
+        CreatureAttackVisual.OnAllAttacksResolved += FlushPendingRelayout;
+    }
+
+    void OnDisable()
+    {
+        CreatureAttackVisual.OnAllAttacksResolved -= FlushPendingRelayout;
     }
 
     public void RefreshSlotsPositions() => PlaceCreaturesOnNewSlots();
@@ -119,7 +136,7 @@ public class TableVisual : MonoBehaviour
     }
 
     // rowLocalPos : 0 = le plus à gauche dans la rangée
-    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int rowLocalPos, int baseID, bool completeCommand = true)
+    public void AddCreatureAtIndex(CardAsset ca, int UniqueID, int rowLocalPos, int baseID, bool completeCommand = true, int? overrideAttack = null, int? overrideHealth = null)
     {
         bool isMelee = ca.melee;
         CenteredSlots rowSlots      = GetRowSlots(isMelee);
@@ -129,7 +146,7 @@ public class TableVisual : MonoBehaviour
         int newCount  = targetList.Count + 1;
         Vector3 spawnPos = rowSlots.GetSlotPosition(listIndex, newCount);
 
-        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos);
+        GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos, overrideAttack, overrideHealth);
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
 
@@ -312,7 +329,7 @@ public class TableVisual : MonoBehaviour
         PlaceCreaturesOnNewSlots();
     }
 
-    public void RemoveCreatureWithID(int IDToRemove)
+    public void RemoveCreatureWithID(int IDToRemove, float reorderDelay = 0f)
     {
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
         if (!MeleeCreaturesOnTable.Remove(creatureToRemove))
@@ -322,13 +339,60 @@ public class TableVisual : MonoBehaviour
         // On attend la fin réelle du repositionnement (tween DOMove) avant de libérer la file de
         // commandes : sinon la prochaine attaque de la queue peut démarrer alors que les créatures de
         // la rangée sont encore en train de glisser vers leur nouveau slot, et l'attaquant vise à côté.
-        PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+        // reorderDelay (durée du VFX de mort de la créature qui vient d'être détruite ci-dessus)
+        // retarde uniquement ce re-order, jamais la disparition elle-même.
+        Debug.Log($"[DBG][Timing] RemoveCreatureWithID reorderDelay={reorderDelay:F3} @ {Time.realtimeSinceStartup:F3}");
+        if (reorderDelay <= 0f)
+        {
+            PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+            return;
+        }
+
+        bool fired = false;
+        DOVirtual.DelayedCall(reorderDelay, () =>
+            {
+                fired = true;
+                Debug.Log($"[DBG][Timing] reorderDelay écoulé, lancement du re-order @ {Time.realtimeSinceStartup:F3}");
+                PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
+            })
+            .SetLink(gameObject)
+            .OnKill(() => { if (!fired) Command.CommandExecutionComplete(); });
     }
 
     // onComplete (optionnel) : appelé une fois que tous les tweens de repositionnement (mêlée + distance)
     // sont réellement terminés — à utiliser avant de libérer la file de commandes (Command.CommandExecutionComplete),
     // pour qu'une attaque suivante ne se déclenche jamais pendant qu'une créature glisse encore vers son slot.
     void PlaceCreaturesOnNewSlots(System.Action onComplete = null)
+    {
+        if (CreatureAttackVisual.AnyAttackInFlight)
+        {
+            // Une attaque est en vol quelque part (peu importe la table) : on ne bouge personne
+            // tant qu'elle n'est pas résolue, sinon sa cible pourrait glisser sous la charge/le
+            // projectile déjà lancé vers une position figée. Rejoué par FlushPendingRelayout.
+            _relayoutPending = true;
+            if (onComplete != null) _pendingRelayoutCallbacks.Add(onComplete);
+            return;
+        }
+
+        DoPlaceCreaturesOnNewSlots(onComplete);
+    }
+
+    private void FlushPendingRelayout()
+    {
+        if (!_relayoutPending) return;
+        _relayoutPending = false;
+
+        List<System.Action> callbacks = new List<System.Action>(_pendingRelayoutCallbacks);
+        _pendingRelayoutCallbacks.Clear();
+
+        DoPlaceCreaturesOnNewSlots(() =>
+        {
+            foreach (System.Action callback in callbacks)
+                callback();
+        });
+    }
+
+    private void DoPlaceCreaturesOnNewSlots(System.Action onComplete)
     {
         int meleeGap  = (_previewIndex >= 0 &&  _previewIsMelee) ? _previewIndex : -1;
         int rangedGap = (_previewIndex >= 0 && !_previewIsMelee) ? _previewIndex : -1;
@@ -398,8 +462,22 @@ public class TableVisual : MonoBehaviour
         {
             int virtualIndex = (hasGap && i >= clampedGap) ? i + 1 : i;
             Vector3 targetPos = rowSlots.GetSlotPosition(virtualIndex, virtualCount);
+
+            // Créature actuellement figée entre le wind-up et la résolution de son attaque (voir
+            // CreatureAttackVisual.IsPausedMidAttack) : comptée normalement dans l'effectif/le centrage
+            // de la rangée (donc dans virtualCount/targetPos ci-dessus), mais son propre tween est sauté
+            // pour qu'elle reste visuellement à sa position de recul jusqu'à ce que sa charge/son tir
+            // reprenne, au lieu d'être tirée vers son slot par un repositionnement causé par un effet
+            // OnAttack qui se déclenche pendant cet intervalle (ex: spawn d'un token dans sa propre rangée).
+            if (CreatureAttackVisual.IsPausedMidAttack(displayOrder[i]))
+            {
+                TweenDone();
+                continue;
+            }
+
             displayOrder[i].transform.DOKill();
-            Tween t = displayOrder[i].transform.DOMove(targetPos, 0.3f).SetEase(Ease.OutQuad);
+            float reorderDuration = VisualManager.Instance != null ? VisualManager.Instance.RowReorderDuration : 0.3f;
+            Tween t = displayOrder[i].transform.DOMove(targetPos, reorderDuration).SetEase(Ease.OutQuad);
             if (onComplete != null)
             {
                 bool done = false;
@@ -539,7 +617,7 @@ public class TableVisual : MonoBehaviour
     private CenteredSlots GetRowSlots(bool isMelee) =>
         (isMelee && meleeSlots != null) ? meleeSlots : rangedSlots;
 
-    private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position)
+    private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position, int? overrideAttack = null, int? overrideHealth = null)
     {
         GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
@@ -551,10 +629,19 @@ public class TableVisual : MonoBehaviour
         IDHolder id = creature.AddComponent<IDHolder>();
         id.UniqueID = uniqueID;
 
+        // Stats de spawn explicites (ex: token créé pendant la planification d'un combat, voir
+        // TokenGenerationSO/PlayACreatureCommand) : prioritaires sur la lecture "live" ci-dessous,
+        // qui peut déjà refléter la vie de FIN de combat si EnqueueBattleCommands a tourné avant que
+        // cette commande de spawn ne s'exécute.
+        if (overrideAttack.HasValue || overrideHealth.HasValue)
+        {
+            manager.AttackText.text = (overrideAttack ?? ca.Attack).ToString();
+            manager.HealthText.text = (overrideHealth ?? ca.MaxHealth).ToString();
+        }
         // Si la logique existe déjà et a été modifiée avant que ce visuel soit créé
         // (ex: reveal différé côté réseau, buffs OnPlay résolus avant l'affichage),
         // on affiche les stats actuelles plutôt que les stats imprimées de la carte.
-        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
+        else if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
         {
             manager.AttackText.text = cl.Attack.ToString();
             manager.HealthText.text = cl.Health.ToString();

@@ -21,8 +21,28 @@ public class CreatureDieCommand : Command
             return;
         }
 
-        creatureToRemove.GetComponent<VfxManager>()?.PlayDeath();
+        VfxManager vfx = creatureToRemove.GetComponent<VfxManager>();
 
+        // Le VFX de trigger OnDeath doit se jouer ici, tant que le GameObject existe encore : passé
+        // ce point, il est détruit (voir plus bas) avant que la command du trigger OnDeath
+        // (enfilée par EffectRegistry.Execute) n'ait la moindre chance de s'exécuter — voir
+        // CreatureLogic.MarkPendingDeath, qui enfile toujours CreatureDieCommand avant de libérer
+        // les commandes différées de l'effet OnDeath.
+        if (vfx != null && TriggerAnimationLibrary.Instance != null)
+        {
+            CardAsset cardAsset = creatureToRemove.GetComponent<OneCreatureManager>()?.cardAsset;
+            bool hasOnDeathEffect = cardAsset != null && cardAsset.Effects != null
+                && cardAsset.Effects.Exists(e => e.Trigger == TriggerType.OnDeath);
+
+            if (hasOnDeathEffect)
+            {
+                GameObject onDeathVfxPrefab = TriggerAnimationLibrary.Instance.GetVfxPrefab(TriggerType.OnDeath);
+                if (onDeathVfxPrefab != null)
+                    vfx.PlayTriggerVfx(onDeathVfxPrefab);
+            }
+        }
+
+        float deathVfxDuration = vfx != null ? vfx.PlayDeath() : 0f;
 
         if (p.PAreas != null)
         {
@@ -34,8 +54,10 @@ public class CreatureDieCommand : Command
                 if (area.tableVisual.MeleeCreaturesOnTable.Contains(creatureToRemove) ||
                     area.tableVisual.RangedCreaturesOnTable.Contains(creatureToRemove))
                 {
-                    // RemoveCreatureWithID calls CommandExecutionComplete internally via its tween OnComplete.
-                    area.tableVisual.RemoveCreatureWithID(DeadCreatureID);
+                    // La créature disparaît immédiatement ; seul le re-order de la rangée attend la
+                    // durée du VFX de mort (voir TableVisual.RemoveCreatureWithID), qui appelle
+                    // CommandExecutionComplete lui-même une fois le repositionnement terminé.
+                    area.tableVisual.RemoveCreatureWithID(DeadCreatureID, deathVfxDuration);
                     return;
                 }
             }

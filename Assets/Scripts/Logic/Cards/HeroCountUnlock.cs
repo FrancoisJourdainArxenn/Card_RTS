@@ -6,6 +6,10 @@ public enum MatchStatType
     RessourcesSpent,
     CardsPlayed,
     UnitsSummoned,
+    TokensCreated,
+    UnitsDied,       // All : toute unité qui meurt, peu importe le camp
+    AllyUnitsDied,   // Ally : mes unités à moi qui meurent
+    EnemyUnitsDied,  // Enemy : les unités adverses qui meurent
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 

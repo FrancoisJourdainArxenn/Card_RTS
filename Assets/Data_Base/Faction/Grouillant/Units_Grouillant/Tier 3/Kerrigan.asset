@@ -12,37 +12,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Kerrigan
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: 
+  Name: Infestor
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
   tier: 3
-  Description: '<b>Row Attacks.</b>
+  Description: '<b>Arcing Attacks.
 
-    When a token Unit is created in my zone,
-    I gain +1/+0.'
+    On Battle Start:</b> I gain +1/+0 for each
+    Unit in my zone until end of turn.'
   CardImage: {fileID: 21300000, guid: 2b16327101e499342a91547fb68f1b5e, type: 3}
-  MainCost: 5
+  MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 5
+  MaxHealth: 4
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 5
+  AttackSpeedMultiplier: 3
   AttackModifiers:
-  - {fileID: 11400000, guid: f3700aa79d9c73749b559ce573d874b1, type: 2}
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
   Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 11
-    Condition: {fileID: 11400000, guid: 78777b9d4ac95324b988967fb8045c03, type: 2}
+  - EffectName: Upgrade
+    Effect: {fileID: 11400000, guid: 3a5e648d35a26d745bff2d8fcb1eff6d, type: 2}
+    Trigger: 14
+    Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
       affectedElements:
@@ -52,7 +53,11 @@ MonoBehaviour:
         includesEventSubject: 0
         queries: []
       repartition: 0
-      useScalingCount: 0
+      useScalingCount: 1
       scalingQuery:
         targetType: 0
-        queries: []
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}

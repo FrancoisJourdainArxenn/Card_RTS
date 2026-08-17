@@ -105,21 +105,85 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — sérialisation de l'état canonique et broadcast");
 
         ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
+
+        // Contient à la fois les effets OnDeath et OnAttack résolus par anticipation pendant la
+        // planification, dans l'ordre chronologique réel — voir ZoneCombatResolver.PredictedTriggerReplay.
+        List<ZoneCombatResolver.PredictedTriggerReplay> predictedReplays = ZoneCombatResolver.DrainPredictedTriggerReplays();
+        int[] predictedSourceIDs  = new int[predictedReplays.Count];
+        int[] predictedEffectIdxs = new int[predictedReplays.Count];
+        int[] predictedSeeds      = new int[predictedReplays.Count];
+        for (int i = 0; i < predictedReplays.Count; i++)
+        {
+            predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
+            predictedEffectIdxs[i] = predictedReplays[i].EffectIndex;
+            predictedSeeds[i]      = predictedReplays[i].Seed;
+        }
+
+        // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
+        // rejoués côté client au bon endroit relatif dans la boucle ci-dessous, jamais via un ClientRpc
+        // séparé, pour ne pas devancer la trigger qui les a chronologiquement causés — voir
+        // ZoneCombatResolver.IsResolvingPredictedTrigger.
+        List<ZoneCombatResolver.PredictedTokenSpawn> predictedTokenSpawns = ZoneCombatResolver.DrainPredictedTokenSpawns();
+        int[] tokenSpawnSourceIDs   = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnEffectIdxs  = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnPlayerIdxs  = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnCardIDs     = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnCreatureIDs = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnTablePos    = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnBaseIDs     = new int[predictedTokenSpawns.Count];
+        int[] tokenSpawnDeferKeys   = new int[predictedTokenSpawns.Count];
+        for (int i = 0; i < predictedTokenSpawns.Count; i++)
+        {
+            tokenSpawnSourceIDs[i]   = predictedTokenSpawns[i].SourceEntityID;
+            tokenSpawnEffectIdxs[i]  = predictedTokenSpawns[i].EffectIndex;
+            tokenSpawnPlayerIdxs[i]  = predictedTokenSpawns[i].PlayerIndex;
+            tokenSpawnCardIDs[i]     = predictedTokenSpawns[i].CardID;
+            tokenSpawnCreatureIDs[i] = predictedTokenSpawns[i].CreatureID;
+            tokenSpawnTablePos[i]    = predictedTokenSpawns[i].TablePos;
+            tokenSpawnBaseIDs[i]     = predictedTokenSpawns[i].BaseID;
+            tokenSpawnDeferKeys[i]   = predictedTokenSpawns[i].DeferKey;
+        }
+
+        List<ZoneCombatResolver.OnBattleStartReplay> onBattleStartReplays = ZoneCombatResolver.DrainOnBattleStartReplays();
+        int[] battleStartZoneKeys   = new int[onBattleStartReplays.Count];
+        int[] battleStartSourceIDs  = new int[onBattleStartReplays.Count];
+        int[] battleStartIsBuilding = new int[onBattleStartReplays.Count];
+        int[] battleStartEffectIdxs = new int[onBattleStartReplays.Count];
+        int[] battleStartSeeds      = new int[onBattleStartReplays.Count];
+        for (int i = 0; i < onBattleStartReplays.Count; i++)
+        {
+            battleStartZoneKeys[i]   = onBattleStartReplays[i].ZoneDeferKey;
+            battleStartSourceIDs[i]  = onBattleStartReplays[i].SourceID;
+            battleStartIsBuilding[i] = onBattleStartReplays[i].IsBuilding ? 1 : 0;
+            battleStartEffectIdxs[i] = onBattleStartReplays[i].EffectIndex;
+            battleStartSeeds[i]      = onBattleStartReplays[i].Seed;
+        }
+
         ApplyCanonicalBattleAssignmentClientRpc(
             canonical.CreatureIDs,     canonical.CreatureDamages,
             canonical.BaseIDs,         canonical.BaseDamages,
             canonical.TargetPlayerIDs, canonical.PlayerDamages,
             canonical.BuildingIDs,     canonical.BuildingDamages,
-            canonical.ResolverP1Pools, canonical.ResolverP2Pools
+            canonical.ResolverP1Pools, canonical.ResolverP2Pools,
+            predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,
+            tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
+            tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
+            tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
+            battleStartZoneKeys,       battleStartSourceIDs,       battleStartIsBuilding,
+            battleStartEffectIdxs,     battleStartSeeds
         );
 
         ZoneCombatResolver.SerializeAllBattleSteps(
             out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
-            out int[] stepOwnerPlayerIDs);
+            out int[] stepOwnerPlayerIDs,
+            out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
+            out int[] stepCounterDamages);
         BroadcastBattleStepsClientRpc(
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
-            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs);
+            stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
+            stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
+            stepCounterDamages);
 
         // La transition vers EndBattle est désormais déclenchée depuis ReportBattleAnimationsDoneServerRpc,
         // une fois que CHAQUE client a confirmé que sa file de commandes locale a fini de jouer les
@@ -134,7 +198,9 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void BroadcastBattleStepsClientRpc(
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
-        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs)
+        int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
+        int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
+        int[] counterDamages)
     {
         int nCreature = 0, nBuilding = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
@@ -144,7 +210,8 @@ public class GameNetworkManager : NetworkBehaviour
         }
         // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
-            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs);
+            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
+            secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages);
         // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }
@@ -195,12 +262,54 @@ public class GameNetworkManager : NetworkBehaviour
         int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages,
         int[] buildingIDs,     int[] buildingDamages,
-        int[] p1Pools,         int[] p2Pools)
+        int[] p1Pools,         int[] p2Pools,
+        int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds,
+        int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
+        int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
+        int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
+        int[] battleStartZoneKeys, int[] battleStartSourceIDs, int[] battleStartIsBuilding,
+        int[] battleStartEffectIndexes, int[] battleStartSeeds)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
             targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
         ZoneCombatResolver.ApplyCanonicalPools(p1Pools, p2Pools);
+
+        // OnBattleStart précède logiquement les dégâts/morts de combat : rejoué en premier.
+        if (!IsServer)
+            for (int i = 0; i < battleStartSourceIDs.Length; i++)
+            {
+                // Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
+                ZoneCombatResolver.ReplayOnBattleStartEffect(
+                    battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
+                    battleStartEffectIndexes[i], battleStartSeeds[i]);
+            }
+
+        // Le serveur a déjà résolu ces effets (OnDeath et OnAttack, entrelacés dans l'ordre
+        // chronologique réel — voir ZoneCombatResolver.PredictedTriggerReplay) réellement pendant sa
+        // propre planification (CreatureLogic.ResolvePredictedBattleDeath / ResolvePredictedOnAttack)
+        // — seuls les autres clients rejouent, avec la même seed, pour obtenir exactement le même
+        // ciblage/résultat.
+        if (!IsServer)
+            for (int i = 0; i < predictedSourceIDs.Length; i++)
+            {
+                // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i]);
+
+                // Tokens créés par CETTE entrée précise (même paire source/effet — voir
+                // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
+                // pour qu'un trigger prédit ultérieur dans cette même boucle (ex: un autre OnAttack à
+                // ciblage aléatoire) voie exactement le même état de zone qu'a vu le serveur au même
+                // point chronologique de la planification.
+                for (int j = 0; j < tokenSpawnSourceIDs.Length; j++)
+                {
+                    if (tokenSpawnSourceIDs[j] != predictedSourceIDs[i] || tokenSpawnEffectIdxs[j] != predictedEffectIndexes[i]) continue;
+                    ApplyTokenSpawnOnClient(
+                        tokenSpawnPlayerIdxs[j], tokenSpawnSourceIDs[j], tokenSpawnEffectIdxs[j],
+                        tokenSpawnTablePos[j], tokenSpawnBaseIDs[j], tokenSpawnCardIDs[j],
+                        tokenSpawnCreatureIDs[j], tokenSpawnDeferKeys[j]);
+                }
+            }
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)
@@ -1332,21 +1441,40 @@ public class GameNetworkManager : NetworkBehaviour
         Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID, visualData);
     }
 
-    public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID)
+    // cardID/creatureID sont déjà alloués par l'appelant (TokenGenerationSO.Execute), qui a créé
+    // la créature en autorité serveur AVANT cet appel — voir TokenToZoneClientRpc ci-dessous.
+    // deferKey reflète Command.CurrentDeferSourceID au moment de l'appel serveur (int.MinValue =
+    // pas de report) : le visuel ne doit être différé que si le token provient d'un trigger résolu
+    // par anticipation en combat (OnDeath → ID de créature, OnBattleStart → zoneDeferKey, etc.),
+    // pas d'un ETB normal à la pose. La clé elle-même dépend du trigger d'origine, pas d'une seule
+    // convention fixe — voir Command.CurrentDeferSourceID.
+    public void BroadCastTokenToZone(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, int deferKey)
     {
         if (!IsServer) return;
-        int cardID = IDFactory.GetUniqueID();
-        int creatureID = IDFactory.GetUniqueID();
-        TokenToZoneClientRpc(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID);
+        TokenToZoneClientRpc(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID, deferKey);
     }
 
+    // Le serveur a déjà créé cette créature localement, en autorité, dans TokenGenerationSO.SpawnToZone
+    // (pour qu'elle puisse rejoindre la file d'attaque de la bataille en cours de planification —
+    // voir ZoneCombatResolver.NotifyCreatureAddedDuringPlanning). L'hôte reçoit aussi ce ClientRpc
+    // (il est son propre client) mais ne doit PAS recréer la créature ; seuls les autres clients le font.
     [ClientRpc]
-    void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID)
+    void TokenToZoneClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, int deferKey)
+    {
+        if (IsServer) return;
+        ApplyTokenSpawnOnClient(playerIndex, sourceEntityID, effectIndex, tablePos, baseID, cardID, creatureID, deferKey);
+    }
+
+    // Résout l'asset/visuel du token puis crée la créature côté client — factorisé entre
+    // TokenToZoneClientRpc (tokens hors combat prédit) et le rejeu inline de
+    // ZoneCombatResolver.PredictedTokenSpawn dans ApplyCanonicalBattleAssignmentClientRpc (tokens
+    // créés par un OnDeath/OnAttack résolu par anticipation — voir TokenGenerationSO.Execute).
+    void ApplyTokenSpawnOnClient(int playerIndex, int sourceEntityID, int effectIndex, int tablePos, int baseID, int cardID, int creatureID, int deferKey)
     {
         CardAsset tokenAsset = EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex);
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
-        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID, visualData);
+        Player.Players[playerIndex].NetworkSpawnTokenToZone(tokenAsset, cardID, creatureID, tablePos, baseID, deferKey, visualData);
     }
 
 

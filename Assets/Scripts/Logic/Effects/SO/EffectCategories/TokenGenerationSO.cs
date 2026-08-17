@@ -1,3 +1,4 @@
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -44,16 +45,6 @@ public class TokenGenerationSO : EffectSO
                 return;
             }
 
-            PlayerArea targetArea = ResolveTargetArea(context);
-            bool tokenIsMelee = TokenToSummon.melee;
-            // Position de départ dans la rangée concernée (melee ou ranged)
-            int baseTablePos = tokenIsMelee
-                ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-                : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-            // Occupation réelle de la rangée pour le check de capacité : ignore les créatures en pending move
-            int effectiveRowCount = targetArea.tableVisual.EffectiveRowCount(tokenIsMelee);
-
-
             for (int i = 0; i < TokenCount; i++)
             {
                 switch (Placement)
@@ -62,14 +53,38 @@ public class TokenGenerationSO : EffectSO
                         GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
                         break;
                     case TokenPlacement.ToZone:
-                        if (effectiveRowCount + i >= GlobalSettings.Instance.MaxCreaturePerRow)
+                        // Créée tout de suite, en autorité serveur — au lieu d'attendre l'aller-retour
+                        // du ClientRpc — pour que le token puisse rejoindre la file d'attaque de la
+                        // bataille en cours de planification (voir SpawnToZone →
+                        // ZoneCombatResolver.NotifyCreatureAddedDuringPlanning). Les IDs sont générés
+                        // ici pour être diffusés tels quels aux autres clients ; ceux-ci ne recréent
+                        // PAS la créature s'ils sont le serveur (voir TokenToZoneClientRpc).
+                        int cardID     = IDFactory.GetUniqueID();
+                        int creatureID = IDFactory.GetUniqueID();
+                        CreatureLogic spawned = SpawnToZone(context, visualData, out int tablePos, creatureID, cardID);
+                        if (spawned != null)
                         {
-                            Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({effectiveRowCount + i}/{GlobalSettings.Instance.MaxCreaturePerRow}), token {i + 1} annulé.");
-                            new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
-                            continue;
+                            // La clé de report active dépend du trigger d'origine (ID de créature pour
+                            // OnDeath, zoneDeferKey pour OnBattleStart...) — voir Command.CurrentDeferSourceID.
+                            // int.MinValue sert de sentinelle "pas de report" (aucune clé réelle n'y arrive :
+                            // ni un UniqueCreatureID, toujours positif, ni un zoneDeferKey, toujours proche de
+                            // -2 000 000 000 mais jamais égal à int.MinValue).
+                            int deferKey = Command.CurrentDeferSourceID ?? int.MinValue;
+
+                            // Pendant la résolution d'un trigger prédit (OnDeath/OnAttack — voir
+                            // ZoneCombatResolver.IsResolvingPredictedTrigger), NE PAS diffuser tout de suite :
+                            // ce ClientRpc arriverait, pour TOUS les tokens de TOUTE la bataille, avant l'unique
+                            // ApplyCanonicalBattleAssignmentClientRpc envoyé une fois la planification terminée —
+                            // un effet à ciblage aléatoire plus tard dans la même bataille verrait alors ce token
+                            // côté client alors qu'il n'existait pas encore côté hôte au même point chronologique
+                            // (désync constaté sur Flag-Bearer "Inspire" + un Zergling Token de Broodling). On
+                            // enregistre à la place ce spawn, tagué par (sourceEntityID, effectIndex) — rejoué au
+                            // bon moment relatif dans la boucle de ApplyCanonicalBattleAssignmentClientRpc.
+                            if (ZoneCombatResolver.IsResolvingPredictedTrigger)
+                                ZoneCombatResolver.RecordPredictedTokenSpawn(sourceEntityID, effectIndex, playerIndex, cardID, creatureID, tablePos, spawned.BaseID, deferKey);
+                            else
+                                GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey);
                         }
-                        // On envoie la position row-locale (index dans la rangée melee ou ranged)
-                        GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, baseTablePos + i, targetArea.baseID);
                         break;
                 }
             }
@@ -84,7 +99,7 @@ public class TokenGenerationSO : EffectSO
                         context.Caster.GetACardNotFromDeck(TokenToSummon, visualData: visualData);
                         break;
                     case TokenPlacement.ToZone:
-                        SpawnToZone(context, visualData);
+                        SpawnToZone(context, visualData, out _);
                         break;
                 }
             }
@@ -109,34 +124,61 @@ public class TokenGenerationSO : EffectSO
         return target;
     }
 
-    private void SpawnToZone(EffectContext context, EffectVisualData visualData)
+    // creatureID/cardID : -1 = génère un nouvel ID local (solo). En session réseau (appelé depuis
+    // Execute, côté serveur), des IDs pré-alloués sont passés pour être diffusés tels quels aux
+    // autres clients. Retourne la créature créée (ou null si la zone est pleine) ; tablePos est
+    // la position row-locale utilisée, à renvoyer telle quelle dans la diffusion réseau.
+    private CreatureLogic SpawnToZone(EffectContext context, EffectVisualData visualData, out int tablePos, int creatureID = -1, int cardID = -1)
     {
         Player caster = context.Caster;
         PlayerArea targetArea = ResolveTargetArea(context);
 
         bool tokenIsMelee = TokenToSummon.melee;
-        int currentCount  = tokenIsMelee
-            ? targetArea.tableVisual.MeleeCreaturesOnTable.Count
-            : targetArea.tableVisual.RangedCreaturesOnTable.Count;
         CenteredSlots rowSlots = tokenIsMelee && targetArea.tableVisual.meleeSlots != null
             ? targetArea.tableVisual.meleeSlots
             : targetArea.tableVisual.rangedSlots;
 
-        if (!targetArea.tableVisual.RowHasSpace(tokenIsMelee))
+        // Compte logique (caster.playedCards.Creatures), pas visuel (tableVisual) : mis à jour de
+        // façon synchrone dès qu'un token/créature est inséré, quel que soit le trigger qui l'a
+        // créé (OnDeath, OnBattleStart, ETB...) — contrairement au visuel, dont l'affichage peut
+        // être différé pendant une résolution anticipée de combat (Command.DeferForBattleReplay).
+        // Plusieurs triggers résolus l'un après l'autre dans la même passe de planification (ex :
+        // Broodling qui meurt PUIS Queen qui déclenche son OnBattleStart) se voient donc l'un
+        // l'autre sans qu'aucun site d'appel n'ait à s'en soucier.
+        bool InRow(CreatureLogic cr) => cr.BaseID == targetArea.baseID && cr.IsMelee == tokenIsMelee;
+        int currentCount = caster.playedCards.Creatures.Count(InRow);
+
+        // Une créature de CETTE rangée déjà vouée à mourir pendant la bataille en cours (marquée
+        // IsPendingDeath, ou dégâts en attente >= vie restante — voir ZoneCombatResolver.WouldSurvive)
+        // occupe encore logiquement sa place ici : son retrait de playedCards.Creatures n'a lieu que
+        // bien plus tard (CreatureLogic.Die, via ProcessPendingDeaths en fin de Battle). Sans ce
+        // filtre, la capacité resterait figée à l'état "plein" pour le reste du combat dès qu'une
+        // première créature meurt, même si d'autres meurent ensuite et libèrent d'autres places.
+        int effectiveCount = caster.playedCards.Creatures.Count(cr => InRow(cr) && ZoneCombatResolver.WouldSurvive(cr));
+
+        if (effectiveCount >= GlobalSettings.Instance.MaxCreaturePerRow)
         {
             Debug.LogWarning($"[TokenGenerationSO] Zone pleine ({currentCount}/{GlobalSettings.Instance.MaxCreaturePerRow}), token annulé.");
             new ShowMessageCommand("Zone is full, token could not be spawned.", 2f).AddToQueue();
-            return;
+            tablePos = -1;
+            return null;
         }
 
-        CardLogic tokenCard = new CardLogic(TokenToSummon);
+        CardLogic tokenCard = new CardLogic(TokenToSummon, cardID);
         tokenCard.owner = caster;
 
-        CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID);
-        int tablePos     = currentCount; // position row-locale : on ajoute à la fin de la rangée
+        CreatureLogic newCreature = new CreatureLogic(caster, TokenToSummon, targetArea.baseID, creatureID);
+        // Capturé tout de suite, avant qu'aucun dégât de CE combat ne soit appliqué : EnqueueBattleCommands
+        // mute déjà toutes les Health de la bataille de façon synchrone avant que PlayACreatureCommand
+        // (mis en file plus bas) ne s'exécute réellement — lire cl.Health à ce moment-là donnerait la
+        // vie de FIN de combat plutôt que la vie de spawn (voir TableVisual.CreateCreatureGO).
+        int spawnAttack = newCreature.Attack;
+        int spawnHealth = newCreature.Health;
+        tablePos         = currentCount; // position row-locale : on ajoute à la fin de la rangée
         int logicalIndex = caster.GetLogicalInsertIndex(TokenToSummon.melee, targetArea.baseID, tablePos);
         caster.playedCards.Creatures.Insert(logicalIndex, newCreature);
         FogOfWarManager.Refresh();
+        ZoneCombatResolver.NotifyCreatureAddedDuringPlanning(newCreature);
 
         if (visualData?.vfxPrefab != null)
         {
@@ -153,7 +195,7 @@ public class TokenGenerationSO : EffectSO
             }
         }
 
-        new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea).AddToQueue();
+        new PlayACreatureCommand(tokenCard, caster, tablePos, newCreature.UniqueCreatureID, targetArea, spawnAttack, spawnHealth).AddToQueue();
 
         EffectRegistry.ETB(TokenToSummon, new EffectContext
         {
@@ -163,6 +205,7 @@ public class TokenGenerationSO : EffectSO
 
         EffectRegistry.NotifyTokenCreated(caster, newCreature);
 
+        return newCreature;
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null) { }
