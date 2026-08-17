@@ -6,7 +6,7 @@ public class HeroPortrait : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 {
     [SerializeField] private Image glowImage;
     [SerializeField] private Image heroPortraitImage;
-    [SerializeField] private Image frameImage;
+    [SerializeField] private Image selectedFrame;
     [SerializeField] private Sprite selectedFrameSprite;
     public DeckSO deck;
     [SerializeField] private UITooltipTrigger tooltipTrigger;
@@ -31,7 +31,6 @@ public class HeroPortrait : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             heroPortraitImage.sprite = deck.heroCard.CardImage;
         }
 
-        normalFrameSprite = frameImage.sprite;
     }
 
     private string GetHeroTooltipText()
@@ -59,11 +58,11 @@ public class HeroPortrait : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             currentlySelected.Deselect();
 
         currentlySelected = this;
-        frameImage.sprite = selectedFrameSprite;
+        selectedFrame.enabled = true;
     }
 
     private void Deselect()
     {
-        frameImage.sprite = normalFrameSprite;
+        selectedFrame.enabled = false;
     }
 }
