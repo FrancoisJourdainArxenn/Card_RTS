@@ -12,6 +12,7 @@ public class ApplyShieldSO : EffectSO
     // que toutes les répartitions d'ApplyEffect (Uniform, Random, RandomMeleeFirst, RandomSingleTarget)
     // en bénéficient automatiquement sans dupliquer la logique.
     protected override int Amount => ShieldAmount + (_caster != null ? _caster.ShieldBonus : 0);
+    protected override bool IsBuffEffect => true;
 
     public override void Execute(
         string EffectName,

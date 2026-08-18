@@ -141,6 +141,7 @@ public class CreatureLogic: ILivable
     {
         get
         {
+            if (ca.IsStructureUnit) return false;
             bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
             bool ownersTurn = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
             return ownersTurn && (AttacksLeftThisTurn > 0);
@@ -152,6 +153,7 @@ public class CreatureLogic: ILivable
     {
         get
         {
+            if (ca.IsStructureUnit) return false;
             bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
             bool ownersTurn = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
             return ownersTurn && (MovementsLeftThisTurn > 0);
@@ -163,8 +165,13 @@ public class CreatureLogic: ILivable
     private int tempAttackBonus;
     public int Attack
     {
-        get => baseAttack + permAttackBonus + tempAttackBonus;
-        set => permAttackBonus = value - baseAttack - tempAttackBonus;
+        // Verrouillée à 0 pour une structure, quelle que soit la source (buff, ApplyBuff, sync réseau).
+        get => ca.IsStructureUnit ? 0 : baseAttack + permAttackBonus + tempAttackBonus;
+        set
+        {
+            if (ca.IsStructureUnit) return;
+            permAttackBonus = value - baseAttack - tempAttackBonus;
+        }
     }
      
     // number of attacks for one turn if (attacksForOneTurn==2) => Windfury

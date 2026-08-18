@@ -71,16 +71,20 @@ public class ModifyStatsSO : EffectSO, IRevertable
 
         foreach (ILivable target in affectedElements.Cast<ILivable>())
         {
+            int attackBefore = target.Attack;
             ApplyStatsDelta(target, scaledAttack, scaledHealth);
-            new ModifyStatsCommand(target.ID, scaledAttack, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
+            int actualAttackDelta = target.Attack - attackBefore;
+            new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
 
             if (IsTempEffect)
             {
                 ILivable t = target;
                 TempEffectTracker.Register(t.ID, () =>
                 {
+                    int revertAttackBefore = t.Attack;
                     ApplyStatsDelta(t, -scaledAttack, -scaledHealth);
-                    new ModifyStatsCommand(t.ID, -scaledAttack, t.Attack, -scaledHealth, t.Health, RevertVisual).AddToQueue();
+                    int actualRevertAttackDelta = t.Attack - revertAttackBefore;
+                    new ModifyStatsCommand(t.ID, actualRevertAttackDelta, t.Attack, -scaledHealth, t.Health, RevertVisual).AddToQueue();
                 });
             }
         }
@@ -88,14 +92,18 @@ public class ModifyStatsSO : EffectSO, IRevertable
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? _ = null)
     {
+        int attackBefore = target.Attack;
         ApplyStatsDelta(target, AttackBonus, HealthBonus);
-        new ModifyStatsCommand(target.ID, AttackBonus, target.Attack, HealthBonus, target.Health, EffectVisual).AddToQueue();
+        int actualAttackDelta = target.Attack - attackBefore;
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, HealthBonus, target.Health, EffectVisual).AddToQueue();
     }
 
     public void Revert(ILivable target, int? _ = null)
     {
+        int attackBefore = target.Attack;
         ApplyStatsDelta(target, -AttackBonus, -HealthBonus);
-        new ModifyStatsCommand(target.ID, -AttackBonus, target.Attack, -HealthBonus, target.Health, RevertVisual).AddToQueue();
+        int actualAttackDelta = target.Attack - attackBefore;
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -HealthBonus, target.Health, RevertVisual).AddToQueue();
     }
 
     private static void ApplyStatsDelta(ILivable target, int attackDelta, int healthDelta)

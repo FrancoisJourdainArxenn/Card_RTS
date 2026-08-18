@@ -15,11 +15,13 @@ MonoBehaviour:
   deckName: Test Deck (Zerg)
   difficultyLevel: 0
   deckTooltip: OnAttack
-  heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
+  heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
   cards:
-  - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
-  - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
-  - {fileID: 11400000, guid: 76b2768144f9fbb46b668ff29ff161c8, type: 2}
+  - {fileID: 11400000, guid: 93b49bd2dc3a5bf499d9938050f22ec7, type: 2}
+  - {fileID: 11400000, guid: cd969695eb1cd0c44a62056fadd2c0cb, type: 2}
+  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
+  - {fileID: 11400000, guid: d5db13ad01a7ec44ca776765701d1ae3, type: 2}
+  - {fileID: 11400000, guid: 83a713e12f98b4746988c19138e8cbb6, type: 2}
   buildings:
   - {fileID: 11400000, guid: 7e435039d49311b40b7797527b6db2df, type: 2}
   - {fileID: 11400000, guid: 0826368b770da794584a44c190288b63, type: 2}

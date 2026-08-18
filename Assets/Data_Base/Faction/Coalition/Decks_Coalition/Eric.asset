@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: Raynor
+  m_Name: Eric
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Raynor, Rebel Leader
+  deckName: Erik, Happy Trigger
   difficultyLevel: 1
   deckTooltip: <b>Soldiers</b> together strong !
   heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
@@ -33,4 +33,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3dffc249e96d09545a80812d428b1c8d, type: 2}
   - {fileID: 11400000, guid: 085e3a21e10386f4abaafc624ef5f088, type: 2}
   - {fileID: 11400000, guid: 1ffa2a9a9a036744cb201e886004ce20, type: 2}
+  - {fileID: 11400000, guid: 93b49bd2dc3a5bf499d9938050f22ec7, type: 2}
+  - {fileID: 11400000, guid: cd969695eb1cd0c44a62056fadd2c0cb, type: 2}
   buildings: []
