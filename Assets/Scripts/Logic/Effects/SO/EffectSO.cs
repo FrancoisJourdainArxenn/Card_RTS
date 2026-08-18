@@ -14,6 +14,7 @@ public abstract class EffectSO : ScriptableObject
     // sur CreatureLogic.Attack bloque déjà la composante attaque, et on veut laisser passer le +HP.
     protected virtual bool IsBuffEffect => false;
     private static System.Random _networkRng;
+    internal static System.Random CurrentNetworkRng => _networkRng;
     internal static void SetNetworkRng(System.Random rng) => _networkRng = rng;
     internal static void ClearNetworkRng() => _networkRng = null;
     protected class EffectTarget

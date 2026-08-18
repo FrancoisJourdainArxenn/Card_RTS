@@ -112,11 +112,13 @@ public class GameNetworkManager : NetworkBehaviour
         int[] predictedSourceIDs  = new int[predictedReplays.Count];
         int[] predictedEffectIdxs = new int[predictedReplays.Count];
         int[] predictedSeeds      = new int[predictedReplays.Count];
+        int[] predictedDeferKeys  = new int[predictedReplays.Count];
         for (int i = 0; i < predictedReplays.Count; i++)
         {
             predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
             predictedEffectIdxs[i] = predictedReplays[i].EffectIndex;
             predictedSeeds[i]      = predictedReplays[i].Seed;
+            predictedDeferKeys[i]  = predictedReplays[i].DeferKey;
         }
 
         // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
@@ -165,7 +167,7 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.TargetPlayerIDs, canonical.PlayerDamages,
             canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
-            predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,
+            predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
@@ -263,7 +265,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] targetPlayerIDs, int[] playerDamages,
         int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
-        int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds,
+        int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
@@ -294,7 +296,7 @@ public class GameNetworkManager : NetworkBehaviour
             for (int i = 0; i < predictedSourceIDs.Length; i++)
             {
                 // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
-                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i]);
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i]);
 
                 // Tokens créés par CETTE entrée précise (même paire source/effet — voir
                 // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
@@ -351,23 +353,38 @@ public class GameNetworkManager : NetworkBehaviour
         if (isIndependent)
         {
             int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            ulong senderClientId = rpcParams.Receive.SenderClientId;
 
-            // Si le client soumettant est distant (pas le host), le serveur met à jour son état
-            // de jeu localement sans déclencher de visuels ni _isComplete.
-            bool isSenderHost = rpcParams.Receive.SenderClientId == NetworkManager.ServerClientId;
-            if (!isSenderHost)
-                PhaseEffectPipeline.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, isLocalPlayer: false);
+            // Met à jour l'état de jeu (sans visuel, sans compléter le pipeline local — voir
+            // PhaseEffectPipeline.ApplyCanonicalResolution isLocalPlayer:false) chez TOUS les
+            // clients autres que l'expéditeur — symétrique, que l'expéditeur soit le host ou un
+            // client distant. Un ClientRpc appelé côté serveur s'exécute aussi localement quand
+            // il cible le serveur/host, donc ceci couvre également le cas host-non-sender sans
+            // appel direct séparé.
+            List<ulong> otherClientIds = new List<ulong>();
+            foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+                if (clientId != senderClientId)
+                    otherClientIds.Add(clientId);
 
-            // Feedback visuel ciblé au seul joueur qui soumet.
-            ClientRpcParams targetParams = new ClientRpcParams
+            if (otherClientIds.Count > 0)
+            {
+                ClientRpcParams otherParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams { TargetClientIds = otherClientIds.ToArray() }
+                };
+                ApplyOpponentEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, otherParams);
+            }
+
+            // Feedback visuel + complétion du pipeline local, ciblés au seul joueur qui soumet.
+            ClientRpcParams senderParams = new ClientRpcParams
             {
                 Send = new ClientRpcSendParams
                 {
-                    TargetClientIds = new ulong[] { rpcParams.Receive.SenderClientId }
+                    TargetClientIds = new ulong[] { senderClientId }
                 }
             };
             Debug.Log($"[GameNetworkManager] SubmitEffectTargets indépendant — joueur {playerIndex}, phase {forPhase}");
-            ApplyCanonicalEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, targetParams);
+            ApplyCanonicalEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, senderParams);
         }
         else
         {
@@ -411,6 +428,24 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[ClientRpc] ApplyCanonicalEffectResolution reçu — {sourceEntityIDs.Length} effet(s), seed={effectSeed}, phase={TurnManager.Instance.CurrentPhase}");
         PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
+        );
+    }
+
+    /// <summary>
+    /// Reçu par les clients AUTRES que l'expéditeur d'un effet indépendant (Regroup/Command) :
+    /// applique uniquement l'état de jeu (pas de visuel, pas de complétion du pipeline local —
+    /// voir PhaseEffectPipeline.ApplyCanonicalResolution isLocalPlayer:false).
+    /// </summary>
+    [ClientRpc]
+    void ApplyOpponentEffectResolutionClientRpc(
+        int[] sourceEntityIDs,
+        int[] effectIndexes,
+        int[] selectedTargetIDs,
+        int effectSeed,
+        ClientRpcParams clientRpcParams = default)
+    {
+        PhaseEffectPipeline.ApplyCanonicalResolution(
+            sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed, isLocalPlayer: false
         );
     }
 
