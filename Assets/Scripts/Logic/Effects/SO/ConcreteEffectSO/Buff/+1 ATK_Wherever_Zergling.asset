@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
-  m_Name: Temp+2ATK
+  m_Name: +1 ATK_Wherever_Zergling
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: Gives +2 ATK until end of turn
+  Description: Gives +1 ATK.
   EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
-  AttackBonus: 2
+  AttackBonus: 1
   HealthBonus: 0
-  IsTempEffect: 1
+  IsTempEffect: 0
   RevertVisual:
-    vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
+    vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
-  PersistentFilter: {fileID: 11400000, guid: d104453cd4a802d498fc1f89f2502d7f, type: 2}
+  PersistentFilter: {fileID: 11400000, guid: 8d350a69ea7e7cc47acea175575b2e4b, type: 2}
   MatchSameNameAsTarget: 0

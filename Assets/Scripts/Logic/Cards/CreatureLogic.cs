@@ -343,6 +343,11 @@ public class CreatureLogic: ILivable
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
         owner.matchStats.Add(MatchStatType.UnitsSummoned);
+
+        foreach (PermanentCreatureBuff buff in owner.permanentCreatureBuffs)
+            if (buff.filter != null && buff.filter.Matches(ca))
+                ApplyBuff(buff.attackBonus, buff.healthBonus);
+
         if (ca.Effects != null && ca.Effects.Count > 0)
             EffectRegistry.RegisterCreatureEffects(this, ca);
     }

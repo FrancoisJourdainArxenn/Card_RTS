@@ -4,6 +4,14 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Linq;
 
+[System.Serializable]
+public struct PermanentCreatureBuff
+{
+    public CardFilterSO filter;
+    public int attackBonus;
+    public int healthBonus;
+}
+
 public class Player : MonoBehaviour, ILivable
 {
     // PUBLIC FIELDS
@@ -46,6 +54,11 @@ public class Player : MonoBehaviour, ILivable
 
     private Dictionary<int, int> _shieldBonusFromSources = new(); // bonus de bouclier lié à une entité vivante (aura, effet...)
     public int ShieldBonus => _shieldBonusFromSources.Values.Sum();
+
+    // Buffs de stats permanents ("pour le reste de la partie") appliqués par SubType ou par nom de
+    // carte. Appliqués à chaque nouvelle CreatureLogic de ce joueur (voir CreatureLogic constructor) —
+    // pas sur le CardAsset (partagé entre joueurs) pour ne pas buffer l'adversaire.
+    public List<PermanentCreatureBuff> permanentCreatureBuffs = new List<PermanentCreatureBuff>();
 
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER

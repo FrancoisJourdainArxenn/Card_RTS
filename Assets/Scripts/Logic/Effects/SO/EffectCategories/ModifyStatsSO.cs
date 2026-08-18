@@ -12,6 +12,12 @@ public class ModifyStatsSO : EffectSO, IRevertable
     [Header("Temporary Effect")]
     public bool IsTempEffect;
     public EffectVisualData RevertVisual;
+
+    [Header("Permanent Type/Name Buff (rest of the game)")]
+    [Tooltip("Ex: Robots.asset — toute unité créée plus tard qui correspond recevra aussi ce bonus.")]
+    public CardFilterSO PersistentFilter;
+    [Tooltip("La cible touchée maintenant + toute unité créée plus tard du même nom recevront aussi ce bonus.")]
+    public bool MatchSameNameAsTarget;
     protected override int Amount => AttackBonus;
     public bool IsTemporary => IsTempEffect;
     public override EffectPriority Priority => EffectPriority.ModifyStats;
@@ -34,12 +40,47 @@ public class ModifyStatsSO : EffectSO, IRevertable
         List<IIdentifiable> affectedElements = GetAffectedElements(context, effectInfo);
         if (affectedElements.Count == 0)
         {
-            Log($"{EffectName}: no eligible targets found, effect cancelled.");
-            return;
+            Log($"{EffectName}: no eligible targets found right now.");
+        }
+        else
+        {
+            Log($"{EffectName}: {(AttackBonus > 0 ? "+" : "")}{AttackBonus} ATK / {(HealthBonus > 0 ? "+" : "")}{HealthBonus} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
+            ApplyEffect(effectInfo, affectedElements, visualData);
         }
 
-        Log($"{EffectName}: {(AttackBonus > 0 ? "+" : "")}{AttackBonus} ATK / {(HealthBonus > 0 ? "+" : "")}{HealthBonus} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
-        ApplyEffect(effectInfo, affectedElements, visualData);
+        // Enregistré même si personne n'est éligible maintenant (ex: Roach joué sans Zergling sur le
+        // plateau) : un PersistentFilter fixe (ex: Zergling.asset) ne dépend pas des cibles actuelles,
+        // donc l'annuler ici perdrait le buff pour toutes les unités qui apparaîtront plus tard —
+        // contraire au but même de l'effet. MatchSameNameAsTarget reste conditionné à une cible trouvée
+        // (voir RegisterPersistentBuffIfNeeded), faute de nom à enregistrer sinon.
+        RegisterPersistentBuffIfNeeded(context, affectedElements);
+    }
+
+    // Enregistre ce bonus sur le Caster pour qu'il s'applique aussi à toute CreatureLogic créée plus
+    // tard (voir CreatureLogic constructor) — pas seulement aux cibles touchées maintenant. Stocké côté
+    // Player (pas sur le CardAsset, partagé entre joueurs) pour ne pas buffer l'adversaire.
+    private void RegisterPersistentBuffIfNeeded(EffectContext context, List<IIdentifiable> affectedElements)
+    {
+        if (context.Caster == null) return;
+        if (PersistentFilter == null && !MatchSameNameAsTarget) return;
+
+        CardFilterSO filter = PersistentFilter;
+        if (MatchSameNameAsTarget)
+        {
+            CreatureLogic firstCreature = affectedElements.OfType<CreatureLogic>().FirstOrDefault();
+            if (firstCreature == null) return;
+
+            filter = ScriptableObject.CreateInstance<CardFilterSO>();
+            filter.filterByName = true;
+            filter.requiredName = firstCreature.ca.Name;
+        }
+
+        context.Caster.permanentCreatureBuffs.Add(new PermanentCreatureBuff
+        {
+            filter = filter,
+            attackBonus = AttackBonus,
+            healthBonus = HealthBonus,
+        });
     }
 
     // Scales AttackBonus/HealthBonus by a dynamic count (e.g. "per unit in your zone") instead of
