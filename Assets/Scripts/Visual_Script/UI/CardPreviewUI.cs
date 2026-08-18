@@ -43,6 +43,7 @@ public class CardPreviewUI : MonoBehaviour
     private List<GameObject> _autoEffectPreviews = new List<GameObject>();
     private Coroutine _autoEffectDismissCoroutine;
     private bool _batchActive = false;
+    private bool _buildingStack = false;
     [SerializeField] private float autoEffectDisplayDuration = 0f;
 
     void Awake()
@@ -114,8 +115,9 @@ public class CardPreviewUI : MonoBehaviour
 
         ClearAutoStack();
 
-        if (_targetingPreviews.Count == 0 && remaining > 0)
+        if (_targetingPreviews.Count == 0 && remaining > 0 && !_buildingStack)
         {
+            _buildingStack = true;
             StartCoroutine(BuildStackDelayed(queue, currentIndex, remaining));
         }
         else if (_targetingPreviews.Count > remaining)
@@ -149,6 +151,7 @@ public class CardPreviewUI : MonoBehaviour
             hoverArrow.Show(frontSourceGO.transform, arrowEndPoint);
 
         BuildStack(queue, currentIndex, remaining);
+        _buildingStack = false;
     }
 
     private void HandleAutoEffect(CardEffectData data, EffectContext context)
@@ -277,6 +280,7 @@ public class CardPreviewUI : MonoBehaviour
 
     private GameObject CreateTargetingPreview(PendingEffectSelection selection)
     {
+        Debug.Log($"[CardPreviewUI] CreateTargetingPreview: {selection.Data?.EffectName} src={selection.SourceEntityID}");
         GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
         if (sourceGO == null) return null;
 
@@ -303,6 +307,7 @@ public class CardPreviewUI : MonoBehaviour
     {
         StopAllCoroutines();
         _autoEffectDismissCoroutine = null;
+        _buildingStack = false;
         hoverArrow?.Hide();
         foreach (GameObject preview in _targetingPreviews)
             if (preview != null) Destroy(preview);

@@ -70,6 +70,8 @@ public partial class EffectContext
     public int GetTargetCount(EffectObjectType type, List<TargetQuery> queries) =>
         ResolveByType(type, queries).Count;
 
+    public int GetSourceShieldValue() => Source is CreatureLogic c ? c.ShieldValue : 0;
+
     public List<IIdentifiable> GetSingleTargetAffectedElements(IIdentifiable target, List<AffectedElement> affectedElements)
     {
         List<IIdentifiable> elements = new();

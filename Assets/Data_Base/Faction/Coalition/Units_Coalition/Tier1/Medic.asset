@@ -17,13 +17,13 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: <b>On Attack:</b> Heals a unit for 2.
+  Description: <b>Start of turn:</b> Heals a unit for 2.
   CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 2
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -38,7 +38,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Heal
     Effect: {fileID: 11400000, guid: 2bb29b9f06c94a74ea05a43bd9a3eba5, type: 2}
-    Trigger: 15
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

@@ -17,8 +17,7 @@ MonoBehaviour:
   deckTooltip: OnDeath
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
   cards:
-  - {fileID: 11400000, guid: 352bae19c1fe6a544a1ac934475baa89, type: 2}
-  - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}
+  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
   - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
-  - {fileID: 11400000, guid: 2783a9cf422cc86479b55c9cfae2d6a4, type: 2}
+  - {fileID: 11400000, guid: 8a3f9e79a6a60ff4daa2dad3f1e8e95e, type: 2}
   buildings: []

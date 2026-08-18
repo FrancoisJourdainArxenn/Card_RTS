@@ -44,6 +44,9 @@ public class Player : MonoBehaviour, ILivable
 
     public int HandDrawCount => GlobalSettings.Instance.initdraw + bonusHandDrawCount + _drawCountFromSources.Values.Sum();
 
+    private Dictionary<int, int> _shieldBonusFromSources = new(); // bonus de bouclier lié à une entité vivante (aura, effet...)
+    public int ShieldBonus => _shieldBonusFromSources.Values.Sum();
+
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -295,7 +298,8 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
-    // discard the whole hand (used at the start of each turn, before drawing the new hand)
+    // discard the whole hand (called at the end of the Command phase, right before BeginCombat,
+    // so cards added to hand during the Battle phase aren't wiped out by this turn's discard)
     // hero cards stay in hand: they aren't drawn from the deck and shouldn't be discarded
     public void DiscardHand()
     {
@@ -865,6 +869,16 @@ public class Player : MonoBehaviour, ILivable
     public void RemoveBonusHandDrawCountFromSource(int sourceID)
     {
         _drawCountFromSources.Remove(sourceID);
+    }
+
+    public void AddBonusShieldFromSource(int sourceID, int amount)
+    {
+        _shieldBonusFromSources[sourceID] = _shieldBonusFromSources.GetValueOrDefault(sourceID, 0) + amount;
+    }
+
+    public void RemoveBonusShieldFromSource(int sourceID)
+    {
+        _shieldBonusFromSources.Remove(sourceID);
     }
 
     public void CalculatePlayerIncome()

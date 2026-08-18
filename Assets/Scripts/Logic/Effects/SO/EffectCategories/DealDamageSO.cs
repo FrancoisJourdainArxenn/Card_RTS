@@ -8,6 +8,8 @@ public class DealDamageSO : HealthEffectSO
     protected override int Amount => Damage;
     public override EffectPriority Priority => EffectPriority.DealDamage;
 
+    private Player _caster;
+
     public override void Execute(
         string EffectName,
         EffectContext context,
@@ -17,6 +19,7 @@ public class DealDamageSO : HealthEffectSO
     {
         Log($"[DealDamage] TRIGGERED — {EffectName} | source: {context.Source?.DisplayName ?? "none"} | damage: {Damage}");
         _sourceID = context.Source?.ID ?? -1;
+        _caster = context.Caster;
         base.Execute(EffectName, context, effectInfo, visualData);
     }
 
@@ -35,7 +38,10 @@ public class DealDamageSO : HealthEffectSO
                 originPosition = sourceGO.transform.position;
         }
 
+        int healthBefore = target.Health;
         int healthAfter = target.TakeDamage(dmg);
+        int effectiveDealt = healthBefore - healthAfter;
+        if (effectiveDealt > 0) _caster?.matchStats.Add(MatchStatType.DamageDealt, effectiveDealt);
         DeathDrainRecorder.RecordAnim(sourceId, target.ID, dmg, healthAfter);
         new DealDamageCommand(target.ID, dmg, healthAfter, sourceId, hasCustomVfx ? visualData : null, originPosition: originPosition).AddToQueue();
     }

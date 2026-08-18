@@ -22,6 +22,9 @@ public class StatThresholdUnlockCondition : HeroUnlockConditionSO
             MatchStatType.UnitsDied       => $"Wait for {remaining} Units to die to Unlock me.",
             MatchStatType.AllyUnitsDied   => $"Lose {remaining} Units to Unlock me.",
             MatchStatType.EnemyUnitsDied  => $"Kill {remaining} Enemy Units to Unlock me.",
+            MatchStatType.DamageTaken          => $"Take {remaining} Damage to Unlock me.",
+            MatchStatType.ShieldDamageAbsorbed => $"Absorb {remaining} Damage with Shields to Unlock me.",
+            MatchStatType.DamageDealt          => $"Deal {remaining} Damage to Unlock me.",
             _ => $"{Stat} : {remaining}"
         };
     }

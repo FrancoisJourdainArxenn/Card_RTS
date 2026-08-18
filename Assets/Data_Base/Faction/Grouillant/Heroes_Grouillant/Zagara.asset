@@ -19,7 +19,8 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Commander.</b>
 
-    Units you <b>create</b> gain +1/+0 and <b>Celerity.</b>'
+    <b>ALL TOKEN</b>units you create gain +1/+0
+    and <b>Celerity.</b>'
   CardImage: {fileID: 21300000, guid: 1303c21eaf505a542a808ee910221ab0, type: 3}
   MainCost: 0
   IsHero: 1

@@ -33,6 +33,7 @@ public enum TargetStatusFilter
     Ranged,
     MeleeFirst,
     Damaged,
+    NonShielded,
     // Undamaged,
     // Visible,
     // Fogged,

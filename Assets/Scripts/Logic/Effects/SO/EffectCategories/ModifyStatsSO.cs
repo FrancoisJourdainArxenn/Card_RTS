@@ -48,7 +48,9 @@ public class ModifyStatsSO : EffectSO, IRevertable
     // an amount through for Uniform/RandomSingleTarget repartition.
     private void ExecuteScaled(string EffectName, EffectContext context, EffectInfo effectInfo, EffectVisualData visualData)
     {
-        int count = context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries);
+        int count = effectInfo.scalingSource == ScalingSource.SourceShield
+            ? context.GetSourceShieldValue()
+            : context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries);
         if (count == 0)
         {
             Log($"{EffectName}: scaling count is 0, effect cancelled.");

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>Commander.</b>
+  Description: <b>Start of turn:</b> Create a Zergling in your hand.
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
   MainCost: 2
   IsHero: 0
@@ -27,12 +27,23 @@ MonoBehaviour:
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 1
+  Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 1
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
-  Effects: []
+  Keywords: []
+  Effects:
+  - EffectName: More Troops
+    Effect: {fileID: 11400000, guid: 3c0f136ab2db4e244bfd45b91f0f04c4, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []

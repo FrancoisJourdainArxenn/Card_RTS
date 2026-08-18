@@ -83,6 +83,35 @@ public class CreatureLogic: ILivable
         ShieldValue = Mathf.Max(ShieldValue, value);
     }
 
+    public void ConsumeShield(int absorbed)
+    {
+        if (absorbed <= 0) return;
+        ShieldValue -= absorbed;
+        VfxManager vfx = Vfx;
+        if (vfx != null)
+        {
+            if (ShieldValue == 0)
+                vfx.HideShieldVfx();
+            else
+                vfx.UpdateShieldVfx(ShieldValue);
+        }
+    }
+
+    // Comme ConsumeShield, mais pour l'absorption calculée pendant ZoneCombatResolver.EnqueueBattleCommands
+    // (combat prédit à l'avance, rejoué plus tard par la file de commandes visuelles). La donnée
+    // (ShieldValue) doit changer tout de suite pour que les steps suivants du même combat calculent
+    // juste, mais le VFX ne doit PAS être touché en direct ici : à cet instant, la file n'a souvent pas
+    // encore rejoué le gain de ce bouclier (voir ApplyShieldCommand), donc mettre à jour le VFX
+    // maintenant l'écraserait avant même qu'il apparaisse — symptôme observé : bouclier gagné puis
+    // consommé dans le même combat prédit, jamais visible. On met donc en file une commande dédiée qui
+    // prendra sa place après le gain dans la séquence visuelle (ConsumeShieldCommand).
+    public void ConsumeShieldQueued(int absorbed)
+    {
+        if (absorbed <= 0) return;
+        ShieldValue -= absorbed;
+        new ConsumeShieldCommand(UniqueCreatureID, ShieldValue).AddToQueue();
+    }
+
     public void GrantCelerity()
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
@@ -98,17 +127,11 @@ public class CreatureLogic: ILivable
         if (ShieldValue > 0)
         {
             int absorbed = Mathf.Min(dmg, ShieldValue);
-            ShieldValue -= absorbed;
+            ConsumeShield(absorbed);
             dmg -= absorbed;
-            VfxManager vfx = Vfx;
-            if (vfx != null)
-            {
-                if (ShieldValue == 0)
-                    vfx.HideShieldVfx();
-                else
-                    vfx.UpdateShieldVfx(ShieldValue);
-            }
+            if (absorbed > 0) owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, absorbed);
         }
+        if (dmg > 0) owner.matchStats.Add(MatchStatType.DamageTaken, dmg);
         Health -= dmg;
         return Health;
     }
@@ -156,6 +179,7 @@ public class CreatureLogic: ILivable
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
+    public bool IsShielded => ShieldValue > 0;
     public List<AttackModifierSO> AttackModifiers => ca.AttackModifiers;
     public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
 

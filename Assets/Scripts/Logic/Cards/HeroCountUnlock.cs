@@ -10,6 +10,9 @@ public enum MatchStatType
     UnitsDied,       // All : toute unité qui meurt, peu importe le camp
     AllyUnitsDied,   // Ally : mes unités à moi qui meurent
     EnemyUnitsDied,  // Enemy : les unités adverses qui meurent
+    DamageTaken,          // dégâts effectifs subis (après bouclier) par mes unités
+    ShieldDamageAbsorbed, // dégâts absorbés par mes boucliers
+    DamageDealt,          // dégâts effectifs infligés (combat + effets) par mes unités/sorts
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 

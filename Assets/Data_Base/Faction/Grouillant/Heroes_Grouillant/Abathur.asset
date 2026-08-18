@@ -27,7 +27,7 @@ MonoBehaviour:
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 1
+  Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0

@@ -18,6 +18,8 @@ public enum SubType
     Mechanical,
     Building,
     Organic,
+    Engineer,
+    Pirate,
 }
 
 public enum TargetingOptions

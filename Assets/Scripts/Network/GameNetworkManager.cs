@@ -1165,6 +1165,19 @@ public class GameNetworkManager : NetworkBehaviour
             player.GetBonusRessources(amount);
     }
 
+    public void BroadCastShieldBonus(int playerIndex, int amount, int sourceID)
+    {
+        if (!IsServer) return;
+        ShieldBonusClientRpc(playerIndex, amount, sourceID);
+    }
+
+    [ClientRpc]
+    public void ShieldBonusClientRpc(int playerIndex, int amount, int sourceID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.AddBonusShieldFromSource(sourceID, amount);
+    }
+
 
     //Moving Units
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

@@ -950,7 +950,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &189538862
 Transform:
   m_ObjectHideFlags: 0
@@ -1222,7 +1222,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 285883774}
-  - component: {fileID: 285883775}
   m_Layer: 0
   m_Name: MultipleMove_Arrow
   m_TagString: Untagged
@@ -1246,19 +1245,6 @@ Transform:
   - {fileID: 336908202}
   m_Father: {fileID: 744353341}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &285883775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 285883773}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44fbc86ab85b94043a4455add587df73, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EffectTargetingArrow
-  arrow: {fileID: 336908203}
 --- !u!1 &289653487
 GameObject:
   m_ObjectHideFlags: 0
@@ -2922,7 +2908,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: 145ac47e3307ef34fabfe216c222adb7, type: 2}
+  playerDeck: {fileID: 11400000, guid: fa938fd62d5eca0478463fd350251881, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &662666355
 GameObject:
@@ -3413,17 +3399,17 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 285883774}
-  - {fileID: 2037853851}
-  - {fileID: 43101765}
   - {fileID: 742823474}
   - {fileID: 868635811}
   - {fileID: 2035501224}
   - {fileID: 1362789471}
   - {fileID: 2130082661}
-  - {fileID: 1911580565}
   - {fileID: 904082097}
   - {fileID: 1602090294}
+  - {fileID: 1911580565}
   - {fileID: 398100639}
+  - {fileID: 2037853851}
+  - {fileID: 43101765}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -5773,7 +5759,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1293432355592994448, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2935548585029002072, guid: 0a603d4edb5552f41856bd3b0f6da473, type: 3}
       propertyPath: _arrowHead
@@ -7071,7 +7057,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -658260681, guid: d93b0e1b18e85794d8cdba91bfc23157, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8649,9 +8635,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 99.944, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:

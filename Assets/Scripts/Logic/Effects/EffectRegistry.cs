@@ -113,6 +113,7 @@ public static class EffectRegistry
         TempEffectTracker.Unregister(died.UniqueCreatureID);
         UnregisterEntity(died.UniqueCreatureID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
+        dyingOwner.RemoveBonusShieldFromSource(died.UniqueCreatureID);
 
     }
 
@@ -150,6 +151,7 @@ public static class EffectRegistry
 
         UnregisterEntity(died.UniqueBuildingID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueBuildingID); // ← ajouté pour retirer les bonus de revenu liés au bâtiment mort
+        dyingOwner.RemoveBonusShieldFromSource(died.UniqueBuildingID);
     }
 
     // ── Triggers de token ─────────────────────────────────────────────────────

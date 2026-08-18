@@ -623,6 +623,8 @@ public class ZoneCombatResolver : MonoBehaviour
                 {
                     if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.targetID, out CreatureLogic target)) continue;
                     CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attackerCreature);
+                    BuildingLogic.BuildingsCreatedThisGame.TryGetValue(step.attackerID, out BuildingLogic attackerBuildingForStats);
+                    Player attackerOwner = step.attackerIsBuilding ? attackerBuildingForStats?.owner : attackerCreature?.owner;
 
                     // Un attaquant déjà IsPendingDeath ici peut avoir deux causes : (1) il est mort lors
                     // d'un step ANTÉRIEUR de cette même liste — son tour ne doit alors plus s'exécuter
@@ -645,6 +647,9 @@ public class ZoneCombatResolver : MonoBehaviour
                     int effectiveDamage = step.damage - shieldAbsorbed;
                     int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
                     // Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield: {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
+                    if (shieldAbsorbed > 0) target.owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, shieldAbsorbed);
+                    if (effectiveDamage > 0) target.owner.matchStats.Add(MatchStatType.DamageTaken, effectiveDamage);
+                    if (effectiveDamage > 0) attackerOwner?.matchStats.Add(MatchStatType.DamageDealt, effectiveDamage);
 
                     int counterDamage = step.counterDamage;
                     int attackerShieldAbsorbed = (!step.attackerIsBuilding && attackerCreature != null)
@@ -652,6 +657,12 @@ public class ZoneCombatResolver : MonoBehaviour
                     int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
                     int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     // Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield: {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
+                    if (!step.attackerIsBuilding && attackerCreature != null)
+                    {
+                        if (attackerShieldAbsorbed > 0) attackerCreature.owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, attackerShieldAbsorbed);
+                        if (effectiveCounterDamage > 0) attackerCreature.owner.matchStats.Add(MatchStatType.DamageTaken, effectiveCounterDamage);
+                        if (effectiveCounterDamage > 0) target.owner.matchStats.Add(MatchStatType.DamageDealt, effectiveCounterDamage);
+                    }
 
                     // Cibles secondaires (Cone/Piercing/Circular/...) déjà résolues UNE FOIS pendant la
                     // planification (ResolveAndReserveModifierHits) et transportées telles quelles dans le
@@ -675,8 +686,14 @@ public class ZoneCombatResolver : MonoBehaviour
                             int secEffective = reserved.Damage - secShieldAbs;
                             int secHealthAfter = Mathf.Max(0, secTarget.Health - secEffective);
                             secondaryHits.Add(new AttackHitResult(secTarget.UniqueCreatureID, reserved.Damage, secHealthAfter));
+                            if (secShieldAbs > 0) secTarget.owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, secShieldAbs);
+                            if (secEffective > 0) secTarget.owner.matchStats.Add(MatchStatType.DamageTaken, secEffective);
+                            if (secEffective > 0) attackerOwner?.matchStats.Add(MatchStatType.DamageDealt, secEffective);
                             if (secHealthAfter > 0)
+                            {
                                 secTarget.Health -= secEffective;
+                                secTarget.ConsumeShieldQueued(secShieldAbs);
+                            }
                         }
 
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Creature — attaquant={step.attackerID} cible={target.UniqueCreatureID}({target.DisplayName}) dégâts={step.damage} PVcibleAprès={targetHealthAfter} contreDégâts={counterDamage} PVattaquantAprès={attackerHealthAfter}");
@@ -688,14 +705,20 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
                     else
+                    {
                         target.Health -= effectiveDamage;
+                        target.ConsumeShieldQueued(shieldAbsorbed);
+                    }
 
                     if (!step.attackerIsBuilding && attackerCreature != null)
                     {
                         if (attackerHealthAfter <= 0)
                             attackerCreature.ScheduleBattleDeath();
                         else
+                        {
                             attackerCreature.Health -= effectiveCounterDamage;
+                            attackerCreature.ConsumeShieldQueued(attackerShieldAbsorbed);
+                        }
                     }
                     else if (step.attackerIsBuilding)
                     {
