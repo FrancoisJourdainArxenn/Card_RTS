@@ -17,7 +17,8 @@ MonoBehaviour:
   deckTooltip: 
   heroCard: {fileID: 11400000, guid: f686a44c2e4826146855ba6f28333cad, type: 2}
   cards:
-  - {fileID: 11400000, guid: 39389a23c4c5e794d917218532b73fc2, type: 2}
-  - {fileID: 11400000, guid: c087c10c20b543c4db2ab8e99c362a94, type: 2}
-  - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
+  - {fileID: 11400000, guid: 2d2919a17637bd74caa378005f62303d, type: 2}
+  - {fileID: 11400000, guid: 2c68c5fa6fb67214a8bfbc548337c084, type: 2}
+  - {fileID: 11400000, guid: 68ec01feb52ff2746800873cee7c9fda, type: 2}
+  - {fileID: 11400000, guid: 155a50dfe3be8654580b8b5e6abcf168, type: 2}
   buildings: []

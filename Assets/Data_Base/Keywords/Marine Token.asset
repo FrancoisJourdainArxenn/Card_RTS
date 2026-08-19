@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Marine Token
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Marine Token
-  description: 2/2 Soldier Unit that costs 1.
+  description: 2/2 -Ranged- Soldier Unit.
+  icon: {fileID: 0}

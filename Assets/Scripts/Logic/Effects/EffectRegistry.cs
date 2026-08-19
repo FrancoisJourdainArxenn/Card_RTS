@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Unity.Netcode;
 
 /// <summary>
 /// Registre des écouteurs d'effets.
@@ -102,11 +103,19 @@ public static class EffectRegistry
 
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = died };
 
-        // Notifie les entités qui écoutent les morts alliées / ennemies
+        // Notifie les entités qui écoutent les morts alliées / ennemies. Les listeners portés par
+        // une créature ont déjà été résolus par anticipation si cette mort a eu lieu en combat (voir
+        // ResolvePredictedBattleDeath → NotifyCreatureDiedPredicted ci-dessous) : on les exclut ici
+        // pour ne pas les déclencher une seconde fois. Seuls les listeners portés par un bâtiment
+        // restent à déclencher dans ce cas (pas encore couverts par le rejeu prédictif réseau, voir
+        // FireListenersPredicted) ; pour une mort hors combat (ReactiveDeathTriggersResolvedInBattle
+        // reste false), tout se déclenche ici comme avant.
         FireListeners(TriggerType.OnFriendlyCreatureDies, eventCtx,
-            re => re.ContextFactory().Caster == dyingOwner);
+            re => re.ContextFactory().Caster == dyingOwner
+                && (!died.ReactiveDeathTriggersResolvedInBattle || !IsCreatureListener(re)));
         FireListeners(TriggerType.OnEnemyCreatureDies, eventCtx,
-            re => re.ContextFactory().Caster != dyingOwner);
+            re => re.ContextFactory().Caster != dyingOwner
+                && (!died.ReactiveDeathTriggersResolvedInBattle || !IsCreatureListener(re)));
 
         NotifyCreatureDeathStats(dyingOwner);
 
@@ -116,6 +125,98 @@ public static class EffectRegistry
         dyingOwner.RemoveBonusShieldFromSource(died.UniqueCreatureID);
 
     }
+
+    // Résout immédiatement, au moment de la mort prédite en planification de combat (voir
+    // CreatureLogic.ResolvePredictedBattleDeath, qui appelle ceci juste après le OnDeath de la
+    // créature qui meurt elle-même), les triggers réactifs OnFriendlyCreatureDies/
+    // OnEnemyCreatureDies des AUTRES créatures — même philosophie que le OnDeath immédiat déjà en
+    // place : le buff (ex: Rex "+1/+0 quand un allié meurt") s'applique au reste de CE combat et
+    // est visible dès que la créature meurt visuellement, au lieu d'attendre le drain de fin de
+    // Battle (NotifyCreatureDied, qui reste le chemin utilisé pour une mort hors combat et pour les
+    // listeners portés par un bâtiment — voir FireListenersPredicted).
+    public static void NotifyCreatureDiedPredicted(CreatureLogic died, Player dyingOwner)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = died };
+        FireListenersPredicted(TriggerType.OnFriendlyCreatureDies, eventCtx, died.UniqueCreatureID,
+            re => re.ContextFactory().Caster == dyingOwner);
+        FireListenersPredicted(TriggerType.OnEnemyCreatureDies, eventCtx, died.UniqueCreatureID,
+            re => re.ContextFactory().Caster != dyingOwner);
+    }
+
+    // Variante de FireListeners qui exécute chaque listener tout de suite (au lieu d'attendre le
+    // drain de fin de Battle) au lieu de le laisser à NotifyCreatureDied, reportée visuellement sous
+    // deferKey (l'ID de la créature qui meurt et cause ces réactions) exactement comme le OnDeath de
+    // cette même créature juste au-dessus dans ResolvePredictedBattleDeath — la commande visuelle
+    // résultante (ex: ModifyStatsCommand sur Rex) se retrouve donc flush au même moment que la
+    // CreatureDieCommand de la créature qui meurt (voir CreatureLogic.QueuePendingDeathVisuals).
+    //
+    // Ne couvre que les listeners portés par une créature : le rejeu déterministe côté client
+    // (CreatureLogic.ReplayPredictedTriggerEffect) ne sait résoudre que des CreatureLogic.ca.Effects,
+    // comme OnDeath/OnAttack/OnTakeDamage avant lui. Un listener porté par un bâtiment est ignoré ici
+    // et reste couvert par le chemin existant (NotifyCreatureDied, à la fin de la Battle phase).
+    //
+    // Limitation connue : l'EffectContext rejoué côté client (ReplayPredictedTriggerEffect) ne
+    // transporte pas EventSubjectCreature — un effet utilisant includesEventSubject pour cibler "la
+    // créature qui vient de mourir" sur ce trigger précis se comporterait donc différemment entre
+    // hôte et client. Aucune carte actuelle ne combine OnFriendlyCreatureDies/OnEnemyCreatureDies
+    // avec includesEventSubject (vérifié dans Data_Base) ; à traiter si ce cas apparaît un jour.
+    private static void FireListenersPredicted(TriggerType trigger, EffectContext baseCtx, int deferKey,
+        System.Func<RegisteredEffect, bool> filter)
+    {
+        if (!_listeners.TryGetValue(trigger, out List<RegisteredEffect> list))
+            return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+
+        foreach (RegisteredEffect re in new List<RegisteredEffect>(list))
+        {
+            if (!filter(re)) continue;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(re.OwnerID, out CreatureLogic listenerCreature))
+                continue; // bâtiments — voir NotifyCreatureDied
+
+            // Un listener déjà mort plus tôt dans CE MÊME combat (prédiction déjà résolue, pas encore
+            // désenregistré — UnregisterEntity n'a lieu qu'au vrai Die(), bien plus tard) ne doit pas
+            // réagir à une mort suivante : contrairement au chemin non prédictif (NotifyCreatureDied),
+            // où le traitement séquentiel de ProcessPendingDeaths désenregistre chaque créature avant
+            // de traiter la suivante, ici toutes les morts d'une même bataille sont résolues par
+            // anticipation avant qu'aucune ne soit désenregistrée.
+            if (listenerCreature.IsPendingDeath || listenerCreature.OnDeathResolvedInBattle) continue;
+
+            EffectContext ctx = re.ContextFactory();
+            ctx.EventSubjectCreature = baseCtx.EventSubjectCreature ?? ctx.EventSubjectCreature;
+            ctx.EventSubjectBuilding = baseCtx.EventSubjectBuilding ?? ctx.EventSubjectBuilding;
+
+            if (!NetworkSessionData.IsNetworkSession)
+            {
+                Command.RunDeferred(deferKey, () => Execute(re.Data, ctx));
+                continue;
+            }
+            if (!isNetworkServer)
+                continue; // rejoué côté client via CreatureLogic.ReplayPredictedTriggerEffect
+
+            int effectIndex = FindEffectIndex(re.OwnerID, re.Data);
+            if (effectIndex < 0) continue; // ne devrait pas arriver — garde défensive
+
+            int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            System.Random previousRng = EffectSO.CurrentNetworkRng;
+            bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+            try
+            {
+                EffectSO.SetNetworkRng(new System.Random(seed));
+                if (!alreadyResolving) ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                Command.RunDeferred(deferKey, () => Execute(re.Data, ctx));
+            }
+            finally
+            {
+                if (!alreadyResolving) ZoneCombatResolver.EndResolvingPredictedTrigger();
+                EffectSO.SetNetworkRng(previousRng);
+            }
+            ZoneCombatResolver.RecordPredictedTriggerReplay(re.OwnerID, effectIndex, seed, deferKey);
+        }
+    }
+
+    private static bool IsCreatureListener(RegisteredEffect re) =>
+        CreatureLogic.CreaturesCreatedThisGame.ContainsKey(re.OwnerID);
 
     // Progression des conditions de déblocage héros (All / Ally / Enemy). Séparé de
     // NotifyCreatureDied pour pouvoir être rejoué côté client par SilentDie(), qui ne

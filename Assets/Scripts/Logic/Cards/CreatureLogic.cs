@@ -76,6 +76,14 @@ public class CreatureLogic: ILivable
     // a second time when the real Die() eventually runs (end of phase / drain).
     public bool OnDeathResolvedInBattle { get; private set; }
 
+    // True once the reactive OnFriendlyCreatureDies/OnEnemyCreatureDies listeners (on OTHER
+    // creatures) have already been fired ahead of time for THIS death during battle planning
+    // (see ResolvePredictedBattleDeath / EffectRegistry.NotifyCreatureDiedPredicted). Prevents
+    // NotifyCreatureDied from firing the creature-owned listeners a second time when the real
+    // Die() eventually runs — building-owned listeners are not covered by the predictive path
+    // yet, so NotifyCreatureDied still fires those regardless of this flag.
+    public bool ReactiveDeathTriggersResolvedInBattle { get; private set; }
+
     public int ShieldValue { get; private set; } = 0;
 
     public void ApplyShield(int value)
@@ -469,6 +477,7 @@ public class CreatureLogic: ILivable
     {
         if (OnDeathResolvedInBattle) return;
         OnDeathResolvedInBattle = true;
+        ReactiveDeathTriggersResolvedInBattle = true;
 
         bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
 
@@ -490,52 +499,64 @@ public class CreatureLogic: ILivable
         if (isNetworkServer)
             ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, -1, 0, UniqueCreatureID);
 
-        if (ca.Effects == null) return;
-
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnDeath) continue;
-
-            // try/catch : une exception ici (ex: un effet OnDeath mal configuré) ne doit ni
-            // interrompre la planification du combat pour le reste de la partie, ni — surtout —
-            // laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués à leur valeur
-            // "en cours" : ce sont des flags statiques globaux, donc s'ils ne sont jamais remis à
-            // leur état normal, TOUTE commande visuelle du jeu (attaques, morts, pioches...) se
-            // retrouve reportée indéfiniment nulle part — symptôme observé : "le combat bloque"
-            // après la mort d'une créature dont l'effet OnDeath a levé une exception.
-            try
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!NetworkSessionData.IsNetworkSession)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnDeath) continue;
+
+                // try/catch : une exception ici (ex: un effet OnDeath mal configuré) ne doit ni
+                // interrompre la planification du combat pour le reste de la partie, ni — surtout —
+                // laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués à leur valeur
+                // "en cours" : ce sont des flags statiques globaux, donc s'ils ne sont jamais remis à
+                // leur état normal, TOUTE commande visuelle du jeu (attaques, morts, pioches...) se
+                // retrouve reportée indéfiniment nulle part — symptôme observé : "le combat bloque"
+                // après la mort d'une créature dont l'effet OnDeath a levé une exception.
+                try
                 {
-                    Command.RunDeferred(UniqueCreatureID, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else if (isNetworkServer)
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    try
+                    if (!NetworkSessionData.IsNetworkSession)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(UniqueCreatureID, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
                     }
-                    finally
+                    else if (isNetworkServer)
                     {
-                        ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.ClearNetworkRng();
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(UniqueCreatureID, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        }
+                        finally
+                        {
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.ClearNetworkRng();
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, UniqueCreatureID);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, UniqueCreatureID);
+                    // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                    // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
-                // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnDeath] Exception pendant l'effet OnDeath #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnDeath] Exception pendant l'effet OnDeath #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
             }
         }
+
+        // Notifie immédiatement les AUTRES créatures qui réagissent à cette mort (ex: Rex "+1/+0
+        // quand un allié meurt", trigger OnFriendlyCreatureDies/OnEnemyCreatureDies) — même logique
+        // "immédiate" que le OnDeath ci-dessus, pour que ce genre de buff s'applique au reste de CE
+        // combat et soit visible dès la mort de cette créature, au lieu d'attendre la fin de la
+        // phase Battle (voir EffectRegistry.NotifyCreatureDiedPredicted). Placé APRÈS le OnDeath de
+        // cette créature elle-même, pour préserver le même ordre relatif que NotifyCreatureDied
+        // (chemin hors combat) : deathrattle propre d'abord, réactions des autres ensuite.
+        // Inconditionnel (pas dans le bloc ca.Effects != null ci-dessus) : une créature SANS aucun
+        // effet propre peut quand même faire réagir Rex.
+        EffectRegistry.NotifyCreatureDiedPredicted(this, owner);
     }
 
     // Clé de report dédiée à OnAttack, distincte de UniqueCreatureID (utilisé tel quel comme clé par

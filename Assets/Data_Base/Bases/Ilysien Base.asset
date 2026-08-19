@@ -36,7 +36,7 @@ MonoBehaviour:
     drawCountBonus: 1
     tierIcon: {fileID: 21300000, guid: 9cac8352d1196d048aa8c61e9d19d605, type: 3}
   - tier: 3
-    incomeBonus: 2
+    incomeBonus: 1
     upgradeCost: 10
     upgradeCostFloor: 0
     upgradeCostReductionPerTurn: 1

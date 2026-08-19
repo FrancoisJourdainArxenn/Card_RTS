@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Barrier Token
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Barrier
-  description: 0/2 Melee unit that last until the end of the turn.
+  description: 0/2 -Melee- unit that last until the end of the turn.
   icon: {fileID: 0}
