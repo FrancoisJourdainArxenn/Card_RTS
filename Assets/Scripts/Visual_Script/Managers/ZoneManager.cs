@@ -89,7 +89,7 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
     {
         if (ScanButton.HandleZoneClickIfActive(this, eventData)) return;
         if (TurnManager.Instance == null) return;
-        if (PhaseEffectPipeline.IsComplete) return;
+        if (!OnPlayTargetingSession.IsActive && PhaseEffectPipeline.IsComplete) return;
         PhaseEffectPipeline.OnEntityClicked(Logic);
     }
 

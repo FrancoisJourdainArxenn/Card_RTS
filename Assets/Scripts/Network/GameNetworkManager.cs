@@ -113,12 +113,14 @@ public class GameNetworkManager : NetworkBehaviour
         int[] predictedEffectIdxs = new int[predictedReplays.Count];
         int[] predictedSeeds      = new int[predictedReplays.Count];
         int[] predictedDeferKeys  = new int[predictedReplays.Count];
+        int[] predictedEventSubjectIDs = new int[predictedReplays.Count];
         for (int i = 0; i < predictedReplays.Count; i++)
         {
             predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
             predictedEffectIdxs[i] = predictedReplays[i].EffectIndex;
             predictedSeeds[i]      = predictedReplays[i].Seed;
             predictedDeferKeys[i]  = predictedReplays[i].DeferKey;
+            predictedEventSubjectIDs[i] = predictedReplays[i].EventSubjectID;
         }
 
         // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
@@ -168,6 +170,7 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
             predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
+            predictedEventSubjectIDs,
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
@@ -266,6 +269,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
         int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
+        int[] predictedEventSubjectIDs,
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
@@ -296,7 +300,7 @@ public class GameNetworkManager : NetworkBehaviour
             for (int i = 0; i < predictedSourceIDs.Length; i++)
             {
                 // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
-                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i]);
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i]);
 
                 // Tokens créés par CETTE entrée précise (même paire source/effet — voir
                 // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
@@ -881,7 +885,9 @@ public class GameNetworkManager : NetworkBehaviour
     /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex)
+    public void PlayCreatureServerRpc(
+        int cardUniqueID, int tablePos, int baseID, int playerIndex,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         int creatureUniqueID = IDFactory.GetUniqueID();
 
@@ -889,7 +895,8 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (isCelerity)
         {
-            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs);
         }
         else
         {
@@ -902,7 +909,8 @@ public class GameNetworkManager : NetworkBehaviour
                 param3 = tablePos,
                 param4 = baseID
             });
-            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs);
         }
     }
 
@@ -911,17 +919,23 @@ public class GameNetworkManager : NetworkBehaviour
     /// avec les mêmes identifiants sur toutes les machines.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    void ShowPendingPlayCreatureClientRpc(
+        int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
+        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
+            onPlayEffectIndexes, onPlaySelectedTargetIDs);
     }
 
     [ClientRpc]
-    void ImmediatePlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    void ImmediatePlayCreatureClientRpc(
+        int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
+        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
+            onPlayEffectIndexes, onPlaySelectedTargetIDs);
     }
 
     [ClientRpc]

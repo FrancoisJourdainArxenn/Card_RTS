@@ -74,7 +74,7 @@ public static class EffectRegistry
 
     // ── Triggers instantanés ──────────────────────────────────────────────────
 
-    public static void ETB(CardAsset ca, EffectContext context)
+    public static void ETB(CardAsset ca, EffectContext context, List<PendingEffectSelection> preResolvedSelections = null)
     {
         if (ca.Effects == null)
             return;
@@ -84,8 +84,36 @@ public static class EffectRegistry
             if (data.Trigger != TriggerType.OnPlay)
                 continue;
 
+            context.SelectedTarget = FindPreResolvedTarget(data, preResolvedSelections);
             Execute(data, context);
         }
+    }
+
+    /// <summary>
+    /// Reconstruit les sélections OnPlay depuis les tableaux reçus par le réseau (voir
+    /// GameNetworkManager.PlayCreatureServerRpc / Player.NetworkPendingPlayCreature).
+    /// </summary>
+    public static List<PendingEffectSelection> BuildPreResolvedSelections(
+        CardAsset ca, int[] effectIndexes, int[] selectedTargetIDs)
+    {
+        List<PendingEffectSelection> result = new List<PendingEffectSelection>();
+        if (ca.Effects == null || effectIndexes == null)
+            return result;
+
+        for (int i = 0; i < effectIndexes.Length; i++)
+        {
+            int idx = effectIndexes[i];
+            if (idx < 0 || idx >= ca.Effects.Count)
+                continue;
+
+            result.Add(new PendingEffectSelection
+            {
+                Data           = ca.Effects[idx],
+                SelectedTarget = PhaseEffectPipeline.ResolveEntityByID(selectedTargetIDs[i])
+            });
+        }
+
+        return result;
     }
 
     public static void NotifyCreatureDied(CreatureLogic died, Player dyingOwner)
@@ -155,11 +183,10 @@ public static class EffectRegistry
     // comme OnDeath/OnAttack/OnTakeDamage avant lui. Un listener porté par un bâtiment est ignoré ici
     // et reste couvert par le chemin existant (NotifyCreatureDied, à la fin de la Battle phase).
     //
-    // Limitation connue : l'EffectContext rejoué côté client (ReplayPredictedTriggerEffect) ne
-    // transporte pas EventSubjectCreature — un effet utilisant includesEventSubject pour cibler "la
-    // créature qui vient de mourir" sur ce trigger précis se comporterait donc différemment entre
-    // hôte et client. Aucune carte actuelle ne combine OnFriendlyCreatureDies/OnEnemyCreatureDies
-    // avec includesEventSubject (vérifié dans Data_Base) ; à traiter si ce cas apparaît un jour.
+    // L'ID de la créature qui meurt (baseCtx.EventSubjectCreature) est transporté jusqu'au client via
+    // PredictedTriggerReplay.EventSubjectID, pour que ReplayPredictedTriggerEffect puisse reconstruire
+    // un EventSubjectCreature identique à celui de l'hôte (ex: la Condition CondMyZone de Rex, qui
+    // compare la zone du mort à celle de Rex) — sans ça la condition évaluait toujours false côté client.
     private static void FireListenersPredicted(TriggerType trigger, EffectContext baseCtx, int deferKey,
         System.Func<RegisteredEffect, bool> filter)
     {
@@ -211,7 +238,8 @@ public static class EffectRegistry
                 if (!alreadyResolving) ZoneCombatResolver.EndResolvingPredictedTrigger();
                 EffectSO.SetNetworkRng(previousRng);
             }
-            ZoneCombatResolver.RecordPredictedTriggerReplay(re.OwnerID, effectIndex, seed, deferKey);
+            ZoneCombatResolver.RecordPredictedTriggerReplay(re.OwnerID, effectIndex, seed, deferKey,
+                ctx.EventSubjectCreature?.UniqueCreatureID ?? -1);
         }
     }
 
@@ -443,5 +471,18 @@ public static class EffectRegistry
             return building.ca.Effects?.IndexOf(data) ?? -1;
 
         return -1;
+    }
+
+    /// <summary>Cible choisie par le joueur AVANT l'exécution (voir OnPlayTargetingSession).</summary>
+    private static IIdentifiable FindPreResolvedTarget(CardEffectData data, List<PendingEffectSelection> preResolvedSelections)
+    {
+        if (preResolvedSelections == null)
+            return null;
+
+        foreach (PendingEffectSelection sel in preResolvedSelections)
+            if (sel.Data == data)
+                return sel.SelectedTarget;
+
+        return null;
     }
 }

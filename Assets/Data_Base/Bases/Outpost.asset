@@ -10,18 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2928f8693ba712248be20e995e8454e4, type: 3}
-  m_Name: StandardBase
+  m_Name: Outpost
   m_EditorClassIdentifier: Assembly-CSharp::BaseAsset
   Faction: {fileID: 0}
-  BaseImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
-  BaseIcon: {fileID: 21300000, guid: c0b6e05098ff085449341eee975007bd, type: 3}
+  BaseImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
+  BaseIcon: {fileID: 21300000, guid: 3f02dedd261407d4aa0496b32bee4dcc, type: 3}
   baseIconColor: {r: 1, g: 1, b: 1, a: 1}
-  baseDescription: '<b>Base</b>
-
-    This Base will Increase your Income by 1 and
-    allow you to play unit in that zone.'
+  baseDescription: This Outpost will allow you to play unit in that zone.
   BaseName: Standard Neutral Base
   MaxHealth: 3
-  mainRessourceIncome: 1
-  mainRessourceBaseCost: 3
+  mainRessourceIncome: 0
+  mainRessourceBaseCost: 2
   tierLevels: []

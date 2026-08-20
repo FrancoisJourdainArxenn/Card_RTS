@@ -85,10 +85,13 @@ public class CreatureLogic: ILivable
     public bool ReactiveDeathTriggersResolvedInBattle { get; private set; }
 
     public int ShieldValue { get; private set; } = 0;
+    public GameObject ShieldVfxPrefab { get; private set; }
 
-    public void ApplyShield(int value)
+    public void ApplyShield(int value, GameObject vfxPrefab = null)
     {
         ShieldValue = Mathf.Max(ShieldValue, value);
+        if (vfxPrefab != null)
+            ShieldVfxPrefab = vfxPrefab;
     }
 
     public void ConsumeShield(int absorbed)
@@ -691,9 +694,15 @@ public class CreatureLogic: ILivable
     // (voir le commentaire sur ZoneCombatResolver.PredictedTriggerReplay) : rejouer OnDeath et
     // OnAttack comme deux boucles séparées risquerait de trahir cet ordre pour un effet à ciblage
     // aléatoire dont le pool de cibles dépend d'un état de vie/mort pas encore rejoué.
-    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey)
+    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1)
     {
         if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
+
+        // Sujet de l'évènement réactif (ex: l'allié qui vient de mourir pour Rex "OnFriendlyCreatureDies") —
+        // -1 si ce trigger n'en a pas (OnDeath/OnAttack/OnTakeDamage, déclenchés sur la créature elle-même).
+        // Toujours résolvable ici : CreaturesCreatedThisGame ne retire jamais ses entrées en cours de partie.
+        CreatureLogic eventSubjectCreature = eventSubjectID >= 0 && CreaturesCreatedThisGame.TryGetValue(eventSubjectID, out CreatureLogic subj)
+            ? subj : null;
 
         // effectIndex=-1 : sentinel posé par ResolvePredictedBattleDeath pour une créature morte en
         // planification SANS effet OnDeath propre — rien à exécuter, juste propager le flag au client
@@ -718,7 +727,8 @@ public class CreatureLogic: ILivable
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
             Command.RunDeferred(deferKey, () =>
-                EffectRegistry.Execute(data, new EffectContext { Caster = creature.owner, Source = creature }));
+                EffectRegistry.Execute(data, new EffectContext
+                    { Caster = creature.owner, Source = creature, EventSubjectCreature = eventSubjectCreature }));
         }
         catch (System.Exception e)
         {

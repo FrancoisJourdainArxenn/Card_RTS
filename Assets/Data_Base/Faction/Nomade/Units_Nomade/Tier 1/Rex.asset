@@ -39,7 +39,7 @@ MonoBehaviour:
   - EffectName: Rage
     Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
     Trigger: 7
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: 78777b9d4ac95324b988967fb8045c03, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0

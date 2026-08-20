@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class GlobalSettings : MonoBehaviour
@@ -172,6 +173,31 @@ public class GlobalSettings : MonoBehaviour
             RefreshEndPhaseButtons();
             BuildSpotVisual.RefreshAll();
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            OnPlayTargetingSession.Cancel();
+
+        if (OnPlayTargetingSession.IsActive && Input.GetMouseButtonDown(0))
+            CancelOnPlayTargetingIfClickMissed();
+    }
+
+    // Clic dans le vide (aucune entité 3D ni élément UI sous le curseur) pendant une session de
+    // ciblage OnPlay : comme un drag relâché dans une zone non valide, on annule et la carte
+    // retourne en main. Les clics sur une entité/zone existante (valide ou non) sont déjà gérés
+    // par OnPlayTargetingSession.OnEntityClicked (voir PhaseEffectPipeline.OnEntityClicked).
+    private void CancelOnPlayTargetingIfClickMissed()
+    {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        if (Camera.main != null)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.GetComponentInParent<IDHolder>() != null)
+                return;
+        }
+
+        OnPlayTargetingSession.Cancel();
     }
     
     public bool CanControlThisPlayer(AreaPosition owner)

@@ -59,13 +59,17 @@ public class ZoneCombatResolver : MonoBehaviour
                               // plusieurs entrées pour la MÊME créature dans une même bataille (contrairement
                               // à OnDeath/OnAttack), donc la clé ne peut plus être dérivée uniquement de
                               // SourceCreatureID côté client — voir CreatureLogic.ReplayPredictedTriggerEffect
+        public int EventSubjectID; // ID de la créature qui a causé ce trigger réactif (ex: l'allié qui vient
+                                    // de mourir pour Rex "OnFriendlyCreatureDies") — -1 si non applicable
+                                    // (OnDeath/OnAttack/OnTakeDamage, déclenchés sur la créature elle-même,
+                                    // n'ont pas de sujet distinct). Voir EffectRegistry.FireListenersPredicted.
     }
     private static readonly List<PredictedTriggerReplay> _pendingPredictedTriggerReplays = new();
 
-    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey)
+    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1)
     {
         _pendingPredictedTriggerReplays.Add(new PredictedTriggerReplay
-            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey });
+            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID });
     }
 
     // Consommé une seule fois par SubmitBattleAssignmentServerRpc, juste après que toute la

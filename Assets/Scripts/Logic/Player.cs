@@ -446,15 +446,25 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
-    // METHODS TO PLAY CREATURES 
+    // METHODS TO PLAY CREATURES
     // 1st overload - by ID
     public void PlayACreatureFromHand(int UniqueID, int tablePos, PlayerArea selectedPArea)
     {
-        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea);
+        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea, null);
+    }
+
+    // Utilisé quand OnPlayTargetingSession a déjà fait choisir sa/ses cible(s) au joueur
+    // avant la pose (voir DragCreatureOnTable.OnEndDrag).
+    public void PlayACreatureFromHand(int UniqueID, int tablePos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
+    {
+        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea, preResolvedSelections);
     }
 
     // 2nd overload - by logic units
     public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
+        => PlayACreatureFromHand(playedCard, rowLocalPos, selectedPArea, null);
+
+    public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
@@ -467,7 +477,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, rowLocalPos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
-        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature });
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
@@ -527,7 +537,9 @@ public class Player : MonoBehaviour, ILivable
         playedCards.Creatures.AddRange(pendingWithoutGO);
     }
 
-    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    public void NetworkPendingPlayCreature(
+        int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
@@ -571,7 +583,9 @@ public class Player : MonoBehaviour, ILivable
         }
 
         // Résolution logique immédiate (créature + OnPlay), après le reveal visuel local pour garder une cible valide.
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
+        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
     }
 
@@ -604,7 +618,9 @@ public class Player : MonoBehaviour, ILivable
         area.tableVisual.ApplyCreatureOrder(meleeIDs, rangedIDs);
     }
 
-    public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    public void NetworkPlayCreatureFromHand(
+        int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
         {
@@ -630,7 +646,9 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
+        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
 
 

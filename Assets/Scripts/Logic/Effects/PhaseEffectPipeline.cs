@@ -130,6 +130,9 @@ public static class PhaseEffectPipeline
 
     public static bool OnEntityClicked(IIdentifiable entity)
     {
+        if (OnPlayTargetingSession.IsActive)
+            return OnPlayTargetingSession.OnEntityClicked(entity);
+
         if (_isComplete)
             return false;
 
@@ -230,6 +233,9 @@ public static class PhaseEffectPipeline
 
     public static bool IsPlayerTargetingComplete(Player player)
     {
+        if (OnPlayTargetingSession.IsActive)
+            return false;
+
         if (_isComplete)
             return true;
 
@@ -522,7 +528,7 @@ public static class PhaseEffectPipeline
         return null;
     }
 
-    private static IIdentifiable ResolveEntityByID(int id)
+    public static IIdentifiable ResolveEntityByID(int id)
     {
         if (id < 0)
             return null;

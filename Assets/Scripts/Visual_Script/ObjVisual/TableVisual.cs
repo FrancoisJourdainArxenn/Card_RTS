@@ -645,6 +645,8 @@ public class TableVisual : MonoBehaviour
         {
             manager.AttackText.text = cl.Attack.ToString();
             manager.HealthText.text = cl.Health.ToString();
+            if (cl.ShieldValue > 0)
+                creature.GetComponent<VfxManager>().ShowShieldVfx(cl.ShieldVfxPrefab, cl.ShieldValue);
         }
 
         return creature;

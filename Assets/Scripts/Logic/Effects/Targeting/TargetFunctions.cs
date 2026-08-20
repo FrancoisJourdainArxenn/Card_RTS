@@ -35,10 +35,14 @@ public partial class EffectContext
                 _                              => candidates
             };
 
-            if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource && Source?.Zone != null)
+            if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource)
             {
-                ZoneLogic sourceZone = Source.Zone;
-                candidates = candidates.Where(t => t is ILivable livable && livable.Zone == sourceZone);
+                // Source est encore null quand on calcule les cibles éligibles AVANT que la carte
+                // ne soit committée (voir OnPlayTargetingSession) : TargetedZone (zone de pose)
+                // sert alors de repère de remplacement.
+                ZoneLogic sourceZone = Source?.Zone ?? TargetedZone;
+                if (sourceZone != null)
+                    candidates = candidates.Where(t => t is ILivable livable && livable.Zone == sourceZone);
             }
             else if (query.zoneFilter == TargetZoneFilter.SameZoneAsTarget && targetZone != null)
             {

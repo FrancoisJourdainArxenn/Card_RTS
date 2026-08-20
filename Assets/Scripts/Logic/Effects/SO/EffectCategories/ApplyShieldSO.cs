@@ -77,7 +77,7 @@ public class ApplyShieldSO : EffectSO
         int displayAmount = value;
         if (target is CreatureLogic creature)
         {
-            creature.ApplyShield(value);
+            creature.ApplyShield(value, visualData?.vfxPrefab);
             displayAmount = creature.ShieldValue;
         }
         new ApplyShieldCommand(target.ID, displayAmount, visualData).AddToQueue();

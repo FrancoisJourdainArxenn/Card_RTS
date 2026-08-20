@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 
 public class DragCreatureOnTable : DraggingActions {
@@ -21,7 +23,8 @@ public class DragCreatureOnTable : DraggingActions {
     {
         get
         {
-            return base.CanDrag && manager.CanBePlayedNow && !_isReturning && !_isPlayed;
+            return base.CanDrag && manager.CanBePlayedNow && !_isReturning && !_isPlayed
+                && !OnPlayTargetingSession.IsActive;
         }
     }
 
@@ -58,7 +61,6 @@ public class DragCreatureOnTable : DraggingActions {
         bool dragOk = DragSuccessful();
         if (dragOk)
         {
-            _isPlayed = true;
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
             bool isMelee = manager.cardAsset.melee;
             // Index visuel brut → index logique (ghosts exclus) : c'est ce dernier qui doit transiter
@@ -67,26 +69,76 @@ public class DragCreatureOnTable : DraggingActions {
             int visualTablePos = selectedPArea.tableVisual.TablePosForNewCreature(isMelee);
             int tablePos = selectedPArea.tableVisual.ToNetworkTablePos(isMelee, visualTablePos);
 
+            int cardID = GetComponent<IDHolder>().UniqueID;
 
-            if (NetworkSessionData.IsNetworkSession)
+            // Si un effet OnPlay de cette carte requiert une sélection du joueur (Require Player
+            // Selection), on choisit la/les cible(s) localement AVANT de committer quoi que ce soit
+            // (dépense de ressource, appel réseau) — rien n'est committé tant que ce n'est pas confirmé.
+            List<PendingEffectSelection> requiredSelections = OnPlayTargetingSession.CollectRequiredSelections(
+                manager.cardAsset, playerOwner, selectedPArea.parentZone.Logic);
+
+            if (requiredSelections.Count == 0)
             {
-                int playerIndex = System.Array.IndexOf(Player.Players, playerOwner);
-                GameNetworkManager.Instance.PlayCreatureServerRpc(
-                    GetComponent<IDHolder>().UniqueID,
-                    tablePos,
-                    selectedPArea.baseID,
-                    playerIndex
-                );
+                _isPlayed = true;
+                CommitPlay(cardID, tablePos, selectedPArea, null);
+                GetComponent<Draggable>().enabled = false;
             }
             else
             {
-                playerOwner.PlayACreatureFromHand(GetComponent<IDHolder>().UniqueID, tablePos, selectedPArea);
+                // Confort visuel : la carte laisse place à un placeholder de créature posé dans la
+                // zone (comme une pose normale), qui sert d'ancre réelle au popup et à la flèche de
+                // ciblage classiques (EffectTargetingArrow/CardPreviewUI attendent une vraie entité).
+                // ID purement local/visuel : rien n'est committé tant que ce n'est pas confirmé,
+                // annuler ne fait que retirer ce ghost.
+                int ghostID = IDFactory.GetLocalOnlyID();
+                selectedPArea.tableVisual.AddCreatureAtIndex(
+                    manager.cardAsset, ghostID, visualTablePos, selectedPArea.baseID, completeCommand: false);
+
+                GameObject ghostGO = IDHolder.GetGameObjectWithID(ghostID);
+                if (ghostGO != null && ghostGO.TryGetComponent(out OneCreatureManager ghostOcm))
+                    ghostOcm.SetPending(true);
+
+                foreach (PendingEffectSelection sel in requiredSelections)
+                    sel.SourceEntityID = ghostID;
+
+                gameObject.SetActive(false);
+
+                OnPlayTargetingSession.Begin(
+                    requiredSelections,
+                    onConfirmed: selections =>
+                    {
+                        _isPlayed = true;
+                        selectedPArea.tableVisual.RemovePendingMoveGhost(ghostGO);
+                        CommitPlay(cardID, tablePos, selectedPArea, selections);
+                        GetComponent<Draggable>().enabled = false;
+                    },
+                    onCancelled: () =>
+                    {
+                        selectedPArea.tableVisual.RemovePendingMoveGhost(ghostGO);
+                        gameObject.SetActive(true);
+                        DragFailed();
+                    });
             }
-             GetComponent<Draggable>().enabled = false;
         }
         else
         {
             DragFailed();
+        }
+    }
+
+    private void CommitPlay(int cardID, int tablePos, PlayerArea selectedPArea, List<PendingEffectSelection> selections)
+    {
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            int playerIndex = System.Array.IndexOf(Player.Players, playerOwner);
+            int[] effectIndexes     = selections?.Select(s => s.EffectIndexInCard).ToArray() ?? new int[0];
+            int[] selectedTargetIDs = selections?.Select(s => s.SelectedTarget?.ID ?? -1).ToArray() ?? new int[0];
+            GameNetworkManager.Instance.PlayCreatureServerRpc(
+                cardID, tablePos, selectedPArea.baseID, playerIndex, effectIndexes, selectedTargetIDs);
+        }
+        else
+        {
+            playerOwner.PlayACreatureFromHand(cardID, tablePos, selectedPArea, selections);
         }
     }
 

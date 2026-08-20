@@ -88,9 +88,16 @@ public static class EffectSelectionController
 
     private static void ShowCurrentHighlights()
     {
-        PendingEffectSelection sel = Current;
         TargetingVisualEvents.RaiseTargetingStarted(_queue, _cursor);
+        ApplyEntityHighlights(Current);
+    }
 
+    /// <summary>
+    /// Met à jour les visuels "éligible/sélectionné" pour une sélection donnée. Public pour être
+    /// réutilisable par d'autres sessions de ciblage (voir OnPlayTargetingSession).
+    /// </summary>
+    public static void ApplyEntityHighlights(PendingEffectSelection sel)
+    {
         foreach (KeyValuePair<int, CreatureLogic> e in CreatureLogic.CreaturesCreatedThisGame)
             UpdateEntityVisual(e.Key, e.Value, sel);
 

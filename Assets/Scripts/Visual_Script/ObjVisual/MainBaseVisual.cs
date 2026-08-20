@@ -78,7 +78,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     void OnMouseDown()
     {
         if (TurnManager.Instance == null) return;
-        if (PhaseEffectPipeline.IsComplete) return;
+        if (!OnPlayTargetingSession.IsActive && PhaseEffectPipeline.IsComplete) return;
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(player.PlayerID, out BaseLogic homeBase))
             PhaseEffectPipeline.OnEntityClicked(homeBase);
     }

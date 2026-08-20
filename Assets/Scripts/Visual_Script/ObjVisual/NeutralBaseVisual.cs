@@ -13,7 +13,8 @@ public class NeutralBaseVisual : MonoBehaviour {
     public NeutralZoneController neutralBaseController;
     public AreaPosition owner;
     public TMP_Text BaseCostText;
-    public TMP_Text MainRessourceIncomeText;
+    public Image iconType;
+    private Color iconColor;
     public GameObject Glow;
     public Transform baseParent;
 
@@ -53,7 +54,9 @@ public class NeutralBaseVisual : MonoBehaviour {
 	public void ApplyLookFromAsset()
     {
         BaseCostText.text = baseAsset.mainRessourceBaseCost.ToString();
-        MainRessourceIncomeText.text = baseAsset.mainRessourceIncome.ToString();
+        iconType.sprite = baseAsset.BaseIcon;
+        iconColor = baseAsset.baseIconColor;
+        iconType.color = iconColor;
     }
 
     void OnMouseEnter()
@@ -63,6 +66,8 @@ public class NeutralBaseVisual : MonoBehaviour {
         bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
         Glow.SetActive(true);
+        UITooltip.ShowTooltip_Static(baseAsset.baseDescription);
+
     }
 
     void OnMouseDown()
@@ -75,6 +80,8 @@ public class NeutralBaseVisual : MonoBehaviour {
     void OnMouseExit()
     {
         Glow.SetActive(false);
+        UITooltip.HideTooltip_Static();
+
     }
 
     public void RemoveBaseCard()
