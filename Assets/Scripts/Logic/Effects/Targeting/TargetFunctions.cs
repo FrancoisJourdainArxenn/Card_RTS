@@ -48,6 +48,14 @@ public partial class EffectContext
             {
                 candidates = candidates.Where(t => t is ILivable livable && livable.Zone == targetZone);
             }
+            else if (query.zoneFilter == TargetZoneFilter.AdjacentToSource)
+            {
+                candidates = candidates.Where(t => t is CreatureLogic c && IsAdjacentTo(Source, c));
+            }
+            else if (query.zoneFilter == TargetZoneFilter.AdjacentToTarget)
+            {
+                candidates = candidates.Where(t => t is CreatureLogic c && IsAdjacentTo(Target, c));
+            }
             if (query.cardFilter != null)
                 candidates = candidates.Where(t => query.cardFilter.Matches(GetCardAsset(t)));
 
@@ -103,5 +111,22 @@ public partial class EffectContext
         BuildingLogic b => b.ca,
         _               => null
     };
+
+    // Un "voisin" est la créature juste avant/après `anchor` dans playedCards.Creatures, sur la
+    // même ligne (même BaseID + même IsMelee) — même algo que LateralAttackModifierSO.GetAdjacent
+    // (splash de combat), réutilisé ici pour rester cohérent entre ciblage d'effet et de combat.
+    private static bool IsAdjacentTo(ILivable anchor, CreatureLogic candidate)
+    {
+        if (anchor is not CreatureLogic anchorCreature) return false;
+
+        List<CreatureLogic> row = anchorCreature.owner.playedCards.Creatures
+            .Where(c => c.BaseID == anchorCreature.BaseID && c.IsMelee == anchorCreature.IsMelee)
+            .ToList();
+
+        int anchorIndex = row.IndexOf(anchorCreature);
+        int candidateIndex = row.IndexOf(candidate);
+
+        return anchorIndex >= 0 && candidateIndex >= 0 && Math.Abs(anchorIndex - candidateIndex) == 1;
+    }
 
 }

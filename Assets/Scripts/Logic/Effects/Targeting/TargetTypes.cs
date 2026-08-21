@@ -44,6 +44,7 @@ public enum TargetZoneFilter
     All,
     SameZoneAsSource,
     SameZoneAsTarget,
-    // AdjacentZoneToSource,
+    AdjacentToSource,
+    AdjacentToTarget,
     // VisibleZone,
 }

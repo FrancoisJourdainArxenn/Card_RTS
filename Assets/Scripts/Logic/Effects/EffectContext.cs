@@ -67,8 +67,17 @@ public partial class EffectContext
         return targets;
     }
 
-    public int GetTargetCount(EffectObjectType type, List<TargetQuery> queries) =>
-        ResolveByType(type, queries).Count;
+    // excludeSource : GetEligibleTargets et GetSingleTargetAffectedElements retirent tous les deux
+    // la source du pool sauf demande explicite (includesSource) — cf. le commentaire plus bas sur
+    // le bug Flag-Bearer. GetTargetCount ne le faisait pas, ce qui fausse un compte du type "combien
+    // d'alliés du même sous-type dans ma zone" quand la source elle-même matche le filtre.
+    public int GetTargetCount(EffectObjectType type, List<TargetQuery> queries, bool excludeSource = false)
+    {
+        List<IIdentifiable> resolved = ResolveByType(type, queries);
+        if (excludeSource && Source != null)
+            resolved = resolved.Where(e => !Equals(e, Source)).ToList();
+        return resolved.Count;
+    }
 
     public int GetSourceShieldValue() => Source is CreatureLogic c ? c.ShieldValue : 0;
 

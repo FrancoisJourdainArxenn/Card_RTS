@@ -692,11 +692,15 @@ public class TurnManager : MonoBehaviour
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
     {
         _soloMoveBuffer.Add((creatureUniqueID, targetBaseID, tablePos));
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
     }
 
     public void CancelSoloMove(int creatureUniqueID)
     {
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
     }
 
     private void FlushSoloMoveBuffer()

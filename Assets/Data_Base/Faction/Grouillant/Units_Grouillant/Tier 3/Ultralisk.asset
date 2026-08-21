@@ -17,12 +17,15 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>Arcing Attacks</b>
+  Description: '<b>Arcing Attacks
+
+    On Play:</b> Assimilates the units to the
+    right and left of it to gain their stats.'
   CardImage: {fileID: 21300000, guid: b5c570a4e4dfe52449f7a033ba1fff63, type: 3}
-  MainCost: 5
+  MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 4
+  Attack: 2
   MaxHealth: 7
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 4
@@ -33,7 +36,35 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
-  Effects: []
+  Effects:
+  - EffectName: Empower me !
+    Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 3
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

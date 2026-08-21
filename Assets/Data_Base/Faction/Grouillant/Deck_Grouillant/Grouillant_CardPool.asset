@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b16d44f0fdc5c42b5a304e1dbb87f9, type: 3}
+  m_Name: Grouillant_CardPool
+  m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
+  cards:
+  - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
+  - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}
+  - {fileID: 11400000, guid: 1d718c790f068234eb86d193c9d92bc0, type: 2}
+  - {fileID: 11400000, guid: 1c962ece523e3c1479439a5a12255cca, type: 2}
+  - {fileID: 11400000, guid: 9f412b180eea7be4db7eb38e286c34dd, type: 2}
+  - {fileID: 11400000, guid: f842b0219c6df1a4db9632e27c1c710e, type: 2}
+  - {fileID: 11400000, guid: f01c93db45d9f87428921f110cec8624, type: 2}
+  - {fileID: 11400000, guid: 1cd4064ce16628d43bfea2fc7792e35e, type: 2}
+  - {fileID: 11400000, guid: d3073dbe7a2ab6e44916057a3fc6bc8b, type: 2}
+  - {fileID: 11400000, guid: 31d255cea446e3848afce91b9a4a85f3, type: 2}
+  - {fileID: 11400000, guid: 2ec079382b2e6a34db34e09516677b36, type: 2}
+  - {fileID: 11400000, guid: fd6daaf4727090345b9ad461bc3ee6dc, type: 2}
+  - {fileID: 11400000, guid: f4101c1205d4fdb46a9816e3c341291a, type: 2}
+  - {fileID: 11400000, guid: ecac3d1eac14865458f113cf57ec705a, type: 2}
+  - {fileID: 11400000, guid: 97a90577dfba71d4cae086846f2580ae, type: 2}
+  - {fileID: 11400000, guid: 934cdef1eba6d4b4b8685c2301457b30, type: 2}
+  - {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
+  - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}
+  buildings: []

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Netcode;
 
 [CreateAssetMenu(menuName = "Effects/KillAndAbsorbStatsSO")]
 public class KillAndAbsorbStatsSO : HealthEffectSO
@@ -25,11 +26,14 @@ public class KillAndAbsorbStatsSO : HealthEffectSO
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)
     {
+        string role = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+
         if (target.Health <= 0 || _source == null)
         {
-            Log($"[KillAndAbsorbStats] SKIP — cible déjà morte ou source invalide.");
+            Log($"[KillAndAbsorbStats]{role} SKIP — cible={target.DisplayName} health={target.Health} sourceNull={_source == null}");
             return;
         }
+        Log($"[KillAndAbsorbStats]{role} EXECUTE — cible={target.DisplayName} health={target.Health}");
 
         // Beam lancé AVANT target.Health = 0 (donc avant la mise à mort et toute la cascade
         // qu'elle déclenche : triggers OnDeath alliés, animation de mort, buff visuel de la source)

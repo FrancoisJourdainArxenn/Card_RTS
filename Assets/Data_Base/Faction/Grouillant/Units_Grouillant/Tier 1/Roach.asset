@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>On Attack:</b> Create a Zergling in your hand.
+  Description: 
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 2
   IsHero: 0
@@ -31,20 +31,8 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
-  Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 3c0f136ab2db4e244bfd45b91f0f04c4, type: 2}
-    Trigger: 15
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
+  Effects: []

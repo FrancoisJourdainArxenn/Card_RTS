@@ -16,9 +16,4 @@ MonoBehaviour:
   difficultyLevel: 0
   deckTooltip: 
   heroCard: {fileID: 11400000, guid: f686a44c2e4826146855ba6f28333cad, type: 2}
-  cards:
-  - {fileID: 11400000, guid: 68ec01feb52ff2746800873cee7c9fda, type: 2}
-  - {fileID: 11400000, guid: 5ac298a3db5599e4bbb314a81b22d7bc, type: 2}
-  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
-  - {fileID: 11400000, guid: 1be6f6049ca6525449bec35936ccf041, type: 2}
-  buildings: []
+  sharedPool: {fileID: 11400000, guid: faab8b205ba07fa4da595cbb93257622, type: 2}

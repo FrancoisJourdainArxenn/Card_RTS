@@ -17,13 +17,14 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>Start of turn:</b> Create a Zergling in your hand.
+  Description: Every 5 ally units that die, your Raptors gain +1/+0 (<i>wherever
+    they are</i>).
   CardImage: {fileID: 21300000, guid: 6ca054e689f7b084e8fd189fc894bc8f, type: 3}
-  MainCost: 2
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 4
+  Attack: 1
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -31,19 +32,30 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 1
+  melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: More Troops
-    Effect: {fileID: 11400000, guid: 3c0f136ab2db4e244bfd45b91f0f04c4, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
+  - EffectName: Grow My Minions, Grow !
+    Effect: {fileID: 11400000, guid: 783f6373691172d4e92ba2817991c6f4, type: 2}
+    Trigger: 7
+    Condition: {fileID: 11400000, guid: b9aac5a7913fcbb479b2c07da704dae0, type: 2}
     Effectinfo:
       effectTargets: []
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 11400000, guid: 28cbc08c3459425b93c533ff65741529, type: 2}
       repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

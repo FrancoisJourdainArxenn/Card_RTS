@@ -17,12 +17,12 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>On Death:</b> Create two Guardians.
+  Description: Every 3 ally units that die, create a Raptor.
   CardImage: {fileID: 21300000, guid: 9a2eafb1b366c68448f42999fa927f83, type: 3}
   MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
+  Attack: 0
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -31,37 +31,22 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 1
+  melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
   Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: cf1927b8786e179439007cfef31b6793, type: 2}
-    Trigger: 1
-    Condition: {fileID: 0}
+  - EffectName: To Battle !
+    Effect: {fileID: 11400000, guid: 0339fd8f4a0d630408f7f5f7f8bad261, type: 2}
+    Trigger: 7
+    Condition: {fileID: 11400000, guid: 467378b277c92154c82db11a3e508d5d, type: 2}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

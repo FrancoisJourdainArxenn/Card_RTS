@@ -17,12 +17,12 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>On Battle Start:</b> Gives +1/+0 to Melee units until end of turn. '
+  Description: '<b>On Play:</b> Create an Egg Sack. '
   CardImage: {fileID: 21300000, guid: 239b7c5f2d4fe82419b5dadd62a0e9f9, type: 3}
   MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
+  Attack: 2
   MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
@@ -31,33 +31,21 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: For the Swarm
-    Effect: {fileID: 11400000, guid: 3a5e648d35a26d745bff2d8fcb1eff6d, type: 2}
-    Trigger: 14
+  - EffectName: I've Dropped Something
+    Effect: {fileID: 11400000, guid: d84b24b6c3a02ff408694b7186af3dfa, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 1
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries: []
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

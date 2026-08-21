@@ -318,7 +318,7 @@ public class CardPreviewUI : MonoBehaviour
         previewingEffects = false;
     }
 
-    public void Show(CardAsset asset, Vector2 mouseOffset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
+    public void Show(CardAsset asset, Vector2 mouseOffset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null, BuildingLogic sourceBuilding = null)
     {
         if(previewingEffects)
             return;
@@ -334,10 +334,10 @@ public class CardPreviewUI : MonoBehaviour
         Vector2 previewPosition = localPoint + mouseOffset;
         _anchorRect.anchoredPosition = previewPosition;
 
-        ShowPreview(asset, owner, attackOverride, healthOverride, maxHealthOverride);
+        ShowPreview(asset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature, sourceBuilding);
     }
 
-    private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null)
+    private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null, BuildingLogic sourceBuilding = null)
     {
         GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab : cardPreviewPrefab;
         if (prefabToUse == null) return;
@@ -359,6 +359,8 @@ public class CardPreviewUI : MonoBehaviour
         OneCardManager manager = currentPreview.GetComponent<OneCardManager>();
         manager.cardAsset = asset;
         manager.owner = owner;
+        manager.sourceCreature = sourceCreature;
+        manager.sourceBuilding = sourceBuilding;
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset));

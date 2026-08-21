@@ -49,7 +49,7 @@ MonoBehaviour:
         - team: 1
           statusFilter: 0
           zoneFilter: 0
-          cardFilter: {fileID: 11400000, guid: 8d350a69ea7e7cc47acea175575b2e4b, type: 2}
+          cardFilter: {fileID: 11400000, guid: 28cbc08c3459425b93c533ff65741529, type: 2}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0

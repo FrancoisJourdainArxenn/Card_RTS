@@ -11,6 +11,23 @@ public class CreatureLogic: ILivable
     public CardAsset ca;
     public int UniqueCreatureID;
 
+    // Compteur pour CondCounter (source = WrappedCondition) — vit sur l'instance (pas sur le
+    // ConditionSO, stateless/partagé entre parties), clé par condition pour supporter plusieurs
+    // compteurs indépendants.
+    private Dictionary<ConditionSO, int> _conditionCounters;
+    public int IncrementConditionCounter(ConditionSO key)
+    {
+        _conditionCounters ??= new Dictionary<ConditionSO, int>();
+        _conditionCounters.TryGetValue(key, out int current);
+        current++;
+        _conditionCounters[key] = current;
+        return current;
+    }
+    // Lecture seule, pour l'UI (texte de progression) — contrairement à IncrementConditionCounter,
+    // n'avance pas le compteur.
+    public int PeekConditionCounter(ConditionSO key) =>
+        _conditionCounters != null && _conditionCounters.TryGetValue(key, out int v) ? v : 0;
+
     // PROPERTIES
     // property from ILivable interface
     public int ID => UniqueCreatureID;
@@ -68,6 +85,7 @@ public class CreatureLogic: ILivable
     }
 
     public bool IsPendingDeath { get; private set; }
+    public bool IsPendingMove { get; set; }
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
     private bool _deathVisualQueued;
 
@@ -581,7 +599,7 @@ public class CreatureLogic: ILivable
     // déroulé visuel. Contrairement à ResolvePredictedBattleDeath, pas besoin de flag "déjà résolu" :
     // AssignSingleAttack n'appelle chaque attaquant qu'une seule fois par bataille de zone
     // (BuildAttackQueue n'ajoute chaque créature qu'une fois à la file d'attaque).
-    public void ResolvePredictedOnAttack()
+    public void ResolvePredictedOnAttack(ILivable attackTarget = null)
     {
         if (ca.Effects == null) return;
 
@@ -600,7 +618,7 @@ public class CreatureLogic: ILivable
                 if (!NetworkSessionData.IsNetworkSession)
                 {
                     Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
                 }
                 else if (isNetworkServer)
                 {
@@ -610,14 +628,14 @@ public class CreatureLogic: ILivable
                         EffectSO.SetNetworkRng(new System.Random(seed));
                         ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
-                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
                     }
                     finally
                     {
                         ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.ClearNetworkRng();
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID));
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                 // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
@@ -694,7 +712,7 @@ public class CreatureLogic: ILivable
     // (voir le commentaire sur ZoneCombatResolver.PredictedTriggerReplay) : rejouer OnDeath et
     // OnAttack comme deux boucles séparées risquerait de trahir cet ordre pour un effet à ciblage
     // aléatoire dont le pool de cibles dépend d'un état de vie/mort pas encore rejoué.
-    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1)
+    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
     {
         if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
 
@@ -703,6 +721,11 @@ public class CreatureLogic: ILivable
         // Toujours résolvable ici : CreaturesCreatedThisGame ne retire jamais ses entrées en cours de partie.
         CreatureLogic eventSubjectCreature = eventSubjectID >= 0 && CreaturesCreatedThisGame.TryGetValue(eventSubjectID, out CreatureLogic subj)
             ? subj : null;
+
+        // Cible de CETTE attaque (OnAttack uniquement) — -1 sinon. Résolue via le même chemin
+        // générique que SelectedTarget (PhaseEffectPipeline.ResolveEntityByID) : couvre
+        // Creature/Building/Base/Zone, renvoie null pour un Player (pas de voisinage pour un joueur).
+        ILivable replayTarget = PhaseEffectPipeline.ResolveEntityByID(targetID) as ILivable;
 
         // effectIndex=-1 : sentinel posé par ResolvePredictedBattleDeath pour une créature morte en
         // planification SANS effet OnDeath propre — rien à exécuter, juste propager le flag au client
@@ -728,7 +751,7 @@ public class CreatureLogic: ILivable
             EffectSO.SetNetworkRng(new System.Random(seed));
             Command.RunDeferred(deferKey, () =>
                 EffectRegistry.Execute(data, new EffectContext
-                    { Caster = creature.owner, Source = creature, EventSubjectCreature = eventSubjectCreature }));
+                    { Caster = creature.owner, Source = creature, EventSubjectCreature = eventSubjectCreature, Target = replayTarget }));
         }
         catch (System.Exception e)
         {
@@ -852,6 +875,7 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn--;
         BaseID = baseID;
+        IsPendingMove = false;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }

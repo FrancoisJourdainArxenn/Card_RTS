@@ -8,6 +8,23 @@ public class BuildingLogic : ILivable
     public Player owner;
     public CardAsset ca;
     public int UniqueBuildingID;
+
+    // Compteur pour CondCounter (source = WrappedCondition) — vit sur l'instance (pas sur le
+    // ConditionSO, stateless/partagé entre parties), clé par condition pour supporter plusieurs
+    // compteurs indépendants.
+    private Dictionary<ConditionSO, int> _conditionCounters;
+    public int IncrementConditionCounter(ConditionSO key)
+    {
+        _conditionCounters ??= new Dictionary<ConditionSO, int>();
+        _conditionCounters.TryGetValue(key, out int current);
+        current++;
+        _conditionCounters[key] = current;
+        return current;
+    }
+    // Lecture seule, pour l'UI (texte de progression) — contrairement à IncrementConditionCounter,
+    // n'avance pas le compteur.
+    public int PeekConditionCounter(ConditionSO key) =>
+        _conditionCounters != null && _conditionCounters.TryGetValue(key, out int v) ? v : 0;
     public BuildSpotVisual OriginSpot { get; set; }
     public int OriginZoneID { get; private set; }
 

@@ -63,13 +63,17 @@ public class ZoneCombatResolver : MonoBehaviour
                                     // de mourir pour Rex "OnFriendlyCreatureDies") — -1 si non applicable
                                     // (OnDeath/OnAttack/OnTakeDamage, déclenchés sur la créature elle-même,
                                     // n'ont pas de sujet distinct). Voir EffectRegistry.FireListenersPredicted.
+        public int TargetID; // ID de la cible de CETTE attaque (OnAttack uniquement) — -1 sinon. Nécessaire
+                              // pour un ciblage AdjacentToTarget : BattleStepRecord (qui porte aussi un
+                              // targetID) est diffusé dans un ClientRpc séparé et PLUS TARD que le rejeu des
+                              // triggers prédits — voir GameNetworkManager.SubmitBattleAssignmentServerRpc.
     }
     private static readonly List<PredictedTriggerReplay> _pendingPredictedTriggerReplays = new();
 
-    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1)
+    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
     {
         _pendingPredictedTriggerReplays.Add(new PredictedTriggerReplay
-            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID });
+            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID, TargetID = targetID });
     }
 
     // Consommé une seule fois par SubmitBattleAssignmentServerRpc, juste après que toute la
@@ -464,7 +468,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
                 }
             }
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(b);
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID, counterDamage = counter1 });
         }
 
@@ -495,7 +499,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
             }
             List<AttackHitResult> tier2SecondaryHits = ResolveAndReserveModifierHits(attacker.id, attacker.isBuilding, t, stepIndex);
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(t);
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier2SecondaryHits, counterDamage = counter2 });
         }
 
@@ -526,7 +530,7 @@ public class ZoneCombatResolver : MonoBehaviour
                 }
             }
             List<AttackHitResult> tier3SecondaryHits = ResolveAndReserveModifierHits(attacker.id, attacker.isBuilding, t, stepIndex);
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(t);
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier3SecondaryHits, counterDamage = counter3 });
         }
 
@@ -556,7 +560,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     pendingBuildingDamage[attacker.id] = attackerExisting + b.Attack;
                 }
             }
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(b);
             return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = b.UniqueBuildingID, targetKind = TargetKind.Building, damage = assign, targetOwnerPlayerID = defender.PlayerID, counterDamage = counter4 });
         }
 
@@ -566,7 +570,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingBaseDamage.TryGetValue(defenderBase.ID, out int existing);
             pendingBaseDamage[defenderBase.ID] = existing + dmg;
             Debug.Log($"[Battle→Base:{zoneView.name}] attaquant={attacker.id} cible base={defenderBase.ID} ({defenderBase.DisplayName}) dégâts={dmg}");
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(defenderBase);
             return (0, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = defenderBase.ID, targetKind = TargetKind.Base, damage = dmg, targetOwnerPlayerID = defender.PlayerID });
         }
         if (zoneView.subZones.Contains(defender.MainPArea))
@@ -574,7 +578,7 @@ public class ZoneCombatResolver : MonoBehaviour
             pendingPlayerDamage.TryGetValue(defender.PlayerID, out int existing);
             pendingPlayerDamage[defender.PlayerID] = existing + dmg;
             Debug.Log($"[Battle→Player:{zoneView.name}] attaquant={attacker.id} cible joueur={defender.name} dégâts={dmg}");
-            attackerLogic?.ResolvePredictedOnAttack();
+            attackerLogic?.ResolvePredictedOnAttack(defender);
             return (0, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = defender.PlayerID, targetKind = TargetKind.Player, damage = dmg, targetOwnerPlayerID = defender.PlayerID });
         }
         Debug.Log($"[Assign:{zoneView.name}][AucuneCible] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) dégâts={dmg} perdus — aucune cible éligible (créatures/bâtiments/base/joueur)");

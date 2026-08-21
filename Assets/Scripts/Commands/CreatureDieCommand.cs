@@ -21,6 +21,12 @@ public class CreatureDieCommand : Command
             return;
         }
 
+        // Une créature qui meurt alors qu'un déplacement est en attente (ex: Assimilate ciblant une
+        // unité juste glissée vers une autre zone) laisse sinon son ghost orphelin dans la zone cible :
+        // seuls les chemins de résolution normale d'un déplacement (FlushSoloMoveBuffer,
+        // MoveCreatureClientRpc) nettoient ce ghost, jamais le chemin de mort.
+        creatureToRemove.GetComponent<OneCreatureManager>()?.DestroyPendingMoveGhost();
+
         VfxManager vfx = creatureToRemove.GetComponent<VfxManager>();
 
         // Le VFX de trigger OnDeath doit se jouer ici, tant que le GameObject existe encore : passé

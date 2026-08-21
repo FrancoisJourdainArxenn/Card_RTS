@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: When you play or create <b>ANY</b> Melee Unit, it gains +1/+2.
+  Description: ALL Melee units you play or create have +1/+1.
   CardImage: {fileID: 21300000, guid: 7514b30da6b2bc54b9df3413f0262279, type: 3}
   MainCost: 0
   IsHero: 1
@@ -32,13 +32,14 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: Swarming ! (Card Play)
-    Effect: {fileID: 11400000, guid: 6f2d218f665f81e4692a5f8bb8980690, type: 2}
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 12
-    Condition: {fileID: 11400000, guid: 5d584f19cebb4b4e8bf2b1fb42f46042, type: 2}
+    Condition: {fileID: 11400000, guid: a48e6bffb272491c96a0f49ee49f2a38, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
@@ -61,10 +62,11 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0
   - EffectName: Swarming ! (Card Play)
     Effect: {fileID: 11400000, guid: 6f2d218f665f81e4692a5f8bb8980690, type: 2}
     Trigger: 11
-    Condition: {fileID: 11400000, guid: 5d584f19cebb4b4e8bf2b1fb42f46042, type: 2}
+    Condition: {fileID: 11400000, guid: a48e6bffb272491c96a0f49ee49f2a38, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
@@ -87,3 +89,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

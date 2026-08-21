@@ -114,6 +114,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] predictedSeeds      = new int[predictedReplays.Count];
         int[] predictedDeferKeys  = new int[predictedReplays.Count];
         int[] predictedEventSubjectIDs = new int[predictedReplays.Count];
+        int[] predictedTargetIDs = new int[predictedReplays.Count];
         for (int i = 0; i < predictedReplays.Count; i++)
         {
             predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
@@ -121,6 +122,7 @@ public class GameNetworkManager : NetworkBehaviour
             predictedSeeds[i]      = predictedReplays[i].Seed;
             predictedDeferKeys[i]  = predictedReplays[i].DeferKey;
             predictedEventSubjectIDs[i] = predictedReplays[i].EventSubjectID;
+            predictedTargetIDs[i]  = predictedReplays[i].TargetID;
         }
 
         // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
@@ -170,7 +172,7 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
             predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
-            predictedEventSubjectIDs,
+            predictedEventSubjectIDs,  predictedTargetIDs,
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
@@ -269,7 +271,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
         int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
-        int[] predictedEventSubjectIDs,
+        int[] predictedEventSubjectIDs, int[] predictedTargetIDs,
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
@@ -297,10 +299,17 @@ public class GameNetworkManager : NetworkBehaviour
         // — seuls les autres clients rejouent, avec la même seed, pour obtenir exactement le même
         // ciblage/résultat.
         if (!IsServer)
+        {
+            // Consommé une fois appliqué : empêche qu'un token déjà rejoué pour une occurrence
+            // antérieure du même couple (sourceID, effectIdx) — ex: une créature touchée deux fois
+            // dans la même bataille par un trigger OnTakeDamage qui spawn un token — soit réappliqué
+            // à une occurrence ultérieure de ce même couple (voir bug: ArgumentException clé dupliquée
+            // dans CardsCreatedThisGame, le token étant recréé deux fois avec le même networkID).
+            bool[] tokenSpawnConsumed = new bool[tokenSpawnSourceIDs.Length];
             for (int i = 0; i < predictedSourceIDs.Length; i++)
             {
                 // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
-                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i]);
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i], predictedTargetIDs[i]);
 
                 // Tokens créés par CETTE entrée précise (même paire source/effet — voir
                 // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
@@ -309,13 +318,16 @@ public class GameNetworkManager : NetworkBehaviour
                 // point chronologique de la planification.
                 for (int j = 0; j < tokenSpawnSourceIDs.Length; j++)
                 {
+                    if (tokenSpawnConsumed[j]) continue;
                     if (tokenSpawnSourceIDs[j] != predictedSourceIDs[i] || tokenSpawnEffectIdxs[j] != predictedEffectIndexes[i]) continue;
+                    tokenSpawnConsumed[j] = true;
                     ApplyTokenSpawnOnClient(
                         tokenSpawnPlayerIdxs[j], tokenSpawnSourceIDs[j], tokenSpawnEffectIdxs[j],
                         tokenSpawnTablePos[j], tokenSpawnBaseIDs[j], tokenSpawnCardIDs[j],
                         tokenSpawnCreatureIDs[j], tokenSpawnDeferKeys[j]);
                 }
             }
+        }
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)
@@ -1240,6 +1252,8 @@ public class GameNetworkManager : NetworkBehaviour
             param2 = targetBaseID,
             param3 = tablePos
         });
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -1252,6 +1266,9 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (removed == 0)
             return;
+
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
 
         // Le client à l'origine de l'annulation a déjà effacé sa propre flèche en local,
         // de façon synchrone, avant même d'envoyer ce RPC (voir DragCreatureActions.OnStartDrag /

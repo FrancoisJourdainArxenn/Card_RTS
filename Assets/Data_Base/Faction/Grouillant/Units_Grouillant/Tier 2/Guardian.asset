@@ -17,12 +17,12 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 2
-  Description: 
+  Description: <b>On Play:</b> I gain +1/+0 per Egg Sack (<i>in my zone</i>).
   CardImage: {fileID: 21300000, guid: edfa35e9818d03c4493820882c22d9a2, type: 3}
-  MainCost: 2
+  MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
+  Attack: 1
   MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -32,6 +32,35 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
-  Keywords: []
-  Effects: []
+  Keywords:
+  - {fileID: 11400000, guid: 098fd9b6e153cf841aff52371f96f586, type: 2}
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 0
+    Condition: {fileID: 11400000, guid: d10d22cac02600742b50c63e8d9b6d0d, type: 2}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 1
+      scalingQuery:
+        targetType: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 8fcafd03a3b594042a0bc9c359c48bec, type: 2}
+      scalingSource: 0

@@ -12,6 +12,10 @@ public class DeckSO : ScriptableObject
     
     [Header("Hero")]
     public CardAsset heroCard;
-    public List<CardAsset> cards = new List<CardAsset>();
-    public List<CardAsset> buildings = new List<CardAsset>();
+
+    [Header("Shared Pool")]
+    public CardPoolSO sharedPool;
+
+    public List<CardAsset> cards => sharedPool != null ? sharedPool.cards : new List<CardAsset>();
+    public List<CardAsset> buildings => sharedPool != null ? sharedPool.buildings : new List<CardAsset>();
 }
