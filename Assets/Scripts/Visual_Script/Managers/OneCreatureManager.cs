@@ -19,8 +19,8 @@ public class OneCreatureManager : OneLivableManager
     // Durée du fondu, aussi bien pour ce délai initial que pour la disparition après un hover (Y).
     [SerializeField] private float pendingMoveArrowFadeDuration = 0.5f;
     private Material pendingMoveArrowMat;
-    // Couleur d'origine du matériau (voir SetArrowAlpha : le shader graph du laser n'utilise pas le
-    // canal alpha classique, on doit donc faire varier toute la couleur pour obtenir un vrai fondu).
+    // Couleur d'origine du matériau (Sprites-Default expose _Color et gère nativement l'alpha,
+    // voir SetArrowAlpha).
     private Color _arrowBaseColor = Color.white;
     [HideInInspector] public bool isGhost = false;
     private bool isArrowVisible = false;
@@ -41,6 +41,12 @@ public class OneCreatureManager : OneLivableManager
     [HideInInspector] public OneCreatureManager PendingMoveOrigin;
     // Sur la créature réelle en cours de déplacement, référence vers son ghost dans la zone cible :
     [HideInInspector] public GameObject PendingMoveGhost;
+
+    [Header("Pending State Icons")]
+    // Les deux sprites partagent le même Image (pendingIcon, voir OneLivableManager) : une créature
+    // ne peut jamais être à la fois "jouée de la main en attente" et "en pendingMove".
+    [SerializeField] private Sprite pendingPlaySprite; // carte jouée de la main, en attente de confirmation
+    [SerializeField] private Sprite pendingMoveSprite; // déplacement en attente (origine uniquement, pas le ghost)
 
     public void DestroyPendingMoveGhost()
     {
@@ -72,7 +78,7 @@ public class OneCreatureManager : OneLivableManager
         if (pendingMoveArrow != null)
         {
             pendingMoveArrowMat = pendingMoveArrow.material;
-            _arrowBaseColor = pendingMoveArrowMat.GetColor("_BaseColor");
+            _arrowBaseColor = pendingMoveArrowMat.color;
         }
     }
 
@@ -92,7 +98,7 @@ public class OneCreatureManager : OneLivableManager
 
         if (pendingMoveArrowMat == null) return;
         float offset = Time.time * arrowScrollSpeed;
-        pendingMoveArrowMat.SetTextureOffset("_MainTex", new Vector2(-offset % 1f, 0f));
+        pendingMoveArrowMat.mainTextureOffset = new Vector2(-offset % 1f, 0f);
     }
 
     public void ReadCreatureFromAsset()
@@ -127,10 +133,11 @@ public class OneCreatureManager : OneLivableManager
         frame.color = gray ? Color.gray : Color.white;
     }
 
-    public void SetPending(bool pending)
+    public void SetPending(bool pending, bool isPendingMove = false)
     {
         float v = pendingMoveDarkenAmount;
         art.color = pending ? new Color(v, v, v) : Color.white;
+        SetPendingIcon(pending, pending ? (isPendingMove ? pendingMoveSprite : pendingPlaySprite) : null);
     }
 
     public void OnCreatureClicked()
@@ -210,12 +217,12 @@ public class OneCreatureManager : OneLivableManager
     private void SetArrowAlpha(float alpha)
     {
         _arrowAlpha = alpha;
-        // Le shader graph du laser expose sa propriété "LaserColor" sous le nom _BaseColor, mais sa
-        // sortie Alpha vient d'une conversion implicite Vector4->Vector1 qui ne lit QUE le canal R
-        // (pas le vrai canal A) : un simple SetColor(a: alpha) n'a donc aucun effet visuel. On fait
-        // varier toute la couleur (R inclus) pour obtenir un vrai fondu.
         if (pendingMoveArrowMat != null)
-            pendingMoveArrowMat.SetColor("_BaseColor", _arrowBaseColor * alpha);
+        {
+            Color c = _arrowBaseColor;
+            c.a = alpha;
+            pendingMoveArrowMat.color = c;
+        }
         if (pendingMoveArrow != null)
             pendingMoveArrow.enabled = isArrowVisible && alpha > 0f;
     }

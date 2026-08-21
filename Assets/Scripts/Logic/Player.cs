@@ -709,6 +709,10 @@ public class Player : MonoBehaviour, ILivable
             creatureManager.CanReorderNow = canMove && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
+            // Ne touche pas au visuel "pending" si un déplacement est en attente sur cette créature
+            // (voir DragCreatureActions.SpawnPendingMoveGhost) : ce refresh écraserait sinon son icône.
+            if (creatureManager.PendingMoveGhost == null)
+                creatureManager.SetPending(crl.HasSummoningSickness);
         }
 
         foreach (BuildingLogic bl in playedCards.Buildings)

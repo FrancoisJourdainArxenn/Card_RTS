@@ -428,7 +428,7 @@ public class DragCreatureActions : DraggingActions {
         ghostManager.UpdateGlow();
 
         manager.PendingMoveGhost = ghostGO;
-        manager.SetPending(true); // la carte d'origine s'assombrit tant que le déplacement est en attente, le ghost reste net
+        manager.SetPending(true, isPendingMove: true); // la carte d'origine s'assombrit et affiche l'icône tant que le déplacement est en attente ; le ghost reste net, sans icône
     }
 
     private void ResetDragElements()

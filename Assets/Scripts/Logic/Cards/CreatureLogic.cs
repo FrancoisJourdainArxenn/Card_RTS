@@ -144,6 +144,7 @@ public class CreatureLogic: ILivable
     public void GrantCelerity()
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
+        HasSummoningSickness = false;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
         TurnManager.RefreshAllPlayableHighlights();
@@ -310,6 +311,11 @@ public class CreatureLogic: ILivable
     private int movementsForOneTurn = 1;
     public int MovementsLeftThisTurn { get; set; }
 
+    // Vrai depuis l'entrée en jeu (main ou token) jusqu'au début du prochain tour de son propriétaire,
+    // sauf célérité (voir constructeur / GrantCelerity). Contrairement à (MovementsLeftThisTurn <= 0),
+    // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
+    public bool HasSummoningSickness { get; private set; }
+
     public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
 
     public bool IsMelee => ca.melee;
@@ -367,6 +373,7 @@ public class CreatureLogic: ILivable
         //  AttacksLeftThisTurn = attacksForOneTurn;
         if (ca.Celerity)
             MovementsLeftThisTurn = movementsForOneTurn;
+        HasSummoningSickness = !ca.Celerity;
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
@@ -386,6 +393,7 @@ public class CreatureLogic: ILivable
     {
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
+        HasSummoningSickness = false;
     }
 
     public void ApplyBuff(int attackDelta, int healthDelta)

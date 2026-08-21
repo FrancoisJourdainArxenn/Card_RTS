@@ -17,11 +17,7 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
     public Image frame;
     public Image glow;
     public Image HeroSymbol;
-
-    // [Header("Combat Indicators")]
-    // public GameObject MarkedForDeathIndicator;
-    // public GameObject WillBeDamagedIndicator;
-    // public TMP_Text pendingDamageText;
+    public Image pendingIcon;
 
     private Color _originalAttackColor;
     private Color _originalHealthColor;
@@ -98,6 +94,13 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
             ApplyStatColor(HealthText, healthAfter, cardAsset.MaxHealth, _originalHealthColor);
             ValuePopAnimation.Pop(HealthText.transform);
         }
+    }
+
+    public void SetPendingIcon(bool visible, Sprite sprite = null)
+    {
+        if (pendingIcon == null) return;
+        if (sprite != null) pendingIcon.sprite = sprite;
+        pendingIcon.enabled = visible;
     }
 
     public void SetVisible(bool visible)
