@@ -54,6 +54,7 @@ public class NeutralBaseVisual : MonoBehaviour {
 	public void ApplyLookFromAsset()
     {
         BaseCostText.text = baseAsset.mainRessourceBaseCost.ToString();
+        
         iconType.sprite = baseAsset.BaseIcon;
         iconColor = baseAsset.baseIconColor;
         iconType.color = iconColor;

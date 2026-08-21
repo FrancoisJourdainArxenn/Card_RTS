@@ -7867,7 +7867,7 @@ MonoBehaviour:
   hoverArrow: {fileID: 349764275}
   presenceNotificationVFX: {fileID: 4255934190213682183, guid: a5139a5e85818654c8cbe0b67365497c, type: 3}
   scanTooltipTrigger: {fileID: 1795164897}
-  scanCost: 2
+  scanCost: 4
   scanCostText: {fileID: 346243687}
   button: {fileID: 1795164894}
   radarBG: {fileID: 886297610}
@@ -8638,9 +8638,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 99.944, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:

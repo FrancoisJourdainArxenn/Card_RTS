@@ -15,8 +15,10 @@ MonoBehaviour:
   Faction: {fileID: 0}
   BaseImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
   BaseIcon: {fileID: 21300000, guid: 3f02dedd261407d4aa0496b32bee4dcc, type: 3}
-  baseIconColor: {r: 1, g: 1, b: 1, a: 1}
-  baseDescription: This Outpost will allow you to play unit in that zone.
+  baseIconColor: {r: 0.5348434, g: 0.68636733, b: 0.9528302, a: 1}
+  baseDescription: '<b>Outpost</b>
+
+    Outposts allow you to play unit in that zone.'
   BaseName: Standard Neutral Base
   MaxHealth: 3
   mainRessourceIncome: 0

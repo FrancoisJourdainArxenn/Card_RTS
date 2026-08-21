@@ -530,7 +530,12 @@ public static class PhaseEffectPipeline
 
     public static IIdentifiable ResolveEntityByID(int id)
     {
-        if (id < 0)
+        // -1 est le seul sentinel "pas de cible" (voir SelectedTarget?.ID ?? -1 un peu partout) —
+        // id < 0 rejetait à tort toute cible dont l'ID est un hash pouvant tomber négatif (zones :
+        // ZoneManager.Awake utilise Animator.StringToHash, un CRC32 signé), alors que
+        // Creature/Building/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
+        // caché ce bug jusqu'à ce qu'un effet de carte cible une Zone par ID à travers le réseau.
+        if (id == -1)
             return null;
 
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c))

@@ -27,11 +27,16 @@ public class CreatureAttackVisual : MonoBehaviour
     public static bool AnyAttackInFlight => _attacksInFlight > 0;
     public static event System.Action OnAllAttacksResolved;
 
-    private static void BeginFlight() => _attacksInFlight++;
+    private static void BeginFlight()
+    {
+        _attacksInFlight++;
+        Debug.Log($"[DBG][Timing] BeginFlight — _attacksInFlight={_attacksInFlight} @ {Time.realtimeSinceStartup:F3}");
+    }
 
     private static void EndFlight()
     {
         _attacksInFlight = Mathf.Max(0, _attacksInFlight - 1);
+        Debug.Log($"[DBG][Timing] EndFlight — _attacksInFlight={_attacksInFlight} @ {Time.realtimeSinceStartup:F3}");
         if (_attacksInFlight == 0)
             OnAllAttacksResolved?.Invoke();
     }

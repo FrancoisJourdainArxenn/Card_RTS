@@ -59,6 +59,11 @@ public class TurnManager : MonoBehaviour
     public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
     {
         EffectRegistry.Reset();
+        // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
+        // Play, sans reload de scène complet — voir SceneReloader.ReloadScene) laisse le compteur
+        // bloqué > 0 et gèle tout repositionnement de table pour la nouvelle partie (voir
+        // CreatureAttackVisual.ResetFlightCounter).
+        CreatureAttackVisual.ResetFlightCounter();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             // Debug.LogError("TurnManager: need at least 2 Player instances.");
