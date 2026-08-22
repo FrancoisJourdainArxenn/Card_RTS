@@ -191,6 +191,12 @@ public class DragCreatureActions : DraggingActions {
 
     public override void OnDraggingInUpdate()
     {
+        if (Input.GetMouseButtonDown(1))
+        {
+            Draggable.CancelCurrentDrag();
+            return;
+        }
+
         bool isInOriginArea = originArea.tableVisual.CursorOverThisTable;
 
         if (isInOriginArea)
@@ -466,6 +472,15 @@ public class DragCreatureActions : DraggingActions {
     }
 
     private void OnDragFailed() { }
+
+    // Annulation programmatique (clic droit / Echap) pendant un drag en cours — voir
+    // Draggable.CancelCurrentDrag. A ce stade, Move()/Reorder() n'ont pas encore été appelés (rien
+    // n'est committé), donc _skipSnapBack est toujours false : ResetDragElements() ramène la
+    // créature à sa position d'origine SUR LA TABLE (jamais en main, contrairement à DragCreatureOnTable).
+    public override void OnDragCancelled()
+    {
+        ResetDragElements();
+    }
 
     private void HighlightReachableAreas()
     {

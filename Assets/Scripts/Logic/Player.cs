@@ -454,7 +454,7 @@ public class Player : MonoBehaviour, ILivable
     // NetworkPendingPlayCreature. Contrairement à une créature, un sort ne place rien sur une
     // table : rien à cacher/révéler visuellement à ce stade, seul l'habillage "carte jouée" est
     // différé jusqu'à NetworkFlushPlaySpell.
-    public void NetworkPendingPlaySpell(int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    public void NetworkPendingPlaySpell(int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
@@ -463,9 +463,27 @@ public class Player : MonoBehaviour, ILivable
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        if (cardGO != null)
+            handVisual.PlayASpellFromHand(cardGO);
+
         List<PendingEffectSelection> preResolvedSelections =
             EffectRegistry.BuildPreResolvedSelections(playedCard.ca, effectIndexes, selectedTargetIDs);
-        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+
+        // Sans ça, un effet à répartition aléatoire (ex: EffectRepartition.RandomSingleTarget, voir
+        // "+1/+1 un allié dans la zone ciblée") retombe sur EffectSO.ApplyEffect's Random.Range —
+        // l'état du RNG Unity de chaque machine ayant divergé indépendamment, la cible choisie
+        // diffère entre host et client jusqu'à la resynchro canonique de fin de tour.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
     }
 
     // Envoyé par le serveur au moment de la révélation simultanée (voir GameNetworkManager.ExecuteAction) :
@@ -572,7 +590,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void NetworkPendingPlayCreature(
         int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
@@ -618,7 +636,19 @@ public class Player : MonoBehaviour, ILivable
         // Résolution logique immédiate (créature + OnPlay), après le reveal visuel local pour garder une cible valide.
         List<PendingEffectSelection> preResolvedSelections =
             EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+
+        // Voir Player.NetworkPendingPlaySpell : sans ça, un effet OnPlay à répartition aléatoire
+        // retombe sur Random.Range, dont l'état diverge indépendamment entre host et client.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
         EffectRegistry.NotifyCardPlayed(this, newCreature);
     }
 
@@ -653,7 +683,7 @@ public class Player : MonoBehaviour, ILivable
 
     public void NetworkPlayCreatureFromHand(
         int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
         {
@@ -681,7 +711,19 @@ public class Player : MonoBehaviour, ILivable
 
         List<PendingEffectSelection> preResolvedSelections =
             EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+
+        // Voir Player.NetworkPendingPlaySpell : sans ça, un effet OnPlay à répartition aléatoire
+        // retombe sur Random.Range, dont l'état diverge indépendamment entre host et client.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
         EffectRegistry.NotifyCardPlayed(this, newCreature);
 
 

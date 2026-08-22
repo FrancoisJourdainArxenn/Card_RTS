@@ -908,10 +908,16 @@ public class GameNetworkManager : NetworkBehaviour
 
         bool isCelerity = CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic card) && card.ca.Celerity;
 
+        // Seed généré côté serveur et rejoué identiquement sur tous les clients (voir
+        // Player.NetworkPendingPlayCreature / NetworkPlayCreatureFromHand) : garantit que tout tirage
+        // aléatoire dans la résolution de l'effet OnPlay (ex: EffectRepartition.RandomSingleTarget)
+        // retombe sur la même cible partout, comme pour PlaySpellServerRpc.
+        int seed = Random.Range(int.MinValue, int.MaxValue);
+
         if (isCelerity)
         {
             ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs);
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
         }
         else
         {
@@ -925,7 +931,7 @@ public class GameNetworkManager : NetworkBehaviour
                 param4 = baseID
             });
             ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs);
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
         }
     }
 
@@ -936,21 +942,21 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void ShowPendingPlayCreatureClientRpc(
         int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         Player player = Player.Players[playerIndex];
         player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
-            onPlayEffectIndexes, onPlaySelectedTargetIDs);
+            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
     }
 
     [ClientRpc]
     void ImmediatePlayCreatureClientRpc(
         int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         Player player = Player.Players[playerIndex];
         player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
-            onPlayEffectIndexes, onPlaySelectedTargetIDs);
+            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
     }
 
     [ClientRpc]
@@ -984,7 +990,12 @@ public class GameNetworkManager : NetworkBehaviour
             playerIndex = playerIndex,
             param1 = cardUniqueID
         });
-        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs);
+        // Seed généré côté serveur et rejoué identiquement sur tous les clients (voir
+        // Player.NetworkPendingPlaySpell) : garantit que tout tirage aléatoire dans la résolution de
+        // l'effet (ex: EffectRepartition.RandomSingleTarget) retombe sur la même cible partout,
+        // comme pour les triggers de combat (EffectRegistry.FireListenersPredicted).
+        int seed = Random.Range(int.MinValue, int.MaxValue);
+        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs, seed);
     }
 
     /// <summary>
@@ -992,10 +1003,10 @@ public class GameNetworkManager : NetworkBehaviour
     /// mêmes cibles sur toutes les machines. Pas de visuel ici — voir PlaySpellClientRpc.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs);
+        player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs, seed);
     }
 
     [ClientRpc]

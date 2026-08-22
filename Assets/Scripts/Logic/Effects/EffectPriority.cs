@@ -7,4 +7,5 @@ public enum EffectPriority
     ModifyStats,
     DealDamage,
     HealDamage,
+    CastSpell,
 }

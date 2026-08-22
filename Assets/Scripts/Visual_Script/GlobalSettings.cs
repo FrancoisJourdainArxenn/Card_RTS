@@ -184,6 +184,14 @@ public class GlobalSettings : MonoBehaviour
 
         if (OnPlayTargetingSession.IsActive && Input.GetMouseButtonDown(0))
             CancelOnPlayTargetingIfClickMissed();
+
+        // Filet de sécurité pour le clic droit : contrairement au clic gauche (qui doit distinguer
+        // "raté" d'un vrai choix de cible), le clic droit annule TOUJOURS pendant une session de
+        // ciblage — y compris au-dessus du vide, où ni HoverPreview ni ZoneManager ne reçoivent de
+        // clic pour intercepter le cas eux-mêmes. Redondant (donc sans effet) si l'annulation a déjà
+        // eu lieu via l'un de ces composants dans la même frame, Cancel() étant un no-op hors session active.
+        if (OnPlayTargetingSession.IsActive && Input.GetMouseButtonDown(1))
+            OnPlayTargetingSession.Cancel();
     }
 
     // Clic dans le vide (aucune entité 3D ni élément UI sous le curseur) pendant une session de

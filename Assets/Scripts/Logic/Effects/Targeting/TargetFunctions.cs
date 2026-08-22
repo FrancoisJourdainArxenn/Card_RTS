@@ -30,9 +30,11 @@ public partial class EffectContext
                 TargetStatusFilter.MeleeFirst  => candidates.Any(t => t is ILivable c && c.IsMelee)
                     ? candidates.Where(t => t is ILivable c && c.IsMelee)
                     : candidates,
-                TargetStatusFilter.Damaged     => candidates.Where(t => t is ILivable l && l.IsDamaged),
-                TargetStatusFilter.NonShielded => candidates.Where(t => t is ILivable l && !l.IsShielded),
-                _                              => candidates
+                TargetStatusFilter.Damaged        => candidates.Where(t => t is ILivable l && l.IsDamaged),
+                TargetStatusFilter.NonShielded    => candidates.Where(t => t is ILivable l && !l.IsShielded),
+                TargetStatusFilter.HighestHealth  => FilterToExtremeHealth(candidates, descending: true),
+                TargetStatusFilter.LowestHealth   => FilterToExtremeHealth(candidates, descending: false),
+                _                                 => candidates
             };
 
             if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource)
@@ -105,6 +107,19 @@ public partial class EffectContext
         }
         return targets;
     }
+    // Ne filtre pas un booléen par candidat comme les autres statusFilter : réduit le pool au(x)
+    // seul(s) candidat(s) au PV extrême. Les égalités restantes sont départagées par le Repartition
+    // de l'effet (RandomSingleTarget, etc.), exactement comme pour n'importe quel autre filtre à
+    // choix multiple.
+    private static IEnumerable<IIdentifiable> FilterToExtremeHealth(IEnumerable<IIdentifiable> candidates, bool descending)
+    {
+        List<ILivable> livables = candidates.OfType<ILivable>().ToList();
+        if (livables.Count == 0) return Enumerable.Empty<IIdentifiable>();
+
+        int extreme = descending ? livables.Max(l => l.Health) : livables.Min(l => l.Health);
+        return livables.Where(l => l.Health == extreme).Cast<IIdentifiable>();
+    }
+
     private static CardAsset GetCardAsset(IIdentifiable target) => target switch
     {
         CreatureLogic c => c.ca,

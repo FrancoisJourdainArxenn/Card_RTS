@@ -16,4 +16,4 @@ MonoBehaviour:
   difficultyLevel: 0
   deckTooltip: OnDeath
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
-  sharedPool: {fileID: 11400000, guid: faab8b205ba07fa4da595cbb93257622, type: 2}
+  sharedPool: {fileID: 11400000, guid: 02ad366b035419e479d5a471de4cbbf4, type: 2}

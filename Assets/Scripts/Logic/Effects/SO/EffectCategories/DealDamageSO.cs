@@ -28,7 +28,8 @@ public class DealDamageSO : HealthEffectSO
         int dmg = amount ?? Damage;
         Log($"[DealDamage] APPLY — {target.DisplayName} (ID:{target.ID}) HP avant: {target.Health} (dmg:{dmg})");
         bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
-        int sourceId = hasCustomVfx ? -1 : _sourceID;
+        bool suppressFallback = visualData != null && visualData.suppressAttackFallback;
+        int sourceId = (hasCustomVfx || suppressFallback) ? -1 : _sourceID;
 
         Vector3? originPosition = null;
         if (hasCustomVfx && visualData.travelFromSource)

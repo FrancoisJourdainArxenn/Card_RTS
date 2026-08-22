@@ -15,12 +15,12 @@ public class CardPreviewUI : MonoBehaviour
     private GameObject currentPrefab;
     [SerializeField] private GameObject cardPreviewPrefab;
     [SerializeField] private GameObject heroCardPreviewPrefab;
-    [SerializeField] private GameObject effectTriggeredPrefab;
+    [SerializeField] private GameObject effectTriggeredPrefab; // prefab Effect_Triggered ; seule source d'Instantiate pour tous les popups d'effet (parties 1, 2 et 3)
     private RectTransform _anchorRect;
     private Canvas _canvas;
     private bool previewingEffects = false;
 
-    [SerializeField] private Material _opponentHologramMaterial;
+    // [SerializeField] private Material _opponentHologramMaterial; // orphelin — parties 1 et 3 désactivées, seules utilisatrices
 
     [SerializeField] private RectTransform targetingAnchor;
     [SerializeField] private float stackScaleFactor  = 0.85f;
@@ -40,11 +40,11 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private Transform arrowEndPoint;
 
     private List<GameObject> _targetingPreviews  = new List<GameObject>();
-    private List<GameObject> _autoEffectPreviews = new List<GameObject>();
-    private Coroutine _autoEffectDismissCoroutine;
-    private bool _batchActive = false;
+    private List<GameObject> _autoEffectPreviews = new List<GameObject>(); // pile des popups affichés par ce chemin (partagée avec HandleEffectsBatch, partie 3)
+    // private Coroutine _autoEffectDismissCoroutine; // référence à AutoDismissStack en cours, pour ne jamais en lancer deux en parallèle — partie 1 désactivée
+    // private bool _batchActive = false; // partie 3 désactivée — plus lu ni écrit nulle part
     private bool _buildingStack = false;
-    [SerializeField] private float autoEffectDisplayDuration = 0f;
+    // [SerializeField] private float autoEffectDisplayDuration = 0f; // durée d'affichage de chaque popup dans ce chemin (voir AutoDismissStack) — 1.5s dans BattleScene — partie 1 désactivée
 
     void Awake()
     {
@@ -57,20 +57,20 @@ public class CardPreviewUI : MonoBehaviour
     {
         TargetingVisualEvents.OnTargetingStarted    += HandleTargetingStarted;
         TargetingVisualEvents.OnTargetingEnded      += HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered += HandleAutoEffect;
-        TargetingVisualEvents.OnEffectsBatchPending  += HandleEffectsBatch;
-        TargetingVisualEvents.OnEffectResolved       += HandleEffectResolved;
-        TargetingVisualEvents.OnEffectsBatchComplete += HandleEffectsBatchComplete;
+        // TargetingVisualEvents.OnAutoEffectTriggered += HandleAutoEffect; // partie 1 désactivée
+        // TargetingVisualEvents.OnEffectsBatchPending  += HandleEffectsBatch;       // partie 3 désactivée
+        // TargetingVisualEvents.OnEffectResolved       += HandleEffectResolved;     // partie 3 désactivée
+        // TargetingVisualEvents.OnEffectsBatchComplete += HandleEffectsBatchComplete; // partie 3 désactivée
     }
 
     void OnDisable()
     {
         TargetingVisualEvents.OnTargetingStarted    -= HandleTargetingStarted;
         TargetingVisualEvents.OnTargetingEnded      -= HandleTargetingEnded;
-        TargetingVisualEvents.OnAutoEffectTriggered -= HandleAutoEffect;
-        TargetingVisualEvents.OnEffectsBatchPending  -= HandleEffectsBatch;
-        TargetingVisualEvents.OnEffectResolved       -= HandleEffectResolved;
-        TargetingVisualEvents.OnEffectsBatchComplete -= HandleEffectsBatchComplete;
+        // TargetingVisualEvents.OnAutoEffectTriggered -= HandleAutoEffect; // partie 1 désactivée
+        // TargetingVisualEvents.OnEffectsBatchPending  -= HandleEffectsBatch;       // partie 3 désactivée
+        // TargetingVisualEvents.OnEffectResolved       -= HandleEffectResolved;     // partie 3 désactivée
+        // TargetingVisualEvents.OnEffectsBatchComplete -= HandleEffectsBatchComplete; // partie 3 désactivée
     }
 
     private ZoneLogic GetCreatureZone(CreatureLogic creature)
@@ -108,6 +108,12 @@ public class CardPreviewUI : MonoBehaviour
     
     private void HandleTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
     {
+        // Le ciblage de sort a sa propre flèche dédiée (voir SpellTargetingArrow) et n'a jamais de
+        // popup d'effet associé (CreateTargetingPreview exige un OneCreatureManager/OneBuildingManager) :
+        // rien à faire ici pour ce cas.
+        if (queue[currentIndex].IsSpellTargeting)
+            return;
+
         int remaining = queue.Count - currentIndex;
 
         if (queue.Count > currentIndex && !IsEffectVisibleToLocalPlayer(queue[currentIndex].Context))
@@ -154,78 +160,99 @@ public class CardPreviewUI : MonoBehaviour
         _buildingStack = false;
     }
 
-    private void HandleAutoEffect(CardEffectData data, EffectContext context)
-    {
-        if (_batchActive) return;
-        if (!IsEffectVisibleToLocalPlayer(context)) return;
-        if (_targetingPreviews.Count > 0) return;
+    // Partie 1 (popup pour effet auto isolé) désactivée : plus aucun appelant (event commenté
+    // dans TargetingVisualEvents.cs et abonnement commenté dans OnEnable/OnDisable ci-dessus).
+    // private void HandleAutoEffect(CardEffectData data, EffectContext context)
+    // {
+    //     // Un batch de phase (partie 3) est déjà en cours de traitement : on ignore cet effet
+    //     // auto isolé pour ne pas mélanger les deux systèmes de pile en même temps.
+    //     if (_batchActive) return;
+    //
+    //     // Filtre de brouillard de guerre / visibilité multijoueur : si ni la source, ni la cible,
+    //     // ni la zone ciblée de cet effet ne sont visibles pour GlobalSettings.Instance.localPlayer,
+    //     // on n'affiche rien du tout côté de ce client.
+    //     if (!IsEffectVisibleToLocalPlayer(context)) return;
+    //
+    //     // Une pile de sélection manuelle (partie 2) est active : elle a priorité d'affichage,
+    //     // on ne vient pas superposer un popup auto par-dessus.
+    //     if (_targetingPreviews.Count > 0) return;
+    //
+    //     // Récupère la CardAsset de la source (créature OU bâtiment — un seul des deux est non-null).
+    //     CardAsset ca = (context.Source as CreatureLogic)?.ca
+    //                 ?? (context.Source as BuildingLogic)?.ca;
+    //     if (ca == null) return; // pas de carte associée à la source → rien à afficher
+    //
+    //     // Récupère l'ID unique de la source, pour pouvoir retrouver son GameObject dans la scène
+    //     // plus tard (IDHolder.GetGameObjectWithID), utilisé pour lire la CardAsset ET pour l'animation
+    //     // de trail (SpawnTrail).
+    //     int sourceID = (context.Source as CreatureLogic)?.UniqueCreatureID
+    //                 ?? (context.Source as BuildingLogic)?.UniqueBuildingID
+    //                 ?? -1;
+    //
+    //     // Si l'effet appartient à l'adversaire du joueur local, on applique le matériau "hologramme"
+    //     // (silhouette) sur le popup plutôt que le visuel normal de la carte — pour ne pas révéler
+    //     // le détail exact de la carte adverse.
+    //     Material mat = context.Caster != GlobalSettings.Instance.localPlayer
+    //         ? _opponentHologramMaterial
+    //         : null;
+    //
+    //     // Empile ce nouvel effet dans la pile "auto" — voir PushToAutoStack.
+    //     PushToAutoStack(new PendingEffectSelection
+    //     {
+    //         Data            = data,
+    //         Context         = context,
+    //         EligibleTargets = new List<IIdentifiable>(), // vide : pas de sélection de cible ici (chemin 1)
+    //         SourceEntityID  = sourceID
+    //     }, mat);
+    // }
 
-        CardAsset ca = (context.Source as CreatureLogic)?.ca
-                    ?? (context.Source as BuildingLogic)?.ca;
-        if (ca == null) return;
 
-        int sourceID = (context.Source as CreatureLogic)?.UniqueCreatureID
-                    ?? (context.Source as BuildingLogic)?.UniqueBuildingID
-                    ?? -1;
-
-        Material mat = context.Caster != GlobalSettings.Instance.localPlayer
-            ? _opponentHologramMaterial
-            : null;
-
-        PushToAutoStack(new PendingEffectSelection
-        {
-            Data            = data,
-            Context         = context,
-            EligibleTargets = new List<IIdentifiable>(),
-            SourceEntityID  = sourceID
-        }, mat);
-    }
-
-
-    private void HandleEffectsBatch(List<PendingEffectSelection> effects, List<bool> hasVisuals)
-    {
-        _batchActive = true;
-        if (_targetingPreviews.Count > 0) return;
-
-        ClearAutoStack();
-
-        for (int i = 0; i < effects.Count; i++)
-        {
-            if (hasVisuals != null && i < hasVisuals.Count && !hasVisuals[i]) continue;
-            if (!IsEffectVisibleToLocalPlayer(effects[i].Context)) continue;
-
-            GameObject preview = CreateTargetingPreview(effects[i]);
-            if (preview == null) continue;
-
-            Material mat = effects[i].Context.Caster != GlobalSettings.Instance.localPlayer
-                ? _opponentHologramMaterial : null;
-            if (mat != null) ApplyMaterialToHologram(preview, mat);
-
-            preview.transform.localPosition = Vector3.zero;
-            preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
-            _autoEffectPreviews.Add(preview);
-
-            GameObject sourceGO = IDHolder.GetGameObjectWithID(effects[i].SourceEntityID);
-            if (sourceGO != null) SpawnTrail(sourceGO.transform);
-        }
-        RefreshAllStacks();
-    }
-
-    private void HandleEffectResolved()
-    {
-        if (_autoEffectPreviews.Count == 0) return;
-        GameObject front = _autoEffectPreviews[0];
-        _autoEffectPreviews.RemoveAt(0);
-        if (front != null) Destroy(front);
-        RefreshAllStacks();
-    }
-
-    private void HandleEffectsBatchComplete()
-    {
-        _batchActive = false;
-        if (_autoEffectPreviews.Count == 0 && _targetingPreviews.Count == 0)
-            previewingEffects = false;
-    }
+    // Partie 3 (popup de batch de résolution de phase) désactivée : plus aucun appelant
+    // (events commentés dans TargetingVisualEvents.cs, abonnements commentés ci-dessus).
+    // private void HandleEffectsBatch(List<PendingEffectSelection> effects, List<bool> hasVisuals)
+    // {
+    //     _batchActive = true;
+    //     if (_targetingPreviews.Count > 0) return;
+    //
+    //     ClearAutoStack();
+    //
+    //     for (int i = 0; i < effects.Count; i++)
+    //     {
+    //         if (hasVisuals != null && i < hasVisuals.Count && !hasVisuals[i]) continue;
+    //         if (!IsEffectVisibleToLocalPlayer(effects[i].Context)) continue;
+    //
+    //         GameObject preview = CreateTargetingPreview(effects[i]);
+    //         if (preview == null) continue;
+    //
+    //         Material mat = effects[i].Context.Caster != GlobalSettings.Instance.localPlayer
+    //             ? _opponentHologramMaterial : null;
+    //         if (mat != null) ApplyMaterialToHologram(preview, mat);
+    //
+    //         preview.transform.localPosition = Vector3.zero;
+    //         preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
+    //         _autoEffectPreviews.Add(preview);
+    //
+    //         GameObject sourceGO = IDHolder.GetGameObjectWithID(effects[i].SourceEntityID);
+    //         if (sourceGO != null) SpawnTrail(sourceGO.transform);
+    //     }
+    //     RefreshAllStacks();
+    // }
+    //
+    // private void HandleEffectResolved()
+    // {
+    //     if (_autoEffectPreviews.Count == 0) return;
+    //     GameObject front = _autoEffectPreviews[0];
+    //     _autoEffectPreviews.RemoveAt(0);
+    //     if (front != null) Destroy(front);
+    //     RefreshAllStacks();
+    // }
+    //
+    // private void HandleEffectsBatchComplete()
+    // {
+    //     _batchActive = false;
+    //     if (_autoEffectPreviews.Count == 0 && _targetingPreviews.Count == 0)
+    //         previewingEffects = false;
+    // }
 
     private void BuildStack(List<PendingEffectSelection> queue, int currentIndex, int remaining)
     {
@@ -269,35 +296,47 @@ public class CardPreviewUI : MonoBehaviour
         trail.Play(origin, trailTarget, isZoomed);
     }
 
-    private void ApplyMaterialToHologram(GameObject preview, Material material)
-    {
-        if (material == null) return;
-        Transform hologram = preview.transform.Find("CardPanel/Hologram");
-        if (hologram == null) return;
-        UnityEngine.UI.Image img = hologram.GetComponent<UnityEngine.UI.Image>();
-        if (img != null) img.material = material;
-    }
+    // Plus aucun appelant maintenant que les parties 1 (PushToAutoStack) et 3 (HandleEffectsBatch)
+    // sont désactivées — la partie 2 (pile manuelle) ne l'a jamais utilisée.
+    // private void ApplyMaterialToHologram(GameObject preview, Material material)
+    // {
+    //     if (material == null) return;
+    //
+    //     // Le popup contient un enfant "Hologram" (voir le prefab Effect_Triggered) — c'est LUI qui
+    //     // reçoit le matériau de silhouette, pas le popup entier.
+    //     Transform hologram = preview.transform.Find("CardPanel/Hologram");
+    //     if (hologram == null) return;
+    //     UnityEngine.UI.Image img = hologram.GetComponent<UnityEngine.UI.Image>();
+    //     if (img != null) img.material = material;
+    // }
 
+    // Point d'Instantiate unique pour tous les popups Effect_Triggered du projet — appelé par les
+    // 3 chemins (pile manuelle, batch de phase, effet auto isolé).
     private GameObject CreateTargetingPreview(PendingEffectSelection selection)
     {
         Debug.Log($"[CardPreviewUI] CreateTargetingPreview: {selection.Data?.EffectName} src={selection.SourceEntityID}");
-        GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
-        if (sourceGO == null) return null;
 
+        // Retrouve le GameObject en scène de la source de l'effet via son ID unique.
+        GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
+        if (sourceGO == null) return null; // source introuvable (déjà détruite, ID invalide -1, etc.)
+
+        // Récupère la CardAsset depuis le manager de la source (créature ou bâtiment).
         CardAsset cardAsset = sourceGO.GetComponent<OneCreatureManager>()?.cardAsset
                         ?? sourceGO.GetComponent<OneBuildingManager>()?.cardAsset;
         if (cardAsset == null) return null;
 
-        if (effectTriggeredPrefab == null) return null;
+        if (effectTriggeredPrefab == null) return null; // champ non assigné dans l'inspecteur
 
+        // L'INSTANTIATE : seule ligne de tout le projet qui crée un popup Effect_Triggered.
         GameObject preview = Instantiate(effectTriggeredPrefab, targetingAnchor);
         preview.transform.localPosition = Vector3.zero;
         preview.transform.localRotation = Quaternion.identity;
 
+        // Remplit le popup avec les infos de la carte + le texte de l'effet spécifique déclenché.
         OneCardManager manager = preview.GetComponent<OneCardManager>();
         manager.cardAsset = cardAsset;
         manager.ReadEffectFromAsset(selection.Data.EffectName);
-        previewingEffects = true;
+        previewingEffects = true; // bloque temporairement CardPreviewUI.Show() (aperçu de survol de carte)
         preview.SetActive(true);
         return preview;
     }
@@ -306,7 +345,7 @@ public class CardPreviewUI : MonoBehaviour
     private void HandleTargetingEnded()
     {
         StopAllCoroutines();
-        _autoEffectDismissCoroutine = null;
+        // _autoEffectDismissCoroutine = null; // partie 1 désactivée — StopAllCoroutines() suffit
         _buildingStack = false;
         hoverArrow?.Hide();
         foreach (GameObject preview in _targetingPreviews)
@@ -438,29 +477,41 @@ public class CardPreviewUI : MonoBehaviour
         return new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
     }
 
-    private void PushToAutoStack(PendingEffectSelection selection, Material materialOverride = null)
-    {
-        GameObject preview = CreateTargetingPreview(selection);
-        if (preview == null) return;
-
-        if (materialOverride != null)
-            ApplyMaterialToHologram(preview, materialOverride);
-
-        preview.transform.localPosition = Vector3.zero;
-        preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
-        _autoEffectPreviews.Add(preview);
-
-        GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
-        if (sourceGO != null) SpawnTrail(sourceGO.transform);
-
-        RefreshAllStacks();
-
-        if (_autoEffectDismissCoroutine == null)
-            _autoEffectDismissCoroutine = StartCoroutine(AutoDismissStack());
-    }
+    // Partie 1 désactivée : plus aucun appelant (HandleAutoEffect commenté ci-dessus).
+    // private void PushToAutoStack(PendingEffectSelection selection, Material materialOverride = null)
+    // {
+    //     // Instancie réellement le popup Effect_Triggered.
+    //     GameObject preview = CreateTargetingPreview(selection);
+    //     if (preview == null) return; // source introuvable dans la scène ou CardAsset manquante
+    //
+    //     // Applique le matériau hologramme si l'effet vient de l'adversaire.
+    //     if (materialOverride != null)
+    //         ApplyMaterialToHologram(preview, materialOverride);
+    //
+    //     // Position/échelle de départ (avant l'animation de RefreshAllStacks qui suit).
+    //     preview.transform.localPosition = Vector3.zero;
+    //     preview.transform.localScale    = Vector3.one * previewScale * stackDisplayScale * 0.5f;
+    //     _autoEffectPreviews.Add(preview); // ajouté EN QUEUE de la pile (pas en tête)
+    //
+    //     // Animation du trail (traînée visuelle) partant de la source du popup.
+    //     GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
+    //     if (sourceGO != null) SpawnTrail(sourceGO.transform);
+    //
+    //     // Réanime toute la pile (positions, échelles dégressives, ordre d'affichage).
+    //     RefreshAllStacks();
+    //
+    //     // Ne démarre le minuteur d'auto-disparition QUE s'il n'en existe pas déjà un en cours —
+    //     // s'il y en a déjà un, il traitera ce nouveau popup à son tour quand il arrivera en tête.
+    //     if (_autoEffectDismissCoroutine == null)
+    //         _autoEffectDismissCoroutine = StartCoroutine(AutoDismissStack());
+    // }
 
     private void RefreshAllStacks()
     {
+        // Combine les deux piles existantes (manuelle + auto) pour les positionner ensemble —
+        // en pratique l'une des deux est toujours vide (voir les gardes _batchActive /
+        // _targetingPreviews.Count > 0 plus haut), donc "combined" ne contient que la pile
+        // active du chemin en cours.
         var combined = new List<GameObject>();
         combined.AddRange(_targetingPreviews);
         combined.AddRange(_autoEffectPreviews);
@@ -468,6 +519,8 @@ public class CardPreviewUI : MonoBehaviour
         for (int i = 0; i < combined.Count; i++)
         {
             if (combined[i] == null) continue;
+            // Échelle dégressive : chaque popup plus loin dans la pile est plus petit
+            // (stackScaleFactor à la puissance i).
             float scale = previewScale * stackDisplayScale * Mathf.Pow(stackScaleFactor, i);
             combined[i].transform.DOLocalMove(StackPosition(i), 0.3f).SetEase(Ease.OutQuad);
             combined[i].transform.DOScale(
@@ -481,37 +534,53 @@ public class CardPreviewUI : MonoBehaviour
 
     private void ClearAutoStack()
     {
-        if (_autoEffectDismissCoroutine != null)
-        {
-            StopCoroutine(_autoEffectDismissCoroutine);
-            _autoEffectDismissCoroutine = null;
-        }
+        // Coupe le minuteur en cours si un autre chemin (ex: début d'une sélection manuelle,
+        // partie 2) doit reprendre la main immédiatement, sans attendre la fin naturelle
+        // du délai d'affichage.
+        // Partie 1 désactivée : plus de minuteur à couper (_autoEffectDismissCoroutine n'existe plus).
+        // if (_autoEffectDismissCoroutine != null)
+        // {
+        //     StopCoroutine(_autoEffectDismissCoroutine);
+        //     _autoEffectDismissCoroutine = null;
+        // }
         foreach (GameObject go in _autoEffectPreviews)
-            if (go != null) Destroy(go);
+            if (go != null) Destroy(go); // destruction immédiate, sans respecter autoEffectDisplayDuration
         _autoEffectPreviews.Clear();
         if (_targetingPreviews.Count == 0)
             previewingEffects = false;
     }
 
-    private IEnumerator AutoDismissStack()
-    {
-        while (_autoEffectPreviews.Count > 0)
-        {
-            yield return new WaitForSeconds(autoEffectDisplayDuration);
-
-            if (_autoEffectPreviews.Count == 0) break;
-
-            GameObject front = _autoEffectPreviews[0];
-            _autoEffectPreviews.RemoveAt(0);
-            if (front != null) Destroy(front);
-
-            RefreshAllStacks();
-        }
-
-        if (_targetingPreviews.Count == 0)
-            previewingEffects = false;
-        _autoEffectDismissCoroutine = null;
-    }
+    // Partie 1 désactivée : plus aucun appelant (PushToAutoStack commenté ci-dessus).
+    // // LE minuteur de la partie 1 : détruit les popups auto un par un, à intervalle
+    // // autoEffectDisplayDuration, tant qu'il en reste dans la pile.
+    // private IEnumerator AutoDismissStack()
+    // {
+    //     // Boucle tant qu'il reste des popups "auto" à afficher — chaque itération traite
+    //     // le popup EN TÊTE de la pile (index 0), un par un.
+    //     while (_autoEffectPreviews.Count > 0)
+    //     {
+    //         // C'EST ICI que la durée d'affichage est réellement appliquée : on attend
+    //         // autoEffectDisplayDuration secondes (1.5s dans la scène) avant de détruire
+    //         // le popup courant.
+    //         yield return new WaitForSeconds(autoEffectDisplayDuration);
+    //
+    //         // Re-vérifie après l'attente : ClearAutoStack a pu vider la pile entre-temps.
+    //         if (_autoEffectPreviews.Count == 0) break;
+    //
+    //         GameObject front = _autoEffectPreviews[0];
+    //         _autoEffectPreviews.RemoveAt(0);
+    //         if (front != null) Destroy(front); // destruction effective du popup
+    //
+    //         RefreshAllStacks(); // réanime la pile restante vers ses nouvelles positions
+    //     }
+    //
+    //     // Plus aucun popup nulle part (ni manuel ni auto) → réautorise CardPreviewUI.Show()
+    //     // (l'aperçu de survol de carte, bloqué tant que previewingEffects est vrai).
+    //     if (_targetingPreviews.Count == 0)
+    //         previewingEffects = false;
+    //     _autoEffectDismissCoroutine = null; // libère la référence pour qu'un futur effet
+    //                                          // puisse relancer une nouvelle coroutine
+    // }
 
 
     public void Hide()

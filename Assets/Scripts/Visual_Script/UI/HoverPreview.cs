@@ -50,6 +50,12 @@ public class HoverPreview : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (OnPlayTargetingSession.IsActive && Input.GetMouseButtonDown(1))
+        {
+            OnPlayTargetingSession.Cancel();
+            return;
+        }
+
         GetComponentInParent<OneCreatureManager>()?.OnCreatureClicked();
         GetComponentInParent<OneBuildingManager>()?.OnBuildingClicked();
     }

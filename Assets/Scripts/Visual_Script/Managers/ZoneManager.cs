@@ -92,6 +92,12 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (OnPlayTargetingSession.IsActive && eventData.button == PointerEventData.InputButton.Right)
+        {
+            OnPlayTargetingSession.Cancel();
+            return;
+        }
+
         if (ScanButton.HandleZoneClickIfActive(this, eventData)) return;
         if (TurnManager.Instance == null) return;
         if (!OnPlayTargetingSession.IsActive && PhaseEffectPipeline.IsComplete) return;
@@ -128,8 +134,8 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
         if (!IsTargetingFoggedZones) return;
         if (_targetableOverlay == null) return;
         bool shouldBeVisible = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
-        if (shouldBeVisible && !_targetableOverlay.enabled)
-            Debug.LogWarning($"{name}: overlay désactivé pendant le ciblage — canvas actif={_targetableOverlay.GetComponentInParent<Canvas>(true)?.gameObject.activeInHierarchy}", this);
+        // if (shouldBeVisible && !_targetableOverlay.enabled)
+            // Debug.LogWarning($"{name}: overlay désactivé pendant le ciblage — canvas actif={_targetableOverlay.GetComponentInParent<Canvas>(true)?.gameObject.activeInHierarchy}", this);
     }
     private static string GetHierarchyPath(Transform t)
     {

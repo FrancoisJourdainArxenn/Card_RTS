@@ -331,7 +331,8 @@ public static class PhaseEffectPipeline
             hasVisuals.Add(!e.Data.RequiresPlayerInput || e.EligibleTargets.Count > 0);
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchPending(effects, hasVisuals);
+        // Partie 3 (popup de batch de phase) désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchPending(effects, hasVisuals);
         RunEffectsSequentially(callbacks, hasVisuals, OnAllEffectsComplete);
     }
 
@@ -442,7 +443,8 @@ public static class PhaseEffectPipeline
             });
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchPending(visualEffects, hasVisuals);
+        // Partie 3 (popup de batch de phase) désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchPending(visualEffects, hasVisuals);
         RunEffectsSequentially(callbacks, hasVisuals, OnAllEffectsComplete);
     }
 
@@ -463,8 +465,10 @@ public static class PhaseEffectPipeline
 
     private static IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete, int generation)
     {
-        float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
-        yield return new UnityEngine.WaitForSeconds(stackDelay);
+        // Partie 3 désactivée : cette attente ne servait qu'à laisser le temps aux popups du
+        // batch de finir leur animation d'apparition avant que la résolution ne commence.
+        // float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
+        // yield return new UnityEngine.WaitForSeconds(stackDelay);
 
         for (int i = 0; i < callbacks.Count; i++)
         {
@@ -475,11 +479,13 @@ public static class PhaseEffectPipeline
                 yield return new UnityEngine.WaitForSeconds(delay);
             }
             callbacks[i]?.Invoke();
-            if (showVisual)
-                TargetingVisualEvents.RaiseEffectResolved();
+            // Partie 3 désactivée :
+            // if (showVisual)
+            //     TargetingVisualEvents.RaiseEffectResolved();
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchComplete();
+        // Partie 3 désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchComplete();
 
         // N'appelle onComplete que si cette coroutine appartient encore à la phase courante.
         // ResetForNewPhase incrémente _generation, ce qui invalide les coroutines périmées.

@@ -15,7 +15,7 @@ public class TurnManager : MonoBehaviour
 
 
     public int initdraw;
-    [SerializeField] private float effectSequenceDelay = 1.5f;
+    [SerializeField] private float effectSequenceDelay = 1f;
     [SerializeField] private float combatSequenceDelay = .5f;
     public float EffectSequenceDelay => effectSequenceDelay;
     public float CombatSequenceDelay => combatSequenceDelay;

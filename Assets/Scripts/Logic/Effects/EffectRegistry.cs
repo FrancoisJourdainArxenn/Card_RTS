@@ -387,8 +387,9 @@ public static class EffectRegistry
         // dès la planification, avant même que la créature ne meure visuellement. Doit rester
         // AVANT la remise à -1 de CurrentSourceID ci-dessous : c'est elle qui sert de clé de
         // report dans Command.AddToQueue().
-        if (!data.RequiresPlayerInput)
-            new RaiseEffectVisualCommand(data, context).AddToQueue();
+        // Partie 1 (popup pour effet auto isolé) désactivée :
+        // if (!data.RequiresPlayerInput) // effet auto (sans sélection de cible) → déclenche le popup Effect_Triggered
+        //     new RaiseEffectVisualCommand(data, context).AddToQueue();
 
         // Met en file les morts déclenchées par cet effet seulement maintenant, après ses propres
         // commandes "cause" ci-dessus — voir Command.FlushPendingDeaths.

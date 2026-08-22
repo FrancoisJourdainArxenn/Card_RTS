@@ -34,6 +34,8 @@ public enum TargetStatusFilter
     MeleeFirst,
     Damaged,
     NonShielded,
+    HighestHealth,
+    LowestHealth,
     // Undamaged,
     // Visible,
     // Fogged,

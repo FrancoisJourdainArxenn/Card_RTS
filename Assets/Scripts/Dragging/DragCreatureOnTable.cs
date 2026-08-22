@@ -49,7 +49,22 @@ public class DragCreatureOnTable : DraggingActions {
 
     public override void OnDraggingInUpdate()
     {
+        if (Input.GetMouseButtonDown(1))
+        {
+            Draggable.CancelCurrentDrag();
+            return;
+        }
         UpdateInsertPreview();
+    }
+
+    // Annulation programmatique (clic droit / Echap) pendant un drag en cours — voir
+    // Draggable.CancelCurrentDrag. Reproduit la branche "échec" de OnEndDrag : la carte revient en main.
+    public override void OnDragCancelled()
+    {
+        ClearInsertPreview();
+        transform.localScale = _originalScale;
+        ResetAreaHighlights();
+        DragFailed();
     }
 
     public override void OnEndDrag()

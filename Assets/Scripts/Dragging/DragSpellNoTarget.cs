@@ -45,13 +45,24 @@ public class DragSpellNoTarget: DraggingActions{
 
     public override void OnDraggingInUpdate()
     {
-
+        // Clic droit = annulation immédiate, même si le clic gauche est toujours enfoncé (le drag
+        // "souris" ne dépend que du clic gauche — voir Draggable — donc on le coupe nous-mêmes ici).
+        if (Input.GetMouseButtonDown(1))
+            Draggable.CancelCurrentDrag();
     }
 
     public override void OnEndDrag()
     {
+        // Comme DragCreatureOnTable : on restaure l'échelle inconditionnellement ici, avant de
+        // savoir si le drag a réussi — sinon un sort joué avec succès resterait rétréci (à
+        // dragScale) pendant toute son animation de "carte jouée" vers PlayPreviewSpot.
+        transform.localScale = _originalScale;
+
         if (DragSuccessful())
+        {
+            GetComponent<Draggable>().enabled = false;
             PlaySpell();
+        }
         else
             ReturnToHand();
     }
@@ -64,6 +75,9 @@ public class DragSpellNoTarget: DraggingActions{
 
     private void PlaySpell()
     {
+        if (idHolder == null)
+            idHolder = GetComponent<IDHolder>();
+
         int cardID = idHolder.UniqueID;
 
         if (NetworkSessionData.IsNetworkSession)

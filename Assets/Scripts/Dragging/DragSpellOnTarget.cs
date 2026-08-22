@@ -46,9 +46,15 @@ public class DragSpellOnTarget : DraggingActions {
             return;
         }
 
+        if (idHolder == null)
+            idHolder = GetComponentInParent<IDHolder>();
+
         int cardID = idHolder.UniqueID;
         foreach (PendingEffectSelection sel in requiredSelections)
+        {
             sel.SourceEntityID = cardID;
+            sel.IsSpellTargeting = true;
+        }
 
         whereIsThisCard.SetFaceVisible(false);
 

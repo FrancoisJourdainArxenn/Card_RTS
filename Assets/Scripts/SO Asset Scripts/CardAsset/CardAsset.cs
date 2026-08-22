@@ -7,19 +7,23 @@ public enum CardType
 {
     Unit,
     Building,
-    Order,
+    Action,
 }
 
 public enum SubType
 {
-    Soldier,
-    Swarm,
-    Robot,
-    Mechanical,
-    Building,
-    Organic,
-    Engineer,
-    Pirate,
+    //Units
+    Soldier =1,
+    Swarm =2,
+    Robot =3,
+    Mechanical =4,
+    Organic =6,
+    Engineer =7,
+    Pirate =8,
+
+    //Action
+    Spell = 5,
+    Order = 9,
 }
 
 public enum TargetingOptions

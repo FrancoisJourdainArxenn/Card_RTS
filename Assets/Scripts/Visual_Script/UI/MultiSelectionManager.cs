@@ -41,9 +41,11 @@ public class MultiSelectionManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Draggable.DraggingThis != null)
+        if (Draggable.DraggingThis != null || OnPlayTargetingSession.IsActive)
         {
-            // Un drag (carte ou créature) est en cours : on annule/empêche le cadre de sélection
+            // Un drag (carte ou créature) est en cours, ou une session de ciblage de sort est active
+            // (le drag "souris" est coupé court dès OnStartDrag par DragSpellOnTarget.EndDragSilently,
+            // alors que le bouton reste enfoncé) : on annule/empêche le cadre de sélection.
             isMouseDown = false;
             if (isDragging)
             {

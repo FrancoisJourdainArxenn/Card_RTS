@@ -15,7 +15,6 @@ public class HandVisual : MonoBehaviour
     public Transform DrawPreviewSpot;
     public Transform DeckTransform;
     public Transform OtherCardDrawSourceTransform;
-    public Transform PlayPreviewSpot;
 
     // PRIVATE : a list of all card visual representations as GameObjects
     private List<GameObject> CardsInHand = new List<GameObject>();
@@ -212,15 +211,11 @@ public class HandVisual : MonoBehaviour
 
         CardVisual.transform.SetParent(null);
 
-        Sequence s = DOTween.Sequence();
-        s.Append(CardVisual.transform.DOMove(PlayPreviewSpot.position, 1f));
-        s.Insert(0f, CardVisual.transform.DORotate(Vector3.zero, 1f));
-        s.AppendInterval(2f);
-        s.OnComplete(()=>
-            {
-                //Command.CommandExecutionComplete();
-                Destroy(CardVisual);
-            });
+        CanvasGroup group = CardVisual.GetComponentInChildren<CanvasGroup>();
+        if (group != null)
+            group.DOFade(0f, 0.3f).OnComplete(() => Destroy(CardVisual));
+        else
+            Destroy(CardVisual);
     }
 
 
