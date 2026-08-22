@@ -427,9 +427,11 @@ public class Player : MonoBehaviour, ILivable
           
     }
 
-    // 2nd overload - takes CardLogic and ILivable interface - 
-    // this method is called from Logic, for example by AI
-    public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
+    // 2nd overload - takes CardLogic and ILivable interface -
+    // this method is called from Logic, for example by AI.
+    // preResolvedSelections : cible(s) choisie(s) via OnPlayTargetingSession pour un sort ciblé
+    // (voir DragSpellOnTarget) — transmis à EffectRegistry.ETB exactement comme pour une créature.
+    public void PlayASpellFromHand(CardLogic playedCard, ILivable target, List<PendingEffectSelection> preResolvedSelections = null)
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
@@ -438,12 +440,43 @@ public class Player : MonoBehaviour, ILivable
         {
             Caster = this,
             Target = target
-        });
+        }, preResolvedSelections);
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
         hand.CardsInHand.Remove(playedCard);
         // Recompute playable state after the card is removed.
         HighlightPlayableCards();
+    }
+
+    // Envoyé par le serveur à TOUS les clients dès qu'un sort est joué (voir
+    // GameNetworkManager.PlaySpellServerRpc) : applique l'état de jeu (ressources, main, effets)
+    // immédiatement et de façon déterministe sur toutes les machines — miroir de
+    // NetworkPendingPlayCreature. Contrairement à une créature, un sort ne place rien sur une
+    // table : rien à cacher/révéler visuellement à ce stade, seul l'habillage "carte jouée" est
+    // différé jusqu'à NetworkFlushPlaySpell.
+    public void NetworkPendingPlaySpell(int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
+
+        MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.CardsPlayed);
+        hand.CardsInHand.Remove(playedCard);
+        TurnManager.RefreshAllPlayableHighlights();
+
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(playedCard.ca, effectIndexes, selectedTargetIDs);
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+    }
+
+    // Envoyé par le serveur au moment de la révélation simultanée (voir GameNetworkManager.ExecuteAction) :
+    // ne fait plus que l'habillage visuel "carte jouée" — la logique a déjà été résolue par
+    // NetworkPendingPlaySpell sur toutes les machines. Réutilise directement l'animation existante
+    // (vol vers PlayPreviewSpot + destroy), déjà utilisée par le chemin local.
+    public void NetworkFlushPlaySpell(int cardUniqueID)
+    {
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        if (cardGO != null)
+            handVisual.PlayASpellFromHand(cardGO);
     }
 
     // METHODS TO PLAY CREATURES

@@ -24,7 +24,8 @@ public class EffectTargetingArrow : MonoBehaviour
 
         // SourceEntityID < 0 : ciblage OnPlay avant que la créature n'existe (voir
         // OnPlayTargetingSession) — pas d'entité source à vérifier, la flèche suit simplement la souris.
-        if (current.SourceEntityID >= 0 && IDHolder.GetGameObjectWithID(current.SourceEntityID) == null)
+        GameObject sourceGO = current.SourceEntityID >= 0 ? IDHolder.GetGameObjectWithID(current.SourceEntityID) : null;
+        if (current.SourceEntityID >= 0 && sourceGO == null)
             return;
 
         StopAllCoroutines();
@@ -32,7 +33,13 @@ public class EffectTargetingArrow : MonoBehaviour
         if (current.SelectedTarget != null)
             arrow.Hide();
         else
+        {
+            // Ancre la flèche sur la vraie source (ghost de créature, ou carte de sort en main)
+            // plutôt que de la laisser à sa position précédente/par défaut dans la scène.
+            if (sourceGO != null)
+                arrow.transform.position = sourceGO.transform.position;
             StartCoroutine(ShowArrowDelayed());
+        }
     }
 
     private IEnumerator ShowArrowDelayed()

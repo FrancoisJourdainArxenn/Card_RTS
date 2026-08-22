@@ -759,6 +759,9 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.PlaceBuilding:
                 PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
                 break;
+            case ActionType.PlaySpell:
+                PlaySpellClientRpc(action.playerIndex, action.param1);
+                break;
         }
     }
 
@@ -960,6 +963,51 @@ public class GameNetworkManager : NetworkBehaviour
         }
         Player player = Player.Players[playerIndex];
         player.NetworkFlushPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
+    // -------------------------------------------------------------------------
+    // ACTIONS DE JEU — JOUER UN SORT
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Envoyé par un client pour jouer un sort depuis sa main. Contrairement à une créature, un
+    /// sort ne place rien sur une table : pas d'ID à faire générer par le serveur, seuls
+    /// cardUniqueID et les tableaux de ciblage (déjà résolus localement via OnPlayTargetingSession,
+    /// vides pour un sort sans cible) sont nécessaires.
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void PlaySpellServerRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    {
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.PlaySpell,
+            playerIndex = playerIndex,
+            param1 = cardUniqueID
+        });
+        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : applique l'état de jeu (ressources, main, effets) avec les
+    /// mêmes cibles sur toutes les machines. Pas de visuel ici — voir PlaySpellClientRpc.
+    /// </summary>
+    [ClientRpc]
+    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    {
+        Player player = Player.Players[playerIndex];
+        player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs);
+    }
+
+    [ClientRpc]
+    void PlaySpellClientRpc(int playerIndex, int cardUniqueID)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] PlaySpellClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player player = Player.Players[playerIndex];
+        player.NetworkFlushPlaySpell(cardUniqueID);
     }
 
     // -------------------------------------------------------------------------

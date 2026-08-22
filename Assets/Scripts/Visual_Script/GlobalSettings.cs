@@ -175,7 +175,12 @@ public class GlobalSettings : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
-            OnPlayTargetingSession.Cancel();
+        {
+            if (OnPlayTargetingSession.IsActive)
+                OnPlayTargetingSession.Cancel();
+            else
+                Draggable.CancelCurrentDrag();
+        }
 
         if (OnPlayTargetingSession.IsActive && Input.GetMouseButtonDown(0))
             CancelOnPlayTargetingIfClickMissed();
