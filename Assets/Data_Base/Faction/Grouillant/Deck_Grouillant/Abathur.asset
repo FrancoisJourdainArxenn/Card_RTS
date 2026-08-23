@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Abathur
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Abathur, Perfection Seeker
-  difficultyLevel: 2
+  difficultyLevel: 3
   deckTooltip: Take the upper hand with strong Melee units.
   heroCard: {fileID: 11400000, guid: 9c8745fd772bc6440a2e1b3b85fdfd45, type: 2}
   sharedPool: {fileID: 11400000, guid: faa2b109910e9b143bc2f91d80444285, type: 2}

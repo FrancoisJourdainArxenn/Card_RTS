@@ -9,14 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 512f810027c45d643a514b481db119a4, type: 3}
-  m_Name: Cast_ElementalFury
-  m_EditorClassIdentifier: Assembly-CSharp::CastSpellSO
+  m_Script: {fileID: 11500000, guid: e0bb131d6f971964a96828fd76ec35b3, type: 3}
+  m_Name: Spell+0+1
+  m_EditorClassIdentifier: Assembly-CSharp::AmplifyEffectSO
   Description: 
   EffectVisual:
     vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
-  SpellToCast: {fileID: 11400000, guid: bd5ee8f5dc8705f4e96fde2652ed65e3, type: 2}
-  CastCount: 1
+    suppressAttackFallback: 0
+  AppliesTo: 4
+  DamageBonus: 0
+  HealBonus: 0
+  AttackBonus: 0
+  HealthBonus: 1
+  SpellsOnly: 1

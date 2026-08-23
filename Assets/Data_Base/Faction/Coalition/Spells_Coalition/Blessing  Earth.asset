@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: SpellBuff_NonTargeted
+  m_Name: Blessing  Earth
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 2
-  subType: 9
+  subType: 4
   tier: 1
-  Description: +1/+1 an ally in target Zone
-  CardImage: {fileID: 0}
+  Description: Your Spells give an additional +1/+0.
+  CardImage: {fileID: 21300000, guid: 24c2697f343eed644bcf25102ad909f7, type: 3}
   MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
@@ -36,32 +36,14 @@ MonoBehaviour:
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Buff
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+  - EffectName: 'Blessing : Earth'
+    Effect: {fileID: 11400000, guid: 1c242e2f7e470014e9cca40ca5c2a83f, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 3
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 0
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 2
-          cardFilter: {fileID: 0}
-      repartition: 3
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

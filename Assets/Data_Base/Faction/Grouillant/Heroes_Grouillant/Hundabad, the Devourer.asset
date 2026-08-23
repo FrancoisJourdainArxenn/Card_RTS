@@ -24,7 +24,7 @@ MonoBehaviour:
   CardImage: {fileID: 21300000, guid: 04ce51c31efb6404398baad4b51b98ca, type: 3}
   MainCost: 0
   IsHero: 1
-  UnlockCondition: {fileID: 11400000, guid: 2c776b9e50920024eb56abdf9df7be92, type: 2}
+  UnlockCondition: {fileID: 11400000, guid: ed150932a08217a4fbba8110d209eb0b, type: 2}
   Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1

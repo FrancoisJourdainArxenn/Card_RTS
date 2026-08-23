@@ -25,6 +25,7 @@ public class StatThresholdUnlockCondition : HeroUnlockConditionSO
             MatchStatType.DamageTaken          => $"Take {remaining} Damage to Unlock me.",
             MatchStatType.ShieldDamageAbsorbed => $"Absorb {remaining} Damage with Shields to Unlock me.",
             MatchStatType.DamageDealt          => $"Deal {remaining} Damage to Unlock me.",
+            MatchStatType.UnitsUpgraded        => $"Upgrade your Units by {remaining} to Unlock me.",
             _ => $"{Stat} : {remaining}"
         };
     }

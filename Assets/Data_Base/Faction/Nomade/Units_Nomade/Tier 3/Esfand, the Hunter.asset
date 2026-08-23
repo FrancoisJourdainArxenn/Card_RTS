@@ -43,7 +43,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4695662f7e25bac44b26160b019b349c, type: 2}
   Effects:
   - EffectName: Rex ! Attack !
-    Effect: {fileID: 11400000, guid: 492a8aa3b5ce0f74e88d379c527f4731, type: 2}
+    Effect: {fileID: 11400000, guid: 2d008aec8795b594fadf20e878f11966, type: 2}
     Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:

@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Medic
+  m_Name: Primordial Adept 1
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 0
+  subType: 9
   tier: 1
-  Description: <b>Start of turn:</b> Heals a unit for 2.
-  CardImage: {fileID: 21300000, guid: 796e66510b42ba74e9545ecbe9c65606, type: 3}
-  MainCost: 1
+  Description: <b>On Play:</b> I cast Primordial Touch.
+  CardImage: {fileID: 21300000, guid: 6e4140156ee59b5469901e9fb5fdf281, type: 3}
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
@@ -30,39 +30,23 @@ MonoBehaviour:
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 0
+  Celerity: 1
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
   Effects:
   - EffectName: Heal
-    Effect: {fileID: 11400000, guid: 2bb29b9f06c94a74ea05a43bd9a3eba5, type: 2}
-    Trigger: 2
+    Effect: {fileID: 11400000, guid: ffa4b68b135505a48bade8db08ada89b, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 4
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 1
-          statusFilter: 4
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+      effectTargets: []
+      affectedElements: []
       repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

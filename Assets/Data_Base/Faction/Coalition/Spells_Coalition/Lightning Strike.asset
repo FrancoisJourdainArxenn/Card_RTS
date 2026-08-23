@@ -10,34 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Sergent
+  m_Name: Lightning Strike
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
-  Type: 0
-  subType: 0
+  Type: 2
+  subType: 4
   tier: 1
-  Description: <b>On Attack:</b> Gives +1/+1 to a Soldier until end of turn.
-  CardImage: {fileID: 21300000, guid: 43bc8e2893fd0b540be56f1b2ebab9cf, type: 3}
-  MainCost: 2
+  Description: 'Deals {0} damage randomly split among enemies. '
+  CardImage: {fileID: 21300000, guid: 9e7e0345c15c79f49867d8737a4b24bc, type: 3}
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 3
-  AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  Attack: 0
+  MaxHealth: 0
+  AttacksForOneTurn: 0
+  AttackSpeedMultiplier: 0
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 1
+  MoveSpeed: 0
   Celerity: 0
-  melee: 1
+  melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Garnison
-    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
-    Trigger: 15
+  - EffectName: Elemental Bolt
+    Effect: {fileID: 11400000, guid: a1f304f8cd781e74f9da99faba1c1ef6, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -45,10 +46,10 @@ MonoBehaviour:
         includesSource: 0
         onlySource: 0
         queries:
-        - team: 1
+        - team: 2
           statusFilter: 0
           zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
@@ -56,8 +57,9 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 3
+      repartition: 1
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

@@ -13,12 +13,14 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
     public bool IsTempEffect;
     public EffectVisualData RevertVisual;
 
-    protected override int Amount => Damage;
+    protected override int Amount => _amplifiedDamage;
     public bool IsTemporary => IsTempEffect;
     public override EffectPriority Priority => EffectPriority.DealDamage;
 
-    private Player _caster;
     private readonly HashSet<int> _buffedTargets = new HashSet<int>();
+    private int _amplifiedDamage;
+    private int _amplifiedAttackBonus;
+    private int _amplifiedHealthBonus;
 
     public override void Execute(
         string EffectName,
@@ -30,13 +32,18 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
         Log($"[DamageThenBuffAttack] TRIGGERED — {EffectName} | source: {context.Source?.DisplayName ?? "none"} | damage: {Damage} | atk bonus: {AttackBonus}");
         _sourceID = context.Source?.ID ?? -1;
         _caster = context.Caster;
+        _playedCard = context.PlayedCard;
+        (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
+        _amplifiedDamage = Damage + (_caster != null ? _caster.GetDamageBonus(_playedCard) : 0);
+        _amplifiedAttackBonus = AttackBonus + bonusAttack;
+        _amplifiedHealthBonus = HealthBonus + bonusHealth;
         _buffedTargets.Clear();
         base.Execute(EffectName, context, effectInfo, visualData);
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)
     {
-        int dmg = amount ?? Damage;
+        int dmg = amount ?? _amplifiedDamage;
 
         // --- Étape 1 : dégâts (mirroir de DealDamageSO) ---
         bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
@@ -66,9 +73,9 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
         }
 
         int attackBefore = target.Attack;
-        ApplyStatsDelta(target, AttackBonus, HealthBonus);
+        ApplyStatsDelta(target, _amplifiedAttackBonus, _amplifiedHealthBonus);
         int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, HealthBonus, target.Health, EffectVisual).AddToQueue();
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, _amplifiedHealthBonus, target.Health, EffectVisual).AddToQueue();
         _buffedTargets.Add(target.ID);
     }
 
@@ -77,9 +84,9 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
         if (!_buffedTargets.Remove(target.ID)) return;
 
         int attackBefore = target.Attack;
-        ApplyStatsDelta(target, -AttackBonus, -HealthBonus);
+        ApplyStatsDelta(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
         int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -HealthBonus, target.Health, RevertVisual).AddToQueue();
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -_amplifiedHealthBonus, target.Health, RevertVisual).AddToQueue();
     }
 
     private static void ApplyStatsDelta(ILivable target, int attackDelta, int healthDelta)
@@ -99,5 +106,12 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
         if (HealthBonus > 0) parts.Add($"+{HealthBonus} Vie");
         string bonus = string.Join(" / ", parts);
         return $"Inflige {Damage} dégâts. Si la cible survit, elle gagne {bonus}{(IsTempEffect ? " jusqu'à la fin du tour" : "")}";
+    }
+
+    public override object[] GetDescriptionValues(Player viewer, CardAsset playedCard)
+    {
+        (int bonusAttack, int bonusHealth) = viewer != null ? viewer.GetStatBonus(playedCard) : (0, 0);
+        int bonusDamage = viewer != null ? viewer.GetDamageBonus(playedCard) : 0;
+        return new object[] { Damage + bonusDamage, AttackBonus + bonusAttack, HealthBonus + bonusHealth };
     }
 }

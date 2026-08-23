@@ -95,7 +95,7 @@ public class BuildingLogic : ILivable
         baseAttack = ca.Attack;
         Attack = baseAttack;
         attacksForOneTurn = ca.AttacksForOneTurn;
-        activationForOneTurn = ca.ActivationsForOneTurn;
+        // activationForOneTurn = ca.ActivationsForOneTurn;
         UniqueBuildingID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BuildingsCreatedThisGame.Add(UniqueBuildingID, this);
         if (ca.Effects != null && ca.Effects.Count > 0)

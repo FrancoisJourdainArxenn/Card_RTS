@@ -5,10 +5,8 @@ public class DealDamageSO : HealthEffectSO
 {
     [Header("Parameters")]
     public int Damage;
-    protected override int Amount => Damage;
+    protected override int Amount => Damage + (_caster != null ? _caster.GetDamageBonus(_playedCard) : 0);
     public override EffectPriority Priority => EffectPriority.DealDamage;
-
-    private Player _caster;
 
     public override void Execute(
         string EffectName,
@@ -19,13 +17,12 @@ public class DealDamageSO : HealthEffectSO
     {
         Log($"[DealDamage] TRIGGERED — {EffectName} | source: {context.Source?.DisplayName ?? "none"} | damage: {Damage}");
         _sourceID = context.Source?.ID ?? -1;
-        _caster = context.Caster;
         base.Execute(EffectName, context, effectInfo, visualData);
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)
     {
-        int dmg = amount ?? Damage;
+        int dmg = amount ?? Amount;
         Log($"[DealDamage] APPLY — {target.DisplayName} (ID:{target.ID}) HP avant: {target.Health} (dmg:{dmg})");
         bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
         bool suppressFallback = visualData != null && visualData.suppressAttackFallback;
@@ -51,4 +48,7 @@ public class DealDamageSO : HealthEffectSO
         target.amount >= target.target.Health;
 
     public override string GetDescription() => $"Inflige {Damage} dégâts";
+
+    public override object[] GetDescriptionValues(Player viewer, CardAsset playedCard) =>
+        new object[] { Damage + (viewer != null ? viewer.GetDamageBonus(playedCard) : 0) };
 }

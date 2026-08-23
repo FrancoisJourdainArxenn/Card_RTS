@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Blessing  Water
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 2
+  subType: 4
+  tier: 1
+  Description: Your Spells give an additional +0/+1.
+  CardImage: {fileID: 21300000, guid: f62df128a1d3c2740bace30816d69d25, type: 3}
+  MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 0
+  MaxHealth: 0
+  AttacksForOneTurn: 0
+  AttackSpeedMultiplier: 0
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 0
+  Celerity: 0
+  melee: 0
+  IsStructureUnit: 0
+  ActivationsForOneTurn: 0
+  Keywords: []
+  Effects:
+  - EffectName: 'Blessing : Water'
+    Effect: {fileID: 11400000, guid: 24d97073f25ce8c4d942537b45490a3f, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

@@ -32,6 +32,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}

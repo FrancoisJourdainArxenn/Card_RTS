@@ -18,9 +18,17 @@ public class ModifyStatsSO : EffectSO, IRevertable
     public CardFilterSO PersistentFilter;
     [Tooltip("La cible touchée maintenant + toute unité créée plus tard du même nom recevront aussi ce bonus.")]
     public bool MatchSameNameAsTarget;
-    protected override int Amount => AttackBonus;
+    protected override int Amount => _amplifiedAttackBonus;
     public bool IsTemporary => IsTempEffect;
     public override EffectPriority Priority => EffectPriority.ModifyStats;
+
+    private Player _caster;
+    private CardAsset _playedCard;
+    // Bonus AttackBonus/HealthBonus + amplificateur du caster, capturés une fois à l'exécution pour
+    // qu'ApplyToTarget/Revert/ExecuteScaled appliquent et annulent exactement le même montant, même si
+    // l'amplificateur change (ou que sa source meurt) entre l'application et l'expiration du buff temporaire.
+    private int _amplifiedAttackBonus;
+    private int _amplifiedHealthBonus;
 
     public override void Execute(
         string EffectName,
@@ -30,6 +38,11 @@ public class ModifyStatsSO : EffectSO, IRevertable
     )
     {
         Log($"{EffectName}: Execution");
+        _caster = context.Caster;
+        _playedCard = context.PlayedCard;
+        (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
+        _amplifiedAttackBonus = AttackBonus + bonusAttack;
+        _amplifiedHealthBonus = HealthBonus + bonusHealth;
 
         if (effectInfo.useScalingCount)
         {
@@ -44,7 +57,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
         }
         else
         {
-            Log($"{EffectName}: {(AttackBonus > 0 ? "+" : "")}{AttackBonus} ATK / {(HealthBonus > 0 ? "+" : "")}{HealthBonus} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
+            Log($"{EffectName}: {(_amplifiedAttackBonus > 0 ? "+" : "")}{_amplifiedAttackBonus} ATK / {(_amplifiedHealthBonus > 0 ? "+" : "")}{_amplifiedHealthBonus} HP to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
             ApplyEffect(effectInfo, affectedElements, visualData);
         }
 
@@ -78,8 +91,8 @@ public class ModifyStatsSO : EffectSO, IRevertable
         context.Caster.permanentCreatureBuffs.Add(new PermanentCreatureBuff
         {
             filter = filter,
-            attackBonus = AttackBonus,
-            healthBonus = HealthBonus,
+            attackBonus = _amplifiedAttackBonus,
+            healthBonus = _amplifiedHealthBonus,
         });
     }
 
@@ -105,8 +118,10 @@ public class ModifyStatsSO : EffectSO, IRevertable
             return;
         }
 
-        int scaledAttack = AttackBonus * count;
-        int scaledHealth = HealthBonus * count;
+        // Le bonus d'amplificateur s'ajoute une fois sur le total déjà scalé, pas multiplié par count —
+        // même convention que ApplyShieldSO.ExecuteScaled pour le bonus de bouclier du caster.
+        int scaledAttack = AttackBonus * count + (_amplifiedAttackBonus - AttackBonus);
+        int scaledHealth = HealthBonus * count + (_amplifiedHealthBonus - HealthBonus);
 
         Log($"{EffectName}: {(scaledAttack > 0 ? "+" : "")}{scaledAttack} ATK / {(scaledHealth > 0 ? "+" : "")}{scaledHealth} HP (x{count}) to {affectedElements.Count} target(s) — {string.Join(", ", affectedElements.Select(t => t.DisplayName))}");
 
@@ -116,6 +131,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
             ApplyStatsDelta(target, scaledAttack, scaledHealth);
             int actualAttackDelta = target.Attack - attackBefore;
             new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
+            TrackUpgradeStat(target, scaledAttack, scaledHealth);
 
             if (IsTempEffect)
             {
@@ -134,17 +150,18 @@ public class ModifyStatsSO : EffectSO, IRevertable
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? _ = null)
     {
         int attackBefore = target.Attack;
-        ApplyStatsDelta(target, AttackBonus, HealthBonus);
+        ApplyStatsDelta(target, _amplifiedAttackBonus, _amplifiedHealthBonus);
         int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, HealthBonus, target.Health, EffectVisual).AddToQueue();
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, _amplifiedHealthBonus, target.Health, EffectVisual).AddToQueue();
+        TrackUpgradeStat(target, _amplifiedAttackBonus, _amplifiedHealthBonus);
     }
 
     public void Revert(ILivable target, int? _ = null)
     {
         int attackBefore = target.Attack;
-        ApplyStatsDelta(target, -AttackBonus, -HealthBonus);
+        ApplyStatsDelta(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
         int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -HealthBonus, target.Health, RevertVisual).AddToQueue();
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -_amplifiedHealthBonus, target.Health, RevertVisual).AddToQueue();
     }
 
     private static void ApplyStatsDelta(ILivable target, int attackDelta, int healthDelta)
@@ -152,6 +169,16 @@ public class ModifyStatsSO : EffectSO, IRevertable
         target.Attack += attackDelta;
         target.MaxHealth += healthDelta;
         target.Health += healthDelta;
+    }
+
+    // Compte uniquement la part "gain" (upgrade) du delta — un debuff (ATK/Vie négatif) ne doit pas
+    // faire progresser la condition de héros "Upgrade your units". Pas appelé depuis Revert : l'expiration
+    // d'un buff temporaire ne doit pas retirer le crédit déjà accordé au joueur.
+    private static void TrackUpgradeStat(ILivable target, int attackDelta, int healthDelta)
+    {
+        if (target is not CreatureLogic creature || creature.owner == null) return;
+        int upgradeValue = Mathf.Max(0, attackDelta) + Mathf.Max(0, healthDelta);
+        if (upgradeValue > 0) creature.owner.matchStats.Add(MatchStatType.UnitsUpgraded, upgradeValue);
     }
 
     protected override bool IsTargetSaturated(EffectTarget target) => false;
@@ -162,5 +189,11 @@ public class ModifyStatsSO : EffectSO, IRevertable
         if (AttackBonus > 0) parts.Add($"+{AttackBonus} Attaque");
         if (HealthBonus > 0) parts.Add($"+{HealthBonus} Vie");
         return string.Join(" / ", parts);
+    }
+
+    public override object[] GetDescriptionValues(Player viewer, CardAsset playedCard)
+    {
+        (int bonusAttack, int bonusHealth) = viewer != null ? viewer.GetStatBonus(playedCard) : (0, 0);
+        return new object[] { AttackBonus + bonusAttack, HealthBonus + bonusHealth };
     }
 }

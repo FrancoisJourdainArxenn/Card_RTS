@@ -378,13 +378,13 @@ public class TableVisual : MonoBehaviour
     // pour qu'une attaque suivante ne se déclenche jamais pendant qu'une créature glisse encore vers son slot.
     void PlaceCreaturesOnNewSlots(System.Action onComplete = null)
     {
-        Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots appelé — AnyAttackInFlight={CreatureAttackVisual.AnyAttackInFlight} onComplete={(onComplete != null)} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots appelé — AnyAttackInFlight={CreatureAttackVisual.AnyAttackInFlight} onComplete={(onComplete != null)} @ {Time.realtimeSinceStartup:F3}");
         if (CreatureAttackVisual.AnyAttackInFlight)
         {
             // Une attaque est en vol quelque part (peu importe la table) : on ne bouge personne
             // tant qu'elle n'est pas résolue, sinon sa cible pourrait glisser sous la charge/le
             // projectile déjà lancé vers une position figée. Rejoué par FlushPendingRelayout.
-            Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots DIFFÉRÉ (attaque en vol) @ {Time.realtimeSinceStartup:F3}");
+            // Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots DIFFÉRÉ (attaque en vol) @ {Time.realtimeSinceStartup:F3}");
             _relayoutPending = true;
             if (onComplete != null) _pendingRelayoutCallbacks.Add(onComplete);
             return;
@@ -430,11 +430,11 @@ public class TableVisual : MonoBehaviour
         void RowDone()
         {
             pending--;
-            Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots RowDone — reste={pending} @ {Time.realtimeSinceStartup:F3}");
+            // Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots RowDone — reste={pending} @ {Time.realtimeSinceStartup:F3}");
             if (pending <= 0) onComplete();
         }
 
-        Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots START — melee={MeleeCreaturesOnTable.Count} ranged={RangedCreaturesOnTable.Count} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots START — melee={MeleeCreaturesOnTable.Count} ranged={RangedCreaturesOnTable.Count} @ {Time.realtimeSinceStartup:F3}");
         pending++;
         PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded, RowDone);
         pending++;
@@ -473,11 +473,11 @@ public class TableVisual : MonoBehaviour
         if (virtualCount == 0 || effectiveCount == 0) { onComplete?.Invoke(); return; }
 
         int pendingTweens = effectiveCount;
-        Debug.Log($"[DBG][Timing] PlaceRowOnSlots START — effectiveCount={effectiveCount} hasOnComplete={onComplete != null} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] PlaceRowOnSlots START — effectiveCount={effectiveCount} hasOnComplete={onComplete != null} @ {Time.realtimeSinceStartup:F3}");
         void TweenDone()
         {
             pendingTweens--;
-            Debug.Log($"[DBG][Timing] PlaceRowOnSlots TweenDone — reste={pendingTweens} @ {Time.realtimeSinceStartup:F3}");
+            // Debug.Log($"[DBG][Timing] PlaceRowOnSlots TweenDone — reste={pendingTweens} @ {Time.realtimeSinceStartup:F3}");
             if (pendingTweens <= 0) onComplete?.Invoke();
         }
 
@@ -494,12 +494,12 @@ public class TableVisual : MonoBehaviour
             // OnAttack qui se déclenche pendant cet intervalle (ex: spawn d'un token dans sa propre rangée).
             if (CreatureAttackVisual.IsPausedMidAttack(displayOrder[i]))
             {
-                Debug.Log($"[DBG][Timing] PlaceRowOnSlots — {displayOrder[i]?.name} IsPausedMidAttack, tween sauté @ {Time.realtimeSinceStartup:F3}");
+                // Debug.Log($"[DBG][Timing] PlaceRowOnSlots — {displayOrder[i]?.name} IsPausedMidAttack, tween sauté @ {Time.realtimeSinceStartup:F3}");
                 TweenDone();
                 continue;
             }
 
-            Debug.Log($"[DBG][Timing] PlaceRowOnSlots — i={i} DOMove {displayOrder[i]?.name} (activeInHierarchy={displayOrder[i]?.activeInHierarchy}) vers {targetPos} @ {Time.realtimeSinceStartup:F3}");
+            // Debug.Log($"[DBG][Timing] PlaceRowOnSlots — i={i} DOMove {displayOrder[i]?.name} (activeInHierarchy={displayOrder[i]?.activeInHierarchy}) vers {targetPos} @ {Time.realtimeSinceStartup:F3}");
             displayOrder[i].transform.DOKill();
             float reorderDuration = VisualManager.Instance != null ? VisualManager.Instance.RowReorderDuration : 0.3f;
             Tween t = displayOrder[i].transform.DOMove(targetPos, reorderDuration).SetEase(Ease.OutQuad);

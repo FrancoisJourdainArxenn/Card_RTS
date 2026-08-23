@@ -72,7 +72,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         MainCostText.text = cardAsset.MainCost.ToString();
         subType.text = cardAsset.subType.ToString();
         // 4) add description
-        DescriptionText.text = cardAsset.Description.ToString();
+        DescriptionText.text = cardAsset.GetResolvedDescription(owner);
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
         if (TierImage != null && VisualManager.Instance != null)
@@ -140,7 +140,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void ReadEffectFromAsset(string effectName)
     {
         if (NameText != null)        NameText.text = effectName;
-        if (DescriptionText != null) DescriptionText.text = cardAsset.Description.ToString();
+        if (DescriptionText != null) DescriptionText.text = cardAsset.GetResolvedDescription(owner);
         if (ArtImage != null)        ArtImage.sprite = cardAsset.CardImage;
     }
 

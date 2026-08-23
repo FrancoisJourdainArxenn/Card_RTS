@@ -8,4 +8,5 @@ public enum EffectPriority
     DealDamage,
     HealDamage,
     CastSpell,
+    ChooseOne,
 }

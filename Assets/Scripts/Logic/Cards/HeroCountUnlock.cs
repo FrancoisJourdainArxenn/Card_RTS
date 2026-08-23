@@ -13,6 +13,7 @@ public enum MatchStatType
     DamageTaken,          // dégâts effectifs subis (après bouclier) par mes unités
     ShieldDamageAbsorbed, // dégâts absorbés par mes boucliers
     DamageDealt,          // dégâts effectifs infligés (combat + effets) par mes unités/sorts
+    UnitsUpgraded,        // somme des +ATK/+Vie conférés à mes unités via ModifyStats (upgrades uniquement, pas les debuffs)
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 

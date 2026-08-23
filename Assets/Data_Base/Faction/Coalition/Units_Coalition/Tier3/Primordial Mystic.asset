@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 5
+  subType: 0
   tier: 3
   Description: <b>On Battle Start:</b> Gives +1/+1 to Soldiers until end of turn.
   CardImage: {fileID: 21300000, guid: 56317cd230f9a0742b3aeb9c3c86aa10, type: 3}
@@ -32,6 +32,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
@@ -61,3 +62,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

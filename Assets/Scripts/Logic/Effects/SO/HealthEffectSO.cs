@@ -4,6 +4,9 @@ using UnityEngine;
 
 public abstract class HealthEffectSO : EffectSO
 {
+    protected Player _caster;
+    protected CardAsset _playedCard;
+
     public override void Execute(
         string EffectName,
         EffectContext context,
@@ -11,6 +14,8 @@ public abstract class HealthEffectSO : EffectSO
         EffectVisualData visualData
     )
     {
+        _caster = context.Caster;
+        _playedCard = context.PlayedCard;
         Log($"[HealthEffect] RESOLVING — {EffectName}");
         List<IIdentifiable> eligibleTargets = GetAffectedElements(context, effectInfo);
         if (eligibleTargets.Count == 0)

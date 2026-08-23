@@ -231,7 +231,11 @@ public class GlobalSettings : MonoBehaviour
 
     public void RefreshEndPhaseButtons()
     {
-        bool confirmActive = localPlayer != null && PhaseEffectPipeline.IsTargetingActiveForPlayer(localPlayer);
+        // Bouton de validation du targeting supprimé : la sélection manuelle de la cible
+        // suffit désormais (voir PhaseEffectPipeline.OnEntityClicked), donc on ne bascule
+        // plus jamais vers ConfirmTargetingButton — seul le bouton End Phase normal reste,
+        // grisé tant que des cibles restent à choisir.
+        bool confirmActive = false;
 
         foreach (EndTurnButton eb in Object.FindObjectsByType<EndTurnButton>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
@@ -265,9 +269,10 @@ public class GlobalSettings : MonoBehaviour
         bool notYetReady          = !TurnManager.Instance.HasPlayerRegisteredEndPhase(player);
         bool hasActiveTargeting   = PhaseEffectPipeline.IsTargetingActiveForPlayer(player);
         bool waitingForSelection  = hasActiveTargeting && PhaseEffectPipeline.BlocksEndPhaseButton(player);
+        bool waitingForCardChoice = ChooseOneManager.Instance != null && ChooseOneManager.Instance.HasPendingChoice(player);
 
         bool canConfirmTargeting = isLocalPlayer && hasActiveTargeting && !waitingForSelection;
-        bool canEndPhaseNormally = isLocalPlayer && gameActive && notYetReady && !waitingForSelection;
+        bool canEndPhaseNormally = isLocalPlayer && gameActive && notYetReady && !waitingForSelection && !waitingForCardChoice;
         button.interactable = canConfirmTargeting || canEndPhaseNormally;
     }
 

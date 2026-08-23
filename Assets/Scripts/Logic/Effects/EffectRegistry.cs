@@ -79,6 +79,7 @@ public static class EffectRegistry
         if (ca.Effects == null)
             return;
 
+        context.PlayedCard = ca;
         foreach (CardEffectData data in ca.Effects)
         {
             if (data.Trigger != TriggerType.OnPlay)
@@ -151,6 +152,7 @@ public static class EffectRegistry
         UnregisterEntity(died.UniqueCreatureID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueCreatureID); // ← ajouté pour retirer les bonus de revenu liés à la créature morte
         dyingOwner.RemoveBonusShieldFromSource(died.UniqueCreatureID);
+        dyingOwner.RemoveEffectAmplifier(died.UniqueCreatureID);
 
     }
 
@@ -281,6 +283,7 @@ public static class EffectRegistry
         UnregisterEntity(died.UniqueBuildingID);
         dyingOwner.RemoveBonusIncomeFromSource(died.UniqueBuildingID); // ← ajouté pour retirer les bonus de revenu liés au bâtiment mort
         dyingOwner.RemoveBonusShieldFromSource(died.UniqueBuildingID);
+        dyingOwner.RemoveEffectAmplifier(died.UniqueBuildingID);
     }
 
     // ── Triggers de token ─────────────────────────────────────────────────────
@@ -428,6 +431,19 @@ public static class EffectRegistry
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
                 return building.ca.Effects[effectIndex].Effect.EffectVisual;
+
+        return null;
+    }
+
+    public static ChooseOneSO GetChooseOneSO(int sourceEntityID, int effectIndex)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
+            if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
+                return creature.ca.Effects[effectIndex].Effect as ChooseOneSO;
+
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
+            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
+                return building.ca.Effects[effectIndex].Effect as ChooseOneSO;
 
         return null;
     }

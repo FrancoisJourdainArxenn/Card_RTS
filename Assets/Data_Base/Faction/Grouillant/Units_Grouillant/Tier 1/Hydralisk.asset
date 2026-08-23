@@ -19,13 +19,13 @@ MonoBehaviour:
   tier: 1
   Description: 
   CardImage: {fileID: 21300000, guid: 8a7f70d83619c7943a8a988accfc10a5, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 2
   MaxHealth: 1
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3.5
+  AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0

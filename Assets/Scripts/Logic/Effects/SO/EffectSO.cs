@@ -168,6 +168,10 @@ public abstract class EffectSO : ScriptableObject
 
     public virtual string GetDescription() => Description;
 
+    // Valeurs à substituer dans CardAsset.Description (placeholders {0}, {1}...) pour refléter les
+    // bonus d'amplificateurs actuels de viewer — null si cet effet n'a pas de valeur substituable.
+    public virtual object[] GetDescriptionValues(Player viewer, CardAsset playedCard) => null;
+
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     protected static void Log(string msg) => Debug.Log($"[Effects] {msg}");

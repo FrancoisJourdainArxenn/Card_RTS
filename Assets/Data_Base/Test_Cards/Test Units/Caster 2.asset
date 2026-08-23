@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 1
-  Description: 'On Attack : Cast Elemental Fury (deals 10 randomly dispatch across
+  Description: 'On Attack : Cast Elemental Fury (deals {3} randomly dispatch across
     enemy units).'
   CardImage: {fileID: 21300000, guid: 90bc6a2a109db7e458af6e473298a2b5, type: 3}
   MainCost: 0

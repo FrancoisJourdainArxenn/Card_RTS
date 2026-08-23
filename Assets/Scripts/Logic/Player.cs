@@ -12,6 +12,25 @@ public struct PermanentCreatureBuff
     public int healthBonus;
 }
 
+[System.Flags]
+public enum EffectCategory
+{
+    Damage = 1,
+    Heal = 2,
+    StatBonus = 4,
+}
+
+[System.Serializable]
+public struct EffectAmplifier
+{
+    public EffectCategory AppliesTo;
+    public int DamageBonus;
+    public int HealBonus;
+    public int AttackBonus;
+    public int HealthBonus;
+    public bool SpellsOnly; // true = ne s'applique qu'aux cartes Type == CardType.Action
+}
+
 public class Player : MonoBehaviour, ILivable
 {
     // PUBLIC FIELDS
@@ -54,6 +73,8 @@ public class Player : MonoBehaviour, ILivable
 
     private Dictionary<int, int> _shieldBonusFromSources = new(); // bonus de bouclier lié à une entité vivante (aura, effet...)
     public int ShieldBonus => _shieldBonusFromSources.Values.Sum();
+
+    private Dictionary<int, EffectAmplifier> _effectAmplifiersFromSources = new(); // amplificateurs de Damage/Heal/StatBonus liés à une entité vivante
 
     // Buffs de stats permanents ("pour le reste de la partie") appliqués par SubType ou par nom de
     // carte. Appliqués à chaque nouvelle CreatureLogic de ce joueur (voir CreatureLogic constructor) —
@@ -989,6 +1010,32 @@ public class Player : MonoBehaviour, ILivable
     public void RemoveBonusShieldFromSource(int sourceID)
     {
         _shieldBonusFromSources.Remove(sourceID);
+    }
+
+    public void AddEffectAmplifier(int sourceID, EffectAmplifier amplifier)
+    {
+        _effectAmplifiersFromSources[sourceID] = amplifier;
+    }
+
+    public void RemoveEffectAmplifier(int sourceID)
+    {
+        _effectAmplifiersFromSources.Remove(sourceID);
+    }
+
+    private bool AmplifierApplies(EffectAmplifier amp, EffectCategory category, CardAsset playedCard) =>
+        (amp.AppliesTo & category) != 0
+        && (!amp.SpellsOnly || (playedCard != null && playedCard.Type == CardType.Action));
+
+    public int GetDamageBonus(CardAsset playedCard) =>
+        _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.Damage, playedCard)).Sum(a => a.DamageBonus);
+
+    public int GetHealBonus(CardAsset playedCard) =>
+        _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.Heal, playedCard)).Sum(a => a.HealBonus);
+
+    public (int attack, int health) GetStatBonus(CardAsset playedCard)
+    {
+        IEnumerable<EffectAmplifier> applicable = _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.StatBonus, playedCard));
+        return (applicable.Sum(a => a.AttackBonus), applicable.Sum(a => a.HealthBonus));
     }
 
     public void CalculatePlayerIncome()

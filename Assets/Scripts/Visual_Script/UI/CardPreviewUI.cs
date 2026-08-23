@@ -15,6 +15,7 @@ public class CardPreviewUI : MonoBehaviour
     private GameObject currentPrefab;
     [SerializeField] private GameObject cardPreviewPrefab;
     [SerializeField] private GameObject heroCardPreviewPrefab;
+    [SerializeField] private GameObject actionCardPreviewPrefab; // Card_Action_Preview — sorts (CardType.Action)
     [SerializeField] private GameObject effectTriggeredPrefab; // prefab Effect_Triggered ; seule source d'Instantiate pour tous les popups d'effet (parties 1, 2 et 3)
     private RectTransform _anchorRect;
     private Canvas _canvas;
@@ -378,7 +379,9 @@ public class CardPreviewUI : MonoBehaviour
 
     private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null, BuildingLogic sourceBuilding = null)
     {
-        GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab : cardPreviewPrefab;
+        GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab
+            : (asset.Type == CardType.Action && actionCardPreviewPrefab != null) ? actionCardPreviewPrefab
+            : cardPreviewPrefab;
         if (prefabToUse == null) return;
 
         if (currentPreview != null && currentPrefab != prefabToUse)

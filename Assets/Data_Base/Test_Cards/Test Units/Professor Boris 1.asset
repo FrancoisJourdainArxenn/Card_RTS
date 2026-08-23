@@ -39,7 +39,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Shield'up
     Effect: {fileID: 11400000, guid: 3675c9d3cfe474740bd8a51f3d07b930, type: 2}
-    Trigger: 0
+    Trigger: 3
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

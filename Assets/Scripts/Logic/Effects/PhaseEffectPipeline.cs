@@ -136,7 +136,23 @@ public static class PhaseEffectPipeline
         if (_isComplete)
             return false;
 
-        return EffectSelectionController.OnEntityClicked(entity);
+        bool accepted = EffectSelectionController.OnEntityClicked(entity);
+
+        // La sélection manuelle de la dernière cible requise vaut validation : plus besoin
+        // d'un clic supplémentaire sur un bouton de confirmation séparé pour ce joueur.
+        if (accepted && !EffectSelectionController.HasPendingSelection)
+        {
+            Player confirmingPlayer = NetworkSessionData.IsNetworkSession
+                ? GlobalSettings.Instance?.localPlayer
+                : (_currentLocalPlayerIndex >= 0 && _currentLocalPlayerIndex < Player.Players.Length
+                    ? Player.Players[_currentLocalPlayerIndex]
+                    : null);
+
+            if (confirmingPlayer != null)
+                ConfirmAndSubmit(confirmingPlayer);
+        }
+
+        return accepted;
     }
 
     /// <summary>

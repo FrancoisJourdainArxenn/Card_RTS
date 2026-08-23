@@ -1298,6 +1298,29 @@ public class GameNetworkManager : NetworkBehaviour
         player.AddBonusShieldFromSource(sourceID, amount);
     }
 
+    public void BroadCastEffectAmplifier(int playerIndex, int sourceID, EffectAmplifier amplifier)
+    {
+        if (!IsServer) return;
+        EffectAmplifierClientRpc(playerIndex, sourceID, (int)amplifier.AppliesTo,
+            amplifier.DamageBonus, amplifier.HealBonus, amplifier.AttackBonus, amplifier.HealthBonus, amplifier.SpellsOnly);
+    }
+
+    [ClientRpc]
+    public void EffectAmplifierClientRpc(int playerIndex, int sourceID, int appliesTo,
+        int damageBonus, int healBonus, int attackBonus, int healthBonus, bool spellsOnly)
+    {
+        Player player = Player.Players[playerIndex];
+        player.AddEffectAmplifier(sourceID, new EffectAmplifier
+        {
+            AppliesTo = (EffectCategory)appliesTo,
+            DamageBonus = damageBonus,
+            HealBonus = healBonus,
+            AttackBonus = attackBonus,
+            HealthBonus = healthBonus,
+            SpellsOnly = spellsOnly,
+        });
+    }
+
 
     //Moving Units
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -1577,6 +1600,45 @@ public class GameNetworkManager : NetworkBehaviour
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
         Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID, visualData);
+    }
+
+    public void BroadCastChooseOneOffer(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        if (!IsServer) return;
+        ChooseOneOfferClientRpc(playerIndex, sourceEntityID, effectIndex, seed);
+    }
+
+    [ClientRpc]
+    void ChooseOneOfferClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || so.CardPool.Count == 0) return;
+
+        int offerCount = Mathf.Clamp(so.ChooseBetweenCount, 1, so.CardPool.Count);
+        List<CardAsset> offer = ChooseOneSO.PickDistinct(so.CardPool, offerCount, new System.Random(seed));
+
+        ChooseOneManager.Instance.BeginOffer(Player.Players[playerIndex], offer, sourceEntityID, effectIndex);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SubmitChooseOnePickServerRpc(int playerIndex, int sourceEntityID, int effectIndex, int chosenPoolIndex)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || chosenPoolIndex < 0 || chosenPoolIndex >= so.CardPool.Count)
+            return;
+
+        int cardID = IDFactory.GetUniqueID();
+        ChooseOnePickedClientRpc(playerIndex, sourceEntityID, effectIndex, chosenPoolIndex, cardID);
+    }
+
+    [ClientRpc]
+    void ChooseOnePickedClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int chosenPoolIndex, int cardID)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || chosenPoolIndex < 0 || chosenPoolIndex >= so.CardPool.Count) return;
+
+        CardAsset chosen = so.CardPool[chosenPoolIndex];
+        Player.Players[playerIndex].GetACardNotFromDeck(chosen, cardID);
     }
 
     // cardID/creatureID sont déjà alloués par l'appelant (TokenGenerationSO.Execute), qui a créé

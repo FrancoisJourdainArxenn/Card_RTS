@@ -7,6 +7,7 @@ public partial class EffectContext
     public ILivable Target;
     public ZoneLogic TargetedZone;
     public ILivable Source;
+    public CardAsset PlayedCard; // la carte jouée/lancée à l'origine de cette résolution — renseigné par EffectRegistry.ETB
     public CreatureLogic EventSubjectCreature; // la creature qui vient de mourrir ou d'être jouée
     public BuildingLogic EventSubjectBuilding; // le bâtiment qui vient de mourrir ou d'être jouée
     public TurnManager.TurnPhases CurrentPhase; // la phase actuelle du tour

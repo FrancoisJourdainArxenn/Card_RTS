@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Elemental Fury
+  m_Name: Blessing  Fire
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 2
-  subType: 5
+  subType: 4
   tier: 1
-  Description: Deal 2 to a unit
-  CardImage: {fileID: 21300000, guid: 9e7e0345c15c79f49867d8737a4b24bc, type: 3}
+  Description: Increases the damages of your Spells by 1.
+  CardImage: {fileID: 21300000, guid: bfdf35822fa71894195628e2f20505ac, type: 3}
   MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
@@ -36,28 +36,14 @@ MonoBehaviour:
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
-  - EffectName: Elemental Bolt
-    Effect: {fileID: 11400000, guid: 6aed4dda8b431e64c88d86164243012c, type: 2}
+  - EffectName: 'Blessing : Fire'
+    Effect: {fileID: 11400000, guid: 1611e4ff52829894d95cdfee7d15a0eb, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 2
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries: []
-      repartition: 1
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
