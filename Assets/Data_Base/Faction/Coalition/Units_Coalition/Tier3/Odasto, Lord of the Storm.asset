@@ -10,34 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Blessing  Fire
+  m_Name: Odasto, Lord of the Storm
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
-  Type: 2
-  subType: 4
-  tier: 1
-  Description: Increases the damages of your Spells by 1.
-  CardImage: {fileID: 21300000, guid: bfdf35822fa71894195628e2f20505ac, type: 3}
-  MainCost: 0
+  Type: 0
+  subType: 0
+  tier: 3
+  Description: <b>On Attack:</b> Cast Lightning Strike.
+  CardImage: {fileID: 21300000, guid: efda3f768fe2f2d4092d6f06ffc639b5, type: 3}
+  MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 0
-  AttacksForOneTurn: 0
-  AttackSpeedMultiplier: 0
+  Attack: 2
+  MaxHealth: 4
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 0
+  MoveSpeed: 1
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
   Keywords: []
-  ReferencedCards: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: bd5ee8f5dc8705f4e96fde2652ed65e3, type: 2}
   Effects:
-  - EffectName: 'Blessing : Fire'
-    Effect: {fileID: 11400000, guid: 1611e4ff52829894d95cdfee7d15a0eb, type: 2}
+  - EffectName: 'Cast : Lightning Strike'
+    Effect: {fileID: 11400000, guid: 130e387318cc70e43b985ee89fe5efd3, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

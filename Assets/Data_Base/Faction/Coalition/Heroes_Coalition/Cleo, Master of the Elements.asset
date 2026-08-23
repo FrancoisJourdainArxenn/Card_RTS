@@ -10,44 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Science Officer
+  m_Name: Cleo, Master of the Elements
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: 
+  Name: Cleo, Master of the Elements
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 0
-  tier: 2
-  Description: When you play a Soldier <i>(in my zone)</i>, it gains +0/+1.
-  CardImage: {fileID: 21300000, guid: dfc32ec2fc02b9b4f9afd188f0bffed8, type: 3}
-  MainCost: 4
-  IsHero: 0
-  UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 3
+  subType: 9
+  tier: 1
+  Description: '<b>Commander.</b>
+
+    <b>On Command:</b> Choose a Blessing.'
+  CardImage: {fileID: 21300000, guid: 14868f6084acbdf409781e29a74e11f7, type: 3}
+  MainCost: 0
+  IsHero: 1
+  UnlockCondition: {fileID: 11400000, guid: 1649ea0a02c521b47a10601931e1599c, type: 2}
+  Attack: 3
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 0
+  Commandement: 1
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 12
-    Condition: {fileID: 11400000, guid: 63e6a46340b1418b8551b242627e69c0, type: 2}
+  - EffectName: Blessed by the Elements
+    Effect: {fileID: 11400000, guid: bd09845a4a8461042aeba1d4a9a1a898, type: 2}
+    Trigger: 3
+    Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 1
-        queries: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

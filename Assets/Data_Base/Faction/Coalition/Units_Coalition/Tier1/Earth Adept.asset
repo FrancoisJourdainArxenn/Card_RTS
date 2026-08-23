@@ -33,8 +33,9 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: c280c7b8a8da1384a80bc6b75b7ac476, type: 2}
   Effects:
   - EffectName: Earth Aid Me !
     Effect: {fileID: 11400000, guid: e8c3074c801b11646bd69c3a8909a520, type: 2}
@@ -43,7 +44,7 @@ MonoBehaviour:
     Effectinfo:
       effectTargets: []
       affectedElements: []
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

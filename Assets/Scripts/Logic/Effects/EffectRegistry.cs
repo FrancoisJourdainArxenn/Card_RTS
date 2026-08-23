@@ -76,6 +76,9 @@ public static class EffectRegistry
 
     public static void ETB(CardAsset ca, EffectContext context, List<PendingEffectSelection> preResolvedSelections = null)
     {
+        if (ca.Type == CardType.Action)
+            NotifyActionPlayed(context.Caster, ca);
+
         if (ca.Effects == null)
             return;
 
@@ -319,6 +322,19 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster == spendingPlayer);
     }
 
+    // Déclenché depuis ETB pour toute carte CardType.Action (sort ou order), que ce soit joué depuis
+    // la main (Player.PlayASpellFromHand / NetworkPendingPlaySpell) ou lancé par un effet (CastSpellSO)
+    // — les deux passent par ETB, donc un seul point de déclenchement suffit pour couvrir les deux.
+    public static void NotifyActionPlayed(Player playingPlayer, CardAsset actionCard)
+    {
+        playingPlayer?.matchStats.AddSubType(actionCard.subType);
+
+        EffectContext eventCtx = new EffectContext { PlayedCard = actionCard };
+
+        FireListeners(TriggerType.OnActionPlayed, eventCtx,
+            re => re.ContextFactory().Caster == playingPlayer);
+    }
+
 
     // ── Collecte différée (→ PhaseEffectPipeline) ─────────────────────────────
 
@@ -448,6 +464,19 @@ public static class EffectRegistry
         return null;
     }
 
+    public static GenerateCardsFromPoolSO GetGenerateCardsFromPoolSO(int sourceEntityID, int effectIndex)
+    {
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceEntityID, out CreatureLogic creature))
+            if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
+                return creature.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
+
+        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
+            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
+                return building.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
+
+        return null;
+    }
+
     // ── Privé ─────────────────────────────────────────────────────────────────
 
     /// <summary>Exécute tous les listeners enregistrés pour ce trigger qui passent le filtre.</summary>
@@ -465,6 +494,7 @@ public static class EffectRegistry
             EffectContext ctx = re.ContextFactory();
             ctx.EventSubjectCreature = baseCtx.EventSubjectCreature ?? ctx.EventSubjectCreature;
             ctx.EventSubjectBuilding = baseCtx.EventSubjectBuilding ?? ctx.EventSubjectBuilding;
+            ctx.PlayedCard           = baseCtx.PlayedCard           ?? ctx.PlayedCard;
 
             Execute(re.Data, ctx);
         }

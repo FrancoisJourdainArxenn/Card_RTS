@@ -32,4 +32,6 @@ public enum TriggerType
     //Reactions
     OnCardPlayed = 12,
     OnRessourceSpent = 13,
+    OnActionPlayed = 17, // déclenché quand une carte Action (sort/order) est jouée/lancée, via ETB
+                         // (main du joueur ou CastSpellSO) — voir EffectRegistry.NotifyActionPlayed
 }

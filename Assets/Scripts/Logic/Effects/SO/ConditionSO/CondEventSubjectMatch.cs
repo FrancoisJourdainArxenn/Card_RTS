@@ -14,6 +14,15 @@ using UnityEngine.Serialization;
 [CreateAssetMenu(menuName = "Effects/Conditions/Condition:Event Subject Match")]
 public class CondEventSubjectMatch : ConditionSO
 {
+    public enum SubjectSource
+    {
+        Entity,     // EventSubjectCreature / EventSubjectBuilding — une entité du plateau
+        PlayedCard, // context.PlayedCard — un sort/action joué (OnActionPlayed), sans entité de plateau
+    }
+
+    [Header("Subject")]
+    public SubjectSource subjectSource = SubjectSource.Entity;
+
     [Header("Team")]
     public bool filterByTeam;
     public TargetTeam requiredTeam = TargetTeam.Friendly;
@@ -32,6 +41,11 @@ public class CondEventSubjectMatch : ConditionSO
 
     public override bool Evaluate(EffectContext context)
     {
+        // Sort/action joué : ni Team, ni Melee/Ranged, ni Zone n'ont de sens pour une carte sans
+        // entité de plateau — seul le filtre de carte s'applique.
+        if (subjectSource == SubjectSource.PlayedCard)
+            return context.PlayedCard != null && (cardFilter == null || cardFilter.Matches(context.PlayedCard));
+
         CreatureLogic creature = context.EventSubjectCreature;
         BuildingLogic building = context.EventSubjectBuilding;
         ILivable subject = (ILivable)creature ?? (ILivable)building;

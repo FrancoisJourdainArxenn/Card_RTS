@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 0
+  subType: 9
   tier: 3
   Description: '<b>Piercing Attacks
 
@@ -36,9 +36,9 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 6f51df10716ed0c449646e87a6f233fc, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Cautious
     Effect: {fileID: 11400000, guid: a93337e4c29244f4f974367445642936, type: 2}

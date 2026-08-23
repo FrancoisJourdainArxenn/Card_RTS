@@ -1602,6 +1602,23 @@ public class GameNetworkManager : NetworkBehaviour
         Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID, visualData);
     }
 
+    public void BroadCastPoolCardToHand(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        if (!IsServer) return;
+        int cardID = IDFactory.GetUniqueID();
+        PoolCardToHandClientRpc(playerIndex, sourceEntityID, effectIndex, seed, cardID);
+    }
+
+    [ClientRpc]
+    void PoolCardToHandClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int seed, int cardID)
+    {
+        GenerateCardsFromPoolSO so = EffectRegistry.GetGenerateCardsFromPoolSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || so.CardPool.Count == 0) return;
+
+        CardAsset picked = so.CardPool[new System.Random(seed).Next(0, so.CardPool.Count)];
+        Player.Players[playerIndex].GetACardNotFromDeck(picked, cardID, so.EffectVisual);
+    }
+
     public void BroadCastChooseOneOffer(int playerIndex, int sourceEntityID, int effectIndex, int seed)
     {
         if (!IsServer) return;

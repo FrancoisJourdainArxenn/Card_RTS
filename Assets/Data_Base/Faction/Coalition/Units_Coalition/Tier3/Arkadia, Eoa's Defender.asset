@@ -17,13 +17,14 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 3
-  Description: '<b>On Attack</b>: Create a Marine.'
+  Description: '<b>Battle Start</b>: I gain +0/+1 per ally unit, until the end of
+    turn.'
   CardImage: {fileID: 21300000, guid: f3b858e207f6de642bf29bbc994164a7, type: 3}
-  MainCost: 3
+  MainCost: 4
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 5
+  Attack: 3
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -33,38 +34,34 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 0763789196475974bbfffd53d023248b, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Commander's Call
-    Effect: {fileID: 11400000, guid: b0d77298486287740aebc822775deb14, type: 2}
-    Trigger: 15
+  - EffectName: Stand Tall
+    Effect: {fileID: 11400000, guid: 6a11898b25201584fb5d889c9b005d34, type: 2}
+    Trigger: 14
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+        onlySource: 1
+        queries: []
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0
-        includesSource: 0
+        includesSource: 1
         includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 1
+      scalingQuery:
+        targetType: 0
         queries:
-        - team: 0
+        - team: 1
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
       scalingSource: 0

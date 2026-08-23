@@ -336,6 +336,7 @@ public class CardPreviewUI : MonoBehaviour
         // Remplit le popup avec les infos de la carte + le texte de l'effet spécifique déclenché.
         OneCardManager manager = preview.GetComponent<OneCardManager>();
         manager.cardAsset = cardAsset;
+        manager.owner = GlobalSettings.Instance != null ? GlobalSettings.Instance.localPlayer : null;
         manager.ReadEffectFromAsset(selection.Data.EffectName);
         previewingEffects = true; // bloque temporairement CardPreviewUI.Show() (aperçu de survol de carte)
         preview.SetActive(true);

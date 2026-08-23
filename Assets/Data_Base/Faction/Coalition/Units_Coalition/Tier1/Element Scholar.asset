@@ -22,8 +22,8 @@ MonoBehaviour:
   MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 3
+  Attack: 0
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -33,8 +33,8 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: 'Choose One : Blessing'
     Effect: {fileID: 11400000, guid: bd09845a4a8461042aeba1d4a9a1a898, type: 2}

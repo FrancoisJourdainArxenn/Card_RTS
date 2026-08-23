@@ -33,12 +33,12 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Enhance
-    Effect: {fileID: 11400000, guid: 783f6373691172d4e92ba2817991c6f4, type: 2}
+    Effect: {fileID: 11400000, guid: fe4db0886f56e7943ab2388c85e42a9f, type: 2}
     Trigger: 1
     Condition: {fileID: 0}
     Effectinfo:

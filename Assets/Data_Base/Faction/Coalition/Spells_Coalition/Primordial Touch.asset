@@ -33,8 +33,8 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: Water's Confort
     Effect: {fileID: 11400000, guid: 68d3384ec34240e4f983fa4d27f61aac, type: 2}
@@ -47,7 +47,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 0
+          statusFilter: 4
           zoneFilter: 1
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 0

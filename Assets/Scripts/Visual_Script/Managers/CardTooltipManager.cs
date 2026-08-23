@@ -54,6 +54,7 @@ public class CardTooltipManager : MonoBehaviour
             GameObject panel = Instantiate(prefab, tooltipContainer);
             OneCardManager manager = panel.GetComponent<OneCardManager>();
             manager.cardAsset = card;
+            manager.owner = GlobalSettings.Instance != null ? GlobalSettings.Instance.localPlayer : null;
             manager.ReadCardFromAsset();
 
             // VerticalLayoutGroup calcule l'espace réservé à partir du RectTransform, pas du localScale :

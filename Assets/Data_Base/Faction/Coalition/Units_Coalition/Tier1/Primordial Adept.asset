@@ -33,9 +33,9 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: fb9fd1bf343b23d4caec2f24d1367c44, type: 2}
+  Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: f74acab878122a045b85ae6636174894, type: 2}
   Effects:
   - EffectName: Heal
     Effect: {fileID: 11400000, guid: ffa4b68b135505a48bade8db08ada89b, type: 2}
@@ -44,7 +44,7 @@ MonoBehaviour:
     Effectinfo:
       effectTargets: []
       affectedElements: []
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

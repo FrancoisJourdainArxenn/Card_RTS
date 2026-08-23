@@ -33,8 +33,8 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: 'Blessing : Water'
     Effect: {fileID: 11400000, guid: 24d97073f25ce8c4d942537b45490a3f, type: 2}
