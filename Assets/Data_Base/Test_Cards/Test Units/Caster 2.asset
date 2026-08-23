@@ -34,8 +34,9 @@ MonoBehaviour:
   Celerity: 1
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: bd5ee8f5dc8705f4e96fde2652ed65e3, type: 2}
   Effects:
   - EffectName: 'Cast : Elemental Fury'
     Effect: {fileID: 11400000, guid: 130e387318cc70e43b985ee89fe5efd3, type: 2}

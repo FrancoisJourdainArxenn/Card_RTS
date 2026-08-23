@@ -33,8 +33,9 @@ MonoBehaviour:
   Celerity: 1
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: d1971a60c195d124da34187ae381457f, type: 2}
   Effects:
   - EffectName: 'Cast : Elemental Bolt'
     Effect: {fileID: 11400000, guid: a8cb0e63648967444904879a1af870bf, type: 2}

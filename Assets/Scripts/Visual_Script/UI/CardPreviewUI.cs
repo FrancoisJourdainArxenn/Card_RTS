@@ -406,6 +406,7 @@ public class CardPreviewUI : MonoBehaviour
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset));
+        CardTooltipManager.Instance?.BuildCardTooltips(asset.ReferencedCards);
 
         currentPreview.SetActive(true);
 
@@ -415,7 +416,9 @@ public class CardPreviewUI : MonoBehaviour
 
         // les tooltips sont ancrés au bord droit de la carte une fois sa position finale connue
         ReminderTextManager.Instance?.AnchorToCard(_anchorRect.anchoredPosition);
+        CardTooltipManager.Instance?.AnchorToCard(_anchorRect.anchoredPosition);
         ReminderTextManager.Instance?.FadeIn();
+        CardTooltipManager.Instance?.FadeIn();
 
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
@@ -455,6 +458,18 @@ public class CardPreviewUI : MonoBehaviour
             shift += ComputeScreenShift(tooltipRect, cam);
 
             tooltipRect.anchoredPosition = savedTooltipPos; // AnchorToCard() fixera la position finale après coup
+        }
+
+        CardTooltipManager cardTooltips = CardTooltipManager.Instance;
+        if (cardTooltips != null && cardTooltips.TooltipRect.childCount > 0)
+        {
+            RectTransform cardTooltipRect = cardTooltips.TooltipRect;
+            Vector2 savedPos = cardTooltipRect.anchoredPosition;
+
+            cardTooltips.AnchorToCard(_anchorRect.anchoredPosition + shift);
+            shift += ComputeScreenShift(cardTooltipRect, cam);
+
+            cardTooltipRect.anchoredPosition = savedPos; // AnchorToCard() final refixera la position après coup
         }
 
         if (shift != Vector2.zero)
@@ -589,8 +604,10 @@ public class CardPreviewUI : MonoBehaviour
     public void Hide()
     {
         ReminderTextManager.Instance?.HideTooltips();
+        CardTooltipManager.Instance?.HideTooltips();
         if (currentPreview != null)
             currentPreview.SetActive(false);
     }
+
 
 }
