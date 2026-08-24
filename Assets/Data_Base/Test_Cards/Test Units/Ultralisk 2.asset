@@ -34,12 +34,12 @@ MonoBehaviour:
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
+  Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Empower me !
     Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}

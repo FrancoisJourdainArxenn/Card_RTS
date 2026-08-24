@@ -43,20 +43,37 @@ public class HeroCountUnlock
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} reset to 0");
     }
 
-    private readonly Dictionary<SubType, int> _subTypeValues = new();
+    private readonly Dictionary<SubType, int> _subTypePlayedValues = new();
 
-    public int GetSubType(SubType subType) => _subTypeValues.GetValueOrDefault(subType, 0);
+    public int GetSubTypePlayed(SubType subType) => _subTypePlayedValues.GetValueOrDefault(subType, 0);
 
-    public void AddSubType(SubType subType, int amount = 1)
+    public void AddSubTypePlayed(SubType subType, int amount = 1)
     {
         if (amount == 0) return;
-        _subTypeValues[subType] = GetSubType(subType) + amount;
-        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType {subType} +{amount} => {_subTypeValues[subType]}");
+        _subTypePlayedValues[subType] = GetSubTypePlayed(subType) + amount;
+        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Played {subType} +{amount} => {_subTypePlayedValues[subType]}");
     }
 
-    public void ResetSubType(SubType subType)
+    public void ResetSubTypePlayed(SubType subType)
     {
-        _subTypeValues[subType] = 0;
-        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType {subType} reset to 0");
+        _subTypePlayedValues[subType] = 0;
+        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Played {subType} reset to 0");
+    }
+
+    private readonly Dictionary<SubType, int> _subTypeCreatedValues = new();
+
+    public int GetSubTypeCreated(SubType subType) => _subTypeCreatedValues.GetValueOrDefault(subType, 0);
+
+    public void AddSubTypeCreated(SubType subType, int amount = 1)
+    {
+        if (amount == 0) return;
+        _subTypeCreatedValues[subType] = GetSubTypeCreated(subType) + amount;
+        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Created {subType} +{amount} => {_subTypeCreatedValues[subType]}");
+    }
+
+    public void ResetSubTypeCreated(SubType subType)
+    {
+        _subTypeCreatedValues[subType] = 0;
+        // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Created {subType} reset to 0");
     }
 }

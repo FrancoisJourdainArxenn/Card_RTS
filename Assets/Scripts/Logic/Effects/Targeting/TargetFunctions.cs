@@ -23,20 +23,10 @@ public partial class EffectContext
 
             candidates = candidates.Where(t => !(t is ILivable l && (l.IsPendingDeath || l.OnDeathResolvedInBattle)));
 
-            candidates = query.statusFilter switch
-            {
-                TargetStatusFilter.Melee       => candidates.Where(t => t is ILivable c && c.IsMelee),
-                TargetStatusFilter.Ranged      => candidates.Where(t => t is ILivable c && c.IsRanged),
-                TargetStatusFilter.MeleeFirst  => candidates.Any(t => t is ILivable c && c.IsMelee)
-                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
-                    : candidates,
-                TargetStatusFilter.Damaged        => candidates.Where(t => t is ILivable l && l.IsDamaged),
-                TargetStatusFilter.NonShielded    => candidates.Where(t => t is ILivable l && !l.IsShielded),
-                TargetStatusFilter.HighestHealth  => FilterToExtremeHealth(candidates, descending: true),
-                TargetStatusFilter.LowestHealth   => FilterToExtremeHealth(candidates, descending: false),
-                _                                 => candidates
-            };
-
+            // zoneFilter avant statusFilter : HighestHealth/LowestHealth doivent calculer l'extrême
+            // sur le pool déjà restreint à la zone (sinon un extrême situé dans une autre zone
+            // "gagne" le statusFilter puis se fait éliminer par le zoneFilter, et le candidat
+            // réellement dans la bonne zone a déjà été écarté à l'étape statusFilter — pool vide).
             if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource)
             {
                 // Source est encore null quand on calcule les cibles éligibles AVANT que la carte
@@ -58,6 +48,21 @@ public partial class EffectContext
             {
                 candidates = candidates.Where(t => t is CreatureLogic c && IsAdjacentTo(Target, c));
             }
+
+            candidates = query.statusFilter switch
+            {
+                TargetStatusFilter.Melee       => candidates.Where(t => t is ILivable c && c.IsMelee),
+                TargetStatusFilter.Ranged      => candidates.Where(t => t is ILivable c && c.IsRanged),
+                TargetStatusFilter.MeleeFirst  => candidates.Any(t => t is ILivable c && c.IsMelee)
+                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
+                    : candidates,
+                TargetStatusFilter.Damaged        => candidates.Where(t => t is ILivable l && l.IsDamaged),
+                TargetStatusFilter.NonShielded    => candidates.Where(t => t is ILivable l && !l.IsShielded),
+                TargetStatusFilter.HighestHealth  => FilterToExtremeHealth(candidates, descending: true),
+                TargetStatusFilter.LowestHealth   => FilterToExtremeHealth(candidates, descending: false),
+                _                                 => candidates
+            };
+
             if (query.cardFilter != null)
                 candidates = candidates.Where(t => query.cardFilter.Matches(GetCardAsset(t)));
 

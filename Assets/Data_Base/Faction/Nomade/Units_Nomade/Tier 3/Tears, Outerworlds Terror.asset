@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Tears, Outerworlds Terror
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
+  Type: 0
+  subType: 7
+  tier: 3
+  Description: "<b>Arcing & Piercing Attacks.</b> \nWhen an ally dies, I gain +1/+1."
+  CardImage: {fileID: 21300000, guid: c815b92e7e833e8489a75e2b70a18bd7, type: 3}
+  MainCost: 5
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 3
+  MaxHealth: 5
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 1
+  IsStructureUnit: 0
+  Keywords: []
+  ReferencedCards: []
+  Effects:
+  - EffectName: Now you die.
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 7
+    Condition: {fileID: 11400000, guid: d0d5ea2d817e404095ae0cd5aeb2562d, type: 2}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

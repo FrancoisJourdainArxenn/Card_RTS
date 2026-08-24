@@ -25,6 +25,7 @@ public enum SubType
     //Action
     Spell = 4,
     Order = 8,
+    Invention = 10,
 }
 
 public enum TargetingOptions

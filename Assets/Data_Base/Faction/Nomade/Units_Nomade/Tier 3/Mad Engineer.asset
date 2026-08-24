@@ -17,12 +17,12 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 3
-  Description: <b>On Death :</b> Create a Bully.
+  Description: <b>On Death :</b> Create a Bully and gain a Great Invention !
   CardImage: {fileID: 21300000, guid: ec9706a28d59ec04ab1de74a3baec7d9, type: 3}
   MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 2
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -33,9 +33,9 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 47ed8cddde8e63444bd8b3ccef141136, type: 2}
+  Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: 76a7e553ecf3ca745952cf8b12fd476b, type: 2}
   Effects:
   - EffectName: Frankenstein Creature
     Effect: {fileID: 11400000, guid: eed6c4a6d1813324c86b4cc5e45fd6b7, type: 2}
@@ -62,6 +62,19 @@ MonoBehaviour:
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Frankenstein Invetions
+    Effect: {fileID: 11400000, guid: acd3eee4b86637849bc23d7e03cf5e2d, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

@@ -22,8 +22,8 @@ MonoBehaviour:
   MainCost: 6
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 4
+  Attack: 1
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -31,7 +31,7 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   IsStructureUnit: 0
   Keywords: []
   ReferencedCards:
@@ -39,7 +39,7 @@ MonoBehaviour:
   Effects:
   - EffectName: 'Cast : Lightning Strike'
     Effect: {fileID: 11400000, guid: 130e387318cc70e43b985ee89fe5efd3, type: 2}
-    Trigger: 0
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []

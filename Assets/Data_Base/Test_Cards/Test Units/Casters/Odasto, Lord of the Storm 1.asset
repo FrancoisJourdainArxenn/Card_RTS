@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Odasto, Lord of the Storm 1
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
+  subType: 0
+  tier: 1
+  Description: <b>On Attack:</b> Cast Lightning Strike.
+  CardImage: {fileID: 21300000, guid: efda3f768fe2f2d4092d6f06ffc639b5, type: 3}
+  MainCost: 0
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 2
+  MaxHealth: 4
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 1
+  IsStructureUnit: 0
+  Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: bd5ee8f5dc8705f4e96fde2652ed65e3, type: 2}
+  Effects:
+  - EffectName: 'Cast : Lightning Strike'
+    Effect: {fileID: 11400000, guid: 130e387318cc70e43b985ee89fe5efd3, type: 2}
+    Trigger: 15
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

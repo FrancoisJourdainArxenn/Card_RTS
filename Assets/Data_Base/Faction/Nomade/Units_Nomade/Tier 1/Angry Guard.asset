@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Angry Guard
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
+  Type: 0
+  subType: 7
+  tier: 1
+  Description: When I take Damage, I gain +1/+0.
+  CardImage: {fileID: 21300000, guid: 49eae830c21e39343b101e88bb155ee7, type: 3}
+  MainCost: 3
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 1
+  MaxHealth: 5
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 1
+  IsStructureUnit: 0
+  Keywords: []
+  ReferencedCards: []
+  Effects:
+  - EffectName: Rage
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 16
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

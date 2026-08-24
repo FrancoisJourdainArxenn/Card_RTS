@@ -22,8 +22,8 @@ MonoBehaviour:
   MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 4
+  Attack: 2
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -33,9 +33,9 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Inspire
     Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}

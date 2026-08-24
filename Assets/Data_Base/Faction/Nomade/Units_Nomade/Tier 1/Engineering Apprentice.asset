@@ -17,9 +17,9 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 1
-  Description: <b>Start of turn:</b> A unit gains <b>Shield 1</b>.
+  Description: <b>On Play:</b> Gain an Invention.
   CardImage: {fileID: 21300000, guid: ba76d49effbfb164bad15bada60404e3, type: 3}
-  MainCost: 1
+  MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
@@ -33,13 +33,13 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Shield'up
-    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
-    Trigger: 2
+  - EffectName: Eureka !
+    Effect: {fileID: 11400000, guid: 963e046538874a745bc026d13154a62d, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:

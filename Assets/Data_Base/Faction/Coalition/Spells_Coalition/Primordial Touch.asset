@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 4
   tier: 1
-  Description: Randomly distributes {0} heal among your units.
+  Description: Heals your units for {0}.
   CardImage: {fileID: 21300000, guid: ba6a305f8a8161f4ca3f074a2e3ac051, type: 3}
   MainCost: 0
   IsHero: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Water's Confort
-    Effect: {fileID: 11400000, guid: 68d3384ec34240e4f983fa4d27f61aac, type: 2}
+    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
@@ -57,7 +57,7 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 1
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

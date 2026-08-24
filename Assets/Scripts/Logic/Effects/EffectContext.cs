@@ -8,6 +8,11 @@ public partial class EffectContext
     public ZoneLogic TargetedZone;
     public ILivable Source;
     public CardAsset PlayedCard; // la carte jouée/lancée à l'origine de cette résolution — renseigné par EffectRegistry.ETB
+    // Sous-ensemble de PlayedCard : uniquement quand l'effet qui s'exécute EST l'effet propre de cette
+    // carte (résolution ETB directe). Sert de source pour les bonus d'amplificateur (Blessings) — ne doit
+    // PAS être propagé aux triggers réactifs d'autres créatures, sinon leurs effets non liés au sort
+    // (ex: Orteg "Empowered") héritent à tort du bonus destiné au sort lui-même.
+    public CardAsset AmplifierCard;
     public CreatureLogic EventSubjectCreature; // la creature qui vient de mourrir ou d'être jouée
     public BuildingLogic EventSubjectBuilding; // le bâtiment qui vient de mourrir ou d'être jouée
     public TurnManager.TurnPhases CurrentPhase; // la phase actuelle du tour

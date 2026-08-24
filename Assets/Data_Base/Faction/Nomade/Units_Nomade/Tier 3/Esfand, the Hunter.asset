@@ -25,7 +25,7 @@ MonoBehaviour:
   MainCost: 5
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 4
   MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -37,10 +37,10 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
-  - {fileID: 11400000, guid: 4695662f7e25bac44b26160b019b349c, type: 2}
+  ReferencedCards:
+  - {fileID: 11400000, guid: 2d2919a17637bd74caa378005f62303d, type: 2}
   Effects:
   - EffectName: Rex ! Attack !
     Effect: {fileID: 11400000, guid: 2d008aec8795b594fadf20e878f11966, type: 2}

@@ -39,7 +39,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
     {
         Log($"{EffectName}: Execution");
         _caster = context.Caster;
-        _playedCard = context.PlayedCard;
+        _playedCard = context.AmplifierCard;
         (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
         _amplifiedAttackBonus = AttackBonus + bonusAttack;
         _amplifiedHealthBonus = HealthBonus + bonusHealth;

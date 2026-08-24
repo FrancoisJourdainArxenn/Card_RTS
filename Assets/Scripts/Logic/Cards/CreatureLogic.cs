@@ -107,7 +107,7 @@ public class CreatureLogic: ILivable
 
     public void ApplyShield(int value, GameObject vfxPrefab = null)
     {
-        ShieldValue = Mathf.Max(ShieldValue, value);
+        ShieldValue += value;
         if (vfxPrefab != null)
             ShieldVfxPrefab = vfxPrefab;
     }
@@ -321,7 +321,35 @@ public class CreatureLogic: ILivable
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
     public bool IsShielded => ShieldValue > 0;
-    public List<AttackModifierSO> AttackModifiers => ca.AttackModifiers;
+
+    // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :
+    // ca est un ScriptableObject PARTAGÉ par toutes les instances de cette carte dans la partie, donc y
+    // ajouter directement contaminerait toutes les autres copies de la carte, pas seulement cette créature.
+    private List<AttackModifierSO> _grantedAttackModifiers;
+    public List<AttackModifierSO> AttackModifiers
+    {
+        get
+        {
+            if (_grantedAttackModifiers == null || _grantedAttackModifiers.Count == 0)
+                return ca.AttackModifiers;
+            List<AttackModifierSO> combined = new List<AttackModifierSO>(ca.AttackModifiers ?? new List<AttackModifierSO>());
+            combined.AddRange(_grantedAttackModifiers);
+            return combined;
+        }
+    }
+
+    public void GrantAttackModifier(AttackModifierSO modifier)
+    {
+        if (modifier == null) return;
+        _grantedAttackModifiers ??= new List<AttackModifierSO>();
+        _grantedAttackModifiers.Add(modifier);
+    }
+
+    public void RemoveAttackModifier(AttackModifierSO modifier)
+    {
+        _grantedAttackModifiers?.Remove(modifier);
+    }
+
     public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
 
 

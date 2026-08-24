@@ -83,6 +83,7 @@ public static class EffectRegistry
             return;
 
         context.PlayedCard = ca;
+        context.AmplifierCard = ca;
         foreach (CardEffectData data in ca.Effects)
         {
             if (data.Trigger != TriggerType.OnPlay)
@@ -293,6 +294,7 @@ public static class EffectRegistry
     public static void NotifyTokenCreated(Player creatingPlayer, CreatureLogic tokenOnBoard)
     {
         creatingPlayer.matchStats.Add(MatchStatType.TokensCreated);
+        creatingPlayer.matchStats.AddSubTypeCreated(tokenOnBoard.ca.subType);
 
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = tokenOnBoard };
 
@@ -327,7 +329,7 @@ public static class EffectRegistry
     // — les deux passent par ETB, donc un seul point de déclenchement suffit pour couvrir les deux.
     public static void NotifyActionPlayed(Player playingPlayer, CardAsset actionCard)
     {
-        playingPlayer?.matchStats.AddSubType(actionCard.subType);
+        playingPlayer?.matchStats.AddSubTypePlayed(actionCard.subType);
 
         EffectContext eventCtx = new EffectContext { PlayedCard = actionCard };
 
@@ -495,6 +497,7 @@ public static class EffectRegistry
             ctx.EventSubjectCreature = baseCtx.EventSubjectCreature ?? ctx.EventSubjectCreature;
             ctx.EventSubjectBuilding = baseCtx.EventSubjectBuilding ?? ctx.EventSubjectBuilding;
             ctx.PlayedCard           = baseCtx.PlayedCard           ?? ctx.PlayedCard;
+            // AmplifierCard volontairement pas propagé : un trigger réactif n'est pas l'effet du sort joué.
 
             Execute(re.Data, ctx);
         }

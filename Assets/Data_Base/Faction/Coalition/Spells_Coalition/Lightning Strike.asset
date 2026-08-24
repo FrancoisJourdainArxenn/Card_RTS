@@ -36,8 +36,8 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Elemental Bolt
-    Effect: {fileID: 11400000, guid: a1f304f8cd781e74f9da99faba1c1ef6, type: 2}
+  - EffectName: Lightning Strike
+    Effect: {fileID: 11400000, guid: 6aed4dda8b431e64c88d86164243012c, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

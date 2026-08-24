@@ -18,5 +18,5 @@ MonoBehaviour:
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
-    suppressAttackFallback: 1
+    suppressAttackFallback: 0
   Damage: 1

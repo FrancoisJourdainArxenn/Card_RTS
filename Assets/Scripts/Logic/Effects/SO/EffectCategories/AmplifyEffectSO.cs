@@ -10,7 +10,7 @@ public class AmplifyEffectSO : EffectSO
     public int HealBonus;
     public int AttackBonus;
     public int HealthBonus;
-    public bool SpellsOnly = true;
+    public bool ActionOnly = true;
 
     public override void Execute(
         string EffectName,
@@ -40,7 +40,7 @@ public class AmplifyEffectSO : EffectSO
             HealBonus = HealBonus,
             AttackBonus = AttackBonus,
             HealthBonus = HealthBonus,
-            SpellsOnly = SpellsOnly,
+            SpellsOnly = ActionOnly,
         };
 
         if (NetworkSessionData.IsNetworkSession)
@@ -63,7 +63,7 @@ public class AmplifyEffectSO : EffectSO
         if ((AppliesTo & EffectCategory.Damage) != 0) parts.Add($"+{DamageBonus} Dégâts");
         if ((AppliesTo & EffectCategory.Heal) != 0) parts.Add($"+{HealBonus} Soin");
         if ((AppliesTo & EffectCategory.StatBonus) != 0) parts.Add($"+{AttackBonus}/+{HealthBonus} sur les bonus de stats");
-        string scope = SpellsOnly ? "de vos Sorts" : "de vos effets";
+        string scope = ActionOnly ? "de vos Sorts" : "de vos effets";
         return $"{string.Join(" / ", parts)} {scope}";
     }
 }

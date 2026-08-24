@@ -395,7 +395,7 @@ public class TableVisual : MonoBehaviour
 
     private void FlushPendingRelayout()
     {
-        Debug.Log($"[DBG][Timing] FlushPendingRelayout appelé — _relayoutPending={_relayoutPending} callbacks={_pendingRelayoutCallbacks.Count} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] FlushPendingRelayout appelé — _relayoutPending={_relayoutPending} callbacks={_pendingRelayoutCallbacks.Count} @ {Time.realtimeSinceStartup:F3}");
         if (!_relayoutPending) return;
         _relayoutPending = false;
 

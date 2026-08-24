@@ -32,7 +32,7 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
         Log($"[DamageThenBuffAttack] TRIGGERED — {EffectName} | source: {context.Source?.DisplayName ?? "none"} | damage: {Damage} | atk bonus: {AttackBonus}");
         _sourceID = context.Source?.ID ?? -1;
         _caster = context.Caster;
-        _playedCard = context.PlayedCard;
+        _playedCard = context.AmplifierCard;
         (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
         _amplifiedDamage = Damage + (_caster != null ? _caster.GetDamageBonus(_playedCard) : 0);
         _amplifiedAttackBonus = AttackBonus + bonusAttack;

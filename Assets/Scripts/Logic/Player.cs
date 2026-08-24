@@ -540,7 +540,7 @@ public class Player : MonoBehaviour, ILivable
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
         int baseID       = selectedPArea.baseID;
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
 
@@ -617,7 +617,7 @@ public class Player : MonoBehaviour, ILivable
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -720,7 +720,7 @@ public class Player : MonoBehaviour, ILivable
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);

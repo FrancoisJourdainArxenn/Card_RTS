@@ -15,7 +15,7 @@ public abstract class HealthEffectSO : EffectSO
     )
     {
         _caster = context.Caster;
-        _playedCard = context.PlayedCard;
+        _playedCard = context.AmplifierCard;
         Log($"[HealthEffect] RESOLVING — {EffectName}");
         List<IIdentifiable> eligibleTargets = GetAffectedElements(context, effectInfo);
         if (eligibleTargets.Count == 0)
@@ -24,7 +24,7 @@ public abstract class HealthEffectSO : EffectSO
             return;
         }
 
-        Log($"[HealthEffect] RESOLVED — {EffectName}: {eligibleTargets.Count} cible(s) éligible(s) et affectée(s) — [{string.Join(", ", eligibleTargets.Select(t => $"{t.DisplayName}(ID:{t.ID})"))}]");
+        // Log($"[HealthEffect] RESOLVED — {EffectName}: {eligibleTargets.Count} cible(s) éligible(s) et affectée(s) — [{string.Join(", ", eligibleTargets.Select(t => $"{t.DisplayName}(ID:{t.ID})"))}]");
         ApplyEffect(effectInfo, eligibleTargets, visualData);
     }
 }
