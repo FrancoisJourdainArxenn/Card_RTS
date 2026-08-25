@@ -31,6 +31,39 @@ public class Draggable : MonoBehaviour {
         get{ return _draggingThis;}
     }
 
+    // Nettoyage d'état partagé entre un relâchement normal (OnMouseUp) et une fin de drag
+    // déclenchée par du code (Echap, hand-off vers une session de ciblage) : previews réactivés,
+    // référence statique libérée. Retourne l'instance concernée (ou null si rien n'était en cours).
+    private static Draggable ResetDragState()
+    {
+        if (_draggingThis == null)
+            return null;
+
+        Draggable current = _draggingThis;
+        current.dragging = false;
+        HoverPreview.PreviewsAllowed = true;
+        _draggingThis = null;
+        return current;
+    }
+
+    // Annule programmatiquement le drag en cours (ex: touche Echap) sans attendre un OnMouseUp —
+    // le bouton de la souris peut rester physiquement enfoncé. Délègue à OnDragCancelled() plutôt
+    // qu'à OnEndDrag(), pour laisser chaque DraggingActions distinguer "annulé" de "relâché
+    // normalement". No-op si rien n'est en cours de drag.
+    public static void CancelCurrentDrag()
+    {
+        ResetDragState()?.da.OnDragCancelled();
+    }
+
+    // Termine le drag en cours sans appeler OnEndDrag() ni OnDragCancelled() — utilisé quand un
+    // DraggingActions prend lui-même le relais en plein OnStartDrag() (ex: DragSpellOnTarget qui
+    // bascule immédiatement sur OnPlayTargetingSession) : le drag "souris" doit s'arrêter net,
+    // sans qu'aucun des deux callbacks de fin ne s'exécute. No-op si rien n'est en cours de drag.
+    public static void EndDragSilently()
+    {
+        ResetDragState();
+    }
+
     // MONOBEHAVIOUR METHODS
     void Awake()
     {
@@ -69,13 +102,10 @@ public class Draggable : MonoBehaviour {
     {
         if (dragging)
         {
-            dragging = false;
-            // turn all previews back on
-            HoverPreview.PreviewsAllowed = true;
-            _draggingThis = null;
+            ResetDragState();
             da.OnEndDrag();
         }
-    }   
+    }
 
     // returns mouse position in World coordinates for our GameObject to follow. 
     private Vector3 MouseInWorldCoords()

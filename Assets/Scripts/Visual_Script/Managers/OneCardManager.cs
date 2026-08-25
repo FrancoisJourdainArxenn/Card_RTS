@@ -11,6 +11,11 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public CardAsset cardAsset;
     public Player owner;
+    // Instance vivante correspondant à cardAsset, quand ce OneCardManager représente une créature/
+    // bâtiment déjà sur le plateau (pas rempli pour une carte en main) — permet d'afficher la
+    // progression d'un CondCounter (source = WrappedCondition), dont le compteur vit sur l'instance.
+    public CreatureLogic sourceCreature;
+    public BuildingLogic sourceBuilding;
     // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
@@ -67,7 +72,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         MainCostText.text = cardAsset.MainCost.ToString();
         subType.text = cardAsset.subType.ToString();
         // 4) add description
-        DescriptionText.text = cardAsset.Description.ToString();
+        DescriptionText.text = cardAsset.GetResolvedDescription(owner);
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
         if (TierImage != null && VisualManager.Instance != null)
@@ -79,6 +84,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
         ApplyUnlockDescriptionIfLocked();
+        AppendCounterProgressText();
 
         if (cardAsset.MaxHealth != 0)
         {
@@ -134,7 +140,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void ReadEffectFromAsset(string effectName)
     {
         if (NameText != null)        NameText.text = effectName;
-        if (DescriptionText != null) DescriptionText.text = cardAsset.Description.ToString();
+        if (DescriptionText != null) DescriptionText.text = cardAsset.GetResolvedDescription(owner);
         if (ArtImage != null)        ArtImage.sprite = cardAsset.CardImage;
     }
 
@@ -143,6 +149,20 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         if (_unlockCondition != null && owner != null && !_unlockCondition.IsUnlocked(owner))
             DescriptionText.text = _unlockCondition.GetDescription(owner);
+    }
+
+    // Ajoute (jamais ne remplace) la progression de tout CondCounter présent sur la carte, à la
+    // suite du texte déjà en place (description de base, ou texte de déblocage héros ci-dessus).
+    private void AppendCounterProgressText()
+    {
+        if (cardAsset.Effects == null) return;
+        foreach (CardEffectData data in cardAsset.Effects)
+        {
+            if (data.Condition is not CondCounter counter) continue;
+            string progress = counter.GetProgressText(sourceCreature, sourceBuilding, owner);
+            if (!string.IsNullOrEmpty(progress))
+                DescriptionText.text += $" {progress}";
+        }
     }
 
     public void NotifyLockState(bool isLocked)

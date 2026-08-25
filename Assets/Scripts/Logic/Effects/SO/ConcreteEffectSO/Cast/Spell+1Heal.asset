@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0bb131d6f971964a96828fd76ec35b3, type: 3}
+  m_Name: Spell+1Heal
+  m_EditorClassIdentifier: Assembly-CSharp::AmplifyEffectSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 0}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+  AppliesTo: 2
+  DamageBonus: 0
+  HealBonus: 1
+  AttackBonus: 0
+  HealthBonus: 0
+  SpellsOnly: 1

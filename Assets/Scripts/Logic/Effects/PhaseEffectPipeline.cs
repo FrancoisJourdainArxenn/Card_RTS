@@ -130,10 +130,29 @@ public static class PhaseEffectPipeline
 
     public static bool OnEntityClicked(IIdentifiable entity)
     {
+        if (OnPlayTargetingSession.IsActive)
+            return OnPlayTargetingSession.OnEntityClicked(entity);
+
         if (_isComplete)
             return false;
 
-        return EffectSelectionController.OnEntityClicked(entity);
+        bool accepted = EffectSelectionController.OnEntityClicked(entity);
+
+        // La sélection manuelle de la dernière cible requise vaut validation : plus besoin
+        // d'un clic supplémentaire sur un bouton de confirmation séparé pour ce joueur.
+        if (accepted && !EffectSelectionController.HasPendingSelection)
+        {
+            Player confirmingPlayer = NetworkSessionData.IsNetworkSession
+                ? GlobalSettings.Instance?.localPlayer
+                : (_currentLocalPlayerIndex >= 0 && _currentLocalPlayerIndex < Player.Players.Length
+                    ? Player.Players[_currentLocalPlayerIndex]
+                    : null);
+
+            if (confirmingPlayer != null)
+                ConfirmAndSubmit(confirmingPlayer);
+        }
+
+        return accepted;
     }
 
     /// <summary>
@@ -230,6 +249,9 @@ public static class PhaseEffectPipeline
 
     public static bool IsPlayerTargetingComplete(Player player)
     {
+        if (OnPlayTargetingSession.IsActive)
+            return false;
+
         if (_isComplete)
             return true;
 
@@ -325,7 +347,8 @@ public static class PhaseEffectPipeline
             hasVisuals.Add(!e.Data.RequiresPlayerInput || e.EligibleTargets.Count > 0);
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchPending(effects, hasVisuals);
+        // Partie 3 (popup de batch de phase) désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchPending(effects, hasVisuals);
         RunEffectsSequentially(callbacks, hasVisuals, OnAllEffectsComplete);
     }
 
@@ -436,7 +459,8 @@ public static class PhaseEffectPipeline
             });
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchPending(visualEffects, hasVisuals);
+        // Partie 3 (popup de batch de phase) désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchPending(visualEffects, hasVisuals);
         RunEffectsSequentially(callbacks, hasVisuals, OnAllEffectsComplete);
     }
 
@@ -457,8 +481,10 @@ public static class PhaseEffectPipeline
 
     private static IEnumerator EffectSequenceCoroutine(List<Action> callbacks, List<bool> hasVisuals, Action onComplete, int generation)
     {
-        float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
-        yield return new UnityEngine.WaitForSeconds(stackDelay);
+        // Partie 3 désactivée : cette attente ne servait qu'à laisser le temps aux popups du
+        // batch de finir leur animation d'apparition avant que la résolution ne commence.
+        // float stackDelay = CardPreviewUI.Instance != null ? CardPreviewUI.Instance.StackAppearDelay : 0.5f;
+        // yield return new UnityEngine.WaitForSeconds(stackDelay);
 
         for (int i = 0; i < callbacks.Count; i++)
         {
@@ -469,11 +495,13 @@ public static class PhaseEffectPipeline
                 yield return new UnityEngine.WaitForSeconds(delay);
             }
             callbacks[i]?.Invoke();
-            if (showVisual)
-                TargetingVisualEvents.RaiseEffectResolved();
+            // Partie 3 désactivée :
+            // if (showVisual)
+            //     TargetingVisualEvents.RaiseEffectResolved();
         }
 
-        TargetingVisualEvents.RaiseEffectsBatchComplete();
+        // Partie 3 désactivée :
+        // TargetingVisualEvents.RaiseEffectsBatchComplete();
 
         // N'appelle onComplete que si cette coroutine appartient encore à la phase courante.
         // ResetForNewPhase incrémente _generation, ce qui invalide les coroutines périmées.
@@ -522,9 +550,14 @@ public static class PhaseEffectPipeline
         return null;
     }
 
-    private static IIdentifiable ResolveEntityByID(int id)
+    public static IIdentifiable ResolveEntityByID(int id)
     {
-        if (id < 0)
+        // -1 est le seul sentinel "pas de cible" (voir SelectedTarget?.ID ?? -1 un peu partout) —
+        // id < 0 rejetait à tort toute cible dont l'ID est un hash pouvant tomber négatif (zones :
+        // ZoneManager.Awake utilise Animator.StringToHash, un CRC32 signé), alors que
+        // Creature/Building/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
+        // caché ce bug jusqu'à ce qu'un effet de carte cible une Zone par ID à travers le réseau.
+        if (id == -1)
             return null;
 
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c))

@@ -51,6 +51,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapManager
   cameraHeight: 60
+  clampMiddlePan: 0
+  middlePanMin: {x: 0, y: 0}
+  middlePanMax: {x: 0, y: 0}
+  topHeight: 100
+  topPanMin: {x: 0, y: 0}
+  topPanMax: {x: 0, y: 0}
   TopPlayerBaseSpawn: {fileID: 4647697918157866919}
   LowPlayerBaseSpawn: {fileID: 7248454943773358418}
   NeutralBases: []

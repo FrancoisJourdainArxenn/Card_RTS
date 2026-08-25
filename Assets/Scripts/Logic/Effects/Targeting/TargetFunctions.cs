@@ -23,26 +23,46 @@ public partial class EffectContext
 
             candidates = candidates.Where(t => !(t is ILivable l && (l.IsPendingDeath || l.OnDeathResolvedInBattle)));
 
-            candidates = query.statusFilter switch
+            // zoneFilter avant statusFilter : HighestHealth/LowestHealth doivent calculer l'extrême
+            // sur le pool déjà restreint à la zone (sinon un extrême situé dans une autre zone
+            // "gagne" le statusFilter puis se fait éliminer par le zoneFilter, et le candidat
+            // réellement dans la bonne zone a déjà été écarté à l'étape statusFilter — pool vide).
+            if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource)
             {
-                TargetStatusFilter.Melee      => candidates.Where(t => t is ILivable c && c.IsMelee),
-                TargetStatusFilter.Ranged     => candidates.Where(t => t is ILivable c && c.IsRanged),
-                TargetStatusFilter.MeleeFirst => candidates.Any(t => t is ILivable c && c.IsMelee)
-                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
-                    : candidates,
-                TargetStatusFilter.Damaged    => candidates.Where(t => t is ILivable l && l.IsDamaged),
-                _                             => candidates
-            };
-
-            if (query.zoneFilter == TargetZoneFilter.SameZoneAsSource && Source?.Zone != null)
-            {
-                ZoneLogic sourceZone = Source.Zone;
-                candidates = candidates.Where(t => t is ILivable livable && livable.Zone == sourceZone);
+                // Source est encore null quand on calcule les cibles éligibles AVANT que la carte
+                // ne soit committée (voir OnPlayTargetingSession) : TargetedZone (zone de pose)
+                // sert alors de repère de remplacement.
+                ZoneLogic sourceZone = Source?.Zone ?? TargetedZone;
+                if (sourceZone != null)
+                    candidates = candidates.Where(t => t is ILivable livable && livable.Zone == sourceZone);
             }
             else if (query.zoneFilter == TargetZoneFilter.SameZoneAsTarget && targetZone != null)
             {
                 candidates = candidates.Where(t => t is ILivable livable && livable.Zone == targetZone);
             }
+            else if (query.zoneFilter == TargetZoneFilter.AdjacentToSource)
+            {
+                candidates = candidates.Where(t => t is CreatureLogic c && IsAdjacentTo(Source, c));
+            }
+            else if (query.zoneFilter == TargetZoneFilter.AdjacentToTarget)
+            {
+                candidates = candidates.Where(t => t is CreatureLogic c && IsAdjacentTo(Target, c));
+            }
+
+            candidates = query.statusFilter switch
+            {
+                TargetStatusFilter.Melee       => candidates.Where(t => t is ILivable c && c.IsMelee),
+                TargetStatusFilter.Ranged      => candidates.Where(t => t is ILivable c && c.IsRanged),
+                TargetStatusFilter.MeleeFirst  => candidates.Any(t => t is ILivable c && c.IsMelee)
+                    ? candidates.Where(t => t is ILivable c && c.IsMelee)
+                    : candidates,
+                TargetStatusFilter.Damaged        => candidates.Where(t => t is ILivable l && l.IsDamaged),
+                TargetStatusFilter.NonShielded    => candidates.Where(t => t is ILivable l && !l.IsShielded),
+                TargetStatusFilter.HighestHealth  => FilterToExtremeHealth(candidates, descending: true),
+                TargetStatusFilter.LowestHealth   => FilterToExtremeHealth(candidates, descending: false),
+                _                                 => candidates
+            };
+
             if (query.cardFilter != null)
                 candidates = candidates.Where(t => query.cardFilter.Matches(GetCardAsset(t)));
 
@@ -92,11 +112,41 @@ public partial class EffectContext
         }
         return targets;
     }
+    // Ne filtre pas un booléen par candidat comme les autres statusFilter : réduit le pool au(x)
+    // seul(s) candidat(s) au PV extrême. Les égalités restantes sont départagées par le Repartition
+    // de l'effet (RandomSingleTarget, etc.), exactement comme pour n'importe quel autre filtre à
+    // choix multiple.
+    private static IEnumerable<IIdentifiable> FilterToExtremeHealth(IEnumerable<IIdentifiable> candidates, bool descending)
+    {
+        List<ILivable> livables = candidates.OfType<ILivable>().ToList();
+        if (livables.Count == 0) return Enumerable.Empty<IIdentifiable>();
+
+        int extreme = descending ? livables.Max(l => l.Health) : livables.Min(l => l.Health);
+        return livables.Where(l => l.Health == extreme).Cast<IIdentifiable>();
+    }
+
     private static CardAsset GetCardAsset(IIdentifiable target) => target switch
     {
         CreatureLogic c => c.ca,
         BuildingLogic b => b.ca,
         _               => null
     };
+
+    // Un "voisin" est la créature juste avant/après `anchor` dans playedCards.Creatures, sur la
+    // même ligne (même BaseID + même IsMelee) — même algo que LateralAttackModifierSO.GetAdjacent
+    // (splash de combat), réutilisé ici pour rester cohérent entre ciblage d'effet et de combat.
+    private static bool IsAdjacentTo(ILivable anchor, CreatureLogic candidate)
+    {
+        if (anchor is not CreatureLogic anchorCreature) return false;
+
+        List<CreatureLogic> row = anchorCreature.owner.playedCards.Creatures
+            .Where(c => c.BaseID == anchorCreature.BaseID && c.IsMelee == anchorCreature.IsMelee)
+            .ToList();
+
+        int anchorIndex = row.IndexOf(anchorCreature);
+        int candidateIndex = row.IndexOf(candidate);
+
+        return anchorIndex >= 0 && candidateIndex >= 0 && Math.Abs(anchorIndex - candidateIndex) == 1;
+    }
 
 }

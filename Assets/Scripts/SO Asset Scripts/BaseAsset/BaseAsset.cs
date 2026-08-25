@@ -8,6 +8,10 @@ public class BaseAsset : ScriptableObject
     [Header("General info")]
     public FactionAsset Faction;
     public Sprite BaseImage;
+    public Sprite BaseIcon;
+    public Color baseIconColor;
+    [TextArea(3, 10)] public string baseDescription;
+
     public string BaseName;
     public int MaxHealth;
     public int mainRessourceIncome;

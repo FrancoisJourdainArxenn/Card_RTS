@@ -690,8 +690,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Card Effect
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6cd16d13341009840a3e54bdc3a9e63e, type: 2}
-  m_sharedMaterial: {fileID: 1658384585166287519, guid: 6cd16d13341009840a3e54bdc3a9e63e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7647909a9abd07c4bb40ba642276b8ac, type: 2}
+  m_sharedMaterial: {fileID: 3582875268214167834, guid: 7647909a9abd07c4bb40ba642276b8ac, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

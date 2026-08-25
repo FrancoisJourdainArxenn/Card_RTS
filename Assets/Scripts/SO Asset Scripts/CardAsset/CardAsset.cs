@@ -7,17 +7,25 @@ public enum CardType
 {
     Unit,
     Building,
-    Order,
+    Action,
 }
 
 public enum SubType
 {
-    Soldier,
-    Swarm,
-    Robot,
-    Mechanical,
-    Building,
-    Organic,
+    //Units
+    Soldier =0,
+    Swarm =1,
+    Robot =2,
+    Mechanical =3,
+    Organic =5,
+    Engineer =6,
+    Pirate =7,
+    Mystic =9,
+
+    //Action
+    Spell = 4,
+    Order = 8,
+    Invention = 10,
 }
 
 public enum TargetingOptions
@@ -74,11 +82,32 @@ public class CardAsset : ScriptableObject
     public int MoveSpeed = 1;
     public bool Celerity = false;
     public bool melee = false;
+    // Immobile, ne peut jamais attaquer (attaque verrouillée à 0), immunisée aux buffs de type
+    // bouclier/célérité — occupe quand même une place en rangée Melee/Ranged et reste ciblable
+    // normalement (dégâts, soins) comme n'importe quelle autre unité.
+    public bool IsStructureUnit = false;
+
+
 
 
     [Header("Global Properties")]
-    public int ActivationsForOneTurn = 0;
-    [Header("Effects")]
     public List<Keyword> Keywords = new List<Keyword>();
+    public List<CardAsset> ReferencedCards = new List<CardAsset>();
+    [Header("Effects")]
     public List<CardEffectData> Effects = new List<CardEffectData>();
+
+    // Description avec placeholders {0}, {1}... résolus par le premier effet qui expose des valeurs
+    // substituables (voir EffectSO.GetDescriptionValues) — reflète les bonus d'amplificateurs actuels
+    // de viewer. Une carte sans placeholder (donc sans effet substituable trouvé) garde son texte tel quel.
+    public string GetResolvedDescription(Player viewer)
+    {
+        if (Effects == null) return Description;
+        foreach (CardEffectData data in Effects)
+        {
+            if (data.Effect == null) continue;
+            object[] values = data.Effect.GetDescriptionValues(viewer, this);
+            if (values != null) return string.Format(Description, values);
+        }
+        return Description;
+    }
 }

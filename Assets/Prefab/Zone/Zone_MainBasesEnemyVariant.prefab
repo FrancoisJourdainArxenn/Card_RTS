@@ -41,8 +41,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 1139401389963885789, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.45000002
+      objectReference: {fileID: 0}
+    - target: {fileID: 1139401389963885789, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.8100001
+      value: 2.3000002
       objectReference: {fileID: 0}
     - target: {fileID: 1337397116705222592, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_TagString
@@ -89,12 +93,16 @@ PrefabInstance:
       value: TopCard
       objectReference: {fileID: 0}
     - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_Size.x
+      value: 15.172695
+      objectReference: {fileID: 0}
+    - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Size.z
       value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Center.x
-      value: 0
+      value: 0.49790382
       objectReference: {fileID: 0}
     - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Center.y
@@ -102,7 +110,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2059347606693674415, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Center.z
-      value: 1.2
+      value: 1.1999998
       objectReference: {fileID: 0}
     - target: {fileID: 2356773896271555992, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_TagString
@@ -180,6 +188,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 4.19
       objectReference: {fileID: 0}
+    - target: {fileID: 4027174827410627372, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4241607089193490230, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_Name
       value: Zone_MainBasesEnemyVariant
@@ -202,11 +214,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4845149645686350078, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.08
+      value: 0.47
       objectReference: {fileID: 0}
     - target: {fileID: 4845149645686350078, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -1.77
+      value: -1.28
       objectReference: {fileID: 0}
     - target: {fileID: 4968069982792149789, guid: 6e7cbbbd86a85bf44bba081efd847dfd, type: 3}
       propertyPath: m_LocalPosition.z

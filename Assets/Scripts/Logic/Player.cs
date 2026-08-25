@@ -4,6 +4,33 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Linq;
 
+[System.Serializable]
+public struct PermanentCreatureBuff
+{
+    public CardFilterSO filter;
+    public int attackBonus;
+    public int healthBonus;
+}
+
+[System.Flags]
+public enum EffectCategory
+{
+    Damage = 1,
+    Heal = 2,
+    StatBonus = 4,
+}
+
+[System.Serializable]
+public struct EffectAmplifier
+{
+    public EffectCategory AppliesTo;
+    public int DamageBonus;
+    public int HealBonus;
+    public int AttackBonus;
+    public int HealthBonus;
+    public bool SpellsOnly; // true = ne s'applique qu'aux cartes Type == CardType.Action
+}
+
 public class Player : MonoBehaviour, ILivable
 {
     // PUBLIC FIELDS
@@ -43,6 +70,16 @@ public class Player : MonoBehaviour, ILivable
     private Dictionary<int, int> _drawCountFromSources = new(); // bonus de pioche lié à une entité vivante (tier, effet...)
 
     public int HandDrawCount => GlobalSettings.Instance.initdraw + bonusHandDrawCount + _drawCountFromSources.Values.Sum();
+
+    private Dictionary<int, int> _shieldBonusFromSources = new(); // bonus de bouclier lié à une entité vivante (aura, effet...)
+    public int ShieldBonus => _shieldBonusFromSources.Values.Sum();
+
+    private Dictionary<int, EffectAmplifier> _effectAmplifiersFromSources = new(); // amplificateurs de Damage/Heal/StatBonus liés à une entité vivante
+
+    // Buffs de stats permanents ("pour le reste de la partie") appliqués par SubType ou par nom de
+    // carte. Appliqués à chaque nouvelle CreatureLogic de ce joueur (voir CreatureLogic constructor) —
+    // pas sur le CardAsset (partagé entre joueurs) pour ne pas buffer l'adversaire.
+    public List<PermanentCreatureBuff> permanentCreatureBuffs = new List<PermanentCreatureBuff>();
 
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
@@ -295,7 +332,8 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
-    // discard the whole hand (used at the start of each turn, before drawing the new hand)
+    // discard the whole hand (called at the end of the Command phase, right before BeginCombat,
+    // so cards added to hand during the Battle phase aren't wiped out by this turn's discard)
     // hero cards stay in hand: they aren't drawn from the deck and shouldn't be discarded
     public void DiscardHand()
     {
@@ -410,9 +448,11 @@ public class Player : MonoBehaviour, ILivable
           
     }
 
-    // 2nd overload - takes CardLogic and ILivable interface - 
-    // this method is called from Logic, for example by AI
-    public void PlayASpellFromHand(CardLogic playedCard, ILivable target)
+    // 2nd overload - takes CardLogic and ILivable interface -
+    // this method is called from Logic, for example by AI.
+    // preResolvedSelections : cible(s) choisie(s) via OnPlayTargetingSession pour un sort ciblé
+    // (voir DragSpellOnTarget) — transmis à EffectRegistry.ETB exactement comme pour une créature.
+    public void PlayASpellFromHand(CardLogic playedCard, ILivable target, List<PendingEffectSelection> preResolvedSelections = null)
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
@@ -421,7 +461,7 @@ public class Player : MonoBehaviour, ILivable
         {
             Caster = this,
             Target = target
-        });
+        }, preResolvedSelections);
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
         hand.CardsInHand.Remove(playedCard);
@@ -429,19 +469,78 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
-    // METHODS TO PLAY CREATURES 
+    // Envoyé par le serveur à TOUS les clients dès qu'un sort est joué (voir
+    // GameNetworkManager.PlaySpellServerRpc) : applique l'état de jeu (ressources, main, effets)
+    // immédiatement et de façon déterministe sur toutes les machines — miroir de
+    // NetworkPendingPlayCreature. Contrairement à une créature, un sort ne place rien sur une
+    // table : rien à cacher/révéler visuellement à ce stade, seul l'habillage "carte jouée" est
+    // différé jusqu'à NetworkFlushPlaySpell.
+    public void NetworkPendingPlaySpell(int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed)
+    {
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
+
+        MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.CardsPlayed);
+        hand.CardsInHand.Remove(playedCard);
+        TurnManager.RefreshAllPlayableHighlights();
+
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        if (cardGO != null)
+            handVisual.PlayASpellFromHand(cardGO);
+
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(playedCard.ca, effectIndexes, selectedTargetIDs);
+
+        // Sans ça, un effet à répartition aléatoire (ex: EffectRepartition.RandomSingleTarget, voir
+        // "+1/+1 un allié dans la zone ciblée") retombe sur EffectSO.ApplyEffect's Random.Range —
+        // l'état du RNG Unity de chaque machine ayant divergé indépendamment, la cible choisie
+        // diffère entre host et client jusqu'à la resynchro canonique de fin de tour.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
+    }
+
+    // Envoyé par le serveur au moment de la révélation simultanée (voir GameNetworkManager.ExecuteAction) :
+    // ne fait plus que l'habillage visuel "carte jouée" — la logique a déjà été résolue par
+    // NetworkPendingPlaySpell sur toutes les machines. Réutilise directement l'animation existante
+    // (vol vers PlayPreviewSpot + destroy), déjà utilisée par le chemin local.
+    public void NetworkFlushPlaySpell(int cardUniqueID)
+    {
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        if (cardGO != null)
+            handVisual.PlayASpellFromHand(cardGO);
+    }
+
+    // METHODS TO PLAY CREATURES
     // 1st overload - by ID
     public void PlayACreatureFromHand(int UniqueID, int tablePos, PlayerArea selectedPArea)
     {
-        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea);
+        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea, null);
+    }
+
+    // Utilisé quand OnPlayTargetingSession a déjà fait choisir sa/ses cible(s) au joueur
+    // avant la pose (voir DragCreatureOnTable.OnEndDrag).
+    public void PlayACreatureFromHand(int UniqueID, int tablePos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
+    {
+        PlayACreatureFromHand(CardLogic.CardsCreatedThisGame[UniqueID], tablePos, selectedPArea, preResolvedSelections);
     }
 
     // 2nd overload - by logic units
     public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
+        => PlayACreatureFromHand(playedCard, rowLocalPos, selectedPArea, null);
+
+    public void PlayACreatureFromHand(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
     {
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
         int baseID       = selectedPArea.baseID;
         int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
 
@@ -450,7 +549,7 @@ public class Player : MonoBehaviour, ILivable
         FogOfWarManager.Refresh();
 
         new PlayACreatureCommand(playedCard, this, rowLocalPos, newCreature.UniqueCreatureID, selectedPArea).AddToQueue();
-        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature });
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
         hand.CardsInHand.Remove(playedCard);
         HighlightPlayableCards();
@@ -510,13 +609,15 @@ public class Player : MonoBehaviour, ILivable
         playedCards.Creatures.AddRange(pendingWithoutGO);
     }
 
-    public void NetworkPendingPlayCreature(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    public void NetworkPendingPlayCreature(
+        int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard)) return;
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
@@ -554,7 +655,21 @@ public class Player : MonoBehaviour, ILivable
         }
 
         // Résolution logique immédiate (créature + OnPlay), après le reveal visuel local pour garder une cible valide.
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
+
+        // Voir Player.NetworkPendingPlaySpell : sans ça, un effet OnPlay à répartition aléatoire
+        // retombe sur Random.Range, dont l'état diverge indépendamment entre host et client.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
         EffectRegistry.NotifyCardPlayed(this, newCreature);
     }
 
@@ -587,7 +702,9 @@ public class Player : MonoBehaviour, ILivable
         area.tableVisual.ApplyCreatureOrder(meleeIDs, rangedIDs);
     }
 
-    public void NetworkPlayCreatureFromHand(int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    public void NetworkPlayCreatureFromHand(
+        int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic playedCard))
         {
@@ -603,7 +720,7 @@ public class Player : MonoBehaviour, ILivable
 
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
-        matchStats.AddSubType(playedCard.ca.subType);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
 
         // Utilise l'ID fourni par le serveur pour garantir la cohérence entre clients
         CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID, creatureUniqueID);
@@ -613,7 +730,21 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature });
+        List<PendingEffectSelection> preResolvedSelections =
+            EffectRegistry.BuildPreResolvedSelections(newCreature.ca, onPlayEffectIndexes, onPlaySelectedTargetIDs);
+
+        // Voir Player.NetworkPendingPlaySpell : sans ça, un effet OnPlay à répartition aléatoire
+        // retombe sur Random.Range, dont l'état diverge indépendamment entre host et client.
+        System.Random previousRng = EffectSO.CurrentNetworkRng;
+        EffectSO.SetNetworkRng(new System.Random(seed));
+        try
+        {
+            EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        finally
+        {
+            EffectSO.SetNetworkRng(previousRng);
+        }
         EffectRegistry.NotifyCardPlayed(this, newCreature);
 
 
@@ -674,6 +805,10 @@ public class Player : MonoBehaviour, ILivable
             creatureManager.CanReorderNow = canMove && !removeAllHighlights;
             creatureManager.CanMoveNow = canMove && (crl.MovementsLeftThisTurn > 0) && !removeAllHighlights;
             creatureManager.UpdateGlow();
+            // Ne touche pas au visuel "pending" si un déplacement est en attente sur cette créature
+            // (voir DragCreatureActions.SpawnPendingMoveGhost) : ce refresh écraserait sinon son icône.
+            if (creatureManager.PendingMoveGhost == null)
+                creatureManager.SetPending(crl.HasSummoningSickness);
         }
 
         foreach (BuildingLogic bl in playedCards.Buildings)
@@ -865,6 +1000,42 @@ public class Player : MonoBehaviour, ILivable
     public void RemoveBonusHandDrawCountFromSource(int sourceID)
     {
         _drawCountFromSources.Remove(sourceID);
+    }
+
+    public void AddBonusShieldFromSource(int sourceID, int amount)
+    {
+        _shieldBonusFromSources[sourceID] = _shieldBonusFromSources.GetValueOrDefault(sourceID, 0) + amount;
+    }
+
+    public void RemoveBonusShieldFromSource(int sourceID)
+    {
+        _shieldBonusFromSources.Remove(sourceID);
+    }
+
+    public void AddEffectAmplifier(int sourceID, EffectAmplifier amplifier)
+    {
+        _effectAmplifiersFromSources[sourceID] = amplifier;
+    }
+
+    public void RemoveEffectAmplifier(int sourceID)
+    {
+        _effectAmplifiersFromSources.Remove(sourceID);
+    }
+
+    private bool AmplifierApplies(EffectAmplifier amp, EffectCategory category, CardAsset playedCard) =>
+        (amp.AppliesTo & category) != 0
+        && (!amp.SpellsOnly || (playedCard != null && playedCard.Type == CardType.Action));
+
+    public int GetDamageBonus(CardAsset playedCard) =>
+        _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.Damage, playedCard)).Sum(a => a.DamageBonus);
+
+    public int GetHealBonus(CardAsset playedCard) =>
+        _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.Heal, playedCard)).Sum(a => a.HealBonus);
+
+    public (int attack, int health) GetStatBonus(CardAsset playedCard)
+    {
+        IEnumerable<EffectAmplifier> applicable = _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.StatBonus, playedCard));
+        return (applicable.Sum(a => a.AttackBonus), applicable.Sum(a => a.HealthBonus));
     }
 
     public void CalculatePlayerIncome()

@@ -14,11 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MenuRegistry
   maps:
   - {fileID: 8472823780511676816, guid: 9f4a65383cdbd0e4292acdffbc723eea, type: 3}
+  - {fileID: 8472823780511676816, guid: 53b8dfbb7fe071d46b7d9f6869e78196, type: 3}
   decks:
   - {fileID: 11400000, guid: 941e5d51490834548aa45b0b0603450c, type: 2}
   - {fileID: 11400000, guid: cee0b5bdef8038249bda00f0a20c7510, type: 2}
   - {fileID: 11400000, guid: c69948e416fca8642b2544a611dbf802, type: 2}
   - {fileID: 11400000, guid: a409730b51e9eb1409d5393e78f3e713, type: 2}
+  - {fileID: 11400000, guid: f0f32c3aded46964495e59f0c2492544, type: 2}
+  - {fileID: 11400000, guid: cc31aa0a2a497cf478c364d1ac2fa766, type: 2}
   - {fileID: 11400000, guid: 145ac47e3307ef34fabfe216c222adb7, type: 2}
   - {fileID: 11400000, guid: ce58267493771cd46802293f392aa62a, type: 2}
   - {fileID: 11400000, guid: fa938fd62d5eca0478463fd350251881, type: 2}
+  - {fileID: 11400000, guid: 348fd033c2b022d43b0384ece90fe559, type: 2}
+  - {fileID: 11400000, guid: a1d512100d3006c4a804d048a2ac9275, type: 2}
+  - {fileID: 11400000, guid: b6e48fbfc88a1374d8485d8f8dabb0ca, type: 2}
+  - {fileID: 11400000, guid: 887307512528d844ea714663439c110f, type: 2}

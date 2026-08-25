@@ -154,7 +154,7 @@ public class TokenGenerationSO : EffectSO
         // bien plus tard (CreatureLogic.Die, via ProcessPendingDeaths en fin de Battle). Sans ce
         // filtre, la capacité resterait figée à l'état "plein" pour le reste du combat dès qu'une
         // première créature meurt, même si d'autres meurent ensuite et libèrent d'autres places.
-        int effectiveCount = caster.playedCards.Creatures.Count(cr => InRow(cr) && ZoneCombatResolver.WouldSurvive(cr));
+        int effectiveCount = caster.playedCards.Creatures.Count(cr => InRow(cr) && ZoneCombatResolver.WouldSurvive(cr) && !cr.IsPendingMove);
 
         if (effectiveCount >= GlobalSettings.Instance.MaxCreaturePerRow)
         {

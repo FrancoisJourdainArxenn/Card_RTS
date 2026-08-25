@@ -5,7 +5,7 @@ public class DealDamageSO : HealthEffectSO
 {
     [Header("Parameters")]
     public int Damage;
-    protected override int Amount => Damage;
+    protected override int Amount => Damage + (_caster != null ? _caster.GetDamageBonus(_playedCard) : 0);
     public override EffectPriority Priority => EffectPriority.DealDamage;
 
     public override void Execute(
@@ -22,10 +22,11 @@ public class DealDamageSO : HealthEffectSO
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)
     {
-        int dmg = amount ?? Damage;
+        int dmg = amount ?? Amount;
         Log($"[DealDamage] APPLY — {target.DisplayName} (ID:{target.ID}) HP avant: {target.Health} (dmg:{dmg})");
         bool hasCustomVfx = visualData != null && (visualData.vfxPrefab != null || visualData.overlayMaterial != null);
-        int sourceId = hasCustomVfx ? -1 : _sourceID;
+        bool suppressFallback = visualData != null && visualData.suppressAttackFallback;
+        int sourceId = (hasCustomVfx || suppressFallback) ? -1 : _sourceID;
 
         Vector3? originPosition = null;
         if (hasCustomVfx && visualData.travelFromSource)
@@ -35,7 +36,10 @@ public class DealDamageSO : HealthEffectSO
                 originPosition = sourceGO.transform.position;
         }
 
+        int healthBefore = target.Health;
         int healthAfter = target.TakeDamage(dmg);
+        int effectiveDealt = healthBefore - healthAfter;
+        if (effectiveDealt > 0) _caster?.matchStats.Add(MatchStatType.DamageDealt, effectiveDealt);
         DeathDrainRecorder.RecordAnim(sourceId, target.ID, dmg, healthAfter);
         new DealDamageCommand(target.ID, dmg, healthAfter, sourceId, hasCustomVfx ? visualData : null, originPosition: originPosition).AddToQueue();
     }
@@ -44,4 +48,7 @@ public class DealDamageSO : HealthEffectSO
         target.amount >= target.target.Health;
 
     public override string GetDescription() => $"Inflige {Damage} dégâts";
+
+    public override object[] GetDescriptionValues(Player viewer, CardAsset playedCard) =>
+        new object[] { Damage + (viewer != null ? viewer.GetDamageBonus(playedCard) : 0) };
 }

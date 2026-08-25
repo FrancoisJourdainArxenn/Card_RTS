@@ -334,6 +334,20 @@ public class TableVisual : MonoBehaviour
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(IDToRemove);
         if (!MeleeCreaturesOnTable.Remove(creatureToRemove))
             RangedCreaturesOnTable.Remove(creatureToRemove);
+
+        // Si cette créature était en cours de "move preview" (Draggable.OnMouseDown a démarré un drag
+        // dessus — même un simple clic en déclenche un, voir DragCreatureActions.OnDraggingInUpdate) et
+        // qu'elle meurt avant que OnMouseUp/ReorderCreature n'ait pu s'exécuter (ex: cliquée comme cible
+        // d'un effet qui la tue instantanément), _previewIndex resterait bloqué ≥ 0 pour toujours — plus
+        // aucun OnMouseUp ne viendra jamais le nettoyer sur un GameObject détruit. Ça forcerait un slot
+        // vide fantôme (hasGap) sur TOUS les repositionnements suivants, jusqu'à ce qu'un autre drag
+        // complet réinitialise _previewIndex par hasard.
+        if (creatureToRemove == _movingCreature)
+        {
+            _movingCreature = null;
+            _previewIndex = -1;
+        }
+
         Destroy(creatureToRemove);
 
         // On attend la fin réelle du repositionnement (tween DOMove) avant de libérer la file de
@@ -364,11 +378,13 @@ public class TableVisual : MonoBehaviour
     // pour qu'une attaque suivante ne se déclenche jamais pendant qu'une créature glisse encore vers son slot.
     void PlaceCreaturesOnNewSlots(System.Action onComplete = null)
     {
+        // Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots appelé — AnyAttackInFlight={CreatureAttackVisual.AnyAttackInFlight} onComplete={(onComplete != null)} @ {Time.realtimeSinceStartup:F3}");
         if (CreatureAttackVisual.AnyAttackInFlight)
         {
             // Une attaque est en vol quelque part (peu importe la table) : on ne bouge personne
             // tant qu'elle n'est pas résolue, sinon sa cible pourrait glisser sous la charge/le
             // projectile déjà lancé vers une position figée. Rejoué par FlushPendingRelayout.
+            // Debug.Log($"[DBG][Timing] PlaceCreaturesOnNewSlots DIFFÉRÉ (attaque en vol) @ {Time.realtimeSinceStartup:F3}");
             _relayoutPending = true;
             if (onComplete != null) _pendingRelayoutCallbacks.Add(onComplete);
             return;
@@ -379,6 +395,7 @@ public class TableVisual : MonoBehaviour
 
     private void FlushPendingRelayout()
     {
+        // Debug.Log($"[DBG][Timing] FlushPendingRelayout appelé — _relayoutPending={_relayoutPending} callbacks={_pendingRelayoutCallbacks.Count} @ {Time.realtimeSinceStartup:F3}");
         if (!_relayoutPending) return;
         _relayoutPending = false;
 
@@ -412,9 +429,12 @@ public class TableVisual : MonoBehaviour
         int pending = 1;
         void RowDone()
         {
-            if (--pending <= 0) onComplete();
+            pending--;
+            // Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots RowDone — reste={pending} @ {Time.realtimeSinceStartup:F3}");
+            if (pending <= 0) onComplete();
         }
 
+        // Debug.Log($"[DBG][Timing] DoPlaceCreaturesOnNewSlots START — melee={MeleeCreaturesOnTable.Count} ranged={RangedCreaturesOnTable.Count} @ {Time.realtimeSinceStartup:F3}");
         pending++;
         PlaceRowOnSlots(MeleeCreaturesOnTable,  GetRowSlots(true), meleeGap,  meleeExcluded, RowDone);
         pending++;
@@ -453,9 +473,12 @@ public class TableVisual : MonoBehaviour
         if (virtualCount == 0 || effectiveCount == 0) { onComplete?.Invoke(); return; }
 
         int pendingTweens = effectiveCount;
+        // Debug.Log($"[DBG][Timing] PlaceRowOnSlots START — effectiveCount={effectiveCount} hasOnComplete={onComplete != null} @ {Time.realtimeSinceStartup:F3}");
         void TweenDone()
         {
-            if (--pendingTweens <= 0) onComplete?.Invoke();
+            pendingTweens--;
+            // Debug.Log($"[DBG][Timing] PlaceRowOnSlots TweenDone — reste={pendingTweens} @ {Time.realtimeSinceStartup:F3}");
+            if (pendingTweens <= 0) onComplete?.Invoke();
         }
 
         for (int i = 0; i < effectiveCount; i++)
@@ -471,10 +494,12 @@ public class TableVisual : MonoBehaviour
             // OnAttack qui se déclenche pendant cet intervalle (ex: spawn d'un token dans sa propre rangée).
             if (CreatureAttackVisual.IsPausedMidAttack(displayOrder[i]))
             {
+                // Debug.Log($"[DBG][Timing] PlaceRowOnSlots — {displayOrder[i]?.name} IsPausedMidAttack, tween sauté @ {Time.realtimeSinceStartup:F3}");
                 TweenDone();
                 continue;
             }
 
+            // Debug.Log($"[DBG][Timing] PlaceRowOnSlots — i={i} DOMove {displayOrder[i]?.name} (activeInHierarchy={displayOrder[i]?.activeInHierarchy}) vers {targetPos} @ {Time.realtimeSinceStartup:F3}");
             displayOrder[i].transform.DOKill();
             float reorderDuration = VisualManager.Instance != null ? VisualManager.Instance.RowReorderDuration : 0.3f;
             Tween t = displayOrder[i].transform.DOMove(targetPos, reorderDuration).SetEase(Ease.OutQuad);
@@ -645,6 +670,8 @@ public class TableVisual : MonoBehaviour
         {
             manager.AttackText.text = cl.Attack.ToString();
             manager.HealthText.text = cl.Health.ToString();
+            if (cl.ShieldValue > 0)
+                creature.GetComponent<VfxManager>().ShowShieldVfx(cl.ShieldVfxPrefab, cl.ShieldValue);
         }
 
         return creature;

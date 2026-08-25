@@ -35,8 +35,7 @@ public class HeroPortrait : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     private string GetHeroTooltipText()
     {
-        CardAsset heroCard = deck.heroCard;
-        return $"<b>{heroCard.Name}</b>\n<b>Difficulty:</b><color=#FFFFFFAA> {deck.difficultyLevel}/5\n{deck.deckTooltip}</color>";
+        return $"<b>{deck.deckName}</b>\n<b>Difficulty:</b><color=#FFFFFFAA> {deck.difficultyLevel}/5\n{deck.deckTooltip}</color>";
     }
 
     public void OnPointerEnter(PointerEventData eventData)

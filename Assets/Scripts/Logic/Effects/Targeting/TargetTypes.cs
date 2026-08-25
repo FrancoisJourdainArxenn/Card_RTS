@@ -33,6 +33,9 @@ public enum TargetStatusFilter
     Ranged,
     MeleeFirst,
     Damaged,
+    NonShielded,
+    HighestHealth,
+    LowestHealth,
     // Undamaged,
     // Visible,
     // Fogged,
@@ -43,6 +46,7 @@ public enum TargetZoneFilter
     All,
     SameZoneAsSource,
     SameZoneAsTarget,
-    // AdjacentZoneToSource,
+    AdjacentToSource,
+    AdjacentToTarget,
     // VisibleZone,
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 
 public class HandVisual : MonoBehaviour
@@ -14,7 +15,6 @@ public class HandVisual : MonoBehaviour
     public Transform DrawPreviewSpot;
     public Transform DeckTransform;
     public Transform OtherCardDrawSourceTransform;
-    public Transform PlayPreviewSpot;
 
     // PRIVATE : a list of all card visual representations as GameObjects
     private List<GameObject> CardsInHand = new List<GameObject>();
@@ -111,15 +111,11 @@ public class HandVisual : MonoBehaviour
         else
         {
             // this is a spell: checking for targeted or non-targeted spell
-            if (c.Effects == null || c.Effects.Count == 0 || c.Effects[0].RequiresPlayerInput == false)
+            bool requiresTargeting = c.Effects != null && c.Effects.Any(e => e.RequiresPlayerInput);
+            if (!requiresTargeting)
                 card = GameObject.Instantiate(GlobalSettings.Instance.NoTargetSpellCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
             else
-            {
                 card = GameObject.Instantiate(GlobalSettings.Instance.TargetedSpellCardPrefab, position, Quaternion.Euler(eulerAngles)) as GameObject;
-                // pass targeting options to DraggingActions
-                DragSpellOnTarget dragSpell = card.GetComponentInChildren<DragSpellOnTarget>();
-                // dragSpell.Targets = c.Targets;
-            }
 
         }
 
@@ -215,15 +211,11 @@ public class HandVisual : MonoBehaviour
 
         CardVisual.transform.SetParent(null);
 
-        Sequence s = DOTween.Sequence();
-        s.Append(CardVisual.transform.DOMove(PlayPreviewSpot.position, 1f));
-        s.Insert(0f, CardVisual.transform.DORotate(Vector3.zero, 1f));
-        s.AppendInterval(2f);
-        s.OnComplete(()=>
-            {
-                //Command.CommandExecutionComplete();
-                Destroy(CardVisual);
-            });
+        CanvasGroup group = CardVisual.GetComponentInChildren<CanvasGroup>();
+        if (group != null)
+            group.DOFade(0f, 0.3f).OnComplete(() => Destroy(CardVisual));
+        else
+            Destroy(CardVisual);
     }
 
 

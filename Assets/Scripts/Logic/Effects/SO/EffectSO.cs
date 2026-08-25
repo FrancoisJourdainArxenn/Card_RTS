@@ -9,7 +9,12 @@ public abstract class EffectSO : ScriptableObject
     protected int _sourceID = -1;
     virtual public EffectPriority Priority => EffectPriority.DrawCards;
     protected virtual int Amount => 0;
+    // Les effets qui sont des buffs "tout ou rien" (bouclier, célérité...) se déclarent ici pour être
+    // filtrés hors cible sur une structure. ModifyStatsSO ne s'y déclare pas exprès : le verrou posé
+    // sur CreatureLogic.Attack bloque déjà la composante attaque, et on veut laisser passer le +HP.
+    protected virtual bool IsBuffEffect => false;
     private static System.Random _networkRng;
+    internal static System.Random CurrentNetworkRng => _networkRng;
     internal static void SetNetworkRng(System.Random rng) => _networkRng = rng;
     internal static void ClearNetworkRng() => _networkRng = null;
     protected class EffectTarget
@@ -37,24 +42,30 @@ public abstract class EffectSO : ScriptableObject
             eligibleAffectedElements.AddRange(context.GetExecutionAffectedElements(targetInfo));
 
         List<IIdentifiable> affectedElements = new();
+        List<IIdentifiable> result;
 
         if (eligibleAffectedElements.Count == 0)
         {
-            return effectInfo.effectTargets.Count == 0
+            result = effectInfo.effectTargets.Count == 0
                 ? context.GetSingleTargetAffectedElements(
                     null, effectInfo.affectedElements
                 )
                 : affectedElements;
         }
+        else
+        {
+            foreach (IIdentifiable target in eligibleAffectedElements)
+                affectedElements.AddRange(
+                    context.GetSingleTargetAffectedElements(
+                        target, effectInfo.affectedElements
+                    )
+                );
+            result = affectedElements.Distinct().ToList();
+        }
 
-        foreach (IIdentifiable target in eligibleAffectedElements)
-            affectedElements.AddRange(
-                context.GetSingleTargetAffectedElements(
-                    target, effectInfo.affectedElements
-                )
-            );
-
-        return affectedElements.Distinct().ToList();
+        return IsBuffEffect
+            ? result.Where(t => !(t is CreatureLogic c && c.ca.IsStructureUnit)).ToList()
+            : result;
     }
 
     public void ApplyEffect(EffectInfo effectInfo, List<IIdentifiable> affectedElements, EffectVisualData visualData)
@@ -156,6 +167,10 @@ public abstract class EffectSO : ScriptableObject
     }
 
     public virtual string GetDescription() => Description;
+
+    // Valeurs à substituer dans CardAsset.Description (placeholders {0}, {1}...) pour refléter les
+    // bonus d'amplificateurs actuels de viewer — null si cet effet n'a pas de valeur substituable.
+    public virtual object[] GetDescriptionValues(Player viewer, CardAsset playedCard) => null;
 
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]

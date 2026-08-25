@@ -22,7 +22,6 @@ public abstract class TurnMaker : MonoBehaviour {
     {
         TempEffectTracker.RevertAll();
         p.OnTurnStart();
-        p.DiscardHand();
 
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession
             || p.MainPArea.AllowedToControlThisPlayer;
@@ -67,6 +66,10 @@ public abstract class TurnMaker : MonoBehaviour {
 
     public virtual void OnBeginCombatPhaseEntered()
     {
+        // Discard the leftover hand here (end of Command) rather than at the next Regroup,
+        // so cards added to hand during Battle (e.g. token generation) survive into the next turn.
+        p.DiscardHand();
+
         // In network mode, only the local player runs the targeting session.
         // In local mode, both players run it sequentially (auto-selects for testing).
         bool isLocalPlayer = !NetworkSessionData.IsNetworkSession

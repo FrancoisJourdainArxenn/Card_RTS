@@ -21,7 +21,12 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
     void Awake()
     {
         AllZones.Add(this);
-        int id = GetHierarchyPath(transform).GetHashCode();
+        // Animator.StringToHash (CRC32) au lieu de string.GetHashCode() : ce dernier est randomisé
+        // par processus (.NET hash-code randomization) — la même zone obtenait un ID différent sur
+        // le host et sur chaque client, cassant toute résolution d'ID de zone reçu par le réseau
+        // (voir PhaseEffectPipeline.ResolveEntityByID) alors que la même hiérarchie de scène produit
+        // le même chemin des deux côtés.
+        int id = Animator.StringToHash(GetHierarchyPath(transform));
         Logic = new ZoneLogic(id, name, () => subZones.Select(sz => sz.baseID).ToList());
 
         foreach (PlayerArea pa in GetComponentsInChildren<PlayerArea>())
@@ -87,15 +92,27 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (OnPlayTargetingSession.IsActive && eventData.button == PointerEventData.InputButton.Right)
+        {
+            OnPlayTargetingSession.Cancel();
+            return;
+        }
+
         if (ScanButton.HandleZoneClickIfActive(this, eventData)) return;
         if (TurnManager.Instance == null) return;
-        if (PhaseEffectPipeline.IsComplete) return;
+        if (!OnPlayTargetingSession.IsActive && PhaseEffectPipeline.IsComplete) return;
         PhaseEffectPipeline.OnEntityClicked(Logic);
     }
 
+    // Vaut aussi pour une carte dont l'OnPlay cible une Zone (ex: RevealZoneSO) : sans ces
+    // workarounds — écrits à l'origine seulement pour Scan —, l'overlay/canvas d'une zone jamais
+    // vue (typiquement la zone contenant la base principale adverse) reste inerte au clic pendant
+    // une session de ciblage générique (OnPlayTargetingSession), alors que Scan y arrivait déjà.
+    private static bool IsTargetingFoggedZones => ScanButton.IsActive || OnPlayTargetingSession.IsActive;
+
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!ScanButton.IsActive) return;
+        if (!IsTargetingFoggedZones) return;
         if (_targetableOverlay == null) return;
         bool noPresence = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
         if (!noPresence) return;
@@ -106,7 +123,7 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (!ScanButton.IsActive) return;
+        if (!IsTargetingFoggedZones) return;
         bool noPresence = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
         if (!noPresence) return;
         UpdateTargetableVisual(true);
@@ -114,11 +131,11 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
 
     void LateUpdate()
     {
-        if (!ScanButton.IsActive) return;
+        if (!IsTargetingFoggedZones) return;
         if (_targetableOverlay == null) return;
         bool shouldBeVisible = FogOfWarManager.Instance == null || FogOfWarManager.Instance.IsZoneFogged(this);
-        if (shouldBeVisible && !_targetableOverlay.enabled)
-            Debug.LogWarning($"{name}: overlay désactivé pendant le scan — canvas actif={_targetableOverlay.GetComponentInParent<Canvas>(true)?.gameObject.activeInHierarchy}", this);
+        // if (shouldBeVisible && !_targetableOverlay.enabled)
+            // Debug.LogWarning($"{name}: overlay désactivé pendant le ciblage — canvas actif={_targetableOverlay.GetComponentInParent<Canvas>(true)?.gameObject.activeInHierarchy}", this);
     }
     private static string GetHierarchyPath(Transform t)
     {

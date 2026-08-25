@@ -17,23 +17,22 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Piercing Attacks.</b>
+  Description: 
   CardImage: {fileID: 21300000, guid: 8a7f70d83619c7943a8a988accfc10a5, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
   MaxHealth: 1
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3.5
-  AttackModifiers:
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
-  Keywords:
-  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  Keywords: []
   Effects: []

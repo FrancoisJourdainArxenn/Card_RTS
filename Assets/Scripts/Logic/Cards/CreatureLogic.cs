@@ -11,6 +11,23 @@ public class CreatureLogic: ILivable
     public CardAsset ca;
     public int UniqueCreatureID;
 
+    // Compteur pour CondCounter (source = WrappedCondition) — vit sur l'instance (pas sur le
+    // ConditionSO, stateless/partagé entre parties), clé par condition pour supporter plusieurs
+    // compteurs indépendants.
+    private Dictionary<ConditionSO, int> _conditionCounters;
+    public int IncrementConditionCounter(ConditionSO key)
+    {
+        _conditionCounters ??= new Dictionary<ConditionSO, int>();
+        _conditionCounters.TryGetValue(key, out int current);
+        current++;
+        _conditionCounters[key] = current;
+        return current;
+    }
+    // Lecture seule, pour l'UI (texte de progression) — contrairement à IncrementConditionCounter,
+    // n'avance pas le compteur.
+    public int PeekConditionCounter(ConditionSO key) =>
+        _conditionCounters != null && _conditionCounters.TryGetValue(key, out int v) ? v : 0;
+
     // PROPERTIES
     // property from ILivable interface
     public int ID => UniqueCreatureID;
@@ -68,6 +85,7 @@ public class CreatureLogic: ILivable
     }
 
     public bool IsPendingDeath { get; private set; }
+    public bool IsPendingMove { get; set; }
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
     private bool _deathVisualQueued;
 
@@ -76,16 +94,57 @@ public class CreatureLogic: ILivable
     // a second time when the real Die() eventually runs (end of phase / drain).
     public bool OnDeathResolvedInBattle { get; private set; }
 
-    public int ShieldValue { get; private set; } = 0;
+    // True once the reactive OnFriendlyCreatureDies/OnEnemyCreatureDies listeners (on OTHER
+    // creatures) have already been fired ahead of time for THIS death during battle planning
+    // (see ResolvePredictedBattleDeath / EffectRegistry.NotifyCreatureDiedPredicted). Prevents
+    // NotifyCreatureDied from firing the creature-owned listeners a second time when the real
+    // Die() eventually runs — building-owned listeners are not covered by the predictive path
+    // yet, so NotifyCreatureDied still fires those regardless of this flag.
+    public bool ReactiveDeathTriggersResolvedInBattle { get; private set; }
 
-    public void ApplyShield(int value)
+    public int ShieldValue { get; private set; } = 0;
+    public GameObject ShieldVfxPrefab { get; private set; }
+
+    public void ApplyShield(int value, GameObject vfxPrefab = null)
     {
-        ShieldValue = Mathf.Max(ShieldValue, value);
+        ShieldValue += value;
+        if (vfxPrefab != null)
+            ShieldVfxPrefab = vfxPrefab;
+    }
+
+    public void ConsumeShield(int absorbed)
+    {
+        if (absorbed <= 0) return;
+        ShieldValue -= absorbed;
+        VfxManager vfx = Vfx;
+        if (vfx != null)
+        {
+            if (ShieldValue == 0)
+                vfx.HideShieldVfx();
+            else
+                vfx.UpdateShieldVfx(ShieldValue);
+        }
+    }
+
+    // Comme ConsumeShield, mais pour l'absorption calculée pendant ZoneCombatResolver.EnqueueBattleCommands
+    // (combat prédit à l'avance, rejoué plus tard par la file de commandes visuelles). La donnée
+    // (ShieldValue) doit changer tout de suite pour que les steps suivants du même combat calculent
+    // juste, mais le VFX ne doit PAS être touché en direct ici : à cet instant, la file n'a souvent pas
+    // encore rejoué le gain de ce bouclier (voir ApplyShieldCommand), donc mettre à jour le VFX
+    // maintenant l'écraserait avant même qu'il apparaisse — symptôme observé : bouclier gagné puis
+    // consommé dans le même combat prédit, jamais visible. On met donc en file une commande dédiée qui
+    // prendra sa place après le gain dans la séquence visuelle (ConsumeShieldCommand).
+    public void ConsumeShieldQueued(int absorbed)
+    {
+        if (absorbed <= 0) return;
+        ShieldValue -= absorbed;
+        new ConsumeShieldCommand(UniqueCreatureID, ShieldValue).AddToQueue();
     }
 
     public void GrantCelerity()
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
+        HasSummoningSickness = false;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
         TurnManager.RefreshAllPlayableHighlights();
@@ -95,22 +154,115 @@ public class CreatureLogic: ILivable
 
     public int TakeDamage(int dmg)
     {
+        int rawIncomingDamage = dmg; // pour OnTakeDamage : même sémantique que le hook auto-battle
+                                      // (AddPendingCreatureDamage), qui déclenche sur le montant BRUT
+                                      // assigné, avant absorption par le bouclier.
         if (ShieldValue > 0)
         {
             int absorbed = Mathf.Min(dmg, ShieldValue);
-            ShieldValue -= absorbed;
+            ConsumeShield(absorbed);
             dmg -= absorbed;
-            VfxManager vfx = Vfx;
-            if (vfx != null)
+            if (absorbed > 0) owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, absorbed);
+        }
+        if (dmg > 0) owner.matchStats.Add(MatchStatType.DamageTaken, dmg);
+        Health -= dmg;
+        if (rawIncomingDamage > 0)
+            ResolveOnTakeDamageFromEffect(rawIncomingDamage);
+        return Health;
+    }
+
+    // Résout OnTakeDamage pour des dégâts qui NE PASSENT PAS par la simulation prédictive de combat
+    // (ZoneCombatResolver.AddPendingCreatureDamage / ResolvePredictedOnTakeDamage) — ex: DealDamageSO
+    // (deathrattle "Acid Explosion", sort de dégâts direct, etc.). ZoneCombatResolver ne passe JAMAIS
+    // par TakeDamage() (il mute Health directement), donc aucun risque de double-déclenchement avec le
+    // hook auto-battle — les deux chemins sont mutuellement exclusifs par construction.
+    //
+    // Deux cas, distingués par Command.CurrentDeferSourceID :
+    //  - Aucun contexte différé actif (ex: sort de dégâts joué normalement en Commandement, hors de
+    //    toute résolution prédictive) : résolution immédiate et locale, exactement comme
+    //    EffectRegistry.NotifyCreatureDied le fait déjà pour OnDeath hors combat — la synchronisation
+    //    réseau de CET appel est déjà assurée par l'appelant englobant (PhaseEffectPipeline.
+    //    ApplyCanonicalResolution ou équivalent), comme pour n'importe quel autre effet imbriqué.
+    //  - Contexte différé de combat déjà actif (ex: Acid Explosion résolu pendant un OnDeath prédictif) :
+    //    se greffe sur CETTE MÊME clé plutôt que d'en ouvrir une nouvelle (même idiome que
+    //    TokenGenerationSO.Execute), ET, côté client réseau, NE RÉSOUT RIEN ICI — le serveur a déjà
+    //    enregistré ce déclenchement précis comme une entrée séparée de PredictedTriggerReplay, rejouée
+    //    par ReplayPredictedTriggerEffect via la boucle plate de ApplyCanonicalBattleAssignmentClientRpc.
+    //    Résoudre aussi ici côté client le déclencherait DEUX FOIS : une fois via cette entrée dédiée, une
+    //    fois comme effet de bord naturel du REJEU de l'effet englobant (qui ré-exécute sa propre logique
+    //    avec la même seed pour reproduire les mêmes cibles, donc rappelle TakeDamage() lui-même).
+    private void ResolveOnTakeDamageFromEffect(int dmg)
+    {
+        if (ca.Effects == null) return;
+
+        int? activeDeferKey = Command.CurrentDeferSourceID;
+
+        if (!activeDeferKey.HasValue)
+        {
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (ShieldValue == 0)
-                    vfx.HideShieldVfx();
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnTakeDamage) continue;
+                try
+                {
+                    EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this });
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
+            }
+            return;
+        }
+
+        // Rejoué par l'appelant englobant sur le client — rien à résoudre ici (voir commentaire ci-dessus).
+        if (NetworkSessionData.IsNetworkSession && !NetworkManager.Singleton.IsServer)
+            return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+            try
+            {
+                if (!isNetworkServer)
+                {
+                    Command.RunDeferred(activeDeferKey.Value, () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
                 else
-                    vfx.UpdateShieldVfx(ShieldValue);
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    // Sauvegarde/restauration explicite (pas ClearNetworkRng) : on peut être imbriqué
+                    // dans le SetNetworkRng d'un trigger englobant encore actif (ex: Acid Explosion
+                    // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
+                    // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
+                    System.Random previousRng = EffectSO.CurrentNetworkRng;
+                    bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        if (!alreadyResolving)
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                        Command.RunDeferred(activeDeferKey.Value, () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        if (!alreadyResolving)
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                        EffectSO.SetNetworkRng(previousRng);
+                    }
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
             }
         }
-        Health -= dmg;
-        return Health;
     }
 
     // returns true if we can attack with this creature now
@@ -118,6 +270,7 @@ public class CreatureLogic: ILivable
     {
         get
         {
+            if (ca.IsStructureUnit) return false;
             bool battlePhase = TurnManager.Instance != null && TurnManager.Instance.IsBattlePhase;
             bool ownersTurn = battlePhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
             return ownersTurn && (AttacksLeftThisTurn > 0);
@@ -129,6 +282,7 @@ public class CreatureLogic: ILivable
     {
         get
         {
+            if (ca.IsStructureUnit) return false;
             bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
             bool ownersTurn = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
             return ownersTurn && (MovementsLeftThisTurn > 0);
@@ -140,8 +294,13 @@ public class CreatureLogic: ILivable
     private int tempAttackBonus;
     public int Attack
     {
-        get => baseAttack + permAttackBonus + tempAttackBonus;
-        set => permAttackBonus = value - baseAttack - tempAttackBonus;
+        // Verrouillée à 0 pour une structure, quelle que soit la source (buff, ApplyBuff, sync réseau).
+        get => ca.IsStructureUnit ? 0 : baseAttack + permAttackBonus + tempAttackBonus;
+        set
+        {
+            if (ca.IsStructureUnit) return;
+            permAttackBonus = value - baseAttack - tempAttackBonus;
+        }
     }
      
     // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
@@ -152,11 +311,45 @@ public class CreatureLogic: ILivable
     private int movementsForOneTurn = 1;
     public int MovementsLeftThisTurn { get; set; }
 
+    // Vrai depuis l'entrée en jeu (main ou token) jusqu'au début du prochain tour de son propriétaire,
+    // sauf célérité (voir constructeur / GrantCelerity). Contrairement à (MovementsLeftThisTurn <= 0),
+    // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
+    public bool HasSummoningSickness { get; private set; }
+
     public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
-    public List<AttackModifierSO> AttackModifiers => ca.AttackModifiers;
+    public bool IsShielded => ShieldValue > 0;
+
+    // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :
+    // ca est un ScriptableObject PARTAGÉ par toutes les instances de cette carte dans la partie, donc y
+    // ajouter directement contaminerait toutes les autres copies de la carte, pas seulement cette créature.
+    private List<AttackModifierSO> _grantedAttackModifiers;
+    public List<AttackModifierSO> AttackModifiers
+    {
+        get
+        {
+            if (_grantedAttackModifiers == null || _grantedAttackModifiers.Count == 0)
+                return ca.AttackModifiers;
+            List<AttackModifierSO> combined = new List<AttackModifierSO>(ca.AttackModifiers ?? new List<AttackModifierSO>());
+            combined.AddRange(_grantedAttackModifiers);
+            return combined;
+        }
+    }
+
+    public void GrantAttackModifier(AttackModifierSO modifier)
+    {
+        if (modifier == null) return;
+        _grantedAttackModifiers ??= new List<AttackModifierSO>();
+        _grantedAttackModifiers.Add(modifier);
+    }
+
+    public void RemoveAttackModifier(AttackModifierSO modifier)
+    {
+        _grantedAttackModifiers?.Remove(modifier);
+    }
+
     public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
 
 
@@ -208,11 +401,17 @@ public class CreatureLogic: ILivable
         //  AttacksLeftThisTurn = attacksForOneTurn;
         if (ca.Celerity)
             MovementsLeftThisTurn = movementsForOneTurn;
+        HasSummoningSickness = !ca.Celerity;
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
         owner.matchStats.Add(MatchStatType.UnitsSummoned);
+
+        foreach (PermanentCreatureBuff buff in owner.permanentCreatureBuffs)
+            if (buff.filter != null && buff.filter.Matches(ca))
+                ApplyBuff(buff.attackBonus, buff.healthBonus);
+
         if (ca.Effects != null && ca.Effects.Count > 0)
             EffectRegistry.RegisterCreatureEffects(this, ca);
     }
@@ -222,6 +421,7 @@ public class CreatureLogic: ILivable
     {
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
+        HasSummoningSickness = false;
     }
 
     public void ApplyBuff(int attackDelta, int healthDelta)
@@ -334,6 +534,7 @@ public class CreatureLogic: ILivable
     {
         if (OnDeathResolvedInBattle) return;
         OnDeathResolvedInBattle = true;
+        ReactiveDeathTriggersResolvedInBattle = true;
 
         bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
 
@@ -353,54 +554,66 @@ public class CreatureLogic: ILivable
         // effectIndex=-1 est un sentinel "rien à exécuter, juste marquer OnDeathResolvedInBattle" — géré
         // dans ReplayPredictedTriggerEffect avant la résolution normale d'un CardEffectData.
         if (isNetworkServer)
-            ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, -1, 0);
+            ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, -1, 0, UniqueCreatureID);
 
-        if (ca.Effects == null) return;
-
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnDeath) continue;
-
-            // try/catch : une exception ici (ex: un effet OnDeath mal configuré) ne doit ni
-            // interrompre la planification du combat pour le reste de la partie, ni — surtout —
-            // laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués à leur valeur
-            // "en cours" : ce sont des flags statiques globaux, donc s'ils ne sont jamais remis à
-            // leur état normal, TOUTE commande visuelle du jeu (attaques, morts, pioches...) se
-            // retrouve reportée indéfiniment nulle part — symptôme observé : "le combat bloque"
-            // après la mort d'une créature dont l'effet OnDeath a levé une exception.
-            try
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!NetworkSessionData.IsNetworkSession)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnDeath) continue;
+
+                // try/catch : une exception ici (ex: un effet OnDeath mal configuré) ne doit ni
+                // interrompre la planification du combat pour le reste de la partie, ni — surtout —
+                // laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués à leur valeur
+                // "en cours" : ce sont des flags statiques globaux, donc s'ils ne sont jamais remis à
+                // leur état normal, TOUTE commande visuelle du jeu (attaques, morts, pioches...) se
+                // retrouve reportée indéfiniment nulle part — symptôme observé : "le combat bloque"
+                // après la mort d'une créature dont l'effet OnDeath a levé une exception.
+                try
                 {
-                    Command.RunDeferred(UniqueCreatureID, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else if (isNetworkServer)
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    try
+                    if (!NetworkSessionData.IsNetworkSession)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(UniqueCreatureID, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
                     }
-                    finally
+                    else if (isNetworkServer)
                     {
-                        ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.ClearNetworkRng();
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(UniqueCreatureID, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        }
+                        finally
+                        {
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.ClearNetworkRng();
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, UniqueCreatureID);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed);
+                    // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                    // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
-                // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnDeath] Exception pendant l'effet OnDeath #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnDeath] Exception pendant l'effet OnDeath #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
             }
         }
+
+        // Notifie immédiatement les AUTRES créatures qui réagissent à cette mort (ex: Rex "+1/+0
+        // quand un allié meurt", trigger OnFriendlyCreatureDies/OnEnemyCreatureDies) — même logique
+        // "immédiate" que le OnDeath ci-dessus, pour que ce genre de buff s'applique au reste de CE
+        // combat et soit visible dès la mort de cette créature, au lieu d'attendre la fin de la
+        // phase Battle (voir EffectRegistry.NotifyCreatureDiedPredicted). Placé APRÈS le OnDeath de
+        // cette créature elle-même, pour préserver le même ordre relatif que NotifyCreatureDied
+        // (chemin hors combat) : deathrattle propre d'abord, réactions des autres ensuite.
+        // Inconditionnel (pas dans le bloc ca.Effects != null ci-dessus) : une créature SANS aucun
+        // effet propre peut quand même faire réagir Rex.
+        EffectRegistry.NotifyCreatureDiedPredicted(this, owner);
     }
 
     // Clé de report dédiée à OnAttack, distincte de UniqueCreatureID (utilisé tel quel comme clé par
@@ -422,7 +635,7 @@ public class CreatureLogic: ILivable
     // déroulé visuel. Contrairement à ResolvePredictedBattleDeath, pas besoin de flag "déjà résolu" :
     // AssignSingleAttack n'appelle chaque attaquant qu'une seule fois par bataille de zone
     // (BuildAttackQueue n'ajoute chaque créature qu'une fois à la file d'attaque).
-    public void ResolvePredictedOnAttack()
+    public void ResolvePredictedOnAttack(ILivable attackTarget = null)
     {
         if (ca.Effects == null) return;
 
@@ -441,7 +654,7 @@ public class CreatureLogic: ILivable
                 if (!NetworkSessionData.IsNetworkSession)
                 {
                     Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
                 }
                 else if (isNetworkServer)
                 {
@@ -451,14 +664,14 @@ public class CreatureLogic: ILivable
                         EffectSO.SetNetworkRng(new System.Random(seed));
                         ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
-                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
                     }
                     finally
                     {
                         ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.ClearNetworkRng();
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed);
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                 // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
@@ -466,6 +679,58 @@ public class CreatureLogic: ILivable
             catch (System.Exception e)
             {
                 Debug.LogError($"[OnAttack] Exception pendant l'effet OnAttack #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+            }
+        }
+    }
+
+    // Résout OnTakeDamage immédiatement, à l'instant où ZoneCombatResolver ajoute des dégâts prédits sur
+    // cette créature pendant la planification (AddPendingCreatureDamage) — quel que soit le montant, et
+    // même si ce coup la tue. Contrairement à ResolvePredictedBattleDeath/ResolvePredictedOnAttack, aucun
+    // garde "déjà résolu" : une créature peut être touchée plusieurs fois dans la MÊME bataille, chaque
+    // coup passe sa propre clé de report (hitDeferKey), une par instance de dégâts — voir
+    // ZoneCombatResolver.OnTakeDamageDeferKey.
+    public void ResolvePredictedOnTakeDamage(int hitDeferKey)
+    {
+        if (ca.Effects == null) return;
+
+        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+        for (int i = 0; i < ca.Effects.Count; i++)
+        {
+            CardEffectData data = ca.Effects[i];
+            if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+            Debug.Log($"[OnTakeDamage] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
+
+            try
+            {
+                if (!NetworkSessionData.IsNetworkSession)
+                {
+                    Command.RunDeferred(hitDeferKey, () =>
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                }
+                else if (isNetworkServer)
+                {
+                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    try
+                    {
+                        EffectSO.SetNetworkRng(new System.Random(seed));
+                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                        Command.RunDeferred(hitDeferKey, () =>
+                            EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                    }
+                    finally
+                    {
+                        ZoneCombatResolver.EndResolvingPredictedTrigger();
+                        EffectSO.ClearNetworkRng();
+                    }
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey);
+                }
+                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
             }
         }
     }
@@ -483,9 +748,20 @@ public class CreatureLogic: ILivable
     // (voir le commentaire sur ZoneCombatResolver.PredictedTriggerReplay) : rejouer OnDeath et
     // OnAttack comme deux boucles séparées risquerait de trahir cet ordre pour un effet à ciblage
     // aléatoire dont le pool de cibles dépend d'un état de vie/mort pas encore rejoué.
-    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed)
+    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
     {
         if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
+
+        // Sujet de l'évènement réactif (ex: l'allié qui vient de mourir pour Rex "OnFriendlyCreatureDies") —
+        // -1 si ce trigger n'en a pas (OnDeath/OnAttack/OnTakeDamage, déclenchés sur la créature elle-même).
+        // Toujours résolvable ici : CreaturesCreatedThisGame ne retire jamais ses entrées en cours de partie.
+        CreatureLogic eventSubjectCreature = eventSubjectID >= 0 && CreaturesCreatedThisGame.TryGetValue(eventSubjectID, out CreatureLogic subj)
+            ? subj : null;
+
+        // Cible de CETTE attaque (OnAttack uniquement) — -1 sinon. Résolue via le même chemin
+        // générique que SelectedTarget (PhaseEffectPipeline.ResolveEntityByID) : couvre
+        // Creature/Building/Base/Zone, renvoie null pour un Player (pas de voisinage pour un joueur).
+        ILivable replayTarget = PhaseEffectPipeline.ResolveEntityByID(targetID) as ILivable;
 
         // effectIndex=-1 : sentinel posé par ResolvePredictedBattleDeath pour une créature morte en
         // planification SANS effet OnDeath propre — rien à exécuter, juste propager le flag au client
@@ -506,15 +782,12 @@ public class CreatureLogic: ILivable
         if (data.Trigger == TriggerType.OnDeath)
             creature.OnDeathResolvedInBattle = true;
 
-        // OnAttack utilise une clé de report dédiée (voir OnAttackDeferKey) — jamais UniqueCreatureID
-        // tel quel, sous peine de collisionner avec un éventuel bucket OnDeath de cette même créature.
-        int deferKey = data.Trigger == TriggerType.OnAttack ? OnAttackDeferKey(sourceCreatureID) : sourceCreatureID;
-
         try
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
             Command.RunDeferred(deferKey, () =>
-                EffectRegistry.Execute(data, new EffectContext { Caster = creature.owner, Source = creature }));
+                EffectRegistry.Execute(data, new EffectContext
+                    { Caster = creature.owner, Source = creature, EventSubjectCreature = eventSubjectCreature, Target = replayTarget }));
         }
         catch (System.Exception e)
         {
@@ -638,6 +911,7 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn--;
         BaseID = baseID;
+        IsPendingMove = false;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }

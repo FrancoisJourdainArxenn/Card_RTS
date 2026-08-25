@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Commander.</b>
 
-    Units you <b>create</b> gain +1/+0 and <b>Celerity.</b>'
+    <b>ALL TOKEN</b> units you create gain <b>Celerity.</b>'
   CardImage: {fileID: 21300000, guid: 1303c21eaf505a542a808ee910221ab0, type: 3}
   MainCost: 0
   IsHero: 1
@@ -34,6 +34,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
@@ -56,20 +57,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
-  - EffectName: Onslaught
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 11
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 1
-        queries: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
+      scalingSource: 0

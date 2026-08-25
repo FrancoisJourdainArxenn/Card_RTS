@@ -164,7 +164,7 @@ public class VfxManager : MonoBehaviour
 
         GameObject vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
         float lifetime = GetParticleLifetime(vfx);
-        Debug.Log($"[DBG][Timing] PlayDeath {gameObject.name} lifetime={lifetime:F3} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] PlayDeath {gameObject.name} lifetime={lifetime:F3} @ {Time.realtimeSinceStartup:F3}");
         Destroy(vfx, lifetime);
         return lifetime;
     }

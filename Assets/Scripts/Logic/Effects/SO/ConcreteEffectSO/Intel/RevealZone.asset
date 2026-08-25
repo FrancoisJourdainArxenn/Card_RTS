@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 949e2a6ad80e0964c85876ebacb70592, type: 3}
+  m_Name: RevealZone
+  m_EditorClassIdentifier: Assembly-CSharp::RevealZoneSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 4255934190213682183, guid: a5139a5e85818654c8cbe0b67365497c, type: 3}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0

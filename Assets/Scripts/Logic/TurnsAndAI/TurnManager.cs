@@ -15,7 +15,7 @@ public class TurnManager : MonoBehaviour
 
 
     public int initdraw;
-    [SerializeField] private float effectSequenceDelay = 1.5f;
+    [SerializeField] private float effectSequenceDelay = 1f;
     [SerializeField] private float combatSequenceDelay = .5f;
     public float EffectSequenceDelay => effectSequenceDelay;
     public float CombatSequenceDelay => combatSequenceDelay;
@@ -59,6 +59,11 @@ public class TurnManager : MonoBehaviour
     public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
     {
         EffectRegistry.Reset();
+        // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
+        // Play, sans reload de scène complet — voir SceneReloader.ReloadScene) laisse le compteur
+        // bloqué > 0 et gèle tout repositionnement de table pour la nouvelle partie (voir
+        // CreatureAttackVisual.ResetFlightCounter).
+        CreatureAttackVisual.ResetFlightCounter();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             // Debug.LogError("TurnManager: need at least 2 Player instances.");
@@ -687,11 +692,15 @@ public class TurnManager : MonoBehaviour
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
     {
         _soloMoveBuffer.Add((creatureUniqueID, targetBaseID, tablePos));
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
     }
 
     public void CancelSoloMove(int creatureUniqueID)
     {
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
     }
 
     private void FlushSoloMoveBuffer()

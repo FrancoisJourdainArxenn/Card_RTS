@@ -17,6 +17,7 @@ MonoBehaviour:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
+    travelFromSource: 0
   AttackBonus: 2
   HealthBonus: 0
   IsTempEffect: 1
@@ -24,3 +25,6 @@ MonoBehaviour:
     vfxPrefab: {fileID: 7192022332265547404, guid: d3a2af6591a07e24d806e24a6adf51fc, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
+    travelFromSource: 0
+  PersistentFilter: {fileID: 11400000, guid: d104453cd4a802d498fc1f89f2502d7f, type: 2}
+  MatchSameNameAsTarget: 0

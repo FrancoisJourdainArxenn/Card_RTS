@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Orum, Robot Whisperer
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: Orum, Robot Whisperer
+  Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
+  Type: 0
+  subType: 6
+  tier: 1
+  Description: When you play or create a Robot ANYWHERE, it gains +1/+1.
+  CardImage: {fileID: 21300000, guid: 937878bc4bff4f547b2b6bad1ceb09f9, type: 3}
+  MainCost: 0
+  IsHero: 1
+  UnlockCondition: {fileID: 11400000, guid: e9f623e7bba9b224d9abb777b353b408, type: 2}
+  Attack: 2
+  MaxHealth: 3
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 0
+  IsStructureUnit: 0
+  Keywords: []
+  ReferencedCards: []
+  Effects:
+  - EffectName: Let's Go !
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 12
+    Condition: {fileID: 11400000, guid: c83db6f20b80b614999455c14df625e6, type: 2}
+    Effectinfo:
+      effectTargets: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Let's Go !
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 11
+    Condition: {fileID: 11400000, guid: c83db6f20b80b614999455c14df625e6, type: 2}
+    Effectinfo:
+      effectTargets: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

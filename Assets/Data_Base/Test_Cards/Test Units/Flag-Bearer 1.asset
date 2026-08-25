@@ -32,12 +32,13 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: Inspire
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 15
+    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
+    Trigger: 16
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -65,3 +66,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

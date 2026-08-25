@@ -14,7 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseAsset
   Faction: {fileID: 0}
   BaseImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
+  BaseIcon: {fileID: 21300000, guid: c0b6e05098ff085449341eee975007bd, type: 3}
+  baseIconColor: {r: 1, g: 1, b: 1, a: 1}
+  baseDescription: '<b>Base</b>
+
+    This Base will Increase your Income by 1 and
+    allow you to play unit in that zone.'
   BaseName: Standard Neutral Base
   MaxHealth: 3
   mainRessourceIncome: 1
   mainRessourceBaseCost: 3
+  tierLevels: []

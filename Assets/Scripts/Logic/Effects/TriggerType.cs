@@ -6,7 +6,10 @@ public enum TriggerType
     // Card Lifecycle
     OnPlay = 0,
     // OnAmbush,
-    // OnTakeDamage,
+    OnTakeDamage = 16, // déclenché à chaque fois que l'unité subit des dégâts, quel que soit le montant,
+                        // même si ce coup la tue — une fois par coup, au moment où CE coup précis est
+                        // révélé visuellement (voir ZoneCombatResolver.OnTakeDamageDeferKey et
+                        // CreatureLogic.ResolveOnTakeDamageFromEffect)
     OnDeath = 1,
     OnAttack = 15, // déclenché au milieu de l'animation d'attaque, entre le wind-up et la charge/le projectile
     // Phases
@@ -29,4 +32,6 @@ public enum TriggerType
     //Reactions
     OnCardPlayed = 12,
     OnRessourceSpent = 13,
+    OnActionPlayed = 17, // déclenché quand une carte Action (sort/order) est jouée/lancée, via ETB
+                         // (main du joueur ou CastSpellSO) — voir EffectRegistry.NotifyActionPlayed
 }

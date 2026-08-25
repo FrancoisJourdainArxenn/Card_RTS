@@ -17,13 +17,13 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 2
-  Description: When you play a Soldier <i>(in my zone)</i>, it gains +1/+0.
+  Description: When you play a Soldier <i>(in my zone)</i>, it gains +1/+1.
   CardImage: {fileID: 21300000, guid: ca5f52a1754e23b498e588b0c860c40d, type: 3}
-  MainCost: 2
+  MainCost: 3
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 2
+  Attack: 1
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -31,14 +31,15 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
-  ActivationsForOneTurn: 0
+  melee: 1
+  IsStructureUnit: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+  - EffectName: Armor Up!
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 12
-    Condition: {fileID: 11400000, guid: e760ac52042b2af4e883555d7bf15669, type: 2}
+    Condition: {fileID: 11400000, guid: 63e6a46340b1418b8551b242627e69c0, type: 2}
     Effectinfo:
       effectTargets: []
       affectedElements:
@@ -52,3 +53,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

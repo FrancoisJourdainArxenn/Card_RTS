@@ -112,11 +112,17 @@ public class GameNetworkManager : NetworkBehaviour
         int[] predictedSourceIDs  = new int[predictedReplays.Count];
         int[] predictedEffectIdxs = new int[predictedReplays.Count];
         int[] predictedSeeds      = new int[predictedReplays.Count];
+        int[] predictedDeferKeys  = new int[predictedReplays.Count];
+        int[] predictedEventSubjectIDs = new int[predictedReplays.Count];
+        int[] predictedTargetIDs = new int[predictedReplays.Count];
         for (int i = 0; i < predictedReplays.Count; i++)
         {
             predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
             predictedEffectIdxs[i] = predictedReplays[i].EffectIndex;
             predictedSeeds[i]      = predictedReplays[i].Seed;
+            predictedDeferKeys[i]  = predictedReplays[i].DeferKey;
+            predictedEventSubjectIDs[i] = predictedReplays[i].EventSubjectID;
+            predictedTargetIDs[i]  = predictedReplays[i].TargetID;
         }
 
         // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
@@ -165,7 +171,8 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.TargetPlayerIDs, canonical.PlayerDamages,
             canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
-            predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,
+            predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
+            predictedEventSubjectIDs,  predictedTargetIDs,
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
@@ -263,7 +270,8 @@ public class GameNetworkManager : NetworkBehaviour
         int[] targetPlayerIDs, int[] playerDamages,
         int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
-        int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds,
+        int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
+        int[] predictedEventSubjectIDs, int[] predictedTargetIDs,
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
@@ -291,10 +299,17 @@ public class GameNetworkManager : NetworkBehaviour
         // — seuls les autres clients rejouent, avec la même seed, pour obtenir exactement le même
         // ciblage/résultat.
         if (!IsServer)
+        {
+            // Consommé une fois appliqué : empêche qu'un token déjà rejoué pour une occurrence
+            // antérieure du même couple (sourceID, effectIdx) — ex: une créature touchée deux fois
+            // dans la même bataille par un trigger OnTakeDamage qui spawn un token — soit réappliqué
+            // à une occurrence ultérieure de ce même couple (voir bug: ArgumentException clé dupliquée
+            // dans CardsCreatedThisGame, le token étant recréé deux fois avec le même networkID).
+            bool[] tokenSpawnConsumed = new bool[tokenSpawnSourceIDs.Length];
             for (int i = 0; i < predictedSourceIDs.Length; i++)
             {
                 // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
-                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i]);
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i], predictedTargetIDs[i]);
 
                 // Tokens créés par CETTE entrée précise (même paire source/effet — voir
                 // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
@@ -303,13 +318,16 @@ public class GameNetworkManager : NetworkBehaviour
                 // point chronologique de la planification.
                 for (int j = 0; j < tokenSpawnSourceIDs.Length; j++)
                 {
+                    if (tokenSpawnConsumed[j]) continue;
                     if (tokenSpawnSourceIDs[j] != predictedSourceIDs[i] || tokenSpawnEffectIdxs[j] != predictedEffectIndexes[i]) continue;
+                    tokenSpawnConsumed[j] = true;
                     ApplyTokenSpawnOnClient(
                         tokenSpawnPlayerIdxs[j], tokenSpawnSourceIDs[j], tokenSpawnEffectIdxs[j],
                         tokenSpawnTablePos[j], tokenSpawnBaseIDs[j], tokenSpawnCardIDs[j],
                         tokenSpawnCreatureIDs[j], tokenSpawnDeferKeys[j]);
                 }
             }
+        }
     }
 
     static int[] ConcatArrays(int[] firstArray, int[] secondArray)
@@ -351,23 +369,38 @@ public class GameNetworkManager : NetworkBehaviour
         if (isIndependent)
         {
             int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            ulong senderClientId = rpcParams.Receive.SenderClientId;
 
-            // Si le client soumettant est distant (pas le host), le serveur met à jour son état
-            // de jeu localement sans déclencher de visuels ni _isComplete.
-            bool isSenderHost = rpcParams.Receive.SenderClientId == NetworkManager.ServerClientId;
-            if (!isSenderHost)
-                PhaseEffectPipeline.ApplyCanonicalResolution(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, isLocalPlayer: false);
+            // Met à jour l'état de jeu (sans visuel, sans compléter le pipeline local — voir
+            // PhaseEffectPipeline.ApplyCanonicalResolution isLocalPlayer:false) chez TOUS les
+            // clients autres que l'expéditeur — symétrique, que l'expéditeur soit le host ou un
+            // client distant. Un ClientRpc appelé côté serveur s'exécute aussi localement quand
+            // il cible le serveur/host, donc ceci couvre également le cas host-non-sender sans
+            // appel direct séparé.
+            List<ulong> otherClientIds = new List<ulong>();
+            foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+                if (clientId != senderClientId)
+                    otherClientIds.Add(clientId);
 
-            // Feedback visuel ciblé au seul joueur qui soumet.
-            ClientRpcParams targetParams = new ClientRpcParams
+            if (otherClientIds.Count > 0)
+            {
+                ClientRpcParams otherParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams { TargetClientIds = otherClientIds.ToArray() }
+                };
+                ApplyOpponentEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, otherParams);
+            }
+
+            // Feedback visuel + complétion du pipeline local, ciblés au seul joueur qui soumet.
+            ClientRpcParams senderParams = new ClientRpcParams
             {
                 Send = new ClientRpcSendParams
                 {
-                    TargetClientIds = new ulong[] { rpcParams.Receive.SenderClientId }
+                    TargetClientIds = new ulong[] { senderClientId }
                 }
             };
             Debug.Log($"[GameNetworkManager] SubmitEffectTargets indépendant — joueur {playerIndex}, phase {forPhase}");
-            ApplyCanonicalEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, targetParams);
+            ApplyCanonicalEffectResolutionClientRpc(sourceEntityIDs, effectIndexes, selectedTargetIDs, seed, senderParams);
         }
         else
         {
@@ -411,6 +444,24 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[ClientRpc] ApplyCanonicalEffectResolution reçu — {sourceEntityIDs.Length} effet(s), seed={effectSeed}, phase={TurnManager.Instance.CurrentPhase}");
         PhaseEffectPipeline.ApplyCanonicalResolution(
             sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed
+        );
+    }
+
+    /// <summary>
+    /// Reçu par les clients AUTRES que l'expéditeur d'un effet indépendant (Regroup/Command) :
+    /// applique uniquement l'état de jeu (pas de visuel, pas de complétion du pipeline local —
+    /// voir PhaseEffectPipeline.ApplyCanonicalResolution isLocalPlayer:false).
+    /// </summary>
+    [ClientRpc]
+    void ApplyOpponentEffectResolutionClientRpc(
+        int[] sourceEntityIDs,
+        int[] effectIndexes,
+        int[] selectedTargetIDs,
+        int effectSeed,
+        ClientRpcParams clientRpcParams = default)
+    {
+        PhaseEffectPipeline.ApplyCanonicalResolution(
+            sourceEntityIDs, effectIndexes, selectedTargetIDs, effectSeed, isLocalPlayer: false
         );
     }
 
@@ -708,6 +759,9 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.PlaceBuilding:
                 PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
                 break;
+            case ActionType.PlaySpell:
+                PlaySpellClientRpc(action.playerIndex, action.param1);
+                break;
         }
     }
 
@@ -846,15 +900,24 @@ public class GameNetworkManager : NetworkBehaviour
     /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void PlayCreatureServerRpc(int cardUniqueID, int tablePos, int baseID, int playerIndex)
+    public void PlayCreatureServerRpc(
+        int cardUniqueID, int tablePos, int baseID, int playerIndex,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs)
     {
         int creatureUniqueID = IDFactory.GetUniqueID();
 
         bool isCelerity = CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic card) && card.ca.Celerity;
 
+        // Seed généré côté serveur et rejoué identiquement sur tous les clients (voir
+        // Player.NetworkPendingPlayCreature / NetworkPlayCreatureFromHand) : garantit que tout tirage
+        // aléatoire dans la résolution de l'effet OnPlay (ex: EffectRepartition.RandomSingleTarget)
+        // retombe sur la même cible partout, comme pour PlaySpellServerRpc.
+        int seed = Random.Range(int.MinValue, int.MaxValue);
+
         if (isCelerity)
         {
-            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
         }
         else
         {
@@ -867,7 +930,8 @@ public class GameNetworkManager : NetworkBehaviour
                 param3 = tablePos,
                 param4 = baseID
             });
-            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID);
+            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
         }
     }
 
@@ -876,17 +940,23 @@ public class GameNetworkManager : NetworkBehaviour
     /// avec les mêmes identifiants sur toutes les machines.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    void ShowPendingPlayCreatureClientRpc(
+        int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
+        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
+            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
     }
 
     [ClientRpc]
-    void ImmediatePlayCreatureClientRpc(int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID)
+    void ImmediatePlayCreatureClientRpc(
+        int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
     {
         Player player = Player.Players[playerIndex];
-        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID);
+        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
+            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
     }
 
     [ClientRpc]
@@ -899,6 +969,56 @@ public class GameNetworkManager : NetworkBehaviour
         }
         Player player = Player.Players[playerIndex];
         player.NetworkFlushPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID);
+    }
+
+    // -------------------------------------------------------------------------
+    // ACTIONS DE JEU — JOUER UN SORT
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Envoyé par un client pour jouer un sort depuis sa main. Contrairement à une créature, un
+    /// sort ne place rien sur une table : pas d'ID à faire générer par le serveur, seuls
+    /// cardUniqueID et les tableaux de ciblage (déjà résolus localement via OnPlayTargetingSession,
+    /// vides pour un sort sans cible) sont nécessaires.
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void PlaySpellServerRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs)
+    {
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.PlaySpell,
+            playerIndex = playerIndex,
+            param1 = cardUniqueID
+        });
+        // Seed généré côté serveur et rejoué identiquement sur tous les clients (voir
+        // Player.NetworkPendingPlaySpell) : garantit que tout tirage aléatoire dans la résolution de
+        // l'effet (ex: EffectRepartition.RandomSingleTarget) retombe sur la même cible partout,
+        // comme pour les triggers de combat (EffectRegistry.FireListenersPredicted).
+        int seed = Random.Range(int.MinValue, int.MaxValue);
+        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs, seed);
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : applique l'état de jeu (ressources, main, effets) avec les
+    /// mêmes cibles sur toutes les machines. Pas de visuel ici — voir PlaySpellClientRpc.
+    /// </summary>
+    [ClientRpc]
+    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed)
+    {
+        Player player = Player.Players[playerIndex];
+        player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs, seed);
+    }
+
+    [ClientRpc]
+    void PlaySpellClientRpc(int playerIndex, int cardUniqueID)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] PlaySpellClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        Player player = Player.Players[playerIndex];
+        player.NetworkFlushPlaySpell(cardUniqueID);
     }
 
     // -------------------------------------------------------------------------
@@ -1165,6 +1285,42 @@ public class GameNetworkManager : NetworkBehaviour
             player.GetBonusRessources(amount);
     }
 
+    public void BroadCastShieldBonus(int playerIndex, int amount, int sourceID)
+    {
+        if (!IsServer) return;
+        ShieldBonusClientRpc(playerIndex, amount, sourceID);
+    }
+
+    [ClientRpc]
+    public void ShieldBonusClientRpc(int playerIndex, int amount, int sourceID)
+    {
+        Player player = Player.Players[playerIndex];
+        player.AddBonusShieldFromSource(sourceID, amount);
+    }
+
+    public void BroadCastEffectAmplifier(int playerIndex, int sourceID, EffectAmplifier amplifier)
+    {
+        if (!IsServer) return;
+        EffectAmplifierClientRpc(playerIndex, sourceID, (int)amplifier.AppliesTo,
+            amplifier.DamageBonus, amplifier.HealBonus, amplifier.AttackBonus, amplifier.HealthBonus, amplifier.SpellsOnly);
+    }
+
+    [ClientRpc]
+    public void EffectAmplifierClientRpc(int playerIndex, int sourceID, int appliesTo,
+        int damageBonus, int healBonus, int attackBonus, int healthBonus, bool spellsOnly)
+    {
+        Player player = Player.Players[playerIndex];
+        player.AddEffectAmplifier(sourceID, new EffectAmplifier
+        {
+            AppliesTo = (EffectCategory)appliesTo,
+            DamageBonus = damageBonus,
+            HealBonus = healBonus,
+            AttackBonus = attackBonus,
+            HealthBonus = healthBonus,
+            SpellsOnly = spellsOnly,
+        });
+    }
+
 
     //Moving Units
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -1178,6 +1334,8 @@ public class GameNetworkManager : NetworkBehaviour
             param2 = targetBaseID,
             param3 = tablePos
         });
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -1190,6 +1348,9 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (removed == 0)
             return;
+
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
 
         // Le client à l'origine de l'annulation a déjà effacé sa propre flèche en local,
         // de façon synchrone, avant même d'envoyer ce RPC (voir DragCreatureActions.OnStartDrag /
@@ -1439,6 +1600,62 @@ public class GameNetworkManager : NetworkBehaviour
         if (tokenAsset == null) { Debug.LogError($"[Token] Asset introuvable src={sourceEntityID} idx={effectIndex}"); return; }
         EffectVisualData visualData = EffectRegistry.GetTokenVisualData(sourceEntityID, effectIndex);
         Player.Players[playerIndex].GetACardNotFromDeck(tokenAsset, cardID, visualData);
+    }
+
+    public void BroadCastPoolCardToHand(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        if (!IsServer) return;
+        int cardID = IDFactory.GetUniqueID();
+        PoolCardToHandClientRpc(playerIndex, sourceEntityID, effectIndex, seed, cardID);
+    }
+
+    [ClientRpc]
+    void PoolCardToHandClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int seed, int cardID)
+    {
+        GenerateCardsFromPoolSO so = EffectRegistry.GetGenerateCardsFromPoolSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || so.CardPool.Count == 0) return;
+
+        CardAsset picked = so.CardPool[new System.Random(seed).Next(0, so.CardPool.Count)];
+        Player.Players[playerIndex].GetACardNotFromDeck(picked, cardID, so.EffectVisual);
+    }
+
+    public void BroadCastChooseOneOffer(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        if (!IsServer) return;
+        ChooseOneOfferClientRpc(playerIndex, sourceEntityID, effectIndex, seed);
+    }
+
+    [ClientRpc]
+    void ChooseOneOfferClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int seed)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || so.CardPool.Count == 0) return;
+
+        int offerCount = Mathf.Clamp(so.ChooseBetweenCount, 1, so.CardPool.Count);
+        List<CardAsset> offer = ChooseOneSO.PickDistinct(so.CardPool, offerCount, new System.Random(seed));
+
+        ChooseOneManager.Instance.BeginOffer(Player.Players[playerIndex], offer, sourceEntityID, effectIndex);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SubmitChooseOnePickServerRpc(int playerIndex, int sourceEntityID, int effectIndex, int chosenPoolIndex)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || chosenPoolIndex < 0 || chosenPoolIndex >= so.CardPool.Count)
+            return;
+
+        int cardID = IDFactory.GetUniqueID();
+        ChooseOnePickedClientRpc(playerIndex, sourceEntityID, effectIndex, chosenPoolIndex, cardID);
+    }
+
+    [ClientRpc]
+    void ChooseOnePickedClientRpc(int playerIndex, int sourceEntityID, int effectIndex, int chosenPoolIndex, int cardID)
+    {
+        ChooseOneSO so = EffectRegistry.GetChooseOneSO(sourceEntityID, effectIndex);
+        if (so == null || so.CardPool == null || chosenPoolIndex < 0 || chosenPoolIndex >= so.CardPool.Count) return;
+
+        CardAsset chosen = so.CardPool[chosenPoolIndex];
+        Player.Players[playerIndex].GetACardNotFromDeck(chosen, cardID);
     }
 
     // cardID/creatureID sont déjà alloués par l'appelant (TokenGenerationSO.Execute), qui a créé

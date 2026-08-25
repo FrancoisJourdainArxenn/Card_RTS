@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b16d44f0fdc5c42b5a304e1dbb87f9, type: 3}
+  m_Name: PoolTest2
+  m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
+  cards:
+  - {fileID: 11400000, guid: c8c94a1d0b063c043919fa6d205e4e51, type: 2}
+  - {fileID: 11400000, guid: c493d16d762eb874890417eff765217f, type: 2}
+  - {fileID: 11400000, guid: 06f9d150aba798a4ab171d8c7e62d9df, type: 2}
+  - {fileID: 11400000, guid: 9b5b7c853ca51df468c3f7f91a19e8aa, type: 2}
+  - {fileID: 11400000, guid: 44ae2f52806585343a1e677bbf32bbb7, type: 2}
+  buildings: []

@@ -6,6 +6,7 @@ using UnityEngine;
 public class GiveCeleritySO : EffectSO
 {
     public override EffectPriority Priority => EffectPriority.ModifyStats;
+    protected override bool IsBuffEffect => true;
 
     public override void Execute(
         string EffectName,

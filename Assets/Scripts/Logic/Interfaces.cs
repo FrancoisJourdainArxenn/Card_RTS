@@ -14,6 +14,7 @@ public interface ILivable: IIdentifiable
     ZoneLogic Zone { get; }
 
     public bool IsDamaged => Health < MaxHealth;
+    public bool IsShielded => false;
     public bool IsPendingDeath => false;
     // True once this entity's OnDeath has already been resolved ahead of time during battle
     // planning (see CreatureLogic.ResolvePredictedBattleDeath) — excluded from targeting just

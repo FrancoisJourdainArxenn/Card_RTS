@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Melee</b>
+  Description: '<b>On Play : </b> Zergling gain +1/+0 (wherever they are).'
   CardImage: {fileID: 21300000, guid: 0fd6b1e6f1895ca4ab6eba5eb956cde0, type: 3}
   MainCost: 0
   IsHero: 0
@@ -32,12 +32,13 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   melee: 1
+  IsStructureUnit: 0
   ActivationsForOneTurn: 0
   Keywords: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 1
+    Effect: {fileID: 11400000, guid: 783f6373691172d4e92ba2817991c6f4, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -47,8 +48,8 @@ MonoBehaviour:
         queries:
         - team: 1
           statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+          zoneFilter: 0
+          cardFilter: {fileID: 11400000, guid: 28cbc08c3459425b93c533ff65741529, type: 2}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
@@ -56,8 +57,9 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

@@ -100,6 +100,14 @@ public class WhereIsTheCardOrCreature : MonoBehaviour {
         canvas.sortingLayerName = "Units";
     }
 
+    // Cache/montre uniquement le visuel de la carte (son Canvas) sans désactiver le GameObject :
+    // l'IDHolder reste résolvable et tout enfant hors-Canvas (ex: une flèche de ciblage) reste actif.
+    public void SetFaceVisible(bool visible)
+    {
+        if (canvas != null)
+            canvas.enabled = visible;
+    }
+
     private int HandSortingOrder(int placeInHand)
     {
         return (-(placeInHand + 1) * 10); 

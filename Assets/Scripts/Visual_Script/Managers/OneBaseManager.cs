@@ -174,4 +174,15 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         baseVisual.ResetBuildingZone();
         Destroy(gameObject);
     }
+
+    void OnMouseEnter()
+    {
+        UITooltip.ShowTooltip_Static(baseAsset.baseDescription);
+    }
+
+    void OnMouseExit()
+    {
+        UITooltip.HideTooltip_Static();
+    }
+
 }

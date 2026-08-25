@@ -152,7 +152,7 @@ public class Command
 
     public static void CommandExecutionComplete()
     {
-        Debug.Log($"[DBG][Timing] COMPLETE @ {Time.realtimeSinceStartup:F3} — restants: {CommandQueue.Count}");
+        // Debug.Log($"[DBG][Timing] COMPLETE @ {Time.realtimeSinceStartup:F3} — restants: {CommandQueue.Count}");
         if (CommandQueue.Count > 0)
             PlayFirstCommandFromQueue();
         else
@@ -168,7 +168,7 @@ public class Command
     {
         playingQueue = true;
         Command next = CommandQueue.Dequeue();
-        Debug.Log($"[DBG][Timing] START {next.GetType().Name} @ {Time.realtimeSinceStartup:F3}");
+        // Debug.Log($"[DBG][Timing] START {next.GetType().Name} @ {Time.realtimeSinceStartup:F3}");
         next.StartCommandExecution();
     }
 

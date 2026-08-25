@@ -18,7 +18,9 @@ public class BuildSpotVisual : MonoBehaviour
 
     void Awake()
     {
-        spotID = GetHierarchyPath(transform).GetHashCode();
+        // Animator.StringToHash (CRC32) au lieu de string.GetHashCode() — voir ZoneManager.Awake()
+        // pour la même correction et son explication (hash de string randomisé par processus).
+        spotID = Animator.StringToHash(GetHierarchyPath(transform));
         Registry[SpotID] = this;
     }
 

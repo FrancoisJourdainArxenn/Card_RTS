@@ -20,12 +20,27 @@ public class EffectTargetingArrow : MonoBehaviour
 
     private void OnTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
     {
-        GameObject sourceObject = IDHolder.GetGameObjectWithID(queue[currentIndex].SourceEntityID);
-        if (sourceObject == null) return;
+        PendingEffectSelection current = queue[currentIndex];
+
+        // Le ciblage de sort a sa propre flèche dédiée (voir SpellTargetingArrow) : on ne touche
+        // pas à celle-ci pour ne pas afficher les deux en même temps.
+        if (current.IsSpellTargeting)
+        {
+            StopAllCoroutines();
+            arrow.Hide();
+            return;
+        }
+
+        // SourceEntityID < 0 : ciblage OnPlay avant que la créature n'existe (voir
+        // OnPlayTargetingSession) — pas d'entité source à vérifier, la flèche suit simplement la souris.
+        if (current.SourceEntityID >= 0 && IDHolder.GetGameObjectWithID(current.SourceEntityID) == null)
+            return;
 
         StopAllCoroutines();
 
-        if (queue[currentIndex].SelectedTarget != null)
+        // Point de départ fixe dans la scène (voir Effect_TargetingArrow) : cette flèche ne suit
+        // aucune source, seule sa pointe suit la souris.
+        if (current.SelectedTarget != null)
             arrow.Hide();
         else
             StartCoroutine(ShowArrowDelayed());

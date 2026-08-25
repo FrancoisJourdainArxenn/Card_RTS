@@ -9,6 +9,11 @@ public abstract class DraggingActions : MonoBehaviour {
 
     public abstract void OnDraggingInUpdate();
 
+    // Appelé quand un drag en cours est annulé par du code (ex: touche Echap) plutôt que par un
+    // relâchement de souris normal — voir Draggable.CancelCurrentDrag(). No-op par défaut : seuls
+    // les DraggingActions qui ont besoin d'un comportement d'annulation spécifique le surchargent.
+    public virtual void OnDragCancelled() { }
+
 
     public virtual bool CanDrag
     {
