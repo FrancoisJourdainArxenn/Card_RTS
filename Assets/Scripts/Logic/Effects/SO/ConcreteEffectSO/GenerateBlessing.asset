@@ -22,6 +22,5 @@ MonoBehaviour:
   CardPool:
   - {fileID: 11400000, guid: 4b57b44ac0a0afa4093eac526e52d3de, type: 2}
   - {fileID: 11400000, guid: 0004388da4402ae45be8166039246310, type: 2}
-  - {fileID: 11400000, guid: d8dc68f978f932b4b80441a6f3b29cf7, type: 2}
   - {fileID: 11400000, guid: 5deb46115879d8f49aeb4b92ee85142d, type: 2}
   CardCount: 1
