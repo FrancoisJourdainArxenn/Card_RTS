@@ -40,7 +40,7 @@ MonoBehaviour:
   - EffectName: May the Element be with me
     Effect: {fileID: 11400000, guid: 45bcaa40d013e9540ba252450a570242, type: 2}
     Trigger: 17
-    Condition: {fileID: 11400000, guid: e6060697a459cd7439f5971577c5a4ca, type: 2}
+    Condition: {fileID: 11400000, guid: a5a78a015ae66e74099abcec4037a998, type: 2}
     Effectinfo:
       effectTargets: []
       affectedElements: []

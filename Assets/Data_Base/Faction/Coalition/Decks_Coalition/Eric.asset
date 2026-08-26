@@ -15,6 +15,6 @@ MonoBehaviour:
   deckName: Erik, Happy Trigger
   difficultyLevel: 3
   deckTooltip: Count on your Ranged Unit. Make sure they get a chance to attack.
-    That will the key to victory.
+    They will lead you to victory.
   heroCard: {fileID: 11400000, guid: da587619a2433fc499dcefcee7461d20, type: 2}
   sharedPool: {fileID: 11400000, guid: 66182dd66bcfa4742aa607a78e67d151, type: 2}

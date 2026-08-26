@@ -10,43 +10,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Lightning Strike
+  m_Name: Gryff
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
-  Type: 2
-  subType: 4
-  tier: 1
-  Description: 'Deals {0} damage randomly split among enemies. '
-  CardImage: {fileID: 21300000, guid: 9e7e0345c15c79f49867d8737a4b24bc, type: 3}
-  MainCost: 0
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 0
+  subType: 1
+  tier: 4
+  Description: <b>On Play:</b> Gives +2/+2 to ally units until end of turn.
+  CardImage: {fileID: 21300000, guid: 4ef6c30508eb17b4398da7d6a60ccc13, type: 3}
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 0
-  AttacksForOneTurn: 0
-  AttackSpeedMultiplier: 0
+  Attack: 2
+  MaxHealth: 2
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 0
+  MoveSpeed: 1
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Lightning Strike
-    Effect: {fileID: 11400000, guid: f2030b73480dffa449f28cd79de89822, type: 2}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: bb40a90c7367ace4781f73f2761730cc, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
-        includesSource: 0
+        includesSource: 1
         onlySource: 0
         queries:
-        - team: 2
+        - team: 1
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
@@ -57,7 +57,7 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 1
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0

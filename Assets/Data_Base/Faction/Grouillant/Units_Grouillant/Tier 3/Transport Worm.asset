@@ -10,43 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Gryff
+  m_Name: Transport Worm
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
   tier: 3
-  Description: <b>Start of turn:</b> Create an Egg Sack in your hand, it cost 0.
-  CardImage: {fileID: 21300000, guid: 4ef6c30508eb17b4398da7d6a60ccc13, type: 3}
+  Description: '<b>Back-Up, Commander</b>
+
+    <i>(This unit can''t move or Attack.)</i>'
+  CardImage: {fileID: 21300000, guid: efeebae1f1db26d419f9d1c13a0226cf, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 4
+  Attack: 0
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
-  Commandement: 0
-  Renfort: 0
+  Commandement: 1
+  Renfort: 1
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
-  IsStructureUnit: 0
+  melee: 1
+  IsStructureUnit: 1
   Keywords:
-  - {fileID: 11400000, guid: 098fd9b6e153cf841aff52371f96f586, type: 2}
+  - {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
   ReferencedCards: []
-  Effects:
-  - EffectName: More Eggs
-    Effect: {fileID: 11400000, guid: ca3e905dfa2493046afcdbe6b671f2bc, type: 2}
-    Trigger: 2
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
+  Effects: []

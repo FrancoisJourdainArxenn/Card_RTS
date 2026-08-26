@@ -18,7 +18,7 @@ MonoBehaviour:
   subType: 6
   tier: 4
   Description: <b>On Play:</b> Gives Piercing Attacks to ANY ally unit.
-  CardImage: {fileID: 21300000, guid: ca5f52a1754e23b498e588b0c860c40d, type: 3}
+  CardImage: {fileID: 21300000, guid: dfc32ec2fc02b9b4f9afd188f0bffed8, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}

@@ -27,7 +27,7 @@ MonoBehaviour:
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 4
   AttackModifiers:
-  - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1

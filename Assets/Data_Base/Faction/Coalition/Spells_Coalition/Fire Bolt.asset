@@ -37,7 +37,7 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Elemental Bolt
-    Effect: {fileID: 11400000, guid: a1f304f8cd781e74f9da99faba1c1ef6, type: 2}
+    Effect: {fileID: 11400000, guid: dd53d2e9daa92f34d999c8f2cdb4f171, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
