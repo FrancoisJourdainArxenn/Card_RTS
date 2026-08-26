@@ -48,7 +48,8 @@ public class GenerateCardsFromPoolSO : EffectSO
             for (int i = 0; i < CardCount; i++)
             {
                 int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                GameNetworkManager.Instance.BroadCastPoolCardToHand(playerIndex, sourceEntityID, effectIndex, seed);
+                GameNetworkManager.QueueOrRunAfterReveal(() =>
+                    GameNetworkManager.Instance.BroadCastPoolCardToHand(playerIndex, sourceEntityID, effectIndex, seed));
             }
         }
         else

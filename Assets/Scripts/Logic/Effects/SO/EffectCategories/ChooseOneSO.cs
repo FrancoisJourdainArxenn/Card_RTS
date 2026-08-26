@@ -44,7 +44,8 @@ public class ChooseOneSO : EffectSO
             }
 
             int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-            GameNetworkManager.Instance.BroadCastChooseOneOffer(playerIndex, sourceEntityID, effectIndex, seed);
+            GameNetworkManager.QueueOrRunAfterReveal(() =>
+                GameNetworkManager.Instance.BroadCastChooseOneOffer(playerIndex, sourceEntityID, effectIndex, seed));
         }
         else
         {

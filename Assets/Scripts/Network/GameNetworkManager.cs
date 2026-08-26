@@ -983,6 +983,34 @@ public class GameNetworkManager : NetworkBehaviour
         finally { EffectSO.ClearForcedAllocation(); }
     }
 
+    // Pendant la résolution serveur du OnPlay d'une créature/bâtiment tout juste joué (voir
+    // ResolveOnServerAndCaptureAllocation ci-dessus), un effet type TokenGenerationSO/
+    // GenerateCardsFromPoolSO/ChooseOneSO peut se référer à CETTE MÊME entité comme source
+    // (context.Source) et vouloir diffuser aussitôt un ClientRpc dérivant l'asset via
+    // EffectRegistry.GetTokenAsset(sourceEntityID, effectIndex). Si ce ClientRpc part avant le
+    // ClientRpc qui révèle l'entité elle-même côté client (ShowPendingPlayCreatureClientRpc /
+    // ImmediatePlayCreatureClientRpc, envoyés APRÈS la résolution complète), il arrive en premier
+    // chez les autres clients — qui ne trouvent alors pas encore sourceEntityID dans
+    // CreaturesCreatedThisGame/BuildingsCreatedThisGame ("[Token] Asset introuvable"). On met donc
+    // en attente ces broadcasts pendant la résolution, pour les vider juste après l'envoi du RPC de
+    // reveal — l'ordre d'arrivée côté client est alors garanti correct.
+    private static bool _deferringReveal = false;
+    private static readonly List<System.Action> _deferredRevealBroadcasts = new List<System.Action>();
+
+    public static void QueueOrRunAfterReveal(System.Action broadcast)
+    {
+        if (_deferringReveal) _deferredRevealBroadcasts.Add(broadcast);
+        else broadcast();
+    }
+
+    private static void FlushDeferredRevealBroadcasts()
+    {
+        if (_deferredRevealBroadcasts.Count == 0) return;
+        List<System.Action> pending = new List<System.Action>(_deferredRevealBroadcasts);
+        _deferredRevealBroadcasts.Clear();
+        foreach (System.Action broadcast in pending) broadcast();
+    }
+
     /// <summary>
     /// Envoyé par un client pour jouer une créature depuis sa main.
     /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
@@ -1005,13 +1033,19 @@ public class GameNetworkManager : NetworkBehaviour
 
         if (isCelerity)
         {
-            ResolveOnServerAndCaptureAllocation(
-                () => player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
-                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
-                out int[] allocIDs, out int[] allocAmounts);
+            _deferringReveal = true;
+            try
+            {
+                ResolveOnServerAndCaptureAllocation(
+                    () => player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                        onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
+                    out int[] allocIDs, out int[] allocAmounts);
 
-            ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
+                ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
+            }
+            finally { _deferringReveal = false; }
+            FlushDeferredRevealBroadcasts();
         }
         else
         {
@@ -1025,13 +1059,19 @@ public class GameNetworkManager : NetworkBehaviour
                 param4 = baseID
             });
 
-            ResolveOnServerAndCaptureAllocation(
-                () => player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
-                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
-                out int[] allocIDs, out int[] allocAmounts);
+            _deferringReveal = true;
+            try
+            {
+                ResolveOnServerAndCaptureAllocation(
+                    () => player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                        onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
+                    out int[] allocIDs, out int[] allocAmounts);
 
-            ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
+                ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
+                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
+            }
+            finally { _deferringReveal = false; }
+            FlushDeferredRevealBroadcasts();
         }
     }
 

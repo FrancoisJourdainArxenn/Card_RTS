@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 9
+  subType: 0
   tier: 5
   Description: '<b>Piercing Attacks
 

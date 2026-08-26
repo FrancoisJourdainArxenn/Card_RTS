@@ -89,6 +89,17 @@ public class CreatureLogic: ILivable
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
     private bool _deathVisualQueued;
 
+    // True une fois que CreatureDieCommand a réellement eu son tour dans la file de commandes visuelles
+    // pour cette créature (voir CreatureDieCommand.StartCommandExecution) — contrairement à IsPendingDeath/
+    // Health<=0, qui sont décidés dès la planification logique du combat (donc bien avant que la file
+    // visuelle, elle, n'ait eu le temps de rejouer quoi que ce soit). Un token créé en tout début de
+    // planification (ex: TokenGenerationSO via Laya "Begin Battle: Create a Barrier") peut très bien être
+    // logiquement condamné (IsPendingDeath=true) alors que son propre PlayACreatureCommand n'est même pas
+    // encore passé dans la file — utiliser IsPendingDeath là-bas masquerait alors son reveal pour de bon.
+    // Voir PlayACreatureCommand.StartCommandExecution.
+    public bool DieCommandExecuted { get; private set; }
+    public void MarkDieCommandExecuted() => DieCommandExecuted = true;
+
     // True once OnDeath has already been resolved ahead of time during battle planning
     // (see ResolvePredictedBattleDeath). Prevents NotifyCreatureDied from firing OnDeath
     // a second time when the real Die() eventually runs (end of phase / drain).
