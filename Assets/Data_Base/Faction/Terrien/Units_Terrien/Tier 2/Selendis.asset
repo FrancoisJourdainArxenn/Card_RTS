@@ -17,9 +17,9 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 2
-  Description: <b>Command:</b> a Robot in my Zone gains +1/+1.
+  Description: <b>On Play:</b> a Robot gains +1/+1.
   CardImage: {fileID: 21300000, guid: 535aa7fe1e430f74ca0cb1453a1d2766, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
@@ -32,12 +32,13 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
-  ActivationsForOneTurn: 0
+  IsStructureUnit: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: Selendis' Buff
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 3
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -49,15 +50,16 @@ MonoBehaviour:
           statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 11400000, guid: 94af109c19cbedc49b0feca0ed4d863f, type: 2}
-        requiresPlayerSelection: 0
+        requiresPlayerSelection: 1
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 3
+      repartition: 0
       useScalingCount: 0
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

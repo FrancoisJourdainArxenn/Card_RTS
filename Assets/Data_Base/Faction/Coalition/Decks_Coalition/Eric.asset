@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Eric
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Erik, Happy Trigger
-  difficultyLevel: 1
-  deckTooltip: <b>Soldiers</b> together strong !
-  heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
+  difficultyLevel: 3
+  deckTooltip: Count on your Ranged Unit. Make sure they get a chance to attack.
+    That will the key to victory.
+  heroCard: {fileID: 11400000, guid: da587619a2433fc499dcefcee7461d20, type: 2}
   sharedPool: {fileID: 11400000, guid: 66182dd66bcfa4742aa607a78e67d151, type: 2}

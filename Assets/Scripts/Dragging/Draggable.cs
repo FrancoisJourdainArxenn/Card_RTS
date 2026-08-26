@@ -74,6 +74,7 @@ public class Draggable : MonoBehaviour {
     {
         if (da!=null && da.CanDrag)
         {
+            Debug.Log("mousedown");
             dragging = true;
             // when we are dragging something, all previews should be off
             HoverPreview.PreviewsAllowed = false;

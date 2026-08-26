@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 2
   Description: <b>On Battle Start:</b> I cast Fire Bolt.
   CardImage: {fileID: 21300000, guid: e2fc959c22db440409b123e6da64e478, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0

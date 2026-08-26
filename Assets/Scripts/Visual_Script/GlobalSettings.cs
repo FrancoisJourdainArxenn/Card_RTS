@@ -15,6 +15,8 @@ public class GlobalSettings : MonoBehaviour
     [Tooltip("End phase button for the low-area human player.")]
     public Button EndTurnButton;
     public HandVisual localPlayerHand;
+    public HandBoundsVisual localPlayerHandBounds;
+    public CardHoldSlotVisual localPlayerHoldSlot;
     public UiPlayerVisual UiPlayerVisual;
     public BuildingShopVisual buildingShop;
 
@@ -162,12 +164,42 @@ public class GlobalSettings : MonoBehaviour
     }
 
 
+    // Maintient les zones UI propres au joueur local (main, cadre de main, slot de réserve) en
+    // phase avec `localPlayer` — à appeler chaque fois que cette référence change (démarrage
+    // réseau via GameNetworkManager.AssignLocalPlayerControl, ou bascule debug barre espace
+    // ci-dessous). Sans ça, ces zones restent figées sur le joueur local d'origine.
+    public void SyncLocalPlayerZones()
+    {
+        if (localPlayer == null)
+            return;
+
+        // En réseau, un seul joueur est local par machine : une seule main à afficher, qu'il faut
+        // recibler sur le bon Player. En solo/hotseat, chaque joueur a déjà sa propre HandVisual
+        // dédiée (voir Player.handVisual) — réassigner ici écraserait celle de l'un avec celle de
+        // l'autre à chaque passage de tour, sans jamais pouvoir revenir en arrière.
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            localPlayerHand.owner = localPlayer.MainPArea.owner;
+            localPlayer.handVisual = localPlayerHand;
+        }
+
+        if (localPlayerHandBounds != null)
+            localPlayerHandBounds.owner = localPlayer.MainPArea.owner;
+
+        if (localPlayerHoldSlot != null)
+        {
+            localPlayerHoldSlot.owner = localPlayer;
+            localPlayerHoldSlot.gameObject.tag = localPlayer.tag;
+        }
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             localPlayer = localPlayer == TopPlayer ? LowPlayer : TopPlayer;
             localPlayerDebugText.text = "Local Player: " + localPlayer.name;
+            SyncLocalPlayerZones();
             FogOfWarManager.Refresh();
             PathVisual.RefreshAll();
             RefreshEndPhaseButtons();

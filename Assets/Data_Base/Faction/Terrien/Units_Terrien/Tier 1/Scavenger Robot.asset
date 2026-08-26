@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: <b>On Death:</b> +1 Ressource.
   CardImage: {fileID: 21300000, guid: a4be1be9ed8df834f8e7b54db3b14524, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
@@ -32,8 +32,9 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
-  ActivationsForOneTurn: 0
+  IsStructureUnit: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: 
     Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
@@ -47,3 +48,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

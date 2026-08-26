@@ -883,9 +883,8 @@ public class GameNetworkManager : NetworkBehaviour
         remotePlayer.MainPArea.AllowedToControlThisPlayer = false;
         gs.localPlayer = localPlayer;
         FogOfWarManager.Refresh();
-        gs.localPlayerHand.owner = localPlayer.MainPArea.owner;
-        localPlayer.handVisual = gs.localPlayerHand;
-        
+        gs.SyncLocalPlayerZones();
+
         gs.localPlayerDebugText.text = "Local Player: " + localPlayer.name;
 
         Debug.Log($"[GameNetworkManager] Joueur local : {localPlayer.name} | Joueur distant : {remotePlayer.name}");
@@ -1019,6 +1018,90 @@ public class GameNetworkManager : NetworkBehaviour
         }
         Player player = Player.Players[playerIndex];
         player.NetworkFlushPlaySpell(cardUniqueID);
+    }
+
+    // -------------------------------------------------------------------------
+    // ZONE DE RÉSERVE (CardHoldSlotVisual)
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Envoyé par le joueur qui vient de déposer une carte dans son slot de réserve. Contrairement
+    /// aux actions de jeu (créature/sort), rien ici n'a besoin d'être généré par le serveur : la
+    /// carte est déjà appliquée localement chez l'expéditeur (voir CardHoldSlotVisual.TryHoldCard).
+    /// On relaie donc juste l'info aux AUTRES machines, comme pour un effet indépendant de phase
+    /// (voir SubmitEffectTargetsServerRpc) — sans ça ReservedCard resterait local à l'expéditeur et
+    /// DiscardHand, qui tourne indépendamment sur chaque client en fin de phase Command, finirait
+    /// par désynchroniser les mains (une machine garde la carte, l'autre la discard).
+    /// </summary>
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SyncHoldCardServerRpc(int playerIndex, int cardUniqueID, RpcParams rpcParams = default)
+    {
+        ulong senderClientId = rpcParams.Receive.SenderClientId;
+        List<ulong> otherClientIds = new List<ulong>();
+        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            if (clientId != senderClientId)
+                otherClientIds.Add(clientId);
+
+        if (otherClientIds.Count == 0) return;
+
+        ClientRpcParams otherParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = otherClientIds.ToArray() }
+        };
+        SyncHoldCardClientRpc(playerIndex, cardUniqueID, otherParams);
+    }
+
+    /// <summary>
+    /// Reçu par les machines autres que l'expéditeur : rejoue le dépôt de carte sur le
+    /// CardHoldSlotVisual de ce joueur. ReservedCard (la donnée qui compte pour DiscardHand) est
+    /// fixée tout de suite via CardLogic.CardsCreatedThisGame, déjà peuplé de façon synchrone dès le
+    /// tirage (voir Player.DrawACard / DrawAcardClientRpc) — indépendamment du GameObject visuel de
+    /// la carte, qui lui n'apparaît qu'une fois son DrawACardCommand animé passé en tête de la
+    /// Command Queue LOCALE à cette machine (pas synchronisée en temps réel avec celle de
+    /// l'expéditeur : cette machine peut donc être encore en retard sur l'animation de tirage au
+    /// moment où cette RPC arrive). Le placement visuel dans le slot est donc simplement différé
+    /// jusqu'à ce que le GameObject existe, plutôt que d'échouer.
+    /// </summary>
+    [ClientRpc]
+    void SyncHoldCardClientRpc(int playerIndex, int cardUniqueID, ClientRpcParams clientRpcParams = default)
+    {
+        if (Player.Players == null || playerIndex < 0 || playerIndex >= Player.Players.Length)
+        {
+            Debug.LogError($"[GameNetworkManager] SyncHoldCardClientRpc : playerIndex {playerIndex} invalide");
+            return;
+        }
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(cardUniqueID, out CardLogic card))
+        {
+            Debug.LogError($"[GameNetworkManager] SyncHoldCardClientRpc : CardLogic introuvable cardUniqueID={cardUniqueID}");
+            return;
+        }
+
+        Player player = Player.Players[playerIndex];
+        player.ReservedCard = card;
+        StartCoroutine(ApplyHoldVisualWhenCardReady(player, cardUniqueID));
+    }
+
+    IEnumerator ApplyHoldVisualWhenCardReady(Player player, int cardUniqueID)
+    {
+        float deadline = Time.realtimeSinceStartup + 15f;
+        GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        while (cardGO == null && Time.realtimeSinceStartup < deadline)
+        {
+            yield return null;
+            cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
+        }
+        if (cardGO == null)
+        {
+            Debug.LogError($"[GameNetworkManager] SyncHoldCardClientRpc : GameObject jamais apparu pour cardUniqueID={cardUniqueID}");
+            yield break;
+        }
+
+        // ReservedCard a pu changer entre-temps (carte évincée/rejouée avant même d'avoir fini
+        // d'apparaître) : ne pose visuellement que si cette carte est toujours la réservée actuelle.
+        if (player.ReservedCard == null || player.ReservedCard.UniqueCardID != cardUniqueID)
+            yield break;
+
+        CardHoldSlotVisual.ForPlayer(player)?.ApplyHold(cardGO);
     }
 
     // -------------------------------------------------------------------------

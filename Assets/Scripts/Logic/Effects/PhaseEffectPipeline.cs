@@ -405,8 +405,24 @@ public static class PhaseEffectPipeline
                 if (data == null || ctx == null) continue;
                 ctx.SelectedTarget = ResolveEntityByID(selectedTargetIDs[i]);
                 EffectSO.SetNetworkRng(new System.Random(subSeeds[i]));
-                EffectRegistry.Execute(data, ctx);
-                EffectSO.ClearNetworkRng();
+                // Sans ce try/catch, une exception ici (ex: bug historique du slot AttackModifiers
+                // null dans ZoneCombatResolver) avorte silencieusement CET effet ET tous ceux qui le
+                // suivent dans le même lot, uniquement côté récepteur (le serveur/hôte quand ce n'est
+                // pas lui l'expéditeur) : son état "autoritaire" ne reflète alors jamais le résultat
+                // de l'effet (ex: une créature tuée par Assimilate reste vivante côté serveur), et
+                // BroadcastFullGameState va plus tard re-diffuser cet état erroné à tous les clients.
+                try
+                {
+                    EffectRegistry.Execute(data, ctx);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[ApplyCanonicalResolution][Opponent] Exception en résolvant {data.EffectName} (source={sourceEntityIDs[i]}, target={selectedTargetIDs[i]}) — effet ignoré, état serveur potentiellement désynchronisé : {e}");
+                }
+                finally
+                {
+                    EffectSO.ClearNetworkRng();
+                }
             }
             return;
         }

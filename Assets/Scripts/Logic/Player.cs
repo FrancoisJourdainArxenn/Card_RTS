@@ -85,6 +85,7 @@ public class Player : MonoBehaviour, ILivable
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
     public Hand hand;
+    public CardLogic ReservedCard; // carte posée dans un CardHoldSlotVisual : exclue de DiscardHand
     public PlayedCards playedCards;
     public HeroCountUnlock matchStats = new HeroCountUnlock();
     [HideInInspector] public BaseLogic homeBaseLogic;
@@ -337,7 +338,7 @@ public class Player : MonoBehaviour, ILivable
     // hero cards stay in hand: they aren't drawn from the deck and shouldn't be discarded
     public void DiscardHand()
     {
-        List<CardLogic> toDiscard = hand.CardsInHand.Where(cl => !cl.ca.IsHero).ToList();
+        List<CardLogic> toDiscard = hand.CardsInHand.Where(cl => !cl.ca.IsHero && cl != ReservedCard).ToList();
         foreach (CardLogic cl in toDiscard)
         {
             GameObject cardGO = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
@@ -465,8 +466,26 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         // Recompute playable state after the card is removed.
         HighlightPlayableCards();
+    }
+
+    // Si la carte jouée était celle réservée dans un CardHoldSlotVisual, on la libère ici. Les
+    // scripts de drag le font déjà localement (HoldSlot.ReleaseCard) sur la machine qui a dragué la
+    // carte hors du slot, mais en réseau les autres machines n'apprennent qu'une carte a été jouée
+    // qu'à travers ces méthodes NetworkPendingPlayX/NetworkPlayCreatureFromHand — sans cet appel ici
+    // aussi, leur ReservedCard resterait obsolète et DiscardHand (qui tourne indépendamment sur
+    // chaque machine) finirait par exclure du discard une carte que l'autre machine a bien discardée.
+    private void ClearReservedCardIfPlayed(CardLogic playedCard)
+    {
+        if (playedCard != ReservedCard) return;
+        GameObject cardGO = IDHolder.GetGameObjectWithID(playedCard.UniqueCardID);
+        CardHoldSlotVisual slot = cardGO != null ? CardHoldSlotVisual.ForPlayer(this) : null;
+        if (slot != null)
+            slot.ReleaseCard(cardGO);
+        else
+            ReservedCard = null;
     }
 
     // Envoyé par le serveur à TOUS les clients dès qu'un sort est joué (voir
@@ -482,6 +501,7 @@ public class Player : MonoBehaviour, ILivable
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
@@ -552,6 +572,7 @@ public class Player : MonoBehaviour, ILivable
         EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         HighlightPlayableCards();
     }
 
@@ -619,6 +640,7 @@ public class Player : MonoBehaviour, ILivable
         matchStats.Add(MatchStatType.CardsPlayed);
         matchStats.AddSubTypePlayed(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
@@ -749,6 +771,7 @@ public class Player : MonoBehaviour, ILivable
 
 
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         TurnManager.RefreshAllPlayableHighlights();
         // HighlightPlayableCards();
     }
@@ -786,7 +809,12 @@ public class Player : MonoBehaviour, ILivable
             }
             bool affordable = cl.MainCost <= mainRessourceAvailable;
             cardManager.NotifyLockState(cl.IsLocked);
-            cardManager.CanBePlayedNow = canPlayCards && affordable && !cl.IsLocked && !removeAllHighlights;
+            // CanBeDraggedNow ignore volontairement le coût : une carte trop chère doit rester
+            // manipulable (ex: la déposer dans un CardHoldSlotVisual), seule sa pose effective est
+            // bloquée par un contrôle de coût séparé (voir DragCreatureOnTable/DragSpellOnTarget/
+            // DragSpellNoTarget). CanBePlayedNow, elle, garde le coût : elle pilote le glow "jouable".
+            cardManager.CanBeDraggedNow = canPlayCards && !cl.IsLocked && !removeAllHighlights;
+            cardManager.CanBePlayedNow = cardManager.CanBeDraggedNow && affordable;
         }
 
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);

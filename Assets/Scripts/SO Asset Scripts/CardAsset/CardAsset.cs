@@ -43,7 +43,9 @@ public enum CardTier
 {
     [InspectorName("1")] T1 = 1,
     [InspectorName("2")] T2 = 2,
-    [InspectorName("3")] T3 = 3
+    [InspectorName("3")] T3 = 3,
+    [InspectorName("4")] T4 = 4,
+    [InspectorName("5")] T5 = 5
 }
 
 public class CardAsset : ScriptableObject

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 2
   tier: 1
-  Description: <b>Celerity.</b>
+  Description: <b>Celerity, Scout.</b>
   CardImage: {fileID: 21300000, guid: 246f8b7966edd38498cedbd36115be3e, type: 3}
   MainCost: 1
   IsHero: 0
@@ -32,7 +32,35 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   melee: 0
-  ActivationsForOneTurn: 0
+  IsStructureUnit: 0
   Keywords:
   - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
-  Effects: []
+  - {fileID: 11400000, guid: a5416abf016aec34eacb915942ab6efd, type: 2}
+  ReferencedCards: []
+  Effects:
+  - EffectName: Intel
+    Effect: {fileID: 11400000, guid: 4a4eb16e30db07a4f80ebaf3473745de, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Intel
+    Effect: {fileID: 11400000, guid: 3a89841769b488e42b5e485220586cb3, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

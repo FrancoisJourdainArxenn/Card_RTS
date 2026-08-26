@@ -407,6 +407,7 @@ public class CreatureLogic: ILivable
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
         owner.matchStats.Add(MatchStatType.UnitsSummoned);
+        owner.matchStats.Add(ca.melee ? MatchStatType.MeleeUnitsSummoned : MatchStatType.RangedUnitsSummoned);
 
         foreach (PermanentCreatureBuff buff in owner.permanentCreatureBuffs)
             if (buff.filter != null && buff.filter.Matches(ca))

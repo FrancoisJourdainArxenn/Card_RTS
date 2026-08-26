@@ -19,6 +19,11 @@ public class HandVisual : MonoBehaviour
     // PRIVATE : a list of all card visual representations as GameObjects
     private List<GameObject> CardsInHand = new List<GameObject>();
 
+    // Utilisé par CardHoldSlotVisual avant d'évincer une carte réservée vers cette main : AddCard
+    // ne vérifie pas la capacité, donc appeler ça d'abord évite de dépasser slots.Children.Length
+    // (voir PositionLeftOfHand, qui indexe jusqu'à CardsInHand.Count - 1).
+    public bool HasRoomForOneMore => CardsInHand.Count < slots.Children.Length;
+
     // ADDING OR REMOVING CARDS FROM HAND
 
     // add a new card GameObject to hand
@@ -60,7 +65,31 @@ public class HandVisual : MonoBehaviour
     {
         return CardsInHand[index];
     }
-        
+
+    // Position (monde) juste à gauche de la carte actuellement la plus à gauche de la main —
+    // utilisé par CardHoldSlotVisual pour se positionner dynamiquement au bout de la main plutôt
+    // qu'à un endroit fixe de la scène. "Gauche" = X local le plus petit dans l'espace de `slots`,
+    // déterminé géométriquement (slot 0 vs dernier slot occupé) plutôt que supposé par index : les
+    // slots peuvent être ordonnés dans un sens ou dans l'autre selon la scène. Reflète correctement
+    // le recentrage de `slots` en cours de tween (voir UpdatePlacementOfSlots) puisque la position
+    // est recalculée depuis toute la hiérarchie à chaque appel.
+    public Vector3 PositionLeftOfHand()
+    {
+        if (CardsInHand.Count == 0)
+            return slots.Children[0].transform.position;
+
+        Transform firstSlot = slots.Children[0].transform;
+        Transform lastSlot  = slots.Children[CardsInHand.Count - 1].transform;
+        Transform leftmostOccupied = firstSlot.localPosition.x <= lastSlot.localPosition.x ? firstSlot : lastSlot;
+
+        float stepX = slots.Children.Length > 1
+            ? Mathf.Abs(slots.Children[1].transform.localPosition.x - slots.Children[0].transform.localPosition.x)
+            : 0f;
+
+        Vector3 localPos = leftmostOccupied.localPosition - new Vector3(stepX, 0f, 0f);
+        return slots.transform.TransformPoint(localPos);
+    }
+
     // MANAGING CARDS AND SLOTS
 
     // move Slots GameObject according to the number of cards in hand

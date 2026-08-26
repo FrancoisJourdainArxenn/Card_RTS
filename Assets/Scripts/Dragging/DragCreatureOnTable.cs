@@ -23,7 +23,7 @@ public class DragCreatureOnTable : DraggingActions {
     {
         get
         {
-            return base.CanDrag && manager.CanBePlayedNow && !_isReturning && !_isPlayed
+            return base.CanDrag && manager.CanBeDraggedNow && !_isReturning && !_isPlayed
                 && !OnPlayTargetingSession.IsActive;
         }
     }
@@ -72,6 +72,11 @@ public class DragCreatureOnTable : DraggingActions {
         ClearInsertPreview();
         transform.localScale = _originalScale;
         ResetAreaHighlights();
+
+        CardHoldSlotVisual targetSlot = CardHoldSlotVisual.SlotUnderCursor;
+        if (targetSlot != null && targetSlot.TryHoldCard(gameObject, playerOwner))
+            return;
+
         // 1) Check if we are holding a card over the table
         bool dragOk = DragSuccessful();
         if (dragOk)
@@ -95,6 +100,7 @@ public class DragCreatureOnTable : DraggingActions {
             if (requiredSelections.Count == 0)
             {
                 _isPlayed = true;
+                ReleaseHoldSlotIfAny();
                 CommitPlay(cardID, tablePos, selectedPArea, null);
                 GetComponent<Draggable>().enabled = false;
             }
@@ -123,6 +129,7 @@ public class DragCreatureOnTable : DraggingActions {
                     onConfirmed: selections =>
                     {
                         _isPlayed = true;
+                        ReleaseHoldSlotIfAny();
                         selectedPArea.tableVisual.RemovePendingMoveGhost(ghostGO);
                         CommitPlay(cardID, tablePos, selectedPArea, selections);
                         GetComponent<Draggable>().enabled = false;
@@ -138,6 +145,15 @@ public class DragCreatureOnTable : DraggingActions {
         else
         {
             DragFailed();
+        }
+    }
+
+    private void ReleaseHoldSlotIfAny()
+    {
+        if (whereIsCard.HoldSlot != null)
+        {
+            whereIsCard.HoldSlot.ReleaseCard(gameObject);
+            whereIsCard.HoldSlot = null;
         }
     }
 
@@ -174,7 +190,24 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();
             return false;
         }
+        if (!CanAffordThisCard())
+        {
+            new ShowMessageCommand("Not enough resources", 2f).AddToQueue();
+            return false;
+        }
         return true;
+    }
+
+    // Le drag est maintenant autorisé même sans assez de ressource (voir OneCardManager.CanBeDraggedNow) —
+    // pour pouvoir déposer la carte dans un CardHoldSlotVisual malgré tout. On revalide donc le coût
+    // ici, au moment de la pose effective sur la table, avec le CardLogic (coût potentiellement
+    // modifié par un effet) plutôt que le CardAsset de base.
+    private bool CanAffordThisCard()
+    {
+        IDHolder id = GetComponent<IDHolder>();
+        return id != null
+            && CardLogic.CardsCreatedThisGame.TryGetValue(id.UniqueID, out CardLogic cl)
+            && cl.MainCost <= playerOwner.MainRessourceAvailable;
     }
 
     private void DragFailed()
@@ -185,10 +218,14 @@ public class DragCreatureOnTable : DraggingActions {
     private IEnumerator ReturnToHand()
     {
         _isReturning = true;
-        whereIsCard.SetHandSortingOrder();
+        if (whereIsCard.HoldSlot != null)
+            whereIsCard.SetHoldSlotSortingOrder();
+        else
+            whereIsCard.SetHandSortingOrder();
         whereIsCard.VisualState = tempState;
-        HandVisual PlayerHand = playerOwner.handVisual;
-        Vector3 oldCardPos = PlayerHand.slots.Children[savedHandSlot].transform.localPosition;
+        Vector3 oldCardPos = whereIsCard.HoldSlot != null
+            ? whereIsCard.HoldSlot.cardAnchor.localPosition
+            : playerOwner.handVisual.slots.Children[savedHandSlot].transform.localPosition;
         transform.DOLocalMove(oldCardPos, 0.3f);
         transform.DOScale(_originalScale, 0.3f).SetEase(Ease.OutQuad);
         yield return new WaitForSeconds(0.3f);

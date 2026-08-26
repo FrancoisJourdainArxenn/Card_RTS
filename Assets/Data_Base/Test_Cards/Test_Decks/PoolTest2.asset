@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: PoolTest2
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
   cards:
-  - {fileID: 11400000, guid: c8c94a1d0b063c043919fa6d205e4e51, type: 2}
-  - {fileID: 11400000, guid: c493d16d762eb874890417eff765217f, type: 2}
-  - {fileID: 11400000, guid: 06f9d150aba798a4ab171d8c7e62d9df, type: 2}
-  - {fileID: 11400000, guid: 9b5b7c853ca51df468c3f7f91a19e8aa, type: 2}
-  - {fileID: 11400000, guid: 44ae2f52806585343a1e677bbf32bbb7, type: 2}
+  - {fileID: 11400000, guid: 5ce80caae3cc38a46833150b0b6fb218, type: 2}
+  - {fileID: 11400000, guid: 25f620587f3008249a8e0140635c84be, type: 2}
+  - {fileID: 11400000, guid: d4df34f2474ea6244a9846d48b1b5173, type: 2}
   buildings: []

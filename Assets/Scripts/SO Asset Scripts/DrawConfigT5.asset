@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c2384aec7cfe9b4a801aa06c2d4de36, type: 3}
+  m_Name: DrawConfigT5
+  m_EditorClassIdentifier: Assembly-CSharp::WeightedDrawConfig
+  I_min: 4
+  I_max: 10
+  T1_early: 0.1
+  T2_early: 0.2
+  T3_early: 0.2
+  T4_early: 0.3
+  T5_early: 0.2
+  T1_late: 0.1
+  T2_late: 0.1
+  T3_late: 0.2
+  T4_late: 0.3
+  T5_late: 0.3
+  reDrawMultiplicator: 3

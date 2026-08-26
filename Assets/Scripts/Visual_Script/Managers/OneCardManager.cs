@@ -66,6 +66,12 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
     }
 
+    // Autorise à saisir/déplacer la carte (y compris pour la déposer dans un CardHoldSlotVisual),
+    // indépendamment du coût — contrairement à CanBePlayedNow, qui inclut l'affordabilité et pilote
+    // le glow. Une carte trop chère doit rester manipulable ; seule sa pose effective (sur la table,
+    // ou le lancement d'un sort) reste bloquée par un contrôle de coût séparé au moment du commit.
+    public bool CanBeDraggedNow { get; set; }
+
     public void ReadCardFromAsset()
     {
         NameText.text = string.IsNullOrEmpty(cardAsset.Name) ? cardAsset.name : cardAsset.Name;
@@ -148,7 +154,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void ApplyUnlockDescriptionIfLocked()
     {
         if (_unlockCondition != null && owner != null && !_unlockCondition.IsUnlocked(owner))
-            DescriptionText.text = _unlockCondition.GetDescription(owner);
+            DescriptionText.text = _unlockCondition.GetDescription(owner) + "\n\n" + DescriptionText.text;
     }
 
     // Ajoute (jamais ne remplace) la progression de tout CondCounter présent sur la carte, à la

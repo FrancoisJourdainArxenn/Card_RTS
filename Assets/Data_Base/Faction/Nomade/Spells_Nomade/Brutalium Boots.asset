@@ -33,7 +33,8 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Buff

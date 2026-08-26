@@ -20,7 +20,7 @@ public class DragSpellNoTarget: DraggingActions{
         get
         {
             // TODO : include full field check
-            return base.CanDrag && manager.CanBePlayedNow && !OnPlayTargetingSession.IsActive;
+            return base.CanDrag && manager.CanBeDraggedNow && !OnPlayTargetingSession.IsActive;
         }
     }
 
@@ -58,8 +58,22 @@ public class DragSpellNoTarget: DraggingActions{
         // dragScale) pendant toute son animation de "carte jouée" vers PlayPreviewSpot.
         transform.localScale = _originalScale;
 
+        CardHoldSlotVisual targetSlot = CardHoldSlotVisual.SlotUnderCursor;
+        if (targetSlot != null)
+        {
+            if (targetSlot.TryHoldCard(gameObject, playerOwner))
+                return;
+            ReturnToHand();
+            return;
+        }
+
         if (DragSuccessful())
         {
+            if (whereIsCard.HoldSlot != null)
+            {
+                whereIsCard.HoldSlot.ReleaseCard(gameObject);
+                whereIsCard.HoldSlot = null;
+            }
             GetComponent<Draggable>().enabled = false;
             PlaySpell();
         }
@@ -96,6 +110,13 @@ public class DragSpellNoTarget: DraggingActions{
     {
         transform.DOScale(_originalScale, 0.2f).SetEase(Ease.OutQuad);
 
+        if (whereIsCard.HoldSlot != null)
+        {
+            whereIsCard.SetHoldSlotSortingOrder();
+            transform.DOLocalMove(whereIsCard.HoldSlot.cardAnchor.localPosition, 0.3f);
+            return;
+        }
+
         // Set old sorting order
         whereIsCard.Slot = savedHandSlot;
         if (tag.Contains("Low"))
@@ -110,7 +131,21 @@ public class DragSpellNoTarget: DraggingActions{
 
     protected override bool DragSuccessful()
     {
-        return Vector3.Distance(transform.position, _originalWorldPos) > cancelDistance;
+        if (Vector3.Distance(transform.position, _originalWorldPos) <= cancelDistance)
+            return false;
+
+        // Le drag est autorisé même sans assez de ressource (voir OneCardManager.CanBeDraggedNow) —
+        // pour pouvoir déposer la carte dans un CardHoldSlotVisual malgré tout. On revalide donc le
+        // coût ici, au moment de jouer réellement le sort.
+        if (idHolder == null)
+            idHolder = GetComponent<IDHolder>();
+        if (!CardLogic.CardsCreatedThisGame.TryGetValue(idHolder.UniqueID, out CardLogic cl)
+            || cl.MainCost > playerOwner.MainRessourceAvailable)
+        {
+            new ShowMessageCommand("Not enough resources", 2f).AddToQueue();
+            return false;
+        }
+        return true;
     }
 
 

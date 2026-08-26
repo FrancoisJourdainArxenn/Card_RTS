@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Commander.</b>
 
-    <b>On Command:</b> Choose a Blessing.'
+    <b>Start of Turn:</b> I cast Primordial Blessing.'
   CardImage: {fileID: 21300000, guid: 14868f6084acbdf409781e29a74e11f7, type: 3}
   MainCost: 0
   IsHero: 1
@@ -36,10 +36,11 @@ MonoBehaviour:
   melee: 0
   IsStructureUnit: 0
   Keywords: []
-  ReferencedCards: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: d8dc68f978f932b4b80441a6f3b29cf7, type: 2}
   Effects:
   - EffectName: Blessed by the Elements
-    Effect: {fileID: 11400000, guid: bd09845a4a8461042aeba1d4a9a1a898, type: 2}
+    Effect: {fileID: 11400000, guid: 45bcaa40d013e9540ba252450a570242, type: 2}
     Trigger: 3
     Condition: {fileID: 0}
     Effectinfo:
