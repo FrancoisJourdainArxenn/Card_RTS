@@ -36,6 +36,22 @@ public class PlayACreatureCommand : Command
         }
         HoverPreview.PreviewsAllowed = true;
 
+        // Une créature tuée par un effet résolu DANS la même phase où elle a été jouée (ex: Assimilate
+        // ciblant un allié encore "pending") voit son GameObject détruit avant que ce flush (déclenché
+        // en fin de phase, voir GameNetworkManager.FlushBuffer) ne s'exécute pour elle. Sans ce garde,
+        // la branche "else" ci-dessous la recrée de toutes pièces via AddCreatureAtIndex — un
+        // GameObject flambant neuf, entièrement fonctionnel, pour une créature déjà morte (contrairement
+        // au fantôme partiel du bug ResyncCreatureOrderForArea, celui-ci passe par le vrai pipeline de
+        // création et reste donc pleinement interactif).
+        bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureID, out CreatureLogic creatureLogic);
+        if (!found || creatureLogic.IsPendingDeath || creatureLogic.Health <= 0)
+        {
+            Debug.LogWarning($"[PlayACreatureCommand] SKIP reveal — créature {creatureID} : trouvée={found}, IsPendingDeath={(found ? creatureLogic.IsPendingDeath : (bool?)null)}, Health={(found ? creatureLogic.Health : (int?)null)}.");
+            Command.CommandExecutionComplete();
+            return;
+        }
+        Debug.Log($"[PlayACreatureCommand] REVEAL — créature {creatureID} ({creatureLogic.DisplayName}) Health={creatureLogic.Health}, GO existant={(IDHolder.GetGameObjectWithID(creatureID) != null)}.");
+
         GameObject existingCreature = IDHolder.GetGameObjectWithID(creatureID);
         if (existingCreature != null)
         {

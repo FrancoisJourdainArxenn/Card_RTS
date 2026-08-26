@@ -434,6 +434,13 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {
+        // Le setter Health (case value<=0, branche hors-combat) appelle Die() directement sans jamais
+        // assigner le backing field — contrairement à MarkPendingDeath() qui, elle, fait health = 0.
+        // Sans cette ligne, Health continue de renvoyer sa valeur d'AVANT la mort indéfiniment (l'entrée
+        // n'est jamais retirée de CreatureLogic.CreaturesCreatedThisGame) : tout code qui teste
+        // Health <= 0 pour détecter une créature déjà morte hors combat (ResyncCreatureOrderForArea,
+        // WouldSurvive, PlayACreatureCommand) voit une créature "vivante" et la ressuscite visuellement.
+        health = 0;
         string dieRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
         UnityEngine.Debug.Log($"[Death]{dieRole} DIE — {DisplayName} (ID:{UniqueCreatureID}) | était dans playedCards: {owner.playedCards.Creatures.Contains(this)}");
         bool wasInList = owner.playedCards.Creatures.Remove(this);

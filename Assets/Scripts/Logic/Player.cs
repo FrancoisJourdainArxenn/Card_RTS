@@ -502,7 +502,7 @@ public class Player : MonoBehaviour, ILivable
         matchStats.Add(MatchStatType.CardsPlayed);
         hand.CardsInHand.Remove(playedCard);
         ClearReservedCardIfPlayed(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
+        HighlightPlayableCards();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
         if (cardGO != null)
@@ -652,7 +652,7 @@ public class Player : MonoBehaviour, ILivable
         matchStats.AddSubTypePlayed(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
         ClearReservedCardIfPlayed(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
+        HighlightPlayableCards();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
         if (cardGO != null)
@@ -728,7 +728,7 @@ public class Player : MonoBehaviour, ILivable
         // CreatureLogic + OnPlay déjà résolus dans NetworkPendingPlayCreature ; ici on ne fait que révéler le visuel.
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        TurnManager.RefreshAllPlayableHighlights();
+        HighlightPlayableCards();
 
     }
 
@@ -793,8 +793,7 @@ public class Player : MonoBehaviour, ILivable
 
         hand.CardsInHand.Remove(playedCard);
         ClearReservedCardIfPlayed(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
-        // HighlightPlayableCards();
+        HighlightPlayableCards();
     }
 
     public int TakeDamage(int dmg)

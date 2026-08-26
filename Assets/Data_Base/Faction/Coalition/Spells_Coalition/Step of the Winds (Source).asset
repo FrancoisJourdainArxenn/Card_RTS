@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 2
-  subType: 10
+  subType: 4
   tier: 1
   Description: Gives <b>Celerity</b> to the caster.
   CardImage: {fileID: 21300000, guid: 67a127f719747144a820b6dfc5c97ef3, type: 3}

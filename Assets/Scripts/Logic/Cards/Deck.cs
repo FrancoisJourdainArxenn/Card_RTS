@@ -9,7 +9,7 @@ public class Deck : MonoBehaviour {
 
     public Dictionary<CardAsset, int> timesDrawn = new Dictionary<CardAsset, int>();
 
-    private int _n1, _n2, _n3;
+    private int _n1, _n2, _n3, _n4, _n5;
     private List<CardAsset> _runtimeCards = new List<CardAsset>();
 
     void Awake()
@@ -32,15 +32,17 @@ public class Deck : MonoBehaviour {
 
     private void CacheTierCounts()
     {
-        _n1 = 0; _n2 = 0; _n3 = 0;
+        _n1 = 0; _n2 = 0; _n3 = 0; _n4 = 0; _n5 = 0;
         foreach (CardAsset card in _runtimeCards)
         {
             int t = (int)card.tier;
             if (t == 1)      _n1++;
             else if (t == 2) _n2++;
             else if (t == 3) _n3++;
+            else if (t == 4) _n4++;
+            else if (t == 5) _n5++;
         }
-        // Debug.Log($"[Deck] Pool — T1:{_n1}  T2:{_n2}  T3:{_n3}  Total:{cards.Count}");
+        // Debug.Log($"[Deck] Pool — T1:{_n1}  T2:{_n2}  T3:{_n3}  T4:{_n4}  T5:{_n5}  Total:{_runtimeCards.Count}");
     }
 
     public CardAsset DrawWeightedCard(int seed, int mainIncome, string playerTag = "?")
@@ -52,7 +54,7 @@ public class Deck : MonoBehaviour {
         }
 
         CardAsset drawn = WeightedDraw.Draw(
-            _runtimeCards, timesDrawn, _n1, _n2, _n3,
+            _runtimeCards, timesDrawn, _n1, _n2, _n3, _n4, _n5,
             mainIncome, seed, drawConfig, playerTag);
 
         if (drawn != null)

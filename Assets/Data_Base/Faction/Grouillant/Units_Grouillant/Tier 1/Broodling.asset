@@ -17,23 +17,45 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: <b>Celerity</b>
+  Description: <b>On Play:</b> I gain +1/+0 if there's an Egg Sack in my zone.
   CardImage: {fileID: 21300000, guid: 65b10683aab437643ba5ee151aebf7d0, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
+  Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  Keywords:
-  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
+  Keywords: []
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 0
+    Condition: {fileID: 11400000, guid: d10d22cac02600742b50c63e8d9b6d0d, type: 2}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

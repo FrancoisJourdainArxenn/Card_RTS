@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Baneling
+  m_Name: Reaper
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 1
   tier: 2
-  Description: <b>On Death :</b> Create an Egg Sack in your hand, it cost 0.
-  CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
+  Description: <b>On Attack:</b> Other Melee units gain +0/+1 until end of turn.
+  CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
-  MaxHealth: 1
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -34,16 +34,29 @@ MonoBehaviour:
   melee: 1
   IsStructureUnit: 0
   Keywords: []
-  ReferencedCards:
-  - {fileID: 11400000, guid: b9b9844b024231c48b43895cf386c0b8, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: More Swarm !
-    Effect: {fileID: 11400000, guid: ca3e905dfa2493046afcdbe6b671f2bc, type: 2}
-    Trigger: 1
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 6a11898b25201584fb5d889c9b005d34, type: 2}
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 1
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
