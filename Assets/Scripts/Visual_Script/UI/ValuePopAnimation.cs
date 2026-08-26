@@ -8,6 +8,7 @@ public static class ValuePopAnimation
         float strength = VisualManager.Instance != null ? VisualManager.Instance.popStrength : 0.35f;
         float duration = VisualManager.Instance != null ? VisualManager.Instance.popDuration : 0.35f;
         t.DOKill();
-        t.DOPunchScale(t.localScale * strength, duration, 1, 0.5f);
+        t.localScale = Vector3.one;
+        t.DOPunchScale(Vector3.one * strength, duration, 1, 0.5f);
     }
 }

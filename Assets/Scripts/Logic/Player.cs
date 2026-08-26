@@ -608,19 +608,30 @@ public class Player : MonoBehaviour, ILivable
         foreach (GameObject go in meleeGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
+            // !IsPendingDeath && Health > 0 : le GameObject d'une créature tuée hors combat (Die()
+            // l'a déjà retirée de playedCards.Creatures) peut encore traîner ici un court instant, le
+            // temps que CreatureDieCommand (mis en file, pas synchrone) le détruise réellement. Sans
+            // ce filtre, ce fantôme se ferait réinsérer dans playedCards.Creatures juste plus bas
+            // (AddRange(ordered)) — annulant le retrait de Die() et le figeant en créature "revivue"
+            // mais injouable (voir historique bug Assimilate).
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl)
+                && !cl.IsPendingDeath && cl.Health > 0)
                 ordered.Add(cl);
         }
         foreach (GameObject go in rangedGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl)
+                && !cl.IsPendingDeath && cl.Health > 0)
                 ordered.Add(cl);
         }
         // Créatures déjà présentes en logique dans cette zone mais pas encore visuellement
-        // (ex: reveal différé côté réseau) : ne pas les perdre lors du resync.
+        // (ex: reveal différé côté réseau) : ne pas les perdre lors du resync. Exclut également les
+        // créatures mortes : une créature morte ne devrait déjà plus être dans playedCards.Creatures
+        // (Die() l'en retire), donc sa présence ici ne peut venir que d'une réinsertion fautive — ne
+        // pas la réintégrer une seconde fois.
         List<CreatureLogic> pendingWithoutGO = playedCards.Creatures.FindAll(c =>
-            c.BaseID == baseID && !ordered.Contains(c));
+            c.BaseID == baseID && !ordered.Contains(c) && !c.IsPendingDeath && c.Health > 0);
 
         if (pendingWithoutGO.Count > 0)
             Debug.LogWarning($"[Resync] baseID={baseID} — {pendingWithoutGO.Count} créature(s) sans GO visuel au moment du resync, réintégrée(s) au lieu d'être perdue(s).");
@@ -687,6 +698,11 @@ public class Player : MonoBehaviour, ILivable
         try
         {
             EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        catch (System.Exception e)
+        {
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.LogError($"[NetworkPendingPlayCreature]{role} Exception dans EffectRegistry.ETB pour {newCreature.DisplayName} (ID={creatureUniqueID}) — OnPlay potentiellement non résolu ici : {e}");
         }
         finally
         {
@@ -762,6 +778,11 @@ public class Player : MonoBehaviour, ILivable
         try
         {
             EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
+        }
+        catch (System.Exception e)
+        {
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.LogError($"[NetworkPlayCreatureFromHand]{role} Exception dans EffectRegistry.ETB pour {newCreature.DisplayName} (ID={creatureUniqueID}) — OnPlay potentiellement non résolu ici : {e}");
         }
         finally
         {

@@ -19,7 +19,6 @@ public class CardHoldSlotVisual : MonoBehaviour
     [SerializeField, TextArea(2, 3)] private string emptySlotTooltipText;
     // Icône de cadenas affichée sur la zone : active tant qu'elle est verrouillée (avant tier 3).
     [SerializeField] private Image lockImage;
-    [SerializeField] private Transform cardPanel;
     [SerializeField] private Image background;
     [SerializeField] private Color lockedBackgroundColor = new Color(0.35f, 0.35f, 0.35f, 1f);
     [SerializeField] private Image glowImage;
@@ -28,8 +27,6 @@ public class CardHoldSlotVisual : MonoBehaviour
     [SerializeField] private Color glowOccupiedColor = Color.yellow;
 
     private Color _unlockedBackgroundColor;
-    private bool _wasLocked = true;
-    private bool _lockStateInitialized;
 
     private BoxCollider col;
     private bool cursorOverThisSlot;
@@ -107,12 +104,6 @@ public class CardHoldSlotVisual : MonoBehaviour
 
         if (background != null)
             background.color = isLockedNow ? lockedBackgroundColor : _unlockedBackgroundColor;
-
-        if (_lockStateInitialized && _wasLocked && !isLockedNow && cardPanel != null)
-            ValuePopAnimation.Pop(cardPanel);
-
-        _wasLocked = isLockedNow;
-        _lockStateInitialized = true;
     }
 
     // Halo de survol : rouge si verrouillé, vert si déverrouillé et vide, jaune si déverrouillé et occupé.

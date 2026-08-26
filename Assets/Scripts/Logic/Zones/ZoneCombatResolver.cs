@@ -1132,7 +1132,11 @@ public class ZoneCombatResolver : MonoBehaviour
 
     public static bool WouldSurvive(CreatureLogic creature)
     {
-        if (creature.IsPendingDeath)
+        // IsPendingDeath ne couvre que la mort EN combat (MarkPendingDeath) — une créature tuée hors
+        // combat (ex: Die() direct, voir Assimilate) ne le pose jamais. Sans le check Health <= 0,
+        // une créature déjà morte mais restée fautivement dans playedCards.Creatures (voir
+        // Player.ResyncCreatureOrderForArea) compterait comme occupant une place de rangée.
+        if (creature.IsPendingDeath || creature.Health <= 0)
             return false;
         foreach (ZoneCombatResolver r in allResolvers)
             if (r.pendingDamage.TryGetValue(creature.UniqueCreatureID, out int dmg))
