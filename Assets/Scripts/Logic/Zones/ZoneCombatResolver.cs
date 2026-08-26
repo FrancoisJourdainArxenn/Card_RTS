@@ -67,13 +67,15 @@ public class ZoneCombatResolver : MonoBehaviour
                               // pour un ciblage AdjacentToTarget : BattleStepRecord (qui porte aussi un
                               // targetID) est diffusé dans un ClientRpc séparé et PLUS TARD que le rejeu des
                               // triggers prédits — voir GameNetworkManager.SubmitBattleAssignmentServerRpc.
+        public List<(int id, int amount)> Allocation; // cibles/montants résolus par Random/RandomMeleeFirst/
+                                                        // RandomSingleTarget côté serveur — liste vide si non applicable.
     }
     private static readonly List<PredictedTriggerReplay> _pendingPredictedTriggerReplays = new();
 
-    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
+    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1, List<(int id, int amount)> allocation = null)
     {
         _pendingPredictedTriggerReplays.Add(new PredictedTriggerReplay
-            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID, TargetID = targetID });
+            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID, TargetID = targetID, Allocation = allocation ?? new() });
     }
 
     // Consommé une seule fois par SubmitBattleAssignmentServerRpc, juste après que toute la
@@ -146,13 +148,15 @@ public class ZoneCombatResolver : MonoBehaviour
         public bool IsBuilding;
         public int EffectIndex;
         public int Seed;
+        public List<(int id, int amount)> Allocation; // cibles/montants résolus par Random/RandomMeleeFirst/
+                                                        // RandomSingleTarget côté serveur — liste vide si non applicable.
     }
     private static readonly List<OnBattleStartReplay> _pendingOnBattleStartReplays = new();
 
-    public static void RecordOnBattleStartReplay(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    public static void RecordOnBattleStartReplay(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         _pendingOnBattleStartReplays.Add(new OnBattleStartReplay
-            { ZoneDeferKey = zoneDeferKey, SourceID = sourceID, IsBuilding = isBuilding, EffectIndex = effectIndex, Seed = seed });
+            { ZoneDeferKey = zoneDeferKey, SourceID = sourceID, IsBuilding = isBuilding, EffectIndex = effectIndex, Seed = seed, Allocation = allocation ?? new() });
     }
 
     public static List<OnBattleStartReplay> DrainOnBattleStartReplays()
@@ -163,17 +167,17 @@ public class ZoneCombatResolver : MonoBehaviour
     }
 
     // Appelé côté client par GameNetworkManager.ApplyCanonicalBattleAssignmentClientRpc.
-    public static void ReplayOnBattleStartEffect(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    public static void ReplayOnBattleStartEffect(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         if (isBuilding)
         {
             if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceID, out BuildingLogic b))
-                b.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+                b.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed, allocation);
         }
         else
         {
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out CreatureLogic c))
-                c.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+                c.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed, allocation);
         }
     }
 

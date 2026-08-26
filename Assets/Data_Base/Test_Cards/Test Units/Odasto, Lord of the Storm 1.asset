@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Earth Adept 1
+  m_Name: Odasto, Lord of the Storm 1
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 9
   tier: 1
-  Description: <b>On Battle Start:</b> I cast <b>Earth's Might</b>.
-  CardImage: {fileID: 21300000, guid: 43bc8e2893fd0b540be56f1b2ebab9cf, type: 3}
+  Description: <b>On Attack:</b> Cast Lightning Strike.
+  CardImage: {fileID: 21300000, guid: efda3f768fe2f2d4092d6f06ffc639b5, type: 3}
   MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 2
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -35,11 +35,11 @@ MonoBehaviour:
   IsStructureUnit: 0
   Keywords: []
   ReferencedCards:
-  - {fileID: 11400000, guid: c280c7b8a8da1384a80bc6b75b7ac476, type: 2}
+  - {fileID: 11400000, guid: bd5ee8f5dc8705f4e96fde2652ed65e3, type: 2}
   Effects:
-  - EffectName: Earth Aid Me !
-    Effect: {fileID: 11400000, guid: e8c3074c801b11646bd69c3a8909a520, type: 2}
-    Trigger: 14
+  - EffectName: 'Cast : Lightning Strike'
+    Effect: {fileID: 11400000, guid: 130e387318cc70e43b985ee89fe5efd3, type: 2}
+    Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []

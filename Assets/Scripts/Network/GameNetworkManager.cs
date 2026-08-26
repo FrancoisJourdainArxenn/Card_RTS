@@ -115,6 +115,13 @@ public class GameNetworkManager : NetworkBehaviour
         int[] predictedDeferKeys  = new int[predictedReplays.Count];
         int[] predictedEventSubjectIDs = new int[predictedReplays.Count];
         int[] predictedTargetIDs = new int[predictedReplays.Count];
+        // Allocation (cible, montant) résolue par Random/RandomMeleeFirst/RandomSingleTarget, à plat :
+        // predictedAllocCounts[i] = nombre d'entrées pour le replay i, consommées dans l'ordre depuis
+        // predictedAllocIDs/predictedAllocAmounts — même idiome que secondaryCounts/secondaryTargetIDs
+        // dans SerializeAllBattleSteps.
+        List<int> predictedAllocCounts  = new();
+        List<int> predictedAllocIDs     = new();
+        List<int> predictedAllocAmounts = new();
         for (int i = 0; i < predictedReplays.Count; i++)
         {
             predictedSourceIDs[i]  = predictedReplays[i].SourceCreatureID;
@@ -123,6 +130,15 @@ public class GameNetworkManager : NetworkBehaviour
             predictedDeferKeys[i]  = predictedReplays[i].DeferKey;
             predictedEventSubjectIDs[i] = predictedReplays[i].EventSubjectID;
             predictedTargetIDs[i]  = predictedReplays[i].TargetID;
+
+            List<(int id, int amount)> alloc = predictedReplays[i].Allocation;
+            predictedAllocCounts.Add(alloc?.Count ?? 0);
+            if (alloc != null)
+                foreach ((int id, int amount) in alloc)
+                {
+                    predictedAllocIDs.Add(id);
+                    predictedAllocAmounts.Add(amount);
+                }
         }
 
         // Tokens créés par un de ces mêmes triggers prédits (TokenGenerationSO, placement ToZone) —
@@ -156,6 +172,10 @@ public class GameNetworkManager : NetworkBehaviour
         int[] battleStartIsBuilding = new int[onBattleStartReplays.Count];
         int[] battleStartEffectIdxs = new int[onBattleStartReplays.Count];
         int[] battleStartSeeds      = new int[onBattleStartReplays.Count];
+        // Même idiome à plat que predictedAllocCounts/IDs/Amounts ci-dessus.
+        List<int> battleStartAllocCounts  = new();
+        List<int> battleStartAllocIDs     = new();
+        List<int> battleStartAllocAmounts = new();
         for (int i = 0; i < onBattleStartReplays.Count; i++)
         {
             battleStartZoneKeys[i]   = onBattleStartReplays[i].ZoneDeferKey;
@@ -163,6 +183,15 @@ public class GameNetworkManager : NetworkBehaviour
             battleStartIsBuilding[i] = onBattleStartReplays[i].IsBuilding ? 1 : 0;
             battleStartEffectIdxs[i] = onBattleStartReplays[i].EffectIndex;
             battleStartSeeds[i]      = onBattleStartReplays[i].Seed;
+
+            List<(int id, int amount)> alloc = onBattleStartReplays[i].Allocation;
+            battleStartAllocCounts.Add(alloc?.Count ?? 0);
+            if (alloc != null)
+                foreach ((int id, int amount) in alloc)
+                {
+                    battleStartAllocIDs.Add(id);
+                    battleStartAllocAmounts.Add(amount);
+                }
         }
 
         ApplyCanonicalBattleAssignmentClientRpc(
@@ -173,11 +202,13 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
             predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
             predictedEventSubjectIDs,  predictedTargetIDs,
+            predictedAllocCounts.ToArray(), predictedAllocIDs.ToArray(), predictedAllocAmounts.ToArray(),
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
             battleStartZoneKeys,       battleStartSourceIDs,       battleStartIsBuilding,
-            battleStartEffectIdxs,     battleStartSeeds
+            battleStartEffectIdxs,     battleStartSeeds,
+            battleStartAllocCounts.ToArray(), battleStartAllocIDs.ToArray(), battleStartAllocAmounts.ToArray()
         );
 
         ZoneCombatResolver.SerializeAllBattleSteps(
@@ -272,11 +303,13 @@ public class GameNetworkManager : NetworkBehaviour
         int[] p1Pools,         int[] p2Pools,
         int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
         int[] predictedEventSubjectIDs, int[] predictedTargetIDs,
+        int[] predictedAllocCounts, int[] predictedAllocIDs, int[] predictedAllocAmounts,
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
         int[] battleStartZoneKeys, int[] battleStartSourceIDs, int[] battleStartIsBuilding,
-        int[] battleStartEffectIndexes, int[] battleStartSeeds)
+        int[] battleStartEffectIndexes, int[] battleStartSeeds,
+        int[] battleStartAllocCounts, int[] battleStartAllocIDs, int[] battleStartAllocAmounts)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
@@ -285,13 +318,24 @@ public class GameNetworkManager : NetworkBehaviour
 
         // OnBattleStart précède logiquement les dégâts/morts de combat : rejoué en premier.
         if (!IsServer)
+        {
+            int battleStartAllocCursor = 0;
             for (int i = 0; i < battleStartSourceIDs.Length; i++)
             {
+                int allocCount = (battleStartAllocCounts != null && i < battleStartAllocCounts.Length) ? battleStartAllocCounts[i] : 0;
+                List<(int id, int amount)> allocation = new(allocCount);
+                for (int k = 0; k < allocCount; k++)
+                {
+                    allocation.Add((battleStartAllocIDs[battleStartAllocCursor], battleStartAllocAmounts[battleStartAllocCursor]));
+                    battleStartAllocCursor++;
+                }
+
                 // Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
                 ZoneCombatResolver.ReplayOnBattleStartEffect(
                     battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
-                    battleStartEffectIndexes[i], battleStartSeeds[i]);
+                    battleStartEffectIndexes[i], battleStartSeeds[i], allocation);
             }
+        }
 
         // Le serveur a déjà résolu ces effets (OnDeath et OnAttack, entrelacés dans l'ordre
         // chronologique réel — voir ZoneCombatResolver.PredictedTriggerReplay) réellement pendant sa
@@ -306,10 +350,19 @@ public class GameNetworkManager : NetworkBehaviour
             // à une occurrence ultérieure de ce même couple (voir bug: ArgumentException clé dupliquée
             // dans CardsCreatedThisGame, le token étant recréé deux fois avec le même networkID).
             bool[] tokenSpawnConsumed = new bool[tokenSpawnSourceIDs.Length];
+            int predictedAllocCursor = 0;
             for (int i = 0; i < predictedSourceIDs.Length; i++)
             {
+                int allocCount = (predictedAllocCounts != null && i < predictedAllocCounts.Length) ? predictedAllocCounts[i] : 0;
+                List<(int id, int amount)> allocation = new(allocCount);
+                for (int k = 0; k < allocCount; k++)
+                {
+                    allocation.Add((predictedAllocIDs[predictedAllocCursor], predictedAllocAmounts[predictedAllocCursor]));
+                    predictedAllocCursor++;
+                }
+
                 // Debug.Log($"[DBG][ApplyCanonical] Predicted replay #{i} — sourceID={predictedSourceIDs[i]} effectIdx={predictedEffectIndexes[i]}");
-                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i], predictedTargetIDs[i]);
+                CreatureLogic.ReplayPredictedTriggerEffect(predictedSourceIDs[i], predictedEffectIndexes[i], predictedSeeds[i], predictedDeferKeys[i], predictedEventSubjectIDs[i], predictedTargetIDs[i], allocation);
 
                 // Tokens créés par CETTE entrée précise (même paire source/effet — voir
                 // ZoneCombatResolver.PredictedTokenSpawn) : rejoués tout de suite après, jamais avant —
@@ -894,6 +947,42 @@ public class GameNetworkManager : NetworkBehaviour
     // ACTIONS DE JEU — JOUER UNE CRÉATURE
     // -------------------------------------------------------------------------
 
+    // Résout réellement l'effet côté serveur (autorité) via `resolve`, en capturant l'allocation
+    // (cible(s)/montant(s)) qu'un éventuel Random/RandomMeleeFirst/RandomSingleTarget imbriqué a
+    // effectivement tirée (voir EffectSO.LastAllocation) — pour PlaySpellServerRpc/PlayCreatureServerRpc,
+    // qui la diffusent ensuite aux autres clients au lieu de les laisser retirer indépendamment avec
+    // le même seed sur un pool qui pourrait différer. Même bug, même remède que Cinder Poet/Fire Bolt
+    // en combat (voir ResolveBattleStartEffects) — seule différence ici : toutes les machines,
+    // serveur compris, passent par le MÊME ClientRpc pour appliquer l'état de jeu (ressources, main,
+    // effets), donc c'est ce ClientRpc — pas cette méthode — qui doit éviter de rejouer côté serveur
+    // (voir son garde IsServer plus bas).
+    private static void ResolveOnServerAndCaptureAllocation(System.Action resolve, out int[] allocIDs, out int[] allocAmounts)
+    {
+        EffectSO.ResetLastAllocation();
+        resolve();
+        List<(int id, int amount)> allocation = EffectSO.LastAllocation;
+        allocIDs     = new int[allocation.Count];
+        allocAmounts = new int[allocation.Count];
+        for (int i = 0; i < allocation.Count; i++)
+        {
+            allocIDs[i]     = allocation[i].id;
+            allocAmounts[i] = allocation[i].amount;
+        }
+    }
+
+    // Reconstruit une allocation reçue du serveur (voir ResolveOnServerAndCaptureAllocation ci-dessus)
+    // et la pose le temps de `replay` — jamais côté serveur, qui a déjà résolu pour de vrai.
+    private static void ReplayWithForcedAllocation(int[] allocIDs, int[] allocAmounts, System.Action replay)
+    {
+        List<(int id, int amount)> allocation = new List<(int, int)>(allocIDs.Length);
+        for (int i = 0; i < allocIDs.Length; i++)
+            allocation.Add((allocIDs[i], allocAmounts[i]));
+
+        EffectSO.SetForcedAllocation(allocation);
+        try { replay(); }
+        finally { EffectSO.ClearForcedAllocation(); }
+    }
+
     /// <summary>
     /// Envoyé par un client pour jouer une créature depuis sa main.
     /// Le serveur génère l'ID de la créature (source unique de vérité) et diffuse à tous.
@@ -912,11 +1001,17 @@ public class GameNetworkManager : NetworkBehaviour
         // aléatoire dans la résolution de l'effet OnPlay (ex: EffectRepartition.RandomSingleTarget)
         // retombe sur la même cible partout, comme pour PlaySpellServerRpc.
         int seed = Random.Range(int.MinValue, int.MaxValue);
+        Player player = Player.Players[playerIndex];
 
         if (isCelerity)
         {
+            ResolveOnServerAndCaptureAllocation(
+                () => player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
+                out int[] allocIDs, out int[] allocAmounts);
+
             ImmediatePlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
         }
         else
         {
@@ -929,33 +1024,47 @@ public class GameNetworkManager : NetworkBehaviour
                 param3 = tablePos,
                 param4 = baseID
             });
+
+            ResolveOnServerAndCaptureAllocation(
+                () => player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                    onPlayEffectIndexes, onPlaySelectedTargetIDs, seed),
+                out int[] allocIDs, out int[] allocAmounts);
+
             ShowPendingPlayCreatureClientRpc(playerIndex, cardUniqueID, creatureUniqueID, tablePos, baseID,
-                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed, allocIDs, allocAmounts);
         }
     }
 
     /// <summary>
     /// Reçu par TOUS les clients : exécute la logique + le visuel de jouer une créature
-    /// avec les mêmes identifiants sur toutes les machines.
+    /// avec les mêmes identifiants sur toutes les machines. Le serveur a déjà résolu ceci pour de
+    /// vrai dans PlayCreatureServerRpc (c'est lui qui a produit allocIDs/allocAmounts) — sa propre
+    /// réception de ce ClientRpc ne doit pas rejouer une seconde fois.
     /// </summary>
     [ClientRpc]
     void ShowPendingPlayCreatureClientRpc(
         int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed, int[] allocIDs, int[] allocAmounts)
     {
+        if (IsServer) return;
+
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
-            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
+        ReplayWithForcedAllocation(allocIDs, allocAmounts, () =>
+            player.NetworkPendingPlayCreature(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed));
     }
 
     [ClientRpc]
     void ImmediatePlayCreatureClientRpc(
         int playerIndex, int cardUniqueID, int creatureUniqueID, int tablePos, int baseID,
-        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed)
+        int[] onPlayEffectIndexes, int[] onPlaySelectedTargetIDs, int seed, int[] allocIDs, int[] allocAmounts)
     {
+        if (IsServer) return;
+
         Player player = Player.Players[playerIndex];
-        player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
-            onPlayEffectIndexes, onPlaySelectedTargetIDs, seed);
+        ReplayWithForcedAllocation(allocIDs, allocAmounts, () =>
+            player.NetworkPlayCreatureFromHand(cardUniqueID, creatureUniqueID, tablePos, baseID,
+                onPlayEffectIndexes, onPlaySelectedTargetIDs, seed));
     }
 
     [ClientRpc]
@@ -994,18 +1103,29 @@ public class GameNetworkManager : NetworkBehaviour
         // l'effet (ex: EffectRepartition.RandomSingleTarget) retombe sur la même cible partout,
         // comme pour les triggers de combat (EffectRegistry.FireListenersPredicted).
         int seed = Random.Range(int.MinValue, int.MaxValue);
-        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs, seed);
+        Player player = Player.Players[playerIndex];
+
+        ResolveOnServerAndCaptureAllocation(
+            () => player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs, seed),
+            out int[] allocIDs, out int[] allocAmounts);
+
+        ShowPendingPlaySpellClientRpc(playerIndex, cardUniqueID, effectIndexes, selectedTargetIDs, seed, allocIDs, allocAmounts);
     }
 
     /// <summary>
     /// Reçu par TOUS les clients : applique l'état de jeu (ressources, main, effets) avec les
-    /// mêmes cibles sur toutes les machines. Pas de visuel ici — voir PlaySpellClientRpc.
+    /// mêmes cibles sur toutes les machines. Pas de visuel ici — voir PlaySpellClientRpc. Le serveur
+    /// a déjà résolu ceci pour de vrai dans PlaySpellServerRpc — sa propre réception de ce ClientRpc
+    /// ne doit pas rejouer une seconde fois.
     /// </summary>
     [ClientRpc]
-    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed)
+    void ShowPendingPlaySpellClientRpc(int playerIndex, int cardUniqueID, int[] effectIndexes, int[] selectedTargetIDs, int seed, int[] allocIDs, int[] allocAmounts)
     {
+        if (IsServer) return;
+
         Player player = Player.Players[playerIndex];
-        player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs, seed);
+        ReplayWithForcedAllocation(allocIDs, allocAmounts, () =>
+            player.NetworkPendingPlaySpell(cardUniqueID, effectIndexes, selectedTargetIDs, seed));
     }
 
     [ClientRpc]

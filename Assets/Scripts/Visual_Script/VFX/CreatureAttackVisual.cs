@@ -120,11 +120,11 @@ public class CreatureAttackVisual : MonoBehaviour
     // Command.CommandExecutionComplete depuis onWindupComplete).
     public void PlayWindup(int targetUniqueID, System.Action onWindupComplete)
     {
-        Debug.Log($"[AttackVisual] {gameObject.name} → wind-up vers cible ID:{targetUniqueID}");
+        // Debug.Log($"[AttackVisual] {gameObject.name} → wind-up vers cible ID:{targetUniqueID}");
         // L'attaquant peut avoir été détruit entre l'enregistrement et l'exécution de la commande
         if (this == null)
         {
-            Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
+            // Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -132,7 +132,7 @@ public class CreatureAttackVisual : MonoBehaviour
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
-            Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
+            // Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -183,14 +183,14 @@ public class CreatureAttackVisual : MonoBehaviour
     // _pendingTempState posés par PlayWindup pour le retour et la restauration du VisualState.
     public void PlayResolve(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
     {
-        Debug.Log($"[AttackVisual] {gameObject.name} → résolution vers cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
+        // // Debug.Log($"[AttackVisual] {gameObject.name} → résolution vers cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
         // L'attaquant peut avoir été détruit entre le wind-up et la résolution (ex: par les commandes
         // différées d'un effet OnAttack intercalées entre les deux, voir CreatureAttackCommand.EnqueueAttack).
         // Pas d'EndFlight ici : le vol de PlayWindup s'est déjà refermé de son côté (voir PlayWindup),
         // et celui de PlayResolve n'a pas encore été ouvert à ce stade (BeginFlight plus bas).
         if (this == null)
         {
-            Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
+            // Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -201,7 +201,7 @@ public class CreatureAttackVisual : MonoBehaviour
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
-            Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
+            //  Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
             manager.HealthText.text = attackerHealthAfter.ToString();
             Command.CommandExecutionComplete();
             return;
@@ -414,7 +414,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     // Si cette exception se produit, la file de commandes (Command.CommandQueue) se bloquerait
                     // silencieusement pour toujours sans ce filet — d'où le log explicite ici.
-                    Debug.LogError($"[AttackVisual] EXCEPTION pendant l'animation de {gameObject.name} → cible ID:{targetUniqueID} (type={targetType}) — file débloquée de force: {e}");
+                    // Debug.LogError($"[AttackVisual] EXCEPTION pendant l'animation de {gameObject.name} → cible ID:{targetUniqueID} (type={targetType}) — file débloquée de force: {e}");
                     Command.CommandExecutionComplete();
                 }
             }))

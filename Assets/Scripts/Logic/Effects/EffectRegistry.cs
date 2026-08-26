@@ -246,20 +246,26 @@ public static class EffectRegistry
 
             int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             System.Random previousRng = EffectSO.CurrentNetworkRng;
+            List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
             bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+            List<(int id, int amount)> allocation;
             try
             {
                 EffectSO.SetNetworkRng(new System.Random(seed));
+                EffectSO.ClearForcedAllocation();
+                EffectSO.ResetLastAllocation();
                 if (!alreadyResolving) ZoneCombatResolver.BeginResolvingPredictedTrigger();
                 Command.RunDeferred(deferKey, () => Execute(re.Data, ctx));
+                allocation = EffectSO.LastAllocation;
             }
             finally
             {
                 if (!alreadyResolving) ZoneCombatResolver.EndResolvingPredictedTrigger();
                 EffectSO.SetNetworkRng(previousRng);
+                EffectSO.SetLastAllocation(previousAllocation);
             }
             ZoneCombatResolver.RecordPredictedTriggerReplay(re.OwnerID, effectIndex, seed, deferKey,
-                ctx.EventSubjectCreature?.UniqueCreatureID ?? -1);
+                ctx.EventSubjectCreature?.UniqueCreatureID ?? -1, allocation: allocation);
         }
     }
 

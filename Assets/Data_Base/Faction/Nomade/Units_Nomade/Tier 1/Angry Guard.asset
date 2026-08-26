@@ -19,11 +19,11 @@ MonoBehaviour:
   tier: 1
   Description: When I take Damage, I gain +1/+0.
   CardImage: {fileID: 21300000, guid: 49eae830c21e39343b101e88bb155ee7, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 5
+  Attack: 0
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
