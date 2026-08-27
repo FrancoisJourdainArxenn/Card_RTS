@@ -16,10 +16,10 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
-  tier: 2
+  tier: 3
   Description: <b>Start of Turn:</b> Gain an Invention.
   CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
@@ -33,7 +33,8 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Eureka

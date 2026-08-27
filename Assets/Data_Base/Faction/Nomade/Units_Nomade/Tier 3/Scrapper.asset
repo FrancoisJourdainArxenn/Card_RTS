@@ -16,10 +16,10 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
-  tier: 2
-  Description: When an ally Robot dies ANYWHERE, gain an Invention.
+  tier: 3
+  Description: Every 3 ally Robots that dies ANYWHERE, gain a Robot. It cost 0.
   CardImage: {fileID: 21300000, guid: 9f6995de4bfb7dd4fbc9825fb239143c, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
@@ -37,9 +37,9 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Eureka !
-    Effect: {fileID: 11400000, guid: 963e046538874a745bc026d13154a62d, type: 2}
+    Effect: {fileID: 11400000, guid: 1a8c88bdc68fdcf49bc5f5aed004d1eb, type: 2}
     Trigger: 7
-    Condition: {fileID: 11400000, guid: c83db6f20b80b614999455c14df625e6, type: 2}
+    Condition: {fileID: 11400000, guid: e222992282d700a45b0fa046563e287e, type: 2}
     Effectinfo:
       effectTargets: []
       affectedElements: []

@@ -181,4 +181,10 @@ public class VfxManager : MonoBehaviour
         GameObject vfx = Instantiate(prefab, transform.position, Quaternion.identity);
         Destroy(vfx, GetParticleLifetime(vfx));
     }
+
+    public void PlaySourceVfx(EffectVisualData data)
+    {
+        if (data == null || !data.onSource || data.vfxPrefabOnSource == null) return;
+        PlayTriggerVfx(data.vfxPrefabOnSource);
+    }
 }

@@ -16,10 +16,10 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 7
-  tier: 1
+  tier: 2
   Description: '<b>On Play</b>: Deal 1 to target unit, it gains +2/+0.'
   CardImage: {fileID: 21300000, guid: d095413ec125c0a4a8138b89bdc96525, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2

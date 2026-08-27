@@ -43,6 +43,9 @@ public class VisualManager : MonoBehaviour
     [Header("Card Tier Icons")]
     public Sprite[] CardTierIcons = new Sprite[5]; // index 0 = T1, 1 = T2, 2 = T3, 3 = T4, 4 = T5
 
+    [Header("Granted Keywords")]
+    public Keyword CelerityKeyword;
+
     void Awake()
     {
         Instance = this;

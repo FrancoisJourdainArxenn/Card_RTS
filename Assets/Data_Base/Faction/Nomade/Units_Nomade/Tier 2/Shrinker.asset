@@ -22,7 +22,7 @@ MonoBehaviour:
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
+  Attack: 2
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -31,10 +31,10 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 1
+  melee: 0
   IsStructureUnit: 0
   Keywords:
-  - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: "Eur\xEAka ! "

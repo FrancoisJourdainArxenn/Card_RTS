@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 public abstract class AttackModifierSO : ScriptableObject
 {
+    // Mot-clé affiché quand ce modificateur est octroyé à l'exécution (via GrantAttackModifierSO).
+    // Laisser vide si ce modificateur ne doit jamais apparaître comme mot-clé.
+    public Keyword AssociatedKeyword;
+
     // Résout, UNE SEULE FOIS pendant la planification serveur (ZoneCombatResolver.BuildAutoBattleSequence),
     // les cibles secondaires touchées par ce modificateur — sans jamais muter Health (la mutation réelle
     // se fait plus tard, en exécution, dans EnqueueBattleCommands, à partir du résultat figé ici).

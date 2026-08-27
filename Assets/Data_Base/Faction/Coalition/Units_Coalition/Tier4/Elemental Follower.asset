@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 9
   tier: 4
-  Description: Every 3 Spells you play or cast, I cast Primordial Blessing.
+  Description: Every 5 Spells you play or cast, I cast Primordial Blessing.
   CardImage: {fileID: 21300000, guid: d6f5b8d14379d4b4b8483660881d3a23, type: 3}
   MainCost: 1
   IsHero: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 1
+  melee: 0
   IsStructureUnit: 0
   Keywords: []
   ReferencedCards:

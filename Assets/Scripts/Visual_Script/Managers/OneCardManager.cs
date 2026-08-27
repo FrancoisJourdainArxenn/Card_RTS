@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using DG.Tweening;
@@ -89,6 +90,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
 
         _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
+        PrependGrantedKeywordsText();
         ApplyUnlockDescriptionIfLocked();
         AppendCounterProgressText();
 
@@ -155,6 +157,34 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         if (_unlockCondition != null && owner != null && !_unlockCondition.IsUnlocked(owner))
             DescriptionText.text = _unlockCondition.GetDescription(owner) + "\n\n" + DescriptionText.text;
+    }
+
+    // Ajoute (jamais ne remplace), au-dessus du texte de base, un mot-clé en gras pour chaque buff
+    // octroyé à l'exécution (Célérité, Piercing/Arcing Attacks...) — même convention que les mots-clés
+    // innés déjà écrits à la main dans Description (ex: "<b>Arcing Attacks</b>").
+    private void PrependGrantedKeywordsText()
+    {
+        if (sourceCreature == null) return;
+
+        List<string> grantedNames = new List<string>();
+
+        if (sourceCreature.HasRuntimeCelerity && !cardAsset.Celerity)
+        {
+            Keyword celerityKeyword = VisualManager.Instance?.CelerityKeyword;
+            if (celerityKeyword != null)
+                grantedNames.Add(celerityKeyword.displayName);
+        }
+
+        foreach (AttackModifierSO modifier in sourceCreature.GrantedAttackModifiers)
+        {
+            if (modifier?.AssociatedKeyword != null)
+                grantedNames.Add(modifier.AssociatedKeyword.displayName);
+        }
+
+        if (grantedNames.Count == 0) return;
+
+        string keywordLines = string.Join("\n", grantedNames.ConvertAll(n => $"<b>{n}</b>"));
+        DescriptionText.text = keywordLines + "\n\n" + DescriptionText.text;
     }
 
     // Ajoute (jamais ne remplace) la progression de tout CondCounter présent sur la carte, à la

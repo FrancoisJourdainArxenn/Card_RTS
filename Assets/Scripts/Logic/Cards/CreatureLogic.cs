@@ -156,11 +156,16 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
         HasSummoningSickness = false;
+        HasRuntimeCelerity = true;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
         TurnManager.RefreshAllPlayableHighlights();
 
     }
+
+    // Vrai dès que GrantCelerity() a été appelé — distinct de ca.Celerity (l'inné, déjà écrit à la
+    // main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
+    public bool HasRuntimeCelerity { get; private set; }
 
 
     public int TakeDamage(int dmg)
@@ -366,6 +371,11 @@ public class CreatureLogic: ILivable
     {
         _grantedAttackModifiers?.Remove(modifier);
     }
+
+    // Modificateurs octroyés à l'exécution uniquement (pas ceux de ca.AttackModifiers, déjà écrits
+    // à la main dans Description côté design) — utilisé pour l'affichage du texte de carte.
+    public IReadOnlyList<AttackModifierSO> GrantedAttackModifiers =>
+        (IReadOnlyList<AttackModifierSO>)_grantedAttackModifiers ?? System.Array.Empty<AttackModifierSO>();
 
     public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
 

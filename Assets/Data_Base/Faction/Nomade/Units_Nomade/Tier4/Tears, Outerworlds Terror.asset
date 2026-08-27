@@ -16,13 +16,16 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 7
-  tier: 3
-  Description: "<b>Arcing & Piercing Attacks.</b> \nWhen an ally dies, I gain +1/+1."
+  tier: 4
+  Description: '<b>Arcing & Piercing Attacks.</b>
+
+    When I take damage, I gain
+    +1/+0. '
   CardImage: {fileID: 21300000, guid: c815b92e7e833e8489a75e2b70a18bd7, type: 3}
-  MainCost: 5
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 5
   MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -39,9 +42,9 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Now you die.
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 7
-    Condition: {fileID: 11400000, guid: d0d5ea2d817e404095ae0cd5aeb2562d, type: 2}
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 16
+    Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0

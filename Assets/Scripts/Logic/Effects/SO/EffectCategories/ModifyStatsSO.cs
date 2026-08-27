@@ -38,6 +38,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
     )
     {
         Log($"{EffectName}: Execution");
+        _sourceID = context.Source?.ID ?? -1;
         _caster = context.Caster;
         _playedCard = context.AmplifierCard;
         (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
@@ -131,6 +132,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
             ApplyStatsDelta(target, scaledAttack, scaledHealth);
             int actualAttackDelta = target.Attack - attackBefore;
             new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
+            QueueSourceVfx(EffectVisual);
             TrackUpgradeStat(target, scaledAttack, scaledHealth);
 
             if (IsTempEffect)

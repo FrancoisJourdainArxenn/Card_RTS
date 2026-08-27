@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3bc99e5a2422f41970b1016eefa7fa, type: 3}
   m_Name: ArcingAttack
   m_EditorClassIdentifier: Assembly-CSharp::LateralAttackModifierSO
+  AssociatedKeyword: {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}

@@ -16,13 +16,13 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
-  tier: 3
+  tier: 4
   Description: <b>On Death :</b> Create a Bully and gain a Great Invention !
   CardImage: {fileID: 21300000, guid: ec9706a28d59ec04ab1de74a3baec7d9, type: 3}
-  MainCost: 3
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
+  Attack: 4
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3

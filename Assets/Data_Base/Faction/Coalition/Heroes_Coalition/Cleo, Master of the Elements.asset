@@ -35,13 +35,14 @@ MonoBehaviour:
   Celerity: 0
   melee: 0
   IsStructureUnit: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
   ReferencedCards:
   - {fileID: 11400000, guid: d8dc68f978f932b4b80441a6f3b29cf7, type: 2}
   Effects:
   - EffectName: Blessed by the Elements
     Effect: {fileID: 11400000, guid: 45bcaa40d013e9540ba252450a570242, type: 2}
-    Trigger: 3
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []

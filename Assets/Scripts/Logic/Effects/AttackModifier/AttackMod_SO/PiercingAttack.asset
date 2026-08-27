@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33851db625de4e84285704b218508a13, type: 3}
   m_Name: PiercingAttack
   m_EditorClassIdentifier: Assembly-CSharp::PiercingAttackModifierSO
+  AssociatedKeyword: {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}

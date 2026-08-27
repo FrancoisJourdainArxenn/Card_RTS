@@ -107,6 +107,7 @@ public abstract class EffectSO : ScriptableObject
                 foreach (ILivable target in affectedElements.Cast<ILivable>())
                 {
                     ApplyToTarget(target, visualData);
+                    QueueSourceVfx(visualData);
                     if (this is IRevertable r && r.IsTemporary)
                     {
                         ILivable t = target;
@@ -168,6 +169,7 @@ public abstract class EffectSO : ScriptableObject
                 }
 
                 ApplyToTarget(target, visualData);
+                QueueSourceVfx(visualData);
                 if (this is IRevertable r && r.IsTemporary)
                 {
                     ILivable t = target;
@@ -177,6 +179,17 @@ public abstract class EffectSO : ScriptableObject
             }
 
         }
+    }
+
+    // Joue, en plus du VFX normal (sur la cible), le VFX secondaire configuré sur la source de l'effet
+    // (EffectVisualData.onSource/vfxPrefabOnSource) — sert à repérer quelle unité a déclenché un effet
+    // dont le VFX principal s'affiche sur d'autres unités (ex: un buff). No-op si _sourceID n'a pas été
+    // renseigné par le Execute() du sous-type (voir DealDamageSO, HealthEffectSO...), ou si onSource
+    // n'est pas coché sur cet EffectVisualData.
+    protected void QueueSourceVfx(EffectVisualData visualData)
+    {
+        if (_sourceID == -1) return;
+        new PlaySourceVfxCommand(_sourceID, visualData).AddToQueue();
     }
 
     // Construit le pool de répartition pour Random/RandomMeleeFirst. En résolution normale (pas de
@@ -242,6 +255,7 @@ public abstract class EffectSO : ScriptableObject
         {
             if (et.amount == 0) continue;
             ApplyToTarget(et.target, visualData, et.amount);
+            QueueSourceVfx(visualData);
             if (this is IRevertable r && r.IsTemporary)
             {
                 ILivable t = et.target;

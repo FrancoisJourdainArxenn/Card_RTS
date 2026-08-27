@@ -16,13 +16,13 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 7
-  tier: 3
+  tier: 4
   Description: '<b>Piercing Attacks
 
     On BattleStart:</b> Create a Rex, it gains
     <b>Shield 3</b>.'
   CardImage: {fileID: 21300000, guid: 9b713b9c40afd9e4ba7703f1de2407a7, type: 3}
-  MainCost: 5
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 4

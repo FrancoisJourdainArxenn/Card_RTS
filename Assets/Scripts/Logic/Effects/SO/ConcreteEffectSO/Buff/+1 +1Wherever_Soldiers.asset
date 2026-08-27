@@ -19,6 +19,8 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   AttackBonus: 1
   HealthBonus: 1
   IsTempEffect: 0
@@ -28,5 +30,7 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
   PersistentFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
   MatchSameNameAsTarget: 0

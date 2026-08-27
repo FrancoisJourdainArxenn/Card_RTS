@@ -23,6 +23,9 @@ public class CastSpellSO : EffectSO
 
         Log($"{EffectName}: {context.Caster.name} casts {SpellToCast.name} x{CastCount}");
 
+        if (visualData != null && context.Source != null)
+            new PlayEffectVisualCommand(context.Source.ID, visualData).AddToQueue();
+
         for (int i = 0; i < CastCount; i++)
         {
             EffectRegistry.ETB(SpellToCast, new EffectContext

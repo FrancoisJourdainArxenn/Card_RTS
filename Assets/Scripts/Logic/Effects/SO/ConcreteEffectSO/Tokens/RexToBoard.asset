@@ -19,6 +19,8 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   TokenCount: 1
   TokenToSummon: {fileID: 11400000, guid: 2d2919a17637bd74caa378005f62303d, type: 2}
   Placement: 2

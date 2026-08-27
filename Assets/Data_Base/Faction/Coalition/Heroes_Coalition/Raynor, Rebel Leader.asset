@@ -39,6 +39,7 @@ MonoBehaviour:
   IsStructureUnit: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: 

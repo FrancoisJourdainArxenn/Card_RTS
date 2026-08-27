@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
-  m_Name: Generate2Inventions
+  m_Name: GenerateRobots
   m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
   Description: 
   EffectVisual:
@@ -19,10 +19,11 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   CardPool:
-  - {fileID: 11400000, guid: 5ce80caae3cc38a46833150b0b6fb218, type: 2}
-  - {fileID: 11400000, guid: d4df34f2474ea6244a9846d48b1b5173, type: 2}
-  - {fileID: 11400000, guid: 4368437b499c8924c9d6879fcb6220ab, type: 2}
-  - {fileID: 11400000, guid: 5d9b572a674e68e4f8a86ff683386f44, type: 2}
-  - {fileID: 11400000, guid: 29e76c7fbc7159345961d59b9922c4db, type: 2}
-  CardCount: 2
+  - {fileID: 11400000, guid: 0a2ef7afe7117fe48897eb09c62b0e61, type: 2}
+  - {fileID: 11400000, guid: 4c6dc73027f06f24d8bdf1db08e56a13, type: 2}
+  - {fileID: 11400000, guid: 1af6ab92059eedc4494584814f4c61fd, type: 2}
+  - {fileID: 11400000, guid: a2eff46a731d5ed4088a0fbb9fc19547, type: 2}
+  CardCount: 1

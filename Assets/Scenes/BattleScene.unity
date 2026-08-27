@@ -1288,6 +1288,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 9f3142a73eb8ede4bbb600b7e7e5ffce, type: 3}
   - {fileID: 21300000, guid: d066a7eb8438c7e46890cccddca8d6f6, type: 3}
   - {fileID: 21300000, guid: a4d7265b29df78a49bc13bed9c414d74, type: 3}
+  CelerityKeyword: {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
 --- !u!114 &289653490
 MonoBehaviour:
   m_ObjectHideFlags: 0

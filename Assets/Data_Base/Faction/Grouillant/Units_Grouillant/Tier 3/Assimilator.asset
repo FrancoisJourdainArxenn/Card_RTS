@@ -51,7 +51,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 1
+          statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 1

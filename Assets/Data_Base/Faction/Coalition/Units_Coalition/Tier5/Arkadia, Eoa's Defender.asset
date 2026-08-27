@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 5
   Description: '<b>Back-up
 
-    Battle Start</b>: Soldiers in my zone gain +0/+1.'
+    Battle Start</b>: units in my zone gain +0/+1.'
   CardImage: {fileID: 21300000, guid: f3b858e207f6de642bf29bbc994164a7, type: 3}
   MainCost: 1
   IsHero: 0
