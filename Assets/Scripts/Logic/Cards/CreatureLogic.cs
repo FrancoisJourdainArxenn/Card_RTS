@@ -474,7 +474,10 @@ public class CreatureLogic: ILivable
         EffectRegistry.NotifyCreatureDied(this, owner);
         DeathDrainRecorder.RecordDeath(UniqueCreatureID);
         if (wasInList)
+        {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+            FogOfWarManager.Refresh();
+        }
 
         if (ca.IsHero)
             ReturnHeroToHand();
@@ -504,7 +507,10 @@ public class CreatureLogic: ILivable
         TempEffectTracker.Unregister(UniqueCreatureID);
         EffectRegistry.UnregisterEntity(UniqueCreatureID);
         if (wasInList)
+        {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+            FogOfWarManager.Refresh();
+        }
     }
 
     // During Battle: queues the visual die command immediately so the creature disappears
