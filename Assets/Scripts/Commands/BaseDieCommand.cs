@@ -15,10 +15,12 @@ public class BaseDieCommand : Command
     public override void StartCommandExecution()
     {
         if (neutralBaseController != null)
-            neutralBaseController.RemoveBaseWithID(baseID);
-        else
-            Debug.LogWarning("BaseDieCommand: neutralBaseController is null for base ID " + baseID);
+        {
+            neutralBaseController.PlayBaseDeathAnimationThenRemove(baseID, CommandExecutionComplete);
+            return;
+        }
 
+        Debug.LogWarning("BaseDieCommand: neutralBaseController is null for base ID " + baseID);
         CommandExecutionComplete();
     }
 }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
   m_Name: FastDeck 2
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Test Deck (2)
+  deckName: Caster
   difficultyLevel: 0
   deckTooltip: OnDeath
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}

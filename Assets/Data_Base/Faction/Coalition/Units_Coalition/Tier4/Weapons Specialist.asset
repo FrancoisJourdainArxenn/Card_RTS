@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Weapons Specialist
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: 
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Type: 0
+  subType: 6
+  tier: 4
+  Description: <b>On Play:</b> Gives Piercing Attacks to ANY ally unit.
+  CardImage: {fileID: 21300000, guid: dfc32ec2fc02b9b4f9afd188f0bffed8, type: 3}
+  MainCost: 1
+  IsHero: 0
+  UnlockCondition: {fileID: 0}
+  Attack: 1
+  MaxHealth: 1
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 1
+  Celerity: 0
+  melee: 1
+  IsStructureUnit: 0
+  Keywords:
+  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  ReferencedCards: []
+  Effects:
+  - EffectName: Here's my new Invention
+    Effect: {fileID: 11400000, guid: ab0ece616528298449a0167aa73a57fd, type: 2}
+    Trigger: 0
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 1
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

@@ -111,10 +111,24 @@ public static class EffectRegistry
             if (idx < 0 || idx >= ca.Effects.Count)
                 continue;
 
+            IIdentifiable resolvedTarget = PhaseEffectPipeline.ResolveEntityByID(selectedTargetIDs[i]);
+
+            // selectedTargetIDs[i] == -1 est le sentinel "pas de cible" légitime (effet auto-ciblé) —
+            // voir PhaseEffectPipeline.ResolveEntityByID. Un ID concret qui ne résout à rien ici est en
+            // revanche un échec silencieux : l'effet OnPlay (ex: Assimilate) va s'exécuter avec une
+            // cible null et s'auto-annuler sans la moindre erreur (HealthEffectSO.Execute: "aucune
+            // cible éligible") — ce qui, côté serveur/hôte, laisse l'état autoritaire ne reflétant
+            // jamais l'effet alors que l'expéditeur, lui, a résolu sa cible correctement.
+            if (selectedTargetIDs[i] != -1 && resolvedTarget == null)
+            {
+                string role = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+                Debug.LogError($"[BuildPreResolvedSelections]{role} Cible introuvable — carte={ca.name}, effet={ca.Effects[idx].EffectName}, targetID={selectedTargetIDs[i]} : l'effet OnPlay va s'exécuter sans cible.");
+            }
+
             result.Add(new PendingEffectSelection
             {
                 Data           = ca.Effects[idx],
-                SelectedTarget = PhaseEffectPipeline.ResolveEntityByID(selectedTargetIDs[i])
+                SelectedTarget = resolvedTarget
             });
         }
 
@@ -232,20 +246,26 @@ public static class EffectRegistry
 
             int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             System.Random previousRng = EffectSO.CurrentNetworkRng;
+            List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
             bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+            List<(int id, int amount)> allocation;
             try
             {
                 EffectSO.SetNetworkRng(new System.Random(seed));
+                EffectSO.ClearForcedAllocation();
+                EffectSO.ResetLastAllocation();
                 if (!alreadyResolving) ZoneCombatResolver.BeginResolvingPredictedTrigger();
                 Command.RunDeferred(deferKey, () => Execute(re.Data, ctx));
+                allocation = EffectSO.LastAllocation;
             }
             finally
             {
                 if (!alreadyResolving) ZoneCombatResolver.EndResolvingPredictedTrigger();
                 EffectSO.SetNetworkRng(previousRng);
+                EffectSO.SetLastAllocation(previousAllocation);
             }
             ZoneCombatResolver.RecordPredictedTriggerReplay(re.OwnerID, effectIndex, seed, deferKey,
-                ctx.EventSubjectCreature?.UniqueCreatureID ?? -1);
+                ctx.EventSubjectCreature?.UniqueCreatureID ?? -1, allocation: allocation);
         }
     }
 

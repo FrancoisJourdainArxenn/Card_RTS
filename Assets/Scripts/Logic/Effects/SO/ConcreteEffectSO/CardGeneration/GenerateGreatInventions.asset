@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
+  m_Name: GenerateGreatInventions
+  m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 0}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
+  CardPool:
+  - {fileID: 11400000, guid: 4286de770a4b1524ba89637540efec45, type: 2}
+  - {fileID: 11400000, guid: a52e01c3b40057945bef820ebb74f57d, type: 2}
+  - {fileID: 11400000, guid: a9dc0a53afb553342b26a6946e64a5ec, type: 2}
+  - {fileID: 11400000, guid: 90c0429e079b73b428a830c73c83f24e, type: 2}
+  - {fileID: 11400000, guid: ba9b42c28b651054ca64a22df5196dab, type: 2}
+  CardCount: 1

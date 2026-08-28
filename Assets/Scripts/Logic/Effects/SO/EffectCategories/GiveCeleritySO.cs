@@ -16,6 +16,7 @@ public class GiveCeleritySO : EffectSO
     )
     {
         Log($"{EffectName}: Execution");
+        _sourceID = context.Source?.ID ?? -1;
 
         List<IIdentifiable> affectedElements = GetAffectedElements(context, effectInfo);
         if (affectedElements.Count == 0)

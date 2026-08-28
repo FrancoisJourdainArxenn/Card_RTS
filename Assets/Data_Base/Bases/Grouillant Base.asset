@@ -18,13 +18,13 @@ MonoBehaviour:
   baseIconColor: {r: 1, g: 1, b: 1, a: 1}
   baseDescription: '<b>Main Base</b>
 
-    A main base grants you 3 Income.
+    A main base grants you 2 Income. Under
+    attack, it grants only 1.
 
-    When
-    destroyed, it''s controller loses the game.'
+    When destroyed, it''s controller loses the game.'
   BaseName: Essaimeuse
-  MaxHealth: 12
-  mainRessourceIncome: 3
+  MaxHealth: 1
+  mainRessourceIncome: 2
   mainRessourceBaseCost: 0
   tierLevels:
   - tier: 1
@@ -36,18 +36,34 @@ MonoBehaviour:
     drawCountBonus: 0
     tierIcon: {fileID: 21300000, guid: 32111d3fb07038e46b07f73f7af671f6, type: 3}
   - tier: 2
-    incomeBonus: 1
-    upgradeCost: 8
+    incomeBonus: 0
+    upgradeCost: 5
     upgradeCostFloor: 0
     upgradeCostReductionPerTurn: 1
     drawConfig: {fileID: 11400000, guid: 8e2ae10773eca11448c2e18269fae415, type: 2}
     drawCountBonus: 1
     tierIcon: {fileID: 21300000, guid: 9cac8352d1196d048aa8c61e9d19d605, type: 3}
   - tier: 3
-    incomeBonus: 1
-    upgradeCost: 10
+    incomeBonus: 0
+    upgradeCost: 6
     upgradeCostFloor: 0
     upgradeCostReductionPerTurn: 1
     drawConfig: {fileID: 11400000, guid: 0ccfae11bda3cd9459d3249c2b0e1df5, type: 2}
-    drawCountBonus: 1
+    drawCountBonus: 0
     tierIcon: {fileID: 21300000, guid: 9f3142a73eb8ede4bbb600b7e7e5ffce, type: 3}
+  - tier: 4
+    incomeBonus: 0
+    upgradeCost: 7
+    upgradeCostFloor: 0
+    upgradeCostReductionPerTurn: 1
+    drawConfig: {fileID: 11400000, guid: 4be5c59aac5d5204a935d8d90b3b6945, type: 2}
+    drawCountBonus: 1
+    tierIcon: {fileID: 21300000, guid: d066a7eb8438c7e46890cccddca8d6f6, type: 3}
+  - tier: 5
+    incomeBonus: 1
+    upgradeCost: 8
+    upgradeCostFloor: 0
+    upgradeCostReductionPerTurn: 1
+    drawConfig: {fileID: 11400000, guid: ca8e11714efe9934eae83d91aa8a36f9, type: 2}
+    drawCountBonus: 0
+    tierIcon: {fileID: 21300000, guid: a4d7265b29df78a49bc13bed9c414d74, type: 3}

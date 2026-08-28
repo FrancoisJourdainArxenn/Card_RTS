@@ -120,11 +120,11 @@ public class CreatureAttackVisual : MonoBehaviour
     // Command.CommandExecutionComplete depuis onWindupComplete).
     public void PlayWindup(int targetUniqueID, System.Action onWindupComplete)
     {
-        Debug.Log($"[AttackVisual] {gameObject.name} → wind-up vers cible ID:{targetUniqueID}");
+        // Debug.Log($"[AttackVisual] {gameObject.name} → wind-up vers cible ID:{targetUniqueID}");
         // L'attaquant peut avoir été détruit entre l'enregistrement et l'exécution de la commande
         if (this == null)
         {
-            Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
+            // Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -132,7 +132,7 @@ public class CreatureAttackVisual : MonoBehaviour
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
-            Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
+            // Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -183,14 +183,14 @@ public class CreatureAttackVisual : MonoBehaviour
     // _pendingTempState posés par PlayWindup pour le retour et la restauration du VisualState.
     public void PlayResolve(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
     {
-        Debug.Log($"[AttackVisual] {gameObject.name} → résolution vers cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
+        // // Debug.Log($"[AttackVisual] {gameObject.name} → résolution vers cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
         // L'attaquant peut avoir été détruit entre le wind-up et la résolution (ex: par les commandes
         // différées d'un effet OnAttack intercalées entre les deux, voir CreatureAttackCommand.EnqueueAttack).
         // Pas d'EndFlight ici : le vol de PlayWindup s'est déjà refermé de son côté (voir PlayWindup),
         // et celui de PlayResolve n'a pas encore été ouvert à ce stade (BeginFlight plus bas).
         if (this == null)
         {
-            Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
+            // Debug.LogWarning("[AttackVisual] attaquant détruit avant exécution — CommandExecutionComplete forcé");
             Command.CommandExecutionComplete();
             return;
         }
@@ -201,7 +201,7 @@ public class CreatureAttackVisual : MonoBehaviour
         GameObject target = IDHolder.GetGameObjectWithID(targetUniqueID);
         if (target == null)
         {
-            Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
+            //  Debug.LogWarning($"[AttackVisual] Cible ID:{targetUniqueID} introuvable (IDHolder) — CommandExecutionComplete forcé");
             manager.HealthText.text = attackerHealthAfter.ToString();
             Command.CommandExecutionComplete();
             return;
@@ -251,24 +251,35 @@ public class CreatureAttackVisual : MonoBehaviour
             if (damage > 0)
                 VisualFeedbackEffect.CreateDamageEffect(hitTarget.transform.position, damage);
 
-            switch (GetTargetType(hitTargetID))
+            // Classification par composant présent sur le GameObject résolu (IDHolder), PAS via
+            // GetTargetType/les dictionnaires logiques (BasesCreatedThisGame/...) : ceux-ci sont mutés
+            // de façon SYNCHRONE pendant la planification de toute la zone (ex. BaseLogic.Die() retire
+            // la base dès que le coup fatal est calculé), alors que le rejeu visuel de chaque coup de
+            // la zone n'a lieu qu'ensuite, un par un. Un coup antérieur non-fatal sur cette même base
+            // se retrouvait donc classé Unknown au moment de son rejeu (la base était déjà retirée du
+            // dictionnaire), et son HealthText n'était jamais mis à jour — seule la disparition finale
+            // était visible. Les composants du GameObject, eux, restent en place jusqu'à la fin du
+            // rejeu de toute la zone (voir PlayBaseDeathAnimationThenRemove), donc stables ici.
+            if (hitTarget.GetComponent<MainBaseVisual>() is MainBaseVisual mbv)
             {
-                case AttackTargetType.Player:
-                    hitTarget.GetComponent<MainBaseVisual>().HealthText.text = healthAfter.ToString();
-                    GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
-                    break;
-                case AttackTargetType.Base:
-                    hitTarget.GetComponent<OneBaseManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Creature:
-                    hitTarget.GetComponent<OneCreatureManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Building:
-                    hitTarget.GetComponent<OneBuildingManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Unknown:
-                    Debug.Log("Unknown target type: " + hitTargetID);
-                    break;
+                mbv.ApplyHealthDisplay(healthAfter);
+                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+            }
+            else if (hitTarget.GetComponent<OneBaseManager>() is OneBaseManager om)
+            {
+                om.HealthText.text = healthAfter.ToString();
+            }
+            else if (hitTarget.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
+            {
+                cm.HealthText.text = healthAfter.ToString();
+            }
+            else if (hitTarget.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
+            {
+                bm.HealthText.text = healthAfter.ToString();
+            }
+            else
+            {
+                Debug.Log("Unknown target type: " + hitTargetID);
             }
         }
 
@@ -414,7 +425,7 @@ public class CreatureAttackVisual : MonoBehaviour
                 {
                     // Si cette exception se produit, la file de commandes (Command.CommandQueue) se bloquerait
                     // silencieusement pour toujours sans ce filet — d'où le log explicite ici.
-                    Debug.LogError($"[AttackVisual] EXCEPTION pendant l'animation de {gameObject.name} → cible ID:{targetUniqueID} (type={targetType}) — file débloquée de force: {e}");
+                    // Debug.LogError($"[AttackVisual] EXCEPTION pendant l'animation de {gameObject.name} → cible ID:{targetUniqueID} (type={targetType}) — file débloquée de force: {e}");
                     Command.CommandExecutionComplete();
                 }
             }))

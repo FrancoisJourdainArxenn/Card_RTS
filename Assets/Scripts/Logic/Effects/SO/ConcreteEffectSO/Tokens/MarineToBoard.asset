@@ -17,6 +17,10 @@ MonoBehaviour:
     vfxPrefab: {fileID: 5965768918663700131, guid: 12d57b414b4a77245aac755b80b15b26, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   TokenCount: 1
   TokenToSummon: {fileID: 11400000, guid: 6073210a592c06240bf97653d94320ca, type: 2}
   Placement: 2

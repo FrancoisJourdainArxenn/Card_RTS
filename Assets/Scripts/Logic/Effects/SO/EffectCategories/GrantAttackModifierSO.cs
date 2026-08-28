@@ -22,6 +22,7 @@ public class GrantAttackModifierSO : EffectSO
     )
     {
         Log($"{EffectName}: Execution");
+        _sourceID = context.Source?.ID ?? -1;
 
         if (ModifierToGrant == null)
         {

@@ -164,17 +164,23 @@ public class BuildingLogic : ILivable
                 else if (isNetworkServer)
                 {
                     int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                    List<(int id, int amount)> allocation;
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        EffectSO.ClearForcedAllocation();
+                        EffectSO.ResetLastAllocation();
                         Command.RunDeferred(zoneDeferKey, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        allocation = EffectSO.LastAllocation;
                     }
                     finally
                     {
                         EffectSO.ClearNetworkRng();
+                        EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueBuildingID, true, i, seed);
+                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueBuildingID, true, i, seed, allocation);
                 }
             }
             catch (System.Exception e)
@@ -184,7 +190,7 @@ public class BuildingLogic : ILivable
         }
     }
 
-    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed)
+    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         if (ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) return;
         CardEffectData data = ca.Effects[effectIndex];
@@ -193,6 +199,7 @@ public class BuildingLogic : ILivable
         try
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
+            EffectSO.SetForcedAllocation(allocation);
             Command.RunDeferred(zoneDeferKey, () =>
                 EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
         }
@@ -203,6 +210,7 @@ public class BuildingLogic : ILivable
         finally
         {
             EffectSO.ClearNetworkRng();
+            EffectSO.ClearForcedAllocation();
         }
     }
 

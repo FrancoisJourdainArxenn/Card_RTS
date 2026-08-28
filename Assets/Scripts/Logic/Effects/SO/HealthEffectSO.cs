@@ -14,6 +14,7 @@ public abstract class HealthEffectSO : EffectSO
         EffectVisualData visualData
     )
     {
+        _sourceID = context.Source?.ID ?? -1;
         _caster = context.Caster;
         _playedCard = context.AmplifierCard;
         Log($"[HealthEffect] RESOLVING — {EffectName}");

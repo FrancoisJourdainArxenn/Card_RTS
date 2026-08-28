@@ -24,8 +24,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
             return;
         // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
         HealthText.text = player.Health.ToString();
-        MainRessourceText.text = player.mainRessourceAvailable.ToString();
-        baseManager?.RefreshIncomeDisplay(player.playerMainIncome);
+        if (player.homeBaseLogic != null)
+        {
+            MainRessourceText.text = "+ " + player.homeBaseLogic.EffectiveIncome.ToString();
+            baseManager?.SetUnderAttackVisual(player.homeBaseLogic.IsUnderAttack);
+        }
         RefreshTierIcon();
 
     }
@@ -67,12 +70,46 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
     }
 
-    public void Explode()
+    // Animation de mort de la base — jouée UNE SEULE FOIS après que TOUTES les attaques de sa zone
+    // aient été traitées (voir ZoneCombatResolver.EnqueueBattleCommands, qui enfile
+    // MainBaseDeathAnimationCommand après sa boucle de steps, jamais depuis ApplyHealthDisplay
+    // directement — sinon un deuxième coup fatal dans la même zone rejouerait l'animation). L'ancien
+    // "puis révèle GameOverPanel" a été retiré : GameOverPanel n'est assigné dans aucune scène, et la
+    // fin de partie passe désormais par GameOverCommand (message + retour menu).
+    // Réutilise VfxManager.PlayDeath() (même mécanisme que CreatureDieCommand/BuildingDieCommand) au
+    // lieu d'un champ prefab séparé — le composant VfxManager de ce GameObject a déjà un emplacement
+    // dédié pour l'animation de mort, pas besoin d'en dupliquer un.
+    public void PlayDeathAnimationAndHide(System.Action onComplete)
     {
-        Instantiate(GlobalSettings.Instance.ExplosionPrefab, transform.position, Quaternion.identity);
-        Sequence s = DOTween.Sequence();
-        s.PrependInterval(2f);
-        s.OnComplete(() => GlobalSettings.Instance.GameOverPanel.SetActive(true));
+        VfxManager vfx = GetComponent<VfxManager>();
+        float duration = vfx != null ? vfx.PlayDeath() : 0f;
+
+        gameObject.SetActive(false);
+
+        if (duration <= 0f)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        // SetLink cible player.gameObject (qui reste vivant tout le reste de la partie), JAMAIS ce
+        // gameObject : il vient d'être désactivé ci-dessus, et SetLink tue le tween dès que l'objet
+        // lié est désactivé — lier ce gameObject ferait terminer l'attente instantanément.
+        bool fired = false;
+        DOVirtual.DelayedCall(duration, () => { fired = true; onComplete?.Invoke(); })
+            .SetLink(player.gameObject)
+            .OnKill(() => { if (!fired) onComplete?.Invoke(); });
+    }
+
+    // Affiche les PV — peuvent être négatifs (overkill du coup fatal, voir ZoneCombatResolver.
+    // ComputeRoundOutcome, qui en a besoin pour départager une partie où les deux bases meurent le
+    // même round). Ne déclenche PAS l'animation de mort : un round peut infliger plusieurs coups
+    // fatals successifs à cette base (aucune limite anti-overkill côté joueur, voir
+    // AssignSingleAttack) — la déclencher ici la rejouerait à chaque coup. Voir
+    // PlayDeathAnimationAndHide, appelée une seule fois après la fin de la zone.
+    public void ApplyHealthDisplay(int healthAfter)
+    {
+        HealthText.text = healthAfter.ToString();
     }
 
     void OnMouseDown()

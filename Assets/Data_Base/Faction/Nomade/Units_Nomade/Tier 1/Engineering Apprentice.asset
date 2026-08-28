@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: <b>On Play:</b> Gain an Invention.
   CardImage: {fileID: 21300000, guid: ba76d49effbfb164bad15bada60404e3, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
@@ -34,7 +34,7 @@ MonoBehaviour:
   melee: 0
   IsStructureUnit: 0
   Keywords:
-  - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Eureka !

@@ -67,13 +67,15 @@ public class ZoneCombatResolver : MonoBehaviour
                               // pour un ciblage AdjacentToTarget : BattleStepRecord (qui porte aussi un
                               // targetID) est diffusé dans un ClientRpc séparé et PLUS TARD que le rejeu des
                               // triggers prédits — voir GameNetworkManager.SubmitBattleAssignmentServerRpc.
+        public List<(int id, int amount)> Allocation; // cibles/montants résolus par Random/RandomMeleeFirst/
+                                                        // RandomSingleTarget côté serveur — liste vide si non applicable.
     }
     private static readonly List<PredictedTriggerReplay> _pendingPredictedTriggerReplays = new();
 
-    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
+    public static void RecordPredictedTriggerReplay(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1, List<(int id, int amount)> allocation = null)
     {
         _pendingPredictedTriggerReplays.Add(new PredictedTriggerReplay
-            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID, TargetID = targetID });
+            { SourceCreatureID = sourceCreatureID, EffectIndex = effectIndex, Seed = seed, DeferKey = deferKey, EventSubjectID = eventSubjectID, TargetID = targetID, Allocation = allocation ?? new() });
     }
 
     // Consommé une seule fois par SubmitBattleAssignmentServerRpc, juste après que toute la
@@ -146,13 +148,15 @@ public class ZoneCombatResolver : MonoBehaviour
         public bool IsBuilding;
         public int EffectIndex;
         public int Seed;
+        public List<(int id, int amount)> Allocation; // cibles/montants résolus par Random/RandomMeleeFirst/
+                                                        // RandomSingleTarget côté serveur — liste vide si non applicable.
     }
     private static readonly List<OnBattleStartReplay> _pendingOnBattleStartReplays = new();
 
-    public static void RecordOnBattleStartReplay(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    public static void RecordOnBattleStartReplay(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         _pendingOnBattleStartReplays.Add(new OnBattleStartReplay
-            { ZoneDeferKey = zoneDeferKey, SourceID = sourceID, IsBuilding = isBuilding, EffectIndex = effectIndex, Seed = seed });
+            { ZoneDeferKey = zoneDeferKey, SourceID = sourceID, IsBuilding = isBuilding, EffectIndex = effectIndex, Seed = seed, Allocation = allocation ?? new() });
     }
 
     public static List<OnBattleStartReplay> DrainOnBattleStartReplays()
@@ -163,17 +167,17 @@ public class ZoneCombatResolver : MonoBehaviour
     }
 
     // Appelé côté client par GameNetworkManager.ApplyCanonicalBattleAssignmentClientRpc.
-    public static void ReplayOnBattleStartEffect(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed)
+    public static void ReplayOnBattleStartEffect(int zoneDeferKey, int sourceID, bool isBuilding, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         if (isBuilding)
         {
             if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceID, out BuildingLogic b))
-                b.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+                b.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed, allocation);
         }
         else
         {
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceID, out CreatureLogic c))
-                c.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed);
+                c.ReplayBattleStartEffect(zoneDeferKey, effectIndex, seed, allocation);
         }
     }
 
@@ -239,6 +243,13 @@ public class ZoneCombatResolver : MonoBehaviour
         return false;
     }
 
+    // Planification uniquement — jamais d'enqueue ici, dans AUCUN mode. Nécessaire pour que
+    // ComputeRoundOutcome() puisse lire pendingPlayerDamage de TOUS les resolvers (base principale
+    // des deux joueurs comprise) avant qu'aucune commande ne mute Health : si l'enqueue restait
+    // interfolé ici comme avant en solo, un resolver plus tardif dans la boucle observerait un
+    // Health déjà partiellement appliqué par un resolver précédent du même round (double décompte).
+    // Voir TurnManager.DelayedBattleStart (solo) / GameNetworkManager.SubmitBattleAssignmentServerRpc
+    // (réseau) pour l'enqueue, désormais toujours séparé et postérieur à la planification complète.
     public void OnBattlePhaseStart()
     {
         pendingDamage.Clear();
@@ -248,24 +259,11 @@ public class ZoneCombatResolver : MonoBehaviour
         p1FreePool = 0;
         p2FreePool = 0;
 
-        if (NetworkSessionData.IsNetworkSession)
-        {
-            if (Unity.Netcode.NetworkManager.Singleton.IsServer)
-            {
-                ResolveOnBattleStartEffects();
-                _lastBattleSteps = BuildAutoBattleSequence(zoneView);
-            }
-        }
-        else
-        {
-            ResolveOnBattleStartEffects();
-            List<BattleStepRecord> steps = BuildAutoBattleSequence(zoneView);
-            pendingDamage.Clear();
-            pendingBaseDamage.Clear();
-            pendingPlayerDamage.Clear();
-            pendingBuildingDamage.Clear();
-            EnqueueBattleCommands(steps);
-        }
+        bool isPlanner = !NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer;
+        if (!isPlanner) return;
+
+        ResolveOnBattleStartEffects();
+        _lastBattleSteps = BuildAutoBattleSequence(zoneView);
     }
 
     // Résout OnBattleStart pour toutes les créatures/bâtiments des DEUX joueurs présents dans
@@ -631,6 +629,14 @@ public class ZoneCombatResolver : MonoBehaviour
             new ZoneBattleStartRevealCommand(zoneView.transform.position).AddToQueue();
             Command.FlushDeferredCommands(zoneDeferKey);
         }
+        // Bases mortes pendant CETTE zone — animation de mort jouée UNE SEULE FOIS, après la boucle
+        // ci-dessous, jamais immédiatement dans le switch : un round sans limite anti-overkill (voir
+        // AssignSingleAttack, branches base/joueur) peut infliger plusieurs coups fatals successifs à
+        // la même base dans la même zone, et l'animation ne doit rejouer ni pour chacun d'eux ni avant
+        // que le reste des combats de la zone n'ait fini de s'animer.
+        HashSet<int> diedHomeBasePlayerIDs = new();
+        List<(int baseID, NeutralZoneController controller)> diedNeutralBases = new();
+
         // Debug.Log($"[Enqueue:{zoneView.name}] Traitement de {steps.Count} step(s)");
         for (int zeroBasedStepIdx = 0; zeroBasedStepIdx < steps.Count; zeroBasedStepIdx++)
         {
@@ -837,7 +843,12 @@ public class ZoneCombatResolver : MonoBehaviour
                     if (target.IsHomeBase || targetHealthAfter > 0)
                         target.Health = targetHealthAfter;
                     else
+                    {
+                        // Capturé AVANT Die() : Die() retire cette base de BasesCreatedThisGame, donc
+                        // plus rien ne permettrait de la retrouver après coup.
+                        diedNeutralBases.Add((target.ID, target.neutralBaseController));
                         target.Die();
+                    }
 
                     break;
                 }
@@ -846,18 +857,34 @@ public class ZoneCombatResolver : MonoBehaviour
                     Player target = step.targetOwnerPlayerID == GlobalSettings.Instance.LowPlayer.PlayerID
                         ? GlobalSettings.Instance.LowPlayer
                         : GlobalSettings.Instance.TopPlayer;
-                    int targetHealthAfter = Mathf.Max(0, target.Health - step.damage);
+                    // Pas de plancher à 0 ici, contrairement aux autres TargetKind : le PV final de la
+                    // base principale peut être négatif (overkill) — ComputeRoundOutcome() en a besoin
+                    // pour départager le scénario "les deux bases meurent" (voir la conversation de
+                    // conception), et le joueur doit pouvoir le voir affiché tel quel.
+                    int targetHealthAfter = target.Health - step.damage;
                     Debug.Log($"[Enqueue:{zoneView.name}] step {stepIdx}/{steps.Count} Player — attaquant={step.attackerID} cible joueur={target.name} HP avant={target.Health} dégâts={step.damage} → HP après={targetHealthAfter}");
                     if (!step.attackerIsBuilding)
                         CreatureAttackCommand.EnqueueAttack(target.PlayerID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter);
                     else
                         new BuildingAttackCommand(target.PlayerID, step.attackerID, 0, step.damage, attackerHP, targetHealthAfter).AddToQueue();
                     target.Health = targetHealthAfter;
+                    if (targetHealthAfter <= 0)
+                        diedHomeBasePlayerIDs.Add(target.PlayerID); // HashSet : dédoublonne les coups fatals répétés
                     break;
                 }
             }
             Command.FlushPendingDeaths();
         }
+
+        // Animations de mort des bases — une seule fois chacune, ici, après que toute la zone ait fini
+        // d'être traitée (voir commentaire au-dessus de la boucle). Bloque naturellement la suite de la
+        // file (zone suivante / GameOverCommand déjà enfilé juste après par l'appelant) puisque ces
+        // Command ne rappellent CommandExecutionComplete qu'une fois l'animation terminée.
+        foreach ((int baseID, NeutralZoneController controller) in diedNeutralBases)
+            new BaseDieCommand(baseID, controller).AddToQueue();
+        foreach (int deadPlayerID in diedHomeBasePlayerIDs)
+            new MainBaseDeathAnimationCommand(deadPlayerID).AddToQueue();
+
         Debug.Log($"[Enqueue:{zoneView.name}] Terminé — {steps.Count} step(s) traité(s), file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
     }
 
@@ -929,7 +956,9 @@ public class ZoneCombatResolver : MonoBehaviour
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
-        int[] counterDamages)
+        int[] counterDamages,
+        bool decisive, bool isDraw, int winnerPlayerID,
+        int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
     {
         Dictionary<int, List<BattleStepRecord>> stepsByResolver = new();
         int secCursor = 0;
@@ -960,31 +989,20 @@ public class ZoneCombatResolver : MonoBehaviour
             });
         }
 
-        // Boucle sur TOUS les resolvers enregistrés, pas seulement ceux présents dans stepsByResolver :
-        // une zone entièrement vidée par un effet OnBattleStart (plus aucun défenseur à combattre) n'a
-        // aucun BattleStepRecord et n'apparaîtrait donc jamais ici — or c'est justement EnqueueBattleCommands
-        // qui déclenche le flush des commandes OnBattleStart différées de cette zone (popup, projectile,
-        // ShowDeathPending, CreatureDieCommand). Sans cet appel, elles restent bloquées dans
-        // Command._deferredBySource/_deferredDeathsBySource pour toujours : l'effet s'applique bien en
-        // logique (la cible meurt), mais rien ne se voit jamais (symptôme observé avec Sniper 1).
-        // EnqueueBattleCommands([]) est un no-op sûr pour une zone sans rien à révéler (garde
-        // Command.HasDeferredCommands en tout début de méthode).
-        for (int resolverIdx = 0; resolverIdx < allResolvers.Count; resolverIdx++)
+        // L'ordre de rejeu (bases principales d'abord, dans l'ordre décidé côté serveur, puis le
+        // reste) et le saut éventuel des zones secondaires quand le round est décisif sont gérés par
+        // EnqueueOrderedBattleCommands — voir aussi FlushSkippedZoneDeferredCommands pour la garantie
+        // que même une zone sautée purge ses commandes différées (même classe de bug que "Sniper 1").
+        RoundOutcome outcome = new RoundOutcome
         {
-            List<BattleStepRecord> steps = stepsByResolver.TryGetValue(resolverIdx, out List<BattleStepRecord> found)
-                ? found : new List<BattleStepRecord>();
-            // Debug.Log($"[DBG][EnqueueAllReconstructed] traitement resolver #{resolverIdx} ({allResolvers[resolverIdx].name}) — {steps.Count} step(s)");
-            try
-            {
-                allResolvers[resolverIdx].EnqueueBattleCommands(steps);
-            }
-            catch (System.Exception e)
-            {
-                // Sans ce filet, une exception ici saute tous les resolvers suivants (donc leurs combats
-                // entiers) côté client, pour la même raison que dans TurnManager.DelayedBattleStart.
-                Debug.LogError($"[EnqueueAllReconstructed] EXCEPTION pour resolver #{resolverIdx} — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
-            }
-        }
+            Decisive = decisive,
+            IsDraw = isDraw,
+            WinnerPlayerID = winnerPlayerID,
+            FirstMainBaseResolverIdx = firstMainBaseResolverIdx,
+            SecondMainBaseResolverIdx = secondMainBaseResolverIdx
+        };
+        EnqueueOrderedBattleCommands(outcome, idx =>
+            stepsByResolver.TryGetValue(idx, out List<BattleStepRecord> found) ? found : new List<BattleStepRecord>());
     }
 
     // Les attaquants non-mêlée (ranged) ne subissent pas les dégâts de contre-attaque de leur cible
@@ -1132,7 +1150,11 @@ public class ZoneCombatResolver : MonoBehaviour
 
     public static bool WouldSurvive(CreatureLogic creature)
     {
-        if (creature.IsPendingDeath)
+        // IsPendingDeath ne couvre que la mort EN combat (MarkPendingDeath) — une créature tuée hors
+        // combat (ex: Die() direct, voir Assimilate) ne le pose jamais. Sans le check Health <= 0,
+        // une créature déjà morte mais restée fautivement dans playedCards.Creatures (voir
+        // Player.ResyncCreatureOrderForArea) compterait comme occupant une place de rangée.
+        if (creature.IsPendingDeath || creature.Health <= 0)
             return false;
         foreach (ZoneCombatResolver r in allResolvers)
             if (r.pendingDamage.TryGetValue(creature.UniqueCreatureID, out int dmg))
@@ -1389,6 +1411,136 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (ZoneCombatResolver resolver in allResolvers)
             if (resolver.zoneView.subZones.Contains(player.MainPArea)) return resolver;
         return null;
+    }
+
+    // -------------------------------------------------------------------------
+    // ISSUE DE PARTIE — ORDRE DES COMBATS DE BASE PRINCIPALE, VICTOIRE/DÉFAITE
+    // -------------------------------------------------------------------------
+
+    public struct RoundOutcome
+    {
+        public bool Decisive;
+        public bool IsDraw;
+        public int WinnerPlayerID;              // -1 si égalité ou round non décisif
+        public int FirstMainBaseResolverIdx;    // PV final le plus haut — joué en premier
+        public int SecondMainBaseResolverIdx;   // peut être égal à FirstMainBaseResolverIdx si les
+                                                 // deux MainPArea appartiennent à la même zone
+    }
+
+    // Calculé une fois par round, une fois que TOUS les resolvers ont fini leur planification
+    // (BuildAutoBattleSequence) mais AVANT qu'aucune commande ne soit enfilée — le serveur (ou la
+    // machine solo) connaît donc déjà l'issue de la partie avant la moindre animation. Détermine
+    // l'ordre de rejeu des deux combats de base principale (le PV final le plus haut d'abord — voir
+    // EnqueueOrderedBattleCommands) et si ce round met fin à la partie.
+    public static RoundOutcome ComputeRoundOutcome()
+    {
+        Player low = GlobalSettings.Instance.LowPlayer;
+        Player top = GlobalSettings.Instance.TopPlayer;
+        ZoneCombatResolver lowResolver = FindResolverForPlayer(low);
+        ZoneCombatResolver topResolver = FindResolverForPlayer(top);
+
+        int lowPending = lowResolver != null && lowResolver.pendingPlayerDamage.TryGetValue(low.PlayerID, out int lp) ? lp : 0;
+        int topPending = topResolver != null && topResolver.pendingPlayerDamage.TryGetValue(top.PlayerID, out int tp) ? tp : 0;
+        int finalLowHP = low.Health - lowPending;
+        int finalTopHP = top.Health - topPending;
+
+        int lowIdx = lowResolver != null ? lowResolver.resolverIndex : 0;
+        int topIdx = topResolver != null ? topResolver.resolverIndex : lowIdx;
+
+        bool decisive = finalLowHP <= 0 || finalTopHP <= 0;
+        bool isDraw = decisive && finalLowHP == finalTopHP;
+        bool topFirst = finalTopHP > finalLowHP || (finalTopHP == finalLowHP && topIdx <= lowIdx);
+
+        return new RoundOutcome
+        {
+            Decisive = decisive,
+            IsDraw = isDraw,
+            WinnerPlayerID = isDraw ? -1 : (finalTopHP > finalLowHP ? top.PlayerID : low.PlayerID),
+            FirstMainBaseResolverIdx  = topFirst ? topIdx : lowIdx,
+            SecondMainBaseResolverIdx = topFirst ? lowIdx : topIdx
+        };
+    }
+
+    // Ordre de traversée : les deux zones de base principale d'abord (dans l'ordre décidé par
+    // ComputeRoundOutcome), puis toutes les autres zones dans leur ordre naturel d'enregistrement.
+    static List<int> BuildEnqueueOrder(int firstIdx, int secondIdx)
+    {
+        List<int> order = new List<int> { firstIdx };
+        if (secondIdx != firstIdx) order.Add(secondIdx);
+        for (int i = 0; i < allResolvers.Count; i++)
+            if (i != firstIdx && i != secondIdx) order.Add(i);
+        return order;
+    }
+
+    // Coeur partagé du rejeu ordonné — utilisé par le chemin réseau
+    // (EnqueueAllReconstructedBattleCommands) et par le chemin solo
+    // (EnqueueAllPlannedBattleCommandsSolo). `resolveSteps` fournit les BattleStepRecord déjà connus
+    // pour un resolver donné (reçus du réseau, ou déjà planifiés localement en solo).
+    //
+    // Si le round est décisif, seules les zones de base principale (dans l'ordre voulu) jouent leurs
+    // vraies commandes d'attaque ; toutes les zones suivantes sont "sautées" — mais doivent quand
+    // même purger leurs commandes différées OnBattleStart/OnAttack/OnTakeDamage déjà enregistrées
+    // (voir FlushSkippedZoneDeferredCommands) pour ne pas reproduire le bug de fuite déjà rencontré
+    // avec Sniper 1. Un GameOverCommand est inséré juste après les commandes réelles de la dernière
+    // zone décisive — il se déclenche dès qu'il est dépilé, sans attendre les zones sautées.
+    static void EnqueueOrderedBattleCommands(RoundOutcome outcome, System.Func<int, List<BattleStepRecord>> resolveSteps)
+    {
+        List<int> order = BuildEnqueueOrder(outcome.FirstMainBaseResolverIdx, outcome.SecondMainBaseResolverIdx);
+        int decisiveZoneCount = !outcome.Decisive
+            ? order.Count
+            : (outcome.FirstMainBaseResolverIdx == outcome.SecondMainBaseResolverIdx ? 1 : 2);
+
+        for (int pos = 0; pos < order.Count; pos++)
+        {
+            int idx = order[pos];
+            List<BattleStepRecord> steps = resolveSteps(idx) ?? new List<BattleStepRecord>();
+            bool skip = outcome.Decisive && pos >= decisiveZoneCount;
+            try
+            {
+                if (skip)
+                    allResolvers[idx].FlushSkippedZoneDeferredCommands(steps);
+                else
+                    allResolvers[idx].EnqueueBattleCommands(steps);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[EnqueueOrdered] EXCEPTION pour resolver #{idx}: {e}");
+            }
+
+            if (outcome.Decisive && pos == decisiveZoneCount - 1)
+                new GameOverCommand(outcome.WinnerPlayerID, outcome.IsDraw).AddToQueue();
+        }
+    }
+
+    // Purge les commandes différées d'une zone dont le combat réel ne sera jamais rejoué (round déjà
+    // décidé ailleurs) — sans quoi les effets OnBattleStart/OnAttack/OnTakeDamage déjà enregistrés
+    // pour cette zone (voir zoneDeferKey / CreatureLogic.OnAttackDeferKey / OnTakeDamageDeferKey)
+    // restent bloqués pour toujours dans Command._deferredBySource/_deferredDeathsBySource — même
+    // classe de bug que celle déjà rencontrée avec Sniper 1, mais pour les trois buckets à la fois.
+    // Aucune animation d'attaque n'est jouée : l'issue logique de cette zone n'a plus d'importance.
+    void FlushSkippedZoneDeferredCommands(List<BattleStepRecord> discardedSteps)
+    {
+        if (Command.HasDeferredCommands(zoneDeferKey))
+            Command.FlushDeferredCommands(zoneDeferKey);
+
+        for (int i = 0; i < discardedSteps.Count; i++)
+        {
+            BattleStepRecord step = discardedSteps[i];
+            if (!step.attackerIsBuilding)
+                Command.FlushDeferredCommands(CreatureLogic.OnAttackDeferKey(step.attackerID));
+            Command.FlushDeferredCommands(OnTakeDamageDeferKey(i, 0));
+            Command.FlushDeferredCommands(OnTakeDamageDeferKey(i, 1));
+            if (step.secondaryHits != null)
+                for (int si = 0; si < step.secondaryHits.Count; si++)
+                    Command.FlushDeferredCommands(OnTakeDamageDeferKey(i, 2 + si));
+        }
+    }
+
+    // Chemin solo (pas de réseau) : chaque resolver a déjà planifié son combat (_lastBattleSteps,
+    // rempli par OnBattlePhaseStart) — reste à les enfiler dans l'ordre décidé par ComputeRoundOutcome.
+    public static void EnqueueAllPlannedBattleCommandsSolo(RoundOutcome outcome)
+    {
+        EnqueueOrderedBattleCommands(outcome, idx => allResolvers[idx]._lastBattleSteps);
     }
 
     public static ZoneCombatResolver FindForBuilding(BuildingLogic bl)

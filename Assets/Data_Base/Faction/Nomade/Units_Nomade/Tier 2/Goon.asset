@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 2
   Description: <b>Battle Start:</b> I gain +X/+0, where X is my <b>Shield</b> value.
   CardImage: {fileID: 21300000, guid: 23b4340c246e7364cac6f16e3a23e048, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1

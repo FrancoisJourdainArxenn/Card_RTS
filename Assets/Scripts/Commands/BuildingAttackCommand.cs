@@ -88,25 +88,26 @@ public class BuildingAttackCommand : Command
             if (damageTakenByTarget > 0)
                 VisualFeedbackEffect.CreateDamageEffect(targetGO.transform.position, damageTakenByTarget);
 
-            if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetID))
+            // Classification par composant présent sur targetGO, PAS via les dictionnaires logiques
+            // (BuildingsCreatedThisGame/CreaturesCreatedThisGame/BasesCreatedThisGame) : ceux-ci sont
+            // mutés de façon SYNCHRONE pendant la planification de toute la zone (ex. BaseLogic.Die()
+            // retire la base dès que le coup fatal est calculé), alors que le rejeu visuel de chaque
+            // coup de la zone n'a lieu qu'ensuite, un par un — voir CreatureAttackVisual.ApplyHitFeedback.
+            if (targetGO.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
             {
-                if (targetGO.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
-                    bm.HealthText.text = targetHealthAfter.ToString();
+                bm.HealthText.text = targetHealthAfter.ToString();
             }
-            else if (CreatureLogic.CreaturesCreatedThisGame.ContainsKey(targetID))
+            else if (targetGO.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
             {
-                if (targetGO.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
-                    cm.HealthText.text = targetHealthAfter.ToString();
+                cm.HealthText.text = targetHealthAfter.ToString();
             }
-            else if (BaseLogic.BasesCreatedThisGame.ContainsKey(targetID))
+            else if (targetGO.GetComponent<OneBaseManager>() is OneBaseManager om)
             {
-                if (targetGO.GetComponent<OneBaseManager>() is OneBaseManager om)
-                    om.HealthText.text = targetHealthAfter.ToString();
+                om.HealthText.text = targetHealthAfter.ToString();
             }
-            else
+            else if (targetGO.GetComponent<MainBaseVisual>() is MainBaseVisual mbv)
             {
-                if (targetGO.GetComponent<MainBaseVisual>() is MainBaseVisual mbv)
-                    mbv.HealthText.text = targetHealthAfter.ToString();
+                mbv.ApplyHealthDisplay(targetHealthAfter);
                 GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
             }
         }

@@ -85,6 +85,7 @@ public class Player : MonoBehaviour, ILivable
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
     public Hand hand;
+    public CardLogic ReservedCard; // carte posée dans un CardHoldSlotVisual : exclue de DiscardHand
     public PlayedCards playedCards;
     public HeroCountUnlock matchStats = new HeroCountUnlock();
     [HideInInspector] public BaseLogic homeBaseLogic;
@@ -125,8 +126,10 @@ public class Player : MonoBehaviour, ILivable
                 health = baseAsset.MaxHealth;
             else
                 health = value;
-            if (value <= 0)
-                Die(); 
+            // Die() is no longer triggered reactively here — the game-over decision is now made
+            // ahead of time by ZoneCombatResolver.ComputeRoundOutcome() and acted upon explicitly
+            // by GameOverCommand once the decisive main-base combat(s) finish animating. See
+            // GameOverCommand.cs / ZoneCombatResolver.EnqueueOrderedBattleCommands.
         }
     }
 
@@ -246,6 +249,8 @@ public class Player : MonoBehaviour, ILivable
 
     public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
     {
+        CalculatePlayerIncome(); // recalcule le malus "under attack" avec l'état du plateau à l'instant du versement
+
         if (baseAsset == null)
         {
             Debug.LogWarning("OnTurnStart() skipped: baseAsset is null for " + name, this);
@@ -337,7 +342,7 @@ public class Player : MonoBehaviour, ILivable
     // hero cards stay in hand: they aren't drawn from the deck and shouldn't be discarded
     public void DiscardHand()
     {
-        List<CardLogic> toDiscard = hand.CardsInHand.Where(cl => !cl.ca.IsHero).ToList();
+        List<CardLogic> toDiscard = hand.CardsInHand.Where(cl => !cl.ca.IsHero && cl != ReservedCard).ToList();
         foreach (CardLogic cl in toDiscard)
         {
             GameObject cardGO = IDHolder.GetGameObjectWithID(cl.UniqueCardID);
@@ -465,8 +470,26 @@ public class Player : MonoBehaviour, ILivable
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         // Recompute playable state after the card is removed.
         HighlightPlayableCards();
+    }
+
+    // Si la carte jouée était celle réservée dans un CardHoldSlotVisual, on la libère ici. Les
+    // scripts de drag le font déjà localement (HoldSlot.ReleaseCard) sur la machine qui a dragué la
+    // carte hors du slot, mais en réseau les autres machines n'apprennent qu'une carte a été jouée
+    // qu'à travers ces méthodes NetworkPendingPlayX/NetworkPlayCreatureFromHand — sans cet appel ici
+    // aussi, leur ReservedCard resterait obsolète et DiscardHand (qui tourne indépendamment sur
+    // chaque machine) finirait par exclure du discard une carte que l'autre machine a bien discardée.
+    private void ClearReservedCardIfPlayed(CardLogic playedCard)
+    {
+        if (playedCard != ReservedCard) return;
+        GameObject cardGO = IDHolder.GetGameObjectWithID(playedCard.UniqueCardID);
+        CardHoldSlotVisual slot = cardGO != null ? CardHoldSlotVisual.ForPlayer(this) : null;
+        if (slot != null)
+            slot.ReleaseCard(cardGO);
+        else
+            ReservedCard = null;
     }
 
     // Envoyé par le serveur à TOUS les clients dès qu'un sort est joué (voir
@@ -482,7 +505,8 @@ public class Player : MonoBehaviour, ILivable
         MainRessourceAvailable -= playedCard.MainCost;
         matchStats.Add(MatchStatType.CardsPlayed);
         hand.CardsInHand.Remove(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
+        ClearReservedCardIfPlayed(playedCard);
+        HighlightPlayableCards();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
         if (cardGO != null)
@@ -552,6 +576,7 @@ public class Player : MonoBehaviour, ILivable
         EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
         EffectRegistry.NotifyCardPlayed(this, newCreature);
         hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
         HighlightPlayableCards();
     }
 
@@ -587,19 +612,30 @@ public class Player : MonoBehaviour, ILivable
         foreach (GameObject go in meleeGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
+            // !IsPendingDeath && Health > 0 : le GameObject d'une créature tuée hors combat (Die()
+            // l'a déjà retirée de playedCards.Creatures) peut encore traîner ici un court instant, le
+            // temps que CreatureDieCommand (mis en file, pas synchrone) le détruise réellement. Sans
+            // ce filtre, ce fantôme se ferait réinsérer dans playedCards.Creatures juste plus bas
+            // (AddRange(ordered)) — annulant le retrait de Die() et le figeant en créature "revivue"
+            // mais injouable (voir historique bug Assimilate).
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl)
+                && !cl.IsPendingDeath && cl.Health > 0)
                 ordered.Add(cl);
         }
         foreach (GameObject go in rangedGOs)
         {
             IDHolder id = go?.GetComponent<IDHolder>();
-            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl))
+            if (id != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic cl)
+                && !cl.IsPendingDeath && cl.Health > 0)
                 ordered.Add(cl);
         }
         // Créatures déjà présentes en logique dans cette zone mais pas encore visuellement
-        // (ex: reveal différé côté réseau) : ne pas les perdre lors du resync.
+        // (ex: reveal différé côté réseau) : ne pas les perdre lors du resync. Exclut également les
+        // créatures mortes : une créature morte ne devrait déjà plus être dans playedCards.Creatures
+        // (Die() l'en retire), donc sa présence ici ne peut venir que d'une réinsertion fautive — ne
+        // pas la réintégrer une seconde fois.
         List<CreatureLogic> pendingWithoutGO = playedCards.Creatures.FindAll(c =>
-            c.BaseID == baseID && !ordered.Contains(c));
+            c.BaseID == baseID && !ordered.Contains(c) && !c.IsPendingDeath && c.Health > 0);
 
         if (pendingWithoutGO.Count > 0)
             Debug.LogWarning($"[Resync] baseID={baseID} — {pendingWithoutGO.Count} créature(s) sans GO visuel au moment du resync, réintégrée(s) au lieu d'être perdue(s).");
@@ -619,7 +655,8 @@ public class Player : MonoBehaviour, ILivable
         matchStats.Add(MatchStatType.CardsPlayed);
         matchStats.AddSubTypePlayed(playedCard.ca.subType);
         hand.CardsInHand.Remove(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
+        ClearReservedCardIfPlayed(playedCard);
+        HighlightPlayableCards();
 
         GameObject cardGO = IDHolder.GetGameObjectWithID(cardUniqueID);
         if (cardGO != null)
@@ -666,6 +703,11 @@ public class Player : MonoBehaviour, ILivable
         {
             EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
         }
+        catch (System.Exception e)
+        {
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.LogError($"[NetworkPendingPlayCreature]{role} Exception dans EffectRegistry.ETB pour {newCreature.DisplayName} (ID={creatureUniqueID}) — OnPlay potentiellement non résolu ici : {e}");
+        }
         finally
         {
             EffectSO.SetNetworkRng(previousRng);
@@ -690,7 +732,7 @@ public class Player : MonoBehaviour, ILivable
         // CreatureLogic + OnPlay déjà résolus dans NetworkPendingPlayCreature ; ici on ne fait que révéler le visuel.
         new PlayACreatureCommand(playedCard, this, tablePos, creatureUniqueID, selectedPArea).AddToQueue();
 
-        TurnManager.RefreshAllPlayableHighlights();
+        HighlightPlayableCards();
 
     }
 
@@ -741,6 +783,11 @@ public class Player : MonoBehaviour, ILivable
         {
             EffectRegistry.ETB(newCreature.ca, new EffectContext { Caster = this, Source = newCreature }, preResolvedSelections);
         }
+        catch (System.Exception e)
+        {
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.LogError($"[NetworkPlayCreatureFromHand]{role} Exception dans EffectRegistry.ETB pour {newCreature.DisplayName} (ID={creatureUniqueID}) — OnPlay potentiellement non résolu ici : {e}");
+        }
         finally
         {
             EffectSO.SetNetworkRng(previousRng);
@@ -749,8 +796,8 @@ public class Player : MonoBehaviour, ILivable
 
 
         hand.CardsInHand.Remove(playedCard);
-        TurnManager.RefreshAllPlayableHighlights();
-        // HighlightPlayableCards();
+        ClearReservedCardIfPlayed(playedCard);
+        HighlightPlayableCards();
     }
 
     public int TakeDamage(int dmg)
@@ -759,14 +806,12 @@ public class Player : MonoBehaviour, ILivable
         return Health;
     }
 
+    // Blocks both players from taking new moves. Invoked explicitly by GameOverCommand once the
+    // game-over outcome has been decided — no longer a reactive side effect of Health reaching 0.
     public void Die()
     {
-        // game over
-        // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
-        // TurnManager.Instance.StopTheTimer();
-        new GameOverCommand(this).AddToQueue();
     }
 
     // METHOD TO SHOW GLOW HIGHLIGHTS
@@ -786,7 +831,12 @@ public class Player : MonoBehaviour, ILivable
             }
             bool affordable = cl.MainCost <= mainRessourceAvailable;
             cardManager.NotifyLockState(cl.IsLocked);
-            cardManager.CanBePlayedNow = canPlayCards && affordable && !cl.IsLocked && !removeAllHighlights;
+            // CanBeDraggedNow ignore volontairement le coût : une carte trop chère doit rester
+            // manipulable (ex: la déposer dans un CardHoldSlotVisual), seule sa pose effective est
+            // bloquée par un contrôle de coût séparé (voir DragCreatureOnTable/DragSpellOnTarget/
+            // DragSpellNoTarget). CanBePlayedNow, elle, garde le coût : elle pilote le glow "jouable".
+            cardManager.CanBeDraggedNow = canPlayCards && !cl.IsLocked && !removeAllHighlights;
+            cardManager.CanBePlayedNow = cardManager.CanBeDraggedNow && affordable;
         }
 
         bool canMove = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(this);
@@ -1043,8 +1093,17 @@ public class Player : MonoBehaviour, ILivable
         playerMainIncome = bonusMainIncome;
         foreach (int amt in _incomeFromSources.Values)
             playerMainIncome += amt;
-        foreach (BaseAsset baseAsset in controlledBaseAssets)
-            playerMainIncome += baseAsset.mainRessourceIncome;
+
+        foreach (BaseLogic b in controlledBases)
+        {
+            playerMainIncome += b.EffectiveIncome;
+            if (!b.IsHomeBase)
+            {
+                OneBaseManager mgr = IDHolder.GetGameObjectWithID(b.ID)?.GetComponent<OneBaseManager>();
+                mgr?.RefreshIncomeDisplay(b.EffectiveIncome, b.IsUnderAttack);
+            }
+        }
+
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         baseVisual.ApplyLookFromAsset();

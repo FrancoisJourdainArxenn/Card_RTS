@@ -22,6 +22,7 @@ public class ApplyShieldSO : EffectSO
     )
     {
         Log($"{EffectName}: Execution");
+        _sourceID = context.Source?.ID ?? -1;
         _caster = context.Caster;
 
         if (effectInfo.useScalingCount)
@@ -64,7 +65,10 @@ public class ApplyShieldSO : EffectSO
         Log($"{EffectName}: Shield {scaledAmount} (x{count}) to {targets.Count} target(s) — {string.Join(", ", targets.Select(t => t.DisplayName))}");
 
         foreach (ILivable target in targets.Cast<ILivable>())
+        {
             ApplyToTarget(target, visualData, scaledAmount);
+            QueueSourceVfx(visualData);
+        }
     }
 
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)

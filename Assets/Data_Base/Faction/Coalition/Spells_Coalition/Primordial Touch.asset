@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 4
   tier: 1
-  Description: Heals your units for {0}.
+  Description: Gives +{0}/+{1} to an ally unit.
   CardImage: {fileID: 21300000, guid: ba6a305f8a8161f4ca3f074a2e3ac051, type: 3}
   MainCost: 0
   IsHero: 0
@@ -36,8 +36,8 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Water's Confort
-    Effect: {fileID: 11400000, guid: a10b3aa214c489946bbf9f95d3b40d01, type: 2}
+  - EffectName: Primordial Touch
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
@@ -47,7 +47,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 4
+          statusFilter: 0
           zoneFilter: 1
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
@@ -57,7 +57,7 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 0
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>Arcing Attacks, Celerity</b>
+  Description: '<b>Piercing & Arcing Attacks, Celerity</b>
 
     <b>On Play:</b> Assimilates
     ALL FRIENDLY units to gain their stats.</b>'
@@ -29,17 +29,20 @@ MonoBehaviour:
   MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 1
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords:
   - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
   - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
+  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Total Assimilation
     Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}

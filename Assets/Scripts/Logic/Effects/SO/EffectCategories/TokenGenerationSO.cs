@@ -50,7 +50,8 @@ public class TokenGenerationSO : EffectSO
                 switch (Placement)
                 {
                     case TokenPlacement.ToHand:
-                        GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex);
+                        GameNetworkManager.QueueOrRunAfterReveal(() =>
+                            GameNetworkManager.Instance.BroadCastTokenToHand(playerIndex, sourceEntityID, effectIndex));
                         break;
                     case TokenPlacement.ToZone:
                         // Créée tout de suite, en autorité serveur — au lieu d'attendre l'aller-retour
@@ -83,7 +84,8 @@ public class TokenGenerationSO : EffectSO
                             if (ZoneCombatResolver.IsResolvingPredictedTrigger)
                                 ZoneCombatResolver.RecordPredictedTokenSpawn(sourceEntityID, effectIndex, playerIndex, cardID, creatureID, tablePos, spawned.BaseID, deferKey);
                             else
-                                GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey);
+                                GameNetworkManager.QueueOrRunAfterReveal(() =>
+                                    GameNetworkManager.Instance.BroadCastTokenToZone(playerIndex, sourceEntityID, effectIndex, tablePos, spawned.BaseID, cardID, creatureID, deferKey));
                         }
                         break;
                 }

@@ -33,6 +33,6 @@ MonoBehaviour:
   Celerity: 0
   melee: 1
   IsStructureUnit: 0
-  ActivationsForOneTurn: 0
   Keywords: []
+  ReferencedCards: []
   Effects: []

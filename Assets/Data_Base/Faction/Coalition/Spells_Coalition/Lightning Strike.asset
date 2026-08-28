@@ -37,7 +37,7 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Lightning Strike
-    Effect: {fileID: 11400000, guid: 6aed4dda8b431e64c88d86164243012c, type: 2}
+    Effect: {fileID: 11400000, guid: f2030b73480dffa449f28cd79de89822, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

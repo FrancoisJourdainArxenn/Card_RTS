@@ -122,6 +122,15 @@ public class Command
     public static bool HasDeferredCommands(int sourceID) =>
         _deferredBySource.ContainsKey(sourceID) || _deferredDeathsBySource.ContainsKey(sourceID);
 
+    // Filet de sécurité pour une éventuelle clé de report jamais flushée (bug non détecté) — à
+    // appeler lors d'un reset de partie (voir SceneReloader.ReloadScene) pour qu'une fuite
+    // resymptomatique ne survive jamais qu'à la partie en cours plutôt que pour toujours.
+    public static void ClearDeferredState()
+    {
+        _deferredBySource.Clear();
+        _deferredDeathsBySource.Clear();
+    }
+
     // Clé de report actuellement active (celle passée au RunDeferred englobant), ou null si on
     // n'est pas dans un tel contexte. Utilisé par TokenGenerationSO.Execute pour transmettre la
     // BONNE clé à travers le réseau (BroadCastTokenToZone → NetworkSpawnTokenToZone) — sans ça,

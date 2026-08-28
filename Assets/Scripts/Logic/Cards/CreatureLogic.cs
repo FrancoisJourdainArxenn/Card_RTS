@@ -89,6 +89,17 @@ public class CreatureLogic: ILivable
     public static List<CreatureLogic> PendingDeathList = new List<CreatureLogic>();
     private bool _deathVisualQueued;
 
+    // True une fois que CreatureDieCommand a réellement eu son tour dans la file de commandes visuelles
+    // pour cette créature (voir CreatureDieCommand.StartCommandExecution) — contrairement à IsPendingDeath/
+    // Health<=0, qui sont décidés dès la planification logique du combat (donc bien avant que la file
+    // visuelle, elle, n'ait eu le temps de rejouer quoi que ce soit). Un token créé en tout début de
+    // planification (ex: TokenGenerationSO via Laya "Begin Battle: Create a Barrier") peut très bien être
+    // logiquement condamné (IsPendingDeath=true) alors que son propre PlayACreatureCommand n'est même pas
+    // encore passé dans la file — utiliser IsPendingDeath là-bas masquerait alors son reveal pour de bon.
+    // Voir PlayACreatureCommand.StartCommandExecution.
+    public bool DieCommandExecuted { get; private set; }
+    public void MarkDieCommandExecuted() => DieCommandExecuted = true;
+
     // True once OnDeath has already been resolved ahead of time during battle planning
     // (see ResolvePredictedBattleDeath). Prevents NotifyCreatureDied from firing OnDeath
     // a second time when the real Die() eventually runs (end of phase / drain).
@@ -145,11 +156,16 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
         HasSummoningSickness = false;
+        HasRuntimeCelerity = true;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
         TurnManager.RefreshAllPlayableHighlights();
 
     }
+
+    // Vrai dès que GrantCelerity() a été appelé — distinct de ca.Celerity (l'inné, déjà écrit à la
+    // main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
+    public bool HasRuntimeCelerity { get; private set; }
 
 
     public int TakeDamage(int dmg)
@@ -240,22 +256,28 @@ public class CreatureLogic: ILivable
                     // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
                     // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
                     System.Random previousRng = EffectSO.CurrentNetworkRng;
+                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
                     bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+                    List<(int id, int amount)> allocation;
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        EffectSO.ClearForcedAllocation();
+                        EffectSO.ResetLastAllocation();
                         if (!alreadyResolving)
                             ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(activeDeferKey.Value, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        allocation = EffectSO.LastAllocation;
                     }
                     finally
                     {
                         if (!alreadyResolving)
                             ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.SetNetworkRng(previousRng);
+                        EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value);
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value, allocation: allocation);
                 }
             }
             catch (System.Exception e)
@@ -350,6 +372,11 @@ public class CreatureLogic: ILivable
         _grantedAttackModifiers?.Remove(modifier);
     }
 
+    // Modificateurs octroyés à l'exécution uniquement (pas ceux de ca.AttackModifiers, déjà écrits
+    // à la main dans Description côté design) — utilisé pour l'affichage du texte de carte.
+    public IReadOnlyList<AttackModifierSO> GrantedAttackModifiers =>
+        (IReadOnlyList<AttackModifierSO>)_grantedAttackModifiers ?? System.Array.Empty<AttackModifierSO>();
+
     public float AttackSpeedMultiplier => ca.AttackSpeedMultiplier;
 
 
@@ -407,6 +434,7 @@ public class CreatureLogic: ILivable
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         CreaturesCreatedThisGame.Add(UniqueCreatureID, this);
         owner.matchStats.Add(MatchStatType.UnitsSummoned);
+        owner.matchStats.Add(ca.melee ? MatchStatType.MeleeUnitsSummoned : MatchStatType.RangedUnitsSummoned);
 
         foreach (PermanentCreatureBuff buff in owner.permanentCreatureBuffs)
             if (buff.filter != null && buff.filter.Matches(ca))
@@ -433,13 +461,23 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {
+        // Le setter Health (case value<=0, branche hors-combat) appelle Die() directement sans jamais
+        // assigner le backing field — contrairement à MarkPendingDeath() qui, elle, fait health = 0.
+        // Sans cette ligne, Health continue de renvoyer sa valeur d'AVANT la mort indéfiniment (l'entrée
+        // n'est jamais retirée de CreatureLogic.CreaturesCreatedThisGame) : tout code qui teste
+        // Health <= 0 pour détecter une créature déjà morte hors combat (ResyncCreatureOrderForArea,
+        // WouldSurvive, PlayACreatureCommand) voit une créature "vivante" et la ressuscite visuellement.
+        health = 0;
         string dieRole = !NetworkSessionData.IsNetworkSession ? "" : NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
         UnityEngine.Debug.Log($"[Death]{dieRole} DIE — {DisplayName} (ID:{UniqueCreatureID}) | était dans playedCards: {owner.playedCards.Creatures.Contains(this)}");
         bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDied(this, owner);
         DeathDrainRecorder.RecordDeath(UniqueCreatureID);
         if (wasInList)
+        {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+            FogOfWarManager.Refresh();
+        }
 
         if (ca.IsHero)
             ReturnHeroToHand();
@@ -469,7 +507,10 @@ public class CreatureLogic: ILivable
         TempEffectTracker.Unregister(UniqueCreatureID);
         EffectRegistry.UnregisterEntity(UniqueCreatureID);
         if (wasInList)
+        {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
+            FogOfWarManager.Refresh();
+        }
     }
 
     // During Battle: queues the visual die command immediately so the creature disappears
@@ -580,19 +621,25 @@ public class CreatureLogic: ILivable
                     else if (isNetworkServer)
                     {
                         int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        List<(int id, int amount)> allocation;
                         try
                         {
                             EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
                             ZoneCombatResolver.BeginResolvingPredictedTrigger();
                             Command.RunDeferred(UniqueCreatureID, () =>
                                 EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            allocation = EffectSO.LastAllocation;
                         }
                         finally
                         {
                             ZoneCombatResolver.EndResolvingPredictedTrigger();
                             EffectSO.ClearNetworkRng();
+                            EffectSO.SetLastAllocation(previousAllocation);
                         }
-                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, UniqueCreatureID);
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, UniqueCreatureID, allocation: allocation);
                     }
                     // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                     // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
@@ -659,19 +706,25 @@ public class CreatureLogic: ILivable
                 else if (isNetworkServer)
                 {
                     int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                    List<(int id, int amount)> allocation;
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        EffectSO.ClearForcedAllocation();
+                        EffectSO.ResetLastAllocation();
                         ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
+                        allocation = EffectSO.LastAllocation;
                     }
                     finally
                     {
                         ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.ClearNetworkRng();
+                        EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1);
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1, allocation: allocation);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                 // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
@@ -711,19 +764,25 @@ public class CreatureLogic: ILivable
                 else if (isNetworkServer)
                 {
                     int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                    List<(int id, int amount)> allocation;
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        EffectSO.ClearForcedAllocation();
+                        EffectSO.ResetLastAllocation();
                         ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(hitDeferKey, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        allocation = EffectSO.LastAllocation;
                     }
                     finally
                     {
                         ZoneCombatResolver.EndResolvingPredictedTrigger();
                         EffectSO.ClearNetworkRng();
+                        EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey);
+                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey, allocation: allocation);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
                 // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
@@ -748,7 +807,7 @@ public class CreatureLogic: ILivable
     // (voir le commentaire sur ZoneCombatResolver.PredictedTriggerReplay) : rejouer OnDeath et
     // OnAttack comme deux boucles séparées risquerait de trahir cet ordre pour un effet à ciblage
     // aléatoire dont le pool de cibles dépend d'un état de vie/mort pas encore rejoué.
-    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1)
+    public static void ReplayPredictedTriggerEffect(int sourceCreatureID, int effectIndex, int seed, int deferKey, int eventSubjectID = -1, int targetID = -1, List<(int id, int amount)> allocation = null)
     {
         if (!CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic creature)) return;
 
@@ -785,6 +844,7 @@ public class CreatureLogic: ILivable
         try
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
+            EffectSO.SetForcedAllocation(allocation);
             Command.RunDeferred(deferKey, () =>
                 EffectRegistry.Execute(data, new EffectContext
                     { Caster = creature.owner, Source = creature, EventSubjectCreature = eventSubjectCreature, Target = replayTarget }));
@@ -796,6 +856,7 @@ public class CreatureLogic: ILivable
         finally
         {
             EffectSO.ClearNetworkRng();
+            EffectSO.ClearForcedAllocation();
         }
     }
 
@@ -827,17 +888,23 @@ public class CreatureLogic: ILivable
                 else if (isNetworkServer)
                 {
                     int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                    List<(int id, int amount)> allocation;
                     try
                     {
                         EffectSO.SetNetworkRng(new System.Random(seed));
+                        EffectSO.ClearForcedAllocation();
+                        EffectSO.ResetLastAllocation();
                         Command.RunDeferred(zoneDeferKey, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                        allocation = EffectSO.LastAllocation;
                     }
                     finally
                     {
                         EffectSO.ClearNetworkRng();
+                        EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueCreatureID, false, i, seed);
+                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueCreatureID, false, i, seed, allocation);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayBattleStartEffect
                 // à partir des triplets diffusés par le serveur.
@@ -851,7 +918,7 @@ public class CreatureLogic: ILivable
 
     // Rejeu côté client d'un effet OnBattleStart déjà résolu par le serveur (même mécanisme
     // déterministe que ReplayPredictedTriggerEffect).
-    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed)
+    public void ReplayBattleStartEffect(int zoneDeferKey, int effectIndex, int seed, List<(int id, int amount)> allocation)
     {
         if (ca.Effects == null || effectIndex < 0 || effectIndex >= ca.Effects.Count) return;
         CardEffectData data = ca.Effects[effectIndex];
@@ -860,6 +927,7 @@ public class CreatureLogic: ILivable
         try
         {
             EffectSO.SetNetworkRng(new System.Random(seed));
+            EffectSO.SetForcedAllocation(allocation);
             Command.RunDeferred(zoneDeferKey, () =>
                 EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
         }
@@ -870,6 +938,7 @@ public class CreatureLogic: ILivable
         finally
         {
             EffectSO.ClearNetworkRng();
+            EffectSO.ClearForcedAllocation();
         }
     }
 

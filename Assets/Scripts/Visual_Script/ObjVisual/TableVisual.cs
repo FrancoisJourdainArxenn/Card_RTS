@@ -703,6 +703,10 @@ public class TableVisual : MonoBehaviour
             ghostOcm.isGhost = true;
             ghostOcm.SetGray(true);
 
+            // Active le hover/preview sur le ghost, comme pour une créature normale (AddCreatureAtIndex).
+            WhereIsTheCardOrCreature ghostWhere = ghost.GetComponent<WhereIsTheCardOrCreature>();
+            ghostWhere.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
+
             foreach (Transform t in ghost.GetComponentsInChildren<Transform>())
                 t.tag = owner.ToString() + "Creature";
 

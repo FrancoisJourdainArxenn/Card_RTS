@@ -36,6 +36,33 @@ public class PlayACreatureCommand : Command
         }
         HoverPreview.PreviewsAllowed = true;
 
+        // Une créature tuée par un effet résolu DANS la même phase où elle a été jouée (ex: Assimilate
+        // ciblant un allié encore "pending") voit son GameObject détruit avant que ce flush (déclenché
+        // en fin de phase, voir GameNetworkManager.FlushBuffer) ne s'exécute pour elle. Sans ce garde,
+        // la branche "else" ci-dessous la recrée de toutes pièces via AddCreatureAtIndex — un
+        // GameObject flambant neuf, entièrement fonctionnel, pour une créature déjà morte (contrairement
+        // au fantôme partiel du bug ResyncCreatureOrderForArea, celui-ci passe par le vrai pipeline de
+        // création et reste donc pleinement interactif).
+        //
+        // IsPendingDeath/Health<=0 NE conviennent PAS ici : en combat, ils sont déjà vrais dès la
+        // planification logique de toute la bataille (ZoneCombatResolver.AddPendingCreatureDamage),
+        // bien avant que la file de commandes visuelles n'ait eu le temps de rejouer quoi que ce soit.
+        // Un token créé en tout début de planification (ex: Laya "Begin Battle: Create a Barrier") et
+        // condamné à mourir plus tard DANS CETTE MÊME bataille se voyait donc systématiquement privé de
+        // reveal, alors que son propre CreatureDieCommand — déjà mis en file, juste pas encore joué —
+        // allait de toute façon le faire disparaître au bon moment ensuite. Seul DieCommandExecuted (mis
+        // à vrai quand CreatureDieCommand a réellement eu son tour dans la file, voir
+        // CreatureLogic.MarkDieCommandExecuted) distingue correctement "déjà détruite pour de vrai" de
+        // "condamnée mais pas encore jouée".
+        bool found = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureID, out CreatureLogic creatureLogic);
+        if (!found || creatureLogic.DieCommandExecuted)
+        {
+            Debug.LogWarning($"[PlayACreatureCommand] SKIP reveal — créature {creatureID} : trouvée={found}, DieCommandExecuted={(found ? creatureLogic.DieCommandExecuted : (bool?)null)}.");
+            Command.CommandExecutionComplete();
+            return;
+        }
+        Debug.Log($"[PlayACreatureCommand] REVEAL — créature {creatureID} ({creatureLogic.DisplayName}) Health={creatureLogic.Health}, GO existant={(IDHolder.GetGameObjectWithID(creatureID) != null)}.");
+
         GameObject existingCreature = IDHolder.GetGameObjectWithID(creatureID);
         if (existingCreature != null)
         {

@@ -22,7 +22,7 @@ MonoBehaviour:
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
+  Attack: 1
   MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -32,9 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
-  ActivationsForOneTurn: 0
+  IsStructureUnit: 0
   Keywords:
   - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: Du travail, encore du travail !
     Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
@@ -48,3 +49,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

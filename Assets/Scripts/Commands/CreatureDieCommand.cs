@@ -14,6 +14,12 @@ public class CreatureDieCommand : Command
 
     public override void StartCommandExecution()
     {
+        // Marqué dès que cette commande a son tour dans la file, GO trouvé ou non — voir
+        // CreatureLogic.DieCommandExecuted : c'est ce flag, pas IsPendingDeath, que PlayACreatureCommand
+        // consulte pour décider s'il est encore légitime de révéler cette créature.
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(DeadCreatureID, out CreatureLogic diedCreature))
+            diedCreature.MarkDieCommandExecuted();
+
         GameObject creatureToRemove = IDHolder.GetGameObjectWithID(DeadCreatureID);
         if (creatureToRemove == null)
         {

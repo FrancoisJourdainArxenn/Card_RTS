@@ -19,7 +19,7 @@ MonoBehaviour:
   baseDescription: '<b>Minor Base</b>
 
     This Base will Increase your Income by
-    1 and allow you to play unit in that zone.'
+    1 and allow you to play unit in that zone. Under attack, it does not grant Income.'
   BaseName: Standard Neutral Base
   MaxHealth: 3
   mainRessourceIncome: 1
