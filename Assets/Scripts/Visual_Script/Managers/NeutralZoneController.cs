@@ -126,6 +126,48 @@ public class NeutralZoneController : MonoBehaviour
             Object.Destroy(baseToRemove);
     }
 
+    // Enfilée UNE SEULE FOIS par BaseDieCommand, après que toute la zone où cette base meurt ait fini
+    // d'être traitée (voir ZoneCombatResolver.EnqueueBattleCommands / diedNeutralBases). Fait
+    // disparaître la base, joue son animation de mort via VfxManager.PlayDeath() (même mécanisme que
+    // CreatureDieCommand/BuildingDieCommand — le composant VfxManager de Card_Board_Base a déjà un
+    // emplacement dédié, pas besoin d'un champ prefab séparé), attend sa durée, puis nettoie via
+    // RemoveBaseWithID (spawner réactivé/plot reconstructible seulement une fois l'animation
+    // terminée, pas avant).
+    public void PlayBaseDeathAnimationThenRemove(int baseUniqueID, System.Action onComplete)
+    {
+        GameObject baseGO = IDHolder.GetGameObjectWithID(baseUniqueID);
+        if (baseGO == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
+
+        VfxManager vfx = baseGO.GetComponent<VfxManager>();
+        float duration = vfx != null ? vfx.PlayDeath() : 0f;
+
+        baseGO.SetActive(false);
+
+        void Finish()
+        {
+            RemoveBaseWithID(baseUniqueID);
+            onComplete?.Invoke();
+        }
+
+        if (duration <= 0f)
+        {
+            Finish();
+            return;
+        }
+
+        // SetLink cible ce gameObject (NeutralZoneController, qui reste vivant tout le reste de la
+        // partie), JAMAIS baseGO : il vient d'être désactivé ci-dessus, et SetLink tue le tween dès
+        // que l'objet lié est désactivé.
+        bool fired = false;
+        DOVirtual.DelayedCall(duration, () => { fired = true; Finish(); })
+            .SetLink(gameObject)
+            .OnKill(() => { if (!fired) Finish(); });
+    }
+
     public void UpdateNeutralBaseVisualFog(bool observerHasVision)
     {
         if (capturedNBaseVisual != null)

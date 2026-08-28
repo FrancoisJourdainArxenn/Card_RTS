@@ -126,8 +126,10 @@ public class Player : MonoBehaviour, ILivable
                 health = baseAsset.MaxHealth;
             else
                 health = value;
-            if (value <= 0)
-                Die(); 
+            // Die() is no longer triggered reactively here — the game-over decision is now made
+            // ahead of time by ZoneCombatResolver.ComputeRoundOutcome() and acted upon explicitly
+            // by GameOverCommand once the decisive main-base combat(s) finish animating. See
+            // GameOverCommand.cs / ZoneCombatResolver.EnqueueOrderedBattleCommands.
         }
     }
 
@@ -804,14 +806,12 @@ public class Player : MonoBehaviour, ILivable
         return Health;
     }
 
+    // Blocks both players from taking new moves. Invoked explicitly by GameOverCommand once the
+    // game-over outcome has been decided — no longer a reactive side effect of Health reaching 0.
     public void Die()
     {
-        // game over
-        // block both players from taking new moves
         MainPArea.ControlsON = false;
         otherPlayer.MainPArea.ControlsON = false;
-        // TurnManager.Instance.StopTheTimer();
-        new GameOverCommand(this).AddToQueue();
     }
 
     // METHOD TO SHOW GLOW HIGHLIGHTS

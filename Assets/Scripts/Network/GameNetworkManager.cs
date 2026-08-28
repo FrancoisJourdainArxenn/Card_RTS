@@ -71,6 +71,15 @@ public class GameNetworkManager : NetworkBehaviour
     private readonly HashSet<int> _battleAnimationsDone = new HashSet<int>();
 
     /// <summary>
+    /// Issue du round en cours, calculée par SubmitBattleAssignmentServerRpc (le serveur connaît déjà
+    /// l'issue avant la moindre animation — voir ZoneCombatResolver.ComputeRoundOutcome) et consommée
+    /// par ReportBattleAnimationsDoneServerRpc une fois les deux joueurs confirmés : si le round était
+    /// décisif, GameOverCommand a déjà tourné localement sur chaque machine — la transition normale
+    /// vers EndBattle est alors sautée plutôt que déclenchée.
+    /// </summary>
+    private ZoneCombatResolver.RoundOutcome? _pendingRoundOutcome;
+
+    /// <summary>
     /// Reçu par le serveur quand un joueur termine la Battle phase.
     /// Stocke la soumission pour compter les deux joueurs. Quand les deux ont soumis :
     ///   1. Sérialise l'état calculé par le serveur (BuildAutoBattleSequence déjà exécuté dans OnBattlePhaseStart)
@@ -105,6 +114,14 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — sérialisation de l'état canonique et broadcast");
 
         ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
+
+        // Calculé maintenant, avant toute diffusion : le serveur connaît déjà l'issue de ce round
+        // (via pendingPlayerDamage, déjà rempli par la planification de tous les resolvers) avant
+        // qu'aucune animation ne parte. Stocké pour ReportBattleAnimationsDoneServerRpc, et transmis
+        // ci-dessous à BroadcastBattleStepsClientRpc pour que chaque machine rejoue le même ordre/
+        // découpage — jamais recalculé indépendamment côté client.
+        ZoneCombatResolver.RoundOutcome roundOutcome = ZoneCombatResolver.ComputeRoundOutcome();
+        _pendingRoundOutcome = roundOutcome;
 
         // Contient à la fois les effets OnDeath et OnAttack résolus par anticipation pendant la
         // planification, dans l'ordre chronologique réel — voir ZoneCombatResolver.PredictedTriggerReplay.
@@ -221,7 +238,9 @@ public class GameNetworkManager : NetworkBehaviour
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
-            stepCounterDamages);
+            stepCounterDamages,
+            roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
+            roundOutcome.FirstMainBaseResolverIdx, roundOutcome.SecondMainBaseResolverIdx);
 
         // La transition vers EndBattle est désormais déclenchée depuis ReportBattleAnimationsDoneServerRpc,
         // une fois que CHAQUE client a confirmé que sa file de commandes locale a fini de jouer les
@@ -238,7 +257,9 @@ public class GameNetworkManager : NetworkBehaviour
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
-        int[] counterDamages)
+        int[] counterDamages,
+        bool decisive, bool isDraw, int winnerPlayerID,
+        int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
     {
         int nCreature = 0, nBuilding = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
@@ -249,7 +270,8 @@ public class GameNetworkManager : NetworkBehaviour
         // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
-            secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages);
+            secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages,
+            decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
         // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }
@@ -286,6 +308,18 @@ public class GameNetworkManager : NetworkBehaviour
             return;
 
         _battleAnimationsDone.Clear();
+
+        bool wasDecisive = _pendingRoundOutcome?.Decisive ?? false;
+        _pendingRoundOutcome = null;
+        if (wasDecisive)
+        {
+            // Le round a mis fin à la partie — GameOverCommand a déjà tourné localement sur chaque
+            // machine (voir ZoneCombatResolver.EnqueueOrderedBattleCommands). Pas de transition vers
+            // EndBattle : currentPhase reste figé sur Battle, les contrôles sont déjà désactivés.
+            Debug.Log("[BattleAssignment][Server] Round décisif — transition vers EndBattle sautée (partie terminée)");
+            return;
+        }
+
         TurnManager.Instance.ForceRegisterEndPhase(0);
         TurnManager.Instance.ForceRegisterEndPhase(1);
     }

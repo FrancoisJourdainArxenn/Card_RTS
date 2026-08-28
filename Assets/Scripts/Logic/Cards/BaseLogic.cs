@@ -40,7 +40,8 @@ public class BaseLogic: ILivable
         {
             if (IsHomeBase)
             {
-                owner.Health = value; // délègue au Player — Player.Die() gère le game-over
+                owner.Health = value; // délègue au Player — le game-over est décidé par
+                                      // ZoneCombatResolver.ComputeRoundOutcome(), pas par ce setter
                 return;
             }
             if (value > MaxHealth)
@@ -77,6 +78,15 @@ public class BaseLogic: ILivable
         return Health;
     }
 
+    // Nettoyage logique immédiat uniquement — ne met plus en file BaseDieCommand elle-même.
+    // L'appelant (ZoneCombatResolver.EnqueueBattleCommands) capture (ID, neutralBaseController) avant
+    // d'appeler Die(), et enfile BaseDieCommand une seule fois, après avoir fini de traiter toute la
+    // zone (voir diedNeutralBases) — jamais immédiatement ici, sinon l'animation de mort jouerait en
+    // plein milieu des autres combats de la même zone plutôt qu'après leur fin.
+    // BasesCreatedThisGame.Remove DOIT rester synchrone/immédiat : c'est ce qui fait échouer la
+    // recherche (TryGetValue) d'un step ULTÉRIEUR de la même zone visant cette même base déjà morte
+    // (voir ZoneCombatResolver, garde en tête du cas TargetKind.Base) — sans quoi un round sans limite
+    // anti-overkill (comme pour la base principale) redéclencherait Die() plusieurs fois.
     public void Die()
     {
         if (IsHomeBase) return; // mort de la home base gérée par Player
@@ -84,7 +94,6 @@ public class BaseLogic: ILivable
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
         FogOfWarManager.Refresh();
-        new BaseDieCommand(uniqueBaseID, neutralBaseController).AddToQueue();
     }
 
     // Constructeur pour les bases neutres capturées

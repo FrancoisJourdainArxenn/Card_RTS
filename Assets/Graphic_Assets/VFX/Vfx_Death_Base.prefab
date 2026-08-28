@@ -9836,7 +9836,7 @@ GameObject:
   - component: {fileID: 7622172182739863812}
   - component: {fileID: 8010664113041635742}
   m_Layer: 0
-  m_Name: Vfx_Death_Unit V1
+  m_Name: Vfx_Death_Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11334,7 +11334,7 @@ ParticleSystem:
     startFrame:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.125
+      scalar: 0.25
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -26070,7 +26070,7 @@ ParticleSystem:
     startFrame:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.1875
+      scalar: 0.3125
       minScalar: 0
       maxCurve:
         serializedVersion: 2

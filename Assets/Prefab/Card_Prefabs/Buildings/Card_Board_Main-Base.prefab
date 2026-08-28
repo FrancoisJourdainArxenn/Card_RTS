@@ -1429,9 +1429,10 @@ MonoBehaviour:
   ArtImage: {fileID: 2302234012504505286}
   FrameImage: {fileID: 6335098370175170885}
   CardFaceGlowImage: {fileID: 2299680080893522801}
-  MainRessourceBGColor: {fileID: 0}
-  UnderAttackBGSprite: {fileID: 0}
+  MainRessourceBGColor: {fileID: 301433490106679497}
+  UnderAttackBGSprite: {fileID: 21300000, guid: 715c2965f26331246b33fc1fa3cc779a, type: 3}
   Spawner: {fileID: 0}
+  DeathAnimationPrefab: {fileID: 0}
 --- !u!114 &5938939194421709501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1485,6 +1486,7 @@ MonoBehaviour:
   MainRessourceText: {fileID: 215713205907225638}
   fogOverlay: {fileID: 9191104824621293537}
   CurrentTierImage: {fileID: 6891238427603454131}
+  DeathAnimationPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
   hasBeenSeen: 0
 --- !u!114 &2972207008102704594
 MonoBehaviour:
@@ -1513,7 +1515,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EffectVisualHandler
   effectOverlay: {fileID: 6406302029300316302}
   deathPendingMaterial: {fileID: 2100000, guid: 560a6521f09a02d47b099bed265a99ec, type: 2}
-  deathVfxPrefab: {fileID: 3087267072665922783, guid: fc028f647771fe543a0896adba6cfe48, type: 3}
+  deathVfxPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
 --- !u!114 &4115913096017478983
 MonoBehaviour:
   m_ObjectHideFlags: 0

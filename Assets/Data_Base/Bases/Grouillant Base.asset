@@ -23,7 +23,7 @@ MonoBehaviour:
 
     When destroyed, it''s controller loses the game.'
   BaseName: Essaimeuse
-  MaxHealth: 10
+  MaxHealth: 1
   mainRessourceIncome: 2
   mainRessourceBaseCost: 0
   tierLevels:

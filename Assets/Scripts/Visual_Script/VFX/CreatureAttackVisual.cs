@@ -251,24 +251,35 @@ public class CreatureAttackVisual : MonoBehaviour
             if (damage > 0)
                 VisualFeedbackEffect.CreateDamageEffect(hitTarget.transform.position, damage);
 
-            switch (GetTargetType(hitTargetID))
+            // Classification par composant présent sur le GameObject résolu (IDHolder), PAS via
+            // GetTargetType/les dictionnaires logiques (BasesCreatedThisGame/...) : ceux-ci sont mutés
+            // de façon SYNCHRONE pendant la planification de toute la zone (ex. BaseLogic.Die() retire
+            // la base dès que le coup fatal est calculé), alors que le rejeu visuel de chaque coup de
+            // la zone n'a lieu qu'ensuite, un par un. Un coup antérieur non-fatal sur cette même base
+            // se retrouvait donc classé Unknown au moment de son rejeu (la base était déjà retirée du
+            // dictionnaire), et son HealthText n'était jamais mis à jour — seule la disparition finale
+            // était visible. Les composants du GameObject, eux, restent en place jusqu'à la fin du
+            // rejeu de toute la zone (voir PlayBaseDeathAnimationThenRemove), donc stables ici.
+            if (hitTarget.GetComponent<MainBaseVisual>() is MainBaseVisual mbv)
             {
-                case AttackTargetType.Player:
-                    hitTarget.GetComponent<MainBaseVisual>().HealthText.text = healthAfter.ToString();
-                    GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
-                    break;
-                case AttackTargetType.Base:
-                    hitTarget.GetComponent<OneBaseManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Creature:
-                    hitTarget.GetComponent<OneCreatureManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Building:
-                    hitTarget.GetComponent<OneBuildingManager>().HealthText.text = healthAfter.ToString();
-                    break;
-                case AttackTargetType.Unknown:
-                    Debug.Log("Unknown target type: " + hitTargetID);
-                    break;
+                mbv.ApplyHealthDisplay(healthAfter);
+                GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
+            }
+            else if (hitTarget.GetComponent<OneBaseManager>() is OneBaseManager om)
+            {
+                om.HealthText.text = healthAfter.ToString();
+            }
+            else if (hitTarget.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
+            {
+                cm.HealthText.text = healthAfter.ToString();
+            }
+            else if (hitTarget.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
+            {
+                bm.HealthText.text = healthAfter.ToString();
+            }
+            else
+            {
+                Debug.Log("Unknown target type: " + hitTargetID);
             }
         }
 

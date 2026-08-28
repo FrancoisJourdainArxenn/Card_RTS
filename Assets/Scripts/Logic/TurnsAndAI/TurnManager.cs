@@ -31,6 +31,11 @@ public class TurnManager : MonoBehaviour
     private int currentRound = 1;
     private bool[] phaseReady;
     private readonly List<(int creatureUniqueID, int targetBaseID, int tablePos)> _soloMoveBuffer = new();
+    // Issue du round de combat solo en cours, calculée dans DelayedBattleStart juste avant l'enqueue
+    // ordonné, consommée par AutoAdvanceFromBattleAfterCombat pour savoir si la transition normale
+    // vers EndBattle doit être sautée (partie déjà terminée via GameOverCommand). Miroir solo de
+    // GameNetworkManager._pendingRoundOutcome.
+    private ZoneCombatResolver.RoundOutcome? _lastRoundOutcome;
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -490,9 +495,17 @@ public class TurnManager : MonoBehaviour
             }
             idx++;
         }
-        Debug.Log($"[Battle] Tous les resolvers traités — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
+        Debug.Log($"[Battle] Tous les resolvers traités (planification) — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         if (!NetworkSessionData.IsNetworkSession)
+        {
+            // Planification de TOUS les resolvers terminée avant tout enqueue (voir
+            // ZoneCombatResolver.OnBattlePhaseStart) — le round est donc déjà connu ici, avant la
+            // moindre animation, exactement comme côté réseau (SubmitBattleAssignmentServerRpc).
+            ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
+            _lastRoundOutcome = outcome;
+            ZoneCombatResolver.EnqueueAllPlannedBattleCommandsSolo(outcome);
             StartCoroutine(AutoAdvanceFromBattleAfterCombat());
+        }
         else
             AutoSubmitBattleAssignment();
     }
@@ -618,6 +631,17 @@ public class TurnManager : MonoBehaviour
                 Debug.LogWarning($"[Battle] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — playingQueue={Command.playingQueue} restants={Command.CommandQueue.Count} — la file de commandes de combat est probablement gelée");
             return stuck;
         });
+        bool wasDecisive = _lastRoundOutcome?.Decisive ?? false;
+        _lastRoundOutcome = null;
+        if (wasDecisive)
+        {
+            // Round décisif — GameOverCommand a déjà tourné (voir ZoneCombatResolver.
+            // EnqueueOrderedBattleCommands). Pas de transition vers EndBattle : currentPhase reste
+            // figé sur Battle, les contrôles sont déjà désactivés.
+            Debug.Log("[Battle] Round décisif — transition vers EndBattle sautée (partie terminée)");
+            yield break;
+        }
+
         Debug.Log($"[Battle] File vidée après {Time.realtimeSinceStartup - t0:F1}s → passage à EndBattle");
         if (currentPhase == TurnPhases.Battle)
             AdvancePhaseWhenAllReady();
