@@ -25,10 +25,16 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     public Image ArtImage;
     public Image FrameImage;
     public Image CardFaceGlowImage;
+    public Image MainRessourceBGColor;
+    public Sprite UnderAttackBGSprite;
     public GameObject Spawner;
+
+    private Sprite _normalRessourceBGSprite;
 
     void Awake()
     {
+        if (MainRessourceBGColor != null)
+            _normalRessourceBGSprite = MainRessourceBGColor.sprite;
         if (baseAsset != null)
             ReadBaseFromAsset();
     }
@@ -95,7 +101,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     {
         CurrentHealth = baseAsset.MaxHealth;
         HealthText.text = CurrentHealth.ToString();
-        MainRessourceIncome.text = "+ " + baseAsset.mainRessourceIncome.ToString();
+        RefreshIncomeDisplay(baseAsset.mainRessourceIncome, false);
         ArtImage.sprite = baseAsset.BaseImage;
     }
 
@@ -105,10 +111,17 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         ReadBaseFromAsset();
     }
 
-    public void RefreshIncomeDisplay(int income)
+    public void RefreshIncomeDisplay(int income, bool underAttack = false)
     {
         if (MainRessourceIncome != null)
             MainRessourceIncome.text = "+ " + income.ToString();
+        SetUnderAttackVisual(underAttack);
+    }
+
+    public void SetUnderAttackVisual(bool underAttack)
+    {
+        if (MainRessourceBGColor != null && UnderAttackBGSprite != null)
+            MainRessourceBGColor.sprite = underAttack ? UnderAttackBGSprite : _normalRessourceBGSprite;
     }
     
     public void TakeDamage(int amount, int healthAfter)

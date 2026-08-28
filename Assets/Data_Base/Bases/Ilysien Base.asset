@@ -18,7 +18,7 @@ MonoBehaviour:
   baseIconColor: {r: 1, g: 1, b: 1, a: 1}
   baseDescription: '<b>Main Base</b>
 
-    A main base grants you 3 Income.
+    A main base grants you 2 Income.
 
     When
     destroyed, it''s controller loses the game.'

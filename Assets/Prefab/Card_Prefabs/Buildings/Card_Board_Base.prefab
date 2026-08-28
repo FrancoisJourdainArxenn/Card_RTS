@@ -794,8 +794,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -35, y: -10}
-  m_SizeDelta: {x: 171.02, y: 171.02}
+  m_AnchoredPosition: {x: -39.100006, y: 0.30000305}
+  m_SizeDelta: {x: 175, y: 175}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &5312060525744404450
 CanvasRenderer:
@@ -1156,7 +1156,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.15, y: 0.16000001}
   m_AnchorMax: {x: 0.82000005, y: 0.82000005}
-  m_AnchoredPosition: {x: 2.5653, y: -3.915001}
+  m_AnchoredPosition: {x: 2.5653076, y: -3.9149933}
   m_SizeDelta: {x: -8.92, y: -7.83}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1167577965866504692
@@ -1214,12 +1214,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 82.3
+  m_fontSize: 84.35
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 85
+  m_fontSizeMax: 150
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -1316,6 +1316,8 @@ MonoBehaviour:
   ArtImage: {fileID: 7363659739365228283}
   FrameImage: {fileID: 762220882076096732}
   CardFaceGlowImage: {fileID: 1427065996216362515}
+  MainRessourceBGColor: {fileID: 3880094998679834773}
+  UnderAttackBGSprite: {fileID: 21300000, guid: 715c2965f26331246b33fc1fa3cc779a, type: 3}
   Spawner: {fileID: 0}
 --- !u!114 &5938939194421709501
 MonoBehaviour:
@@ -1329,6 +1331,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d68a108c9ae774941bddb8e59e6ce581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WhereIsTheCardOrCreature
+  HoldSlot: {fileID: 0}
 --- !u!65 &5539823569782606735
 BoxCollider:
   m_ObjectHideFlags: 0

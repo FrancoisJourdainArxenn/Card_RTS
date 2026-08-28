@@ -24,8 +24,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
             return;
         // Read HP from the authoritative logic value so fog refreshes don't overwrite damage.
         HealthText.text = player.Health.ToString();
-        MainRessourceText.text = player.mainRessourceAvailable.ToString();
-        baseManager?.RefreshIncomeDisplay(player.playerMainIncome);
+        if (player.homeBaseLogic != null)
+        {
+            MainRessourceText.text = "+ " + player.homeBaseLogic.EffectiveIncome.ToString();
+            baseManager?.SetUnderAttackVisual(player.homeBaseLogic.IsUnderAttack);
+        }
         RefreshTierIcon();
 
     }

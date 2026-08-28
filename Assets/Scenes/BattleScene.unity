@@ -3821,7 +3821,7 @@ MonoBehaviour:
   UpgradeCost: {fileID: 1941401936}
   UpgradeButton: {fileID: 1535797325}
   ressourceTooltipTrigger: {fileID: 282579321}
-  upgradeTooltipTrigger: {fileID: 0}
+  upgradeTooltipTrigger: {fileID: 1535797328}
   player: {fileID: 1369297962}
 --- !u!114 &744353343
 MonoBehaviour:

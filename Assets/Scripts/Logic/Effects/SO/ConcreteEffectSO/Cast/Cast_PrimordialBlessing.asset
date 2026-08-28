@@ -19,5 +19,7 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
   SpellToCast: {fileID: 11400000, guid: d8dc68f978f932b4b80441a6f3b29cf7, type: 2}
   CastCount: 1

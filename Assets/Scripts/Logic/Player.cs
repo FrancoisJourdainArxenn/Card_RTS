@@ -247,6 +247,8 @@ public class Player : MonoBehaviour, ILivable
 
     public virtual void OnTurnStart() // ICI nécessite de changer l'apport en ressource
     {
+        CalculatePlayerIncome(); // recalcule le malus "under attack" avec l'état du plateau à l'instant du versement
+
         if (baseAsset == null)
         {
             Debug.LogWarning("OnTurnStart() skipped: baseAsset is null for " + name, this);
@@ -1091,8 +1093,17 @@ public class Player : MonoBehaviour, ILivable
         playerMainIncome = bonusMainIncome;
         foreach (int amt in _incomeFromSources.Values)
             playerMainIncome += amt;
-        foreach (BaseAsset baseAsset in controlledBaseAssets)
-            playerMainIncome += baseAsset.mainRessourceIncome;
+
+        foreach (BaseLogic b in controlledBases)
+        {
+            playerMainIncome += b.EffectiveIncome;
+            if (!b.IsHomeBase)
+            {
+                OneBaseManager mgr = IDHolder.GetGameObjectWithID(b.ID)?.GetComponent<OneBaseManager>();
+                mgr?.RefreshIncomeDisplay(b.EffectiveIncome, b.IsUnderAttack);
+            }
+        }
+
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         baseVisual.ApplyLookFromAsset();

@@ -57,12 +57,15 @@ public class BaseLogic: ILivable
     {
         get{ return baseMainRessourceIncome; }
     }
-    
+
+    public bool IsUnderAttack => Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
+    public int EffectiveIncome => IsUnderAttack ? Mathf.Max(0, MainRessourceIncome - 1) : MainRessourceIncome;
+
     public int BaseID {get; private set;}
     public CardTier CurrentTier { get; private set; } = CardTier.T1;
     public int CurrentUpgradeCost { get; private set; }
     public static event Action<BaseLogic> OnUpgradeCostChanged;
-    private BaseTierLevel NextTierData =>
+    public BaseTierLevel NextTierData =>
         (int)CurrentTier < ba.tierLevels.Count ? ba.tierLevels[(int)CurrentTier] : null;
     public bool IsMaxTier => NextTierData == null;
     public Sprite CurrentTierIcon => ba.tierLevels[(int)CurrentTier - 1].tierIcon;
@@ -80,6 +83,7 @@ public class BaseLogic: ILivable
         owner.controlledBaseAssets.Remove(ba);
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
+        FogOfWarManager.Refresh();
         new BaseDieCommand(uniqueBaseID, neutralBaseController).AddToQueue();
     }
 

@@ -66,10 +66,34 @@ public class UiPlayerVisual : MonoBehaviour
                     return "This base is already at max Tier.";
 
                 int nextTier = (int)bl.CurrentTier + 1;
-                return $"Spend {bl.CurrentUpgradeCost} to get to Tier {nextTier}.\n" +
-                       $"Tier {nextTier} allow you to draw tier {nextTier} cards.\n" +
-                       $"Each tier, you draw 1 more card and your Income is increased by 1.\n" +
-                       $"Reduce the cost of upgrade by 1 each turn.";
+                BaseTierLevel next = bl.NextTierData;
+
+                string text = $"Spend {bl.CurrentUpgradeCost} to get to Tier {nextTier}.\n" +
+                               $"Tier {nextTier} will grant you:\n";
+
+                if (next.incomeBonus > 0)
+                {
+                    text += next.incomeBonus == 1
+                        ? "1 more Income.\n"
+                        : $"{next.incomeBonus} more Income.\n";
+                }
+
+                if (next.drawCountBonus > 0)
+                {
+                    text += next.drawCountBonus == 1
+                        ? "1 more card in hand every turn.\n"
+                        : $"{next.drawCountBonus} more cards in hand every turn.\n";
+                }
+
+                if (next.drawConfig != null)
+                    text += $"Access to Tier {nextTier} cards in your draws.\n";
+
+                if (nextTier == 3)
+                    text += "Allows you to keep a card in between turns.\n";
+
+                text += $"Upgrade cost reduces by {next.upgradeCostReductionPerTurn} each turn.";
+
+                return text;
             });
         }
     }
