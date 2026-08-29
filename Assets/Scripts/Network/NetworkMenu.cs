@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+using Unity.Services.Multiplayer;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -15,6 +16,10 @@ public class NetworkMenu : MonoBehaviour
     [Header("UI")]
     public TMP_InputField ipInputField;
     public TMP_Text statusText;
+
+    [Header("Multiplayer (Relay)")]
+    public TMP_InputField relayJoinCodeInputField;
+    public TMP_Text relayCodeDisplayText;
 
     [Header("Selectable")]
     [SerializeField] MenuRegistry menuRegistry;
@@ -90,6 +95,54 @@ public class NetworkMenu : MonoBehaviour
         mapDropdown.gameObject.SetActive(false);
 
         _connectRoutine = null;
+    }
+
+    public async void StartHostRelay()
+    {
+        statusText.text = "Connexion aux services Unity...";
+        await UgsBootstrap.EnsureReadyAsync();
+
+        statusText.text = "Création de la session distante...";
+        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+
+        SessionOptions options = new SessionOptions
+        {
+            MaxPlayers = 2,
+            Name = "CardRTS-Session"
+        }.WithRelayNetwork();
+
+        try
+        {
+            IHostSession session = await MultiplayerService.Instance.CreateSessionAsync(options);
+            statusText.text = $"Session créée ! Code à partager : {session.Code}";
+            if (relayCodeDisplayText != null)
+                relayCodeDisplayText.text = session.Code;
+        }
+        catch (SessionException e)
+        {
+            statusText.text = $"Erreur : {e.Message}";
+        }
+    }
+
+    public async void JoinRelay()
+    {
+        string joinCode = relayJoinCodeInputField.text.Trim().ToUpperInvariant();
+
+        statusText.text = "Connexion aux services Unity...";
+        await UgsBootstrap.EnsureReadyAsync();
+
+        statusText.text = $"Connexion à {joinCode}...";
+        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+
+        try
+        {
+            await MultiplayerService.Instance.JoinSessionByCodeAsync(joinCode);
+            mapDropdown.gameObject.SetActive(false);
+        }
+        catch (SessionException e)
+        {
+            statusText.text = $"Erreur : {e.Message}";
+        }
     }
 
     void OnServerStarted() =>
