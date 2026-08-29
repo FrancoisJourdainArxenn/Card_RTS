@@ -75,21 +75,26 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
-        foreach (Player p in Player.Players)
-        {
-            p.LoadCharacterInfoFromAsset();
-            p.TransmitInfoAboutPlayerToVisual();
-            p.matchStats.Reset(); 
-        }
-
         if (NetworkSessionData.IsNetworkSession)
         {
             foreach (Player p in Player.Players)
             {
                 bool isLow = p == GlobalSettings.Instance.LowPlayer;
                 DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
-                if (preset != null) p.deck.LoadDeck(preset);
+                if (preset != null)
+                {
+                    p.deck.LoadDeck(preset);
+                    if (preset.sharedPool != null && preset.sharedPool.baseAsset != null)
+                        p.ApplyBaseAssetOverride(preset.sharedPool.baseAsset);
+                }
             }
+        }
+
+        foreach (Player p in Player.Players)
+        {
+            p.LoadCharacterInfoFromAsset();
+            p.TransmitInfoAboutPlayerToVisual();
+            p.matchStats.Reset();
         }
 
         if (seed.HasValue)

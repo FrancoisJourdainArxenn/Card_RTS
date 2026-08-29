@@ -1432,7 +1432,6 @@ MonoBehaviour:
   MainRessourceBGColor: {fileID: 301433490106679497}
   UnderAttackBGSprite: {fileID: 21300000, guid: 715c2965f26331246b33fc1fa3cc779a, type: 3}
   Spawner: {fileID: 0}
-  DeathAnimationPrefab: {fileID: 0}
 --- !u!114 &5938939194421709501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1486,7 +1485,6 @@ MonoBehaviour:
   MainRessourceText: {fileID: 215713205907225638}
   fogOverlay: {fileID: 9191104824621293537}
   CurrentTierImage: {fileID: 6891238427603454131}
-  DeathAnimationPrefab: {fileID: 3087267072665922783, guid: 61d53af64519d3e47bcd83966e2c7ee4, type: 3}
   hasBeenSeen: 0
 --- !u!114 &2972207008102704594
 MonoBehaviour:
@@ -1557,17 +1555,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8597402261057766994}
-  m_LocalRotation: {x: -0, y: -0, z: -0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -0}
-  m_LocalScale: {x: 0.444612, y: 0.444612, z: 0.444612}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3887305390733077175}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 279.79, y: 110.4}
-  m_SizeDelta: {x: 822.3, y: 1083.02}
+  m_AnchoredPosition: {x: 290, y: 137}
+  m_SizeDelta: {x: 465.62, y: 613.25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8013655335193603379
 CanvasRenderer:
@@ -1597,7 +1595,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 372d1224729a0534d8055527fe8c7a30, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 47d65401fdb184347af471454bfc43ff, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

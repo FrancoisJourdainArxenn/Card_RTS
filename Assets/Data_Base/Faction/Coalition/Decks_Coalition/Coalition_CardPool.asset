@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83b16d44f0fdc5c42b5a304e1dbb87f9, type: 3}
   m_Name: Coalition_CardPool
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
+  baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
   cards:
   - {fileID: 11400000, guid: dc89e5f5d7c1c8646a4b6e1ddaac7b44, type: 2}
   - {fileID: 11400000, guid: 83a713e12f98b4746988c19138e8cbb6, type: 2}
