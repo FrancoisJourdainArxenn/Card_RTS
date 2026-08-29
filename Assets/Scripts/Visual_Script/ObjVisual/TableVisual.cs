@@ -647,6 +647,7 @@ public class TableVisual : MonoBehaviour
         GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
         manager.BaseID   = baseID;
+        manager.Owner    = owner;
         manager.cardAsset = ca;
         manager.ReadCreatureFromAsset();
         foreach (Transform t in creature.GetComponentsInChildren<Transform>())
@@ -697,6 +698,7 @@ public class TableVisual : MonoBehaviour
 
             OneCreatureManager ghostOcm = ghost.GetComponent<OneCreatureManager>();
             ghostOcm.BaseID = ocm.BaseID;
+            ghostOcm.Owner = owner;
             ghostOcm.cardAsset = ocm.cardAsset;
             ghostOcm.ReadCreatureFromAsset();
             ghostOcm.HealthText.text = ocm.HealthText.text;

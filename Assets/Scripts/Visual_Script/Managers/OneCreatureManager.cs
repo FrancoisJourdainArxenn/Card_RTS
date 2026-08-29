@@ -48,6 +48,19 @@ public class OneCreatureManager : OneLivableManager
     [SerializeField] private Sprite pendingPlaySprite; // carte jouée de la main, en attente de confirmation
     [SerializeField] private Sprite pendingMoveSprite; // déplacement en attente (origine uniquement, pas le ghost)
 
+    [Header("Flying")]
+    // Décalage vertical/arrière appliqué aux enfants directs de la racine (Canvas/Target/CenterPoint),
+    // jamais à la racine elle-même : la racine est repositionnée en permanence par TableVisual (rangées) et
+    // CreatureAttackVisual (windup/charge), qui l'ignoreraient sinon à chaque relayout.
+    [SerializeField] private float flyingElevation = 0.3f;
+    // Recul le long de Z, vers la base du propriétaire (voir Owner) — même logique que le windupBack
+    // du windup d'attaque (CreatureAttackVisual), mais permanent et signé selon le camp.
+    [SerializeField] private float flyingPullBack = 0.15f;
+    // Camp propriétaire de cette créature, fixé par TableVisual juste avant ReadCreatureFromAsset (comme
+    // BaseID) : nécessaire pour signer flyingPullBack, le plateau n'étant pas symétrique en rotation
+    // (Low et Top partagent le même axe Z monde, "vers l'adversaire" a un signe opposé pour chacun).
+    public AreaPosition Owner { get; set; }
+
     public void DestroyPendingMoveGhost()
     {
         if (PendingMoveGhost == null) return;
@@ -112,6 +125,17 @@ public class OneCreatureManager : OneLivableManager
         if(cardAsset.IsHero)
         {
             HeroSymbol.enabled = true;
+        }
+
+        if (cardAsset.Flying)
+        {
+            // Low → vers l'adversaire = +Z, donc "vers sa propre base" = -Z. Top est l'inverse (voir Owner).
+            float backwardZ = (Owner == AreaPosition.Low ? -1f : 1f) * flyingPullBack;
+            foreach (Transform child in transform)
+            {
+                Vector3 pos = child.localPosition;
+                child.localPosition = new Vector3(pos.x, flyingElevation, pos.z + backwardZ);
+            }
         }
 
         if (PreviewManager != null)

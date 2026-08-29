@@ -342,6 +342,7 @@ public class CreatureLogic: ILivable
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
+    public bool IsFlying => ca.Flying;
     public bool IsShielded => ShieldValue > 0;
 
     // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :

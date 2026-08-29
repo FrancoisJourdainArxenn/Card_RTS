@@ -2968,7 +2968,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfc4e325c203faa45a8983bbb2dab8e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  defaultMapPrefab: {fileID: 8472823780511676816, guid: 9f4a65383cdbd0e4292acdffbc723eea, type: 3}
+  defaultMapPrefab: {fileID: 8472823780511676816, guid: 32ad758536f4c3f46bd59b7bcb7d10c5, type: 3}
   registry: {fileID: 11400000, guid: 21f3b0131c441fc44a8ede70531fcee7, type: 2}
 --- !u!1 &625286358
 GameObject:

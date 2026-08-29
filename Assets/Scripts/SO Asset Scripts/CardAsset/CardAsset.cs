@@ -84,6 +84,7 @@ public class CardAsset : ScriptableObject
     public int MoveSpeed = 1;
     public bool Celerity = false;
     public bool melee = false;
+    public bool Flying = false;
     // Immobile, ne peut jamais attaquer (attaque verrouillée à 0), immunisée aux buffs de type
     // bouclier/célérité — occupe quand même une place en rangée Melee/Ranged et reste ciblable
     // normalement (dégâts, soins) comme n'importe quelle autre unité.

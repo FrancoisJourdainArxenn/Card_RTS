@@ -440,6 +440,9 @@ public class ZoneCombatResolver : MonoBehaviour
         // que OnDeath, qui n'affecte jamais l'évènement qui l'a déclenché) — seulement les suivantes.
         CreatureLogic attackerLogic = !attacker.isBuilding && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attacker.id, out CreatureLogic al) ? al : null;
 
+        // Un attaquant Melee qui n'est pas lui-même Flying ne peut pas cibler une créature Flying.
+        bool attackerIsGroundedMelee = IsMeleeAttacker(attacker.id, attacker.isBuilding) && !(attackerLogic?.IsFlying ?? false);
+
         // Tier 1 : bâtiments mêlée
         List<BuildingLogic> eligibleMeleeBuildings = new List<BuildingLogic>();
         foreach (BuildingLogic b in buildings)
@@ -475,6 +478,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (CreatureLogic t in creatures)
         {
             if (!t.IsMelee || IsEffectivelyDead(t)) continue;
+            if (t.IsFlying && attackerIsGroundedMelee) continue;
             eligibleMeleeCreatures.Add(t);
         }
         if (eligibleMeleeCreatures.Count > 0)
@@ -506,6 +510,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (CreatureLogic t in creatures)
         {
             if (t.IsMelee || IsEffectivelyDead(t)) continue;
+            if (t.IsFlying && attackerIsGroundedMelee) continue;
             eligibleRangedCreatures.Add(t);
         }
         if (eligibleRangedCreatures.Count > 0)

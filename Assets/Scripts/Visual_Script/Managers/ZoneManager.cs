@@ -59,12 +59,24 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
         Logic.RemovePath(path.Logic);
     }
 
-    public ZonePath GetPathTo(ZoneManager other)
-        => _registeredPaths.Find(p =>
-            (p.ZoneA == this && p.ZoneB == other) ||
-            (p.ZoneA == other && p.ZoneB == this));
+    public ZonePath GetPathTo(ZoneManager other, Player player, bool isFlying = false)
+    {
+        ZonePath fallback = null;
+        foreach (ZonePath p in _registeredPaths)
+        {
+            bool connects = (p.ZoneA == this && p.ZoneB == other) || (p.ZoneA == other && p.ZoneB == this);
+            if (!connects) continue;
+            if (p.Logic.RequiresFlying && !isFlying) continue;
 
-    public bool IsAdjacentTo(ZoneManager other) => GetPathTo(other) != null;
+            fallback ??= p;
+            if (p.Logic.CanTraverse(player, Logic, isFlying))
+                return p;
+        }
+        return fallback;
+    }
+
+    public bool IsAdjacentTo(ZoneManager other) => _registeredPaths.Exists(p =>
+        (p.ZoneA == this && p.ZoneB == other) || (p.ZoneA == other && p.ZoneB == this));
 
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)
     {

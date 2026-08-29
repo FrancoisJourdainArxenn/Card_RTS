@@ -22,6 +22,7 @@ public interface ILivable: IIdentifiable
     public bool OnDeathResolvedInBattle => false;
     public bool IsMelee => false;
     public bool IsRanged => false;
+    public bool IsFlying => false;
     public int Attack { get; set; }
     void Die();
 

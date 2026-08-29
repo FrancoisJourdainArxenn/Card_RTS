@@ -344,24 +344,23 @@ public class DragCreatureActions : DraggingActions {
             return false;
         }
 
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null)
+            return false;
+
         ZoneManager currentZone = originArea.parentZone;
         ZoneManager targetZone = targetPlayerArea.parentZone;
-        // Debug.Log($"[Move] current={currentZone?.name ?? "NULL"}, target={targetZone?.name ?? "NULL"}, path={currentZone?.GetPathTo(targetZone)?.Logic?.DisplayName ?? "NULL"}");
 
         if (currentZone != targetZone)
         {
-            ZonePath path = currentZone.GetPathTo(targetZone);
-            if (path == null || !path.Logic.CanTraverse(playerOwner, currentZone.Logic))
+            ZonePath path = currentZone.GetPathTo(targetZone, playerOwner, creatureLogic.IsFlying);
+            if (path == null || !path.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying))
             {
                 if (!silent)
                     new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
                 return false;
             }
         }
-
-        CreatureLogic creatureLogic = GetCreatureLogic();
-        if (creatureLogic == null)
-            return false;
 
         if (!targetPlayerArea.tableVisual.RowHasSpace(creatureLogic.IsMelee))
         {
@@ -492,13 +491,17 @@ public class DragCreatureActions : DraggingActions {
         if (originArea == null || originArea.parentZone == null)
             return;
 
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null)
+            return;
+
         ZoneManager currentZone = originArea.parentZone;
         foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
         {
             if (pa == originArea) continue;
             if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
-            ZonePath highlightPath = currentZone.GetPathTo(pa.parentZone);
-            if (pa.parentZone == currentZone || (highlightPath != null && highlightPath.Logic.CanTraverse(playerOwner, currentZone.Logic)))
+            ZonePath highlightPath = currentZone.GetPathTo(pa.parentZone, playerOwner, creatureLogic.IsFlying);
+            if (pa.parentZone == currentZone || (highlightPath != null && highlightPath.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying)))
                 pa.tableVisual.SetHighlight(true);
         }
     }
@@ -530,8 +533,8 @@ public class DragCreatureActions : DraggingActions {
         {
             if (pa == origin) continue;
             if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
-            ZonePath path = currentZone.GetPathTo(pa.parentZone);
-            if (pa.parentZone == currentZone || (path != null && path.Logic.CanTraverse(playerOwner, currentZone.Logic)))
+            ZonePath path = currentZone.GetPathTo(pa.parentZone, playerOwner, creatureLogic.IsFlying);
+            if (pa.parentZone == currentZone || (path != null && path.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying)))
                 result.Add(pa);
         }
     }
