@@ -227,6 +227,25 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
+    // Applique un BaseAsset différent de celui câblé dans l'Inspector (ex: celui du CardPoolSO du
+    // deck choisi en menu, résolu seulement dans TurnManager.OnGameStart, donc après Awake()) et
+    // rafraîchit tout ce qui avait déjà été initialisé avec l'ancien (visuel + homeBaseLogic).
+    public void ApplyBaseAssetOverride(BaseAsset overrideBaseAsset)
+    {
+        if (overrideBaseAsset == null || overrideBaseAsset == baseAsset)
+            return;
+
+        if (controlledBaseAssets.Count > 0 && controlledBaseAssets[0] == baseAsset)
+            controlledBaseAssets[0] = overrideBaseAsset;
+
+        baseAsset = overrideBaseAsset;
+
+        if (baseVisual != null && baseVisual.baseManager != null)
+            baseVisual.baseManager.ResetValues(baseAsset);
+
+        homeBaseLogic = new BaseLogic(this, MainPArea?.parentZone?.Logic);
+    }
+
     void Start()
     {
         baseVisual.gameObject.GetComponent<IDHolder>().UniqueID = PlayerID;

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83b16d44f0fdc5c42b5a304e1dbb87f9, type: 3}
   m_Name: PoolTest1
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
+  baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
   cards:
   - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
   - {fileID: 11400000, guid: dac5871494178b94a96abaeb09c87054, type: 2}

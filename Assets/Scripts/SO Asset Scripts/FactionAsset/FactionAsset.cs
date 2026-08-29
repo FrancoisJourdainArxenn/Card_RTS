@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum Faction{ Coalition, Nomade, Grouillant, Terrien}
+public enum Faction{ Coalition, Nomad, Crawlers, Terrans}
 
 public class FactionAsset : ScriptableObject 
 {
