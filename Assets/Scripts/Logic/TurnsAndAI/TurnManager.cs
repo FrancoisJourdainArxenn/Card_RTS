@@ -31,6 +31,9 @@ public class TurnManager : MonoBehaviour
     private int currentRound = 1;
     private bool[] phaseReady;
     private readonly List<(int creatureUniqueID, int targetBaseID, int tablePos)> _soloMoveBuffer = new();
+    // Embarquements en attente, résolus AVANT _soloMoveBuffer (voir FlushSoloBoardBuffer) pour qu'un
+    // embarquement et le départ de son transporteur ordonnés le même tour se résolvent ensemble.
+    private readonly List<(int passengerUniqueID, int transportUniqueID)> _soloBoardBuffer = new();
     // Issue du round de combat solo en cours, calculée dans DelayedBattleStart juste avant l'enqueue
     // ordonné, consommée par AutoAdvanceFromBattleAfterCombat pour savoir si la transition normale
     // vers EndBattle doit être sautée (partie déjà terminée via GameOverCommand). Miroir solo de
@@ -343,7 +346,10 @@ public class TurnManager : MonoBehaviour
         else
         {
             if (currentPhase == TurnPhases.Command)
+            {
+                FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
+            }
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle      ||
                                  currentPhase == TurnPhases.EndBattle;
@@ -730,6 +736,36 @@ public class TurnManager : MonoBehaviour
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = false;
+    }
+
+    public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID)
+    {
+        Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID} (buffer now {_soloBoardBuffer.Count + 1})");
+        _soloBoardBuffer.Add((passengerUniqueID, transportUniqueID));
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
+    }
+
+    public void CancelSoloBoard(int passengerUniqueID)
+    {
+        int removed = _soloBoardBuffer.RemoveAll(b => b.passengerUniqueID == passengerUniqueID);
+        Debug.Log($"[Transport] CancelSoloBoard — passenger={passengerUniqueID}, removed={removed}");
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
+    }
+
+    private void FlushSoloBoardBuffer()
+    {
+        Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
+        foreach (var (passengerID, transportID) in _soloBoardBuffer)
+        {
+            GameObject passengerGO = IDHolder.GetGameObjectWithID(passengerID);
+            if (passengerGO != null && passengerGO.TryGetComponent(out OneCreatureManager ocm))
+                ocm.ClearPendingMoveArrow();
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic creature))
+                creature.Board(transportID);
+        }
+        _soloBoardBuffer.Clear();
     }
 
     private void FlushSoloMoveBuffer()

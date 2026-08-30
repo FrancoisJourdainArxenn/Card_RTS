@@ -843,6 +843,9 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.MoveCreature:
                 MoveCreatureClientRpc(action.param1, action.param2, action.param3);
                 break;
+            case ActionType.BoardCreature:
+                BoardCreatureClientRpc(action.param1, action.param2);
+                break;
             case ActionType.PlaceBuilding:
                 PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
                 break;
@@ -1649,6 +1652,84 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         creature.Move(targetBaseID, tablePos);
+    }
+
+    //Boarding a Transport
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void BoardCreatureServerRpc(int passengerUniqueID, int transportUniqueID, int playerIndex)
+    {
+        Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}");
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.BoardCreature,
+            playerIndex = playerIndex,
+            param1 = passengerUniqueID,
+            param2 = transportUniqueID
+        });
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void CancelBoardCreatureServerRpc(int passengerUniqueID, int playerIndex, RpcParams rpcParams = default)
+    {
+        int removed = _actionBuffer.RemoveAll(a =>
+            a.type == ActionType.BoardCreature &&
+            a.param1 == passengerUniqueID &&
+            a.playerIndex == playerIndex);
+
+        Debug.Log($"[Transport][Server] CancelBoardCreatureServerRpc — passenger={passengerUniqueID}, playerIndex={playerIndex}, removed={removed}");
+
+        if (removed == 0)
+            return;
+
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
+
+        // Même raison que CancelMoveCreatureServerRpc : l'auteur de l'annulation a déjà nettoyé sa
+        // propre flèche en local, on ne relaie donc qu'aux autres clients.
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        List<ulong> otherClients = new List<ulong>();
+        foreach (ulong id in NetworkManager.ConnectedClientsIds)
+        {
+            if (id != senderId)
+                otherClients.Add(id);
+        }
+
+        if (otherClients.Count == 0)
+            return;
+
+        ClientRpcParams targetParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = otherClients.ToArray() }
+        };
+        CancelBoardCreatureClientRpc(passengerUniqueID, targetParams);
+    }
+
+    [ClientRpc]
+    void CancelBoardCreatureClientRpc(int passengerUniqueID, ClientRpcParams clientRpcParams = default)
+    {
+        IDHolder.GetGameObjectWithID(passengerUniqueID)
+            ?.GetComponent<OneCreatureManager>()
+            ?.ClearPendingMoveArrow();
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : résout l'embarquement avec les mêmes paramètres.
+    /// </summary>
+    [ClientRpc]
+    void BoardCreatureClientRpc(int passengerUniqueID, int transportUniqueID)
+    {
+        Debug.Log($"[Transport][{(IsServer ? "Server" : "Client")}] BoardCreatureClientRpc received — passenger={passengerUniqueID}, transport={transportUniqueID}");
+        OneCreatureManager ocm = IDHolder.GetGameObjectWithID(passengerUniqueID)?.GetComponent<OneCreatureManager>();
+        ocm?.ClearPendingMoveArrow();
+
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+        {
+            Debug.LogError($"[GameNetworkManager] BoardCreature: créature introuvable id={passengerUniqueID}");
+            return;
+        }
+        creature.Board(transportUniqueID);
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

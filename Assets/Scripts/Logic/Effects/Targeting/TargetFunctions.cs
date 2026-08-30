@@ -21,7 +21,16 @@ public partial class EffectContext
                 _                   => Enumerable.Empty<IIdentifiable>()
             };
 
-            candidates = candidates.Where(t => !(t is ILivable l && (l.IsPendingDeath || l.OnDeathResolvedInBattle)));
+            candidates = candidates.Where(t =>
+            {
+                if (t is not ILivable l) return true;
+                if (l.IsBoarded)
+                {
+                    UnityEngine.Debug.Log($"[Transport] GetTargetsByTeam — excluding boarded {(t as IIdentifiable)?.DisplayName} from targeting pool");
+                    return false;
+                }
+                return !(l.IsPendingDeath || l.OnDeathResolvedInBattle);
+            });
 
             // zoneFilter avant statusFilter : HighestHealth/LowestHealth doivent calculer l'extrême
             // sur le pool déjà restreint à la zone (sinon un extrême situé dans une autre zone

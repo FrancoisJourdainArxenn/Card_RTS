@@ -34,6 +34,15 @@ public class DragCreatureActions : DraggingActions {
     private bool _skipSnapBack = false;
     private bool _wasInOriginArea = true;
 
+    // Transports amis, dans la même zone, avec de la place — calculé une fois au début du drag (voir
+    // HighlightBoardableTransports), puis survolé chaque frame (voir UpdateHoveredTransport). Faire
+    // glisser cette créature sur l'un d'eux l'embarque au lieu de la déplacer vers une zone.
+    private readonly List<OneCreatureManager> _candidateTransports = new List<OneCreatureManager>();
+    private OneCreatureManager _hoveredTransport;
+    // Non-null tant qu'un embarquement (pas un déplacement de zone classique) est en attente sur cette
+    // créature — distingue les deux branches dans CancelPendingMove.
+    private int? _pendingBoardTransportID;
+
 
 
     // public static void SetDragCanvas(Canvas canvas) => _preferredDragCanvas = canvas;
@@ -51,10 +60,11 @@ public class DragCreatureActions : DraggingActions {
     public override bool CanDrag
     {
         get
-        {   
+        {
             return (
                 manager != null
                 && base.CanDrag
+                && !MultiSelectionManager.IsConfirmingGroupMove
                 && (
                     manager.CanMoveNow
                     || manager.CanReorderNow
@@ -80,11 +90,14 @@ public class DragCreatureActions : DraggingActions {
                 originArea = playerOwner.GetPlayerAreaByID(startDragCreatureLogic.BaseID);
         }
         whereIsThisCreature.VisualState = VisualStates.Dragging;
-        
+
         // enable target graphic
         sr.enabled = true;
         if (manager.CanMoveNow)
+        {
             HighlightReachableAreas();
+            HighlightBoardableTransports();
+        }
     
         
         _originalManagerLocalPosition = manager.transform.localPosition;
@@ -197,6 +210,8 @@ public class DragCreatureActions : DraggingActions {
             return;
         }
 
+        UpdateHoveredTransport();
+
         bool isInOriginArea = originArea.tableVisual.CursorOverThisTable;
 
         if (isInOriginArea)
@@ -240,7 +255,13 @@ public class DragCreatureActions : DraggingActions {
         if (turnmanager.CurrentPhase == TurnManager.TurnPhases.Command) {
             PlayerArea selectedPArea = playerOwner.SelectedPArea();
 
-            if (selectedPArea == originArea)
+            if (_hoveredTransport != null && manager.CanMoveNow)
+            {
+                bool boardValid = Board(_hoveredTransport);
+                if (!boardValid)
+                    OnDragFailed();
+            }
+            else if (selectedPArea == originArea)
                 Reorder();
             else if (manager.CanMoveNow)
             {
@@ -255,6 +276,7 @@ public class DragCreatureActions : DraggingActions {
             }
         }
 
+        ClearTransportHighlights();
         // return target and arrow to original position
         ResetDragElements();
     }
@@ -289,6 +311,32 @@ public class DragCreatureActions : DraggingActions {
     // effet si la créature n'a pas de déplacement en attente.
     private void CancelPendingMove()
     {
+        if (_pendingBoardTransportID.HasValue)
+        {
+            Debug.Log($"[Transport] CancelPendingMove — cancelling pending board of ID:{idHolder.UniqueID} onto transport ID:{_pendingBoardTransportID.Value}");
+            if (NetworkSessionData.IsNetworkSession)
+                GameNetworkManager.Instance.CancelBoardCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
+            else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+                TurnManager.Instance.CancelSoloBoard(idHolder.UniqueID);
+
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(_pendingBoardTransportID.Value, out CreatureLogic transportLogic))
+            {
+                transportLogic.RemoveLocalPendingBoard(idHolder.UniqueID);
+                IDHolder.GetGameObjectWithID(_pendingBoardTransportID.Value)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+            }
+
+            // Un embarquement n'a jamais de ghost (voir Board) — DestroyPendingMoveGhost() no-opterait
+            // silencieusement (elle sort tôt si PendingMoveGhost est null) sans jamais restaurer la
+            // couleur normale de la créature, contrairement au cas déplacement ci-dessous.
+            originArea.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
+            manager.ClearPendingMoveArrow();
+            manager.HasPendingBoard = false;
+            manager.PendingBoardTarget = null;
+            manager.SetPending(false);
+            _pendingBoardTransportID = null;
+            return;
+        }
+
         if (NetworkSessionData.IsNetworkSession)
             GameNetworkManager.Instance.CancelMoveCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
@@ -351,14 +399,25 @@ public class DragCreatureActions : DraggingActions {
         ZoneManager currentZone = originArea.parentZone;
         ZoneManager targetZone = targetPlayerArea.parentZone;
 
+        // Non-null uniquement si le réseau de téléporteurs (et non un ZonePath physique) est ce qui
+        // rend ce déplacement légal — voir ZoneManager.CanReach. Sert à faire faire à la flèche de
+        // mouvement en attente un crochet par ces deux créatures (voir ShowPendingMoveArrowViaTeleporter).
+        OneCreatureManager viaSourceTeleporter = null;
+        OneCreatureManager viaDestTeleporter = null;
+
         if (currentZone != targetZone)
         {
-            ZonePath path = currentZone.GetPathTo(targetZone, playerOwner, creatureLogic.IsFlying);
-            if (path == null || !path.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying))
+            if (!currentZone.CanReach(targetZone, playerOwner, creatureLogic, out CreatureLogic sourceTeleporterLogic, out CreatureLogic destTeleporterLogic))
             {
                 if (!silent)
                     new ShowMessageCommand("Zone not in range", 1f).AddToQueue();
                 return false;
+            }
+
+            if (sourceTeleporterLogic != null && destTeleporterLogic != null)
+            {
+                viaSourceTeleporter = IDHolder.GetGameObjectWithID(sourceTeleporterLogic.UniqueCreatureID)?.GetComponent<OneCreatureManager>();
+                viaDestTeleporter = IDHolder.GetGameObjectWithID(destTeleporterLogic.UniqueCreatureID)?.GetComponent<OneCreatureManager>();
             }
         }
 
@@ -390,7 +449,10 @@ public class DragCreatureActions : DraggingActions {
         if (NetworkSessionData.IsNetworkSession)
         {
             GameNetworkManager.Instance.MoveCreatureServerRpc(idHolder.UniqueID, targetPlayerArea.baseID, networkTablePos, playerOwner.playerIndex);
-            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            if (viaSourceTeleporter != null && viaDestTeleporter != null)
+                manager.ShowPendingMoveArrowViaTeleporter(viaSourceTeleporter, viaDestTeleporter);
+            else
+                manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
             BroadcastRowOrder(targetPlayerArea);
@@ -398,7 +460,10 @@ public class DragCreatureActions : DraggingActions {
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
             TurnManager.Instance.EnqueueSoloMove(idHolder.UniqueID, targetPlayerArea.baseID, networkTablePos);
-            manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
+            if (viaSourceTeleporter != null && viaDestTeleporter != null)
+                manager.ShowPendingMoveArrowViaTeleporter(viaSourceTeleporter, viaDestTeleporter);
+            else
+                manager.ShowPendingMoveArrow(targetPlayerArea.transform.position);
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             SpawnPendingMoveGhost(creatureLogic, targetPlayerArea, tablePos);
             BroadcastRowOrder(targetPlayerArea);
@@ -478,6 +543,7 @@ public class DragCreatureActions : DraggingActions {
     // créature à sa position d'origine SUR LA TABLE (jamais en main, contrairement à DragCreatureOnTable).
     public override void OnDragCancelled()
     {
+        ClearTransportHighlights();
         ResetDragElements();
     }
 
@@ -500,8 +566,7 @@ public class DragCreatureActions : DraggingActions {
         {
             if (pa == originArea) continue;
             if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
-            ZonePath highlightPath = currentZone.GetPathTo(pa.parentZone, playerOwner, creatureLogic.IsFlying);
-            if (pa.parentZone == currentZone || (highlightPath != null && highlightPath.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying)))
+            if (pa.parentZone == currentZone || currentZone.CanReach(pa.parentZone, playerOwner, creatureLogic))
                 pa.tableVisual.SetHighlight(true);
         }
     }
@@ -510,6 +575,157 @@ public class DragCreatureActions : DraggingActions {
     {
         foreach (PlayerArea pa in FindObjectsByType<PlayerArea>(FindObjectsSortMode.None))
             pa.tableVisual.SetHighlight(false);
+    }
+
+    // Repère les transports amis avec de la place, dans la même zone que cette créature — un
+    // Transport ne peut pas lui-même être embarqué (pas de transports imbriqués). Voir Board().
+    private void HighlightBoardableTransports()
+    {
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null || creatureLogic.CanTransport)
+        {
+            Debug.Log($"[Transport] HighlightBoardableTransports — skip (creatureLogic={(creatureLogic == null ? "null" : creatureLogic.DisplayName)}, CanTransport={creatureLogic?.CanTransport})");
+            return;
+        }
+
+        ZoneLogic myZone = creatureLogic.Zone;
+        if (myZone == null)
+        {
+            Debug.Log($"[Transport] HighlightBoardableTransports — skip, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) has no Zone");
+            return;
+        }
+
+        foreach (CreatureLogic other in playerOwner.playedCards.Creatures)
+        {
+            if (other == creatureLogic) continue;
+            if (!other.CanTransport) continue;
+            if (other.Zone != myZone) continue;
+            if (other.BoardedCreatureIDs.Count + other.LocalPendingBoardCount >= other.TransportCapacity)
+            {
+                Debug.Log($"[Transport] HighlightBoardableTransports — {other.DisplayName}(ID:{other.UniqueCreatureID}) full ({other.BoardedCreatureIDs.Count} boarded + {other.LocalPendingBoardCount} pending / {other.TransportCapacity})");
+                continue;
+            }
+
+            GameObject go = IDHolder.GetGameObjectWithID(other.UniqueCreatureID);
+            OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
+            if (ocm == null) continue;
+
+            _candidateTransports.Add(ocm);
+            ocm.SetTransportHighlight(true);
+        }
+        Debug.Log($"[Transport] HighlightBoardableTransports — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) found {_candidateTransports.Count} candidate(s): [{string.Join(", ", _candidateTransports.ConvertAll(o => o.cardAsset != null ? o.cardAsset.name : "?"))}]");
+    }
+
+    private void ClearTransportHighlights()
+    {
+        foreach (OneCreatureManager ocm in _candidateTransports)
+            if (ocm != null) ocm.SetTransportHighlight(false);
+        _candidateTransports.Clear();
+        _hoveredTransport = null;
+    }
+
+    // Survole les transports candidats chaque frame pendant le drag (bounds écran, voir
+    // OneCreatureManager.IsScreenPointOver) plutôt qu'un raycast physique classique : la poignée de
+    // drag (voir Draggable) suit la souris et masquerait tout ce qui se trouve en-dessous.
+    private void UpdateHoveredTransport()
+    {
+        OneCreatureManager newHover = null;
+        foreach (OneCreatureManager candidate in _candidateTransports)
+        {
+            if (candidate != null && candidate.IsScreenPointOver(Input.mousePosition))
+            {
+                newHover = candidate;
+                break;
+            }
+        }
+
+        if (newHover == _hoveredTransport)
+            return;
+
+        Debug.Log($"[Transport] UpdateHoveredTransport — {(_hoveredTransport != null ? _hoveredTransport.cardAsset?.name : "none")} -> {(newHover != null ? newHover.cardAsset?.name : "none")}");
+
+        if (_hoveredTransport != null)
+            _hoveredTransport.SetTransportHighlight(true);
+        _hoveredTransport = newHover;
+        if (_hoveredTransport != null)
+            _hoveredTransport.SetTransportHighlight(true, targeted: true);
+    }
+
+    // Embarque cette créature à bord de transportManager — même déroulé qu'un déplacement en attente
+    // (Move) : réseau/solo différé bufferisent jusqu'à la résolution, immédiat résout tout de suite.
+    // Contrairement à Move, aucun ghost n'est créé dans une zone cible (voir CreatureMoveVisual.Board) :
+    // la créature reste visible, assombrie, en bout de sa propre rangée jusqu'à résolution.
+    private bool Board(OneCreatureManager transportManager, bool silent = false)
+    {
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null)
+        {
+            Debug.Log("[Transport] Board — abort, no CreatureLogic for dragged creature");
+            return false;
+        }
+
+        IDHolder transportIdHolder = transportManager.GetComponent<IDHolder>();
+        if (transportIdHolder == null)
+        {
+            Debug.Log("[Transport] Board — abort, transport has no IDHolder");
+            return false;
+        }
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(transportIdHolder.UniqueID, out CreatureLogic transportLogic))
+        {
+            Debug.Log($"[Transport] Board — abort, transport ID:{transportIdHolder.UniqueID} not found in CreaturesCreatedThisGame");
+            return false;
+        }
+        if (!transportLogic.CanTransport)
+        {
+            Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) is not a Transport (capacity={transportLogic.TransportCapacity})");
+            return false;
+        }
+        if (transportLogic.BoardedCreatureIDs.Count + transportLogic.LocalPendingBoardCount >= transportLogic.TransportCapacity)
+        {
+            Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) full ({transportLogic.BoardedCreatureIDs.Count} boarded + {transportLogic.LocalPendingBoardCount} pending / {transportLogic.TransportCapacity})");
+            if (!silent)
+                new ShowMessageCommand("That transport is full.", 1f).AddToQueue();
+            return false;
+        }
+
+        Debug.Log($"[Transport] Board — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) -> {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) | NetworkSession={NetworkSessionData.IsNetworkSession} DeferredSolo={GlobalSettings.Instance?.UseDeferredMovesInSolo}");
+
+        CancelPendingMove();
+
+        if (NetworkSessionData.IsNetworkSession)
+        {
+            Debug.Log($"[Transport] Board — sending BoardCreatureServerRpc (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, playerIndex={playerOwner.playerIndex})");
+            GameNetworkManager.Instance.BoardCreatureServerRpc(idHolder.UniqueID, transportIdHolder.UniqueID, playerOwner.playerIndex);
+            manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
+            manager.PendingBoardTarget = transportManager;
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
+            manager.HasPendingBoard = true;
+            manager.SetPending(true, isPendingMove: true);
+            transportLogic.AddLocalPendingBoard(idHolder.UniqueID);
+            transportManager.RefreshPassengerPortraits();
+            _pendingBoardTransportID = transportIdHolder.UniqueID;
+        }
+        else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
+        {
+            Debug.Log($"[Transport] Board — queued via EnqueueSoloBoard (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID})");
+            TurnManager.Instance.EnqueueSoloBoard(idHolder.UniqueID, transportIdHolder.UniqueID);
+            manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
+            manager.PendingBoardTarget = transportManager;
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
+            manager.HasPendingBoard = true;
+            manager.SetPending(true, isPendingMove: true);
+            transportLogic.AddLocalPendingBoard(idHolder.UniqueID);
+            transportManager.RefreshPassengerPortraits();
+            _pendingBoardTransportID = transportIdHolder.UniqueID;
+        }
+        else
+        {
+            Debug.Log($"[Transport] Board — resolving immediately (no deferral)");
+            creatureLogic.Board(transportIdHolder.UniqueID);
+        }
+
+        _skipSnapBack = true;
+        return true;
     }
     // NOT USED IN THIS SCRIPT
     protected override bool DragSuccessful()
@@ -533,10 +749,49 @@ public class DragCreatureActions : DraggingActions {
         {
             if (pa == origin) continue;
             if (!System.Array.Exists(playerOwner.PAreas, a => a == pa)) continue;
-            ZonePath path = currentZone.GetPathTo(pa.parentZone, playerOwner, creatureLogic.IsFlying);
-            if (pa.parentZone == currentZone || (path != null && path.Logic.CanTraverse(playerOwner, currentZone.Logic, creatureLogic.IsFlying)))
+            if (pa.parentZone == currentZone || currentZone.CanReach(pa.parentZone, playerOwner, creatureLogic))
                 result.Add(pa);
         }
+    }
+
+    // Même idée que GetReachableAreasInto, pour les transports amis embarquables plutôt que les zones
+    // atteignables — utilisé par MultiSelectionManager pour permettre l'embarquement groupé.
+    public void GetBoardableTransportsInto(HashSet<OneCreatureManager> result)
+    {
+        if (TurnManager.Instance == null || TurnManager.Instance.CurrentPhase != TurnManager.TurnPhases.Command)
+            return;
+
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null || creatureLogic.CanTransport) return;
+
+        ZoneLogic myZone = creatureLogic.Zone;
+        if (myZone == null) return;
+
+        foreach (CreatureLogic other in playerOwner.playedCards.Creatures)
+        {
+            if (other == creatureLogic) continue;
+            if (!other.CanTransport) continue;
+            if (other.Zone != myZone) continue;
+            if (other.BoardedCreatureIDs.Count + other.LocalPendingBoardCount >= other.TransportCapacity) continue;
+
+            GameObject go = IDHolder.GetGameObjectWithID(other.UniqueCreatureID);
+            OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
+            if (ocm != null) result.Add(ocm);
+        }
+    }
+
+    // Pendant de TryGroupMoveTo pour l'embarquement groupé (voir MultiSelectionManager.ConfirmGroupMove).
+    // silent: true — évite qu'un "That transport is full." individuel s'affiche par unité refusée,
+    // l'appelant affiche un message agrégé une seule fois pour tout le groupe.
+    public bool TryGroupBoardTo(OneCreatureManager transportManager)
+    {
+        CreatureLogic creatureLogic = GetCreatureLogic();
+        if (creatureLogic == null) return false;
+
+        originArea = playerOwner.GetPlayerAreaByID(creatureLogic.BaseID);
+        if (originArea == null) return false;
+
+        return Board(transportManager, silent: true);
     }
 
     // explicitNetworkTablePos : slot logique (ghost-free) assigné par l'appelant (voir

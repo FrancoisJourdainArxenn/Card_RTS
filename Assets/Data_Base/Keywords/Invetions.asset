@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
   m_Name: Invetions
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Invetion
+  displayName: Invention
   description: Inventions have a variety of effects to buff your units or get information
     on the map.
   icon: {fileID: 21300000, guid: a23f951ac542bc54aa2d09aeb4c79571, type: 3}

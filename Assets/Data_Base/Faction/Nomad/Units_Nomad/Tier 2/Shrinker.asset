@@ -16,14 +16,14 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
-  tier: 1
+  tier: 2
   Description: <b>On Attack :</b> Gain an Invention.
   CardImage: {fileID: 21300000, guid: 720be9c9b4d45f7408808f1aaeb82a7f, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 3
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
   ReferencedCards: []

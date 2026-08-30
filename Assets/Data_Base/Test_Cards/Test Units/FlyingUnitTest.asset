@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 3
   tier: 1
-  Description: <b>Flying</b>
+  Description: <b>Flying, Transport 3</b>
   CardImage: {fileID: 21300000, guid: 7b62197386112834d8c27d40ed526ac3, type: 3}
   MainCost: 0
   IsHero: 0
@@ -33,6 +33,7 @@ MonoBehaviour:
   Celerity: 1
   melee: 0
   Flying: 1
+  TransportCapacity: 3
   IsStructureUnit: 0
   Keywords: []
   ReferencedCards: []

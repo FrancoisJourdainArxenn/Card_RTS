@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 2
-  Description: <b>On Play:</b> ANY ally unit gains <b>Shield 2</b>.
+  Description: <b>On Play:</b> ANY ally unit gains <b>Shield 1</b>.
   CardImage: {fileID: 21300000, guid: 2a12379024921c343b6a81fefd424f79, type: 3}
   MainCost: 1
   IsHero: 0
@@ -32,13 +32,16 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Shield'up
-    Effect: {fileID: 11400000, guid: 3675c9d3cfe474740bd8a51f3d07b930, type: 2}
+    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

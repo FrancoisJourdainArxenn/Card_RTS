@@ -110,6 +110,14 @@ public class TokenGenerationSO : EffectSO
 
     private static PlayerArea ResolveTargetArea(EffectContext context)
     {
+        if (context.SelectedTarget is ZoneLogic selectedZone)
+        {
+            PlayerArea selectedArea = System.Array.Find(
+                context.Caster.PAreas,
+                a => a.parentZone?.Logic == selectedZone);
+            if (selectedArea != null) return selectedArea;
+        }
+
         PlayerArea target = context.Caster.MainPArea;
         if (context.Source is CreatureLogic sourceCreature)
         {

@@ -85,10 +85,16 @@ public class CardAsset : ScriptableObject
     public bool Celerity = false;
     public bool melee = false;
     public bool Flying = false;
+    // 0 = no Transport keyword. Otherwise, the number of allied units this creature can carry
+    // with it when it moves — see CreatureLogic.CanTransport/BoardedCreatureIDs.
+    public int TransportCapacity = 0;
     // Immobile, ne peut jamais attaquer (attaque verrouillée à 0), immunisée aux buffs de type
     // bouclier/célérité — occupe quand même une place en rangée Melee/Ranged et reste ciblable
     // normalement (dégâts, soins) comme n'importe quelle autre unité.
     public bool IsStructureUnit = false;
+    // Relie entre elles, en maillage complet, toutes les zones où le même joueur a un téléporteur
+    // vivant — voir TeleporterNetwork/CreatureLogic.IsTeleporter.
+    public bool IsTeleporter = false;
 
 
 

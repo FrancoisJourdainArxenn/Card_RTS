@@ -15,7 +15,6 @@ MonoBehaviour:
   baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
   cards:
   - {fileID: 11400000, guid: a33861b19bddc5b418717747eeca8373, type: 2}
-  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
-  - {fileID: 11400000, guid: f180891d52404964ebe60c5cd17b33ad, type: 2}
-  - {fileID: 11400000, guid: 7d8aa53131a4fe24d97c8dda6ad114f8, type: 2}
+  - {fileID: 11400000, guid: 25f620587f3008249a8e0140635c84be, type: 2}
+  - {fileID: 11400000, guid: db2a6b352e4171040937963ead1c8bc2, type: 2}
   buildings: []

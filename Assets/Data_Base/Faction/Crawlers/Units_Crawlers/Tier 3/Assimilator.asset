@@ -36,8 +36,12 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
-  Keywords: []
+  IsTeleporter: 0
+  Keywords:
+  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Miam

@@ -604,6 +604,11 @@ public class ZoneCombatResolver : MonoBehaviour
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attackerCreature)) return allHits;
         if (attackerCreature.AttackModifiers == null) return allHits;
 
+        // Un attaquant Melee au sol ne peut pas toucher de Flying, même comme cible secondaire
+        // d'un modificateur (Piercing/Row/Circular/...) — même règle que pour la cible principale
+        // (voir attackerIsGroundedMelee dans AssignSingleAttack).
+        bool attackerIsGroundedMelee = attackerCreature.IsMelee && !attackerCreature.IsFlying;
+
         foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
         {
             if (mod == null) continue; // slot vide/cassé — voir le même garde-fou dans EnqueueBattleCommands
@@ -612,6 +617,11 @@ public class ZoneCombatResolver : MonoBehaviour
 
             foreach (AttackHitResult hit in resolved)
             {
+                if (attackerIsGroundedMelee
+                    && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(hit.TargetUniqueID, out CreatureLogic hitCreature)
+                    && hitCreature.IsFlying)
+                    continue;
+
                 pendingDamage.TryGetValue(hit.TargetUniqueID, out int existing);
                 AddPendingCreatureDamage(hit.TargetUniqueID, hit.Damage, stepIndex, 2 + allHits.Count);
                 allHits.Add(hit);
@@ -1114,8 +1124,15 @@ public class ZoneCombatResolver : MonoBehaviour
             if (pa.owner == GetAreaPosition(player))
             {
                 foreach (CreatureLogic c in player.playedCards.Creatures)
-                    if (c.BaseID == pa.baseID)
-                        result.Add(c);
+                {
+                    if (c.BaseID != pa.baseID) continue;
+                    if (c.IsBoarded)
+                    {
+                        Debug.Log($"[Transport] GetCreaturesInMyZone — excluding boarded {c.DisplayName}(ID:{c.UniqueCreatureID}) from combat in zone {zone.name}");
+                        continue;
+                    }
+                    result.Add(c);
+                }
             }
         }
         return result;

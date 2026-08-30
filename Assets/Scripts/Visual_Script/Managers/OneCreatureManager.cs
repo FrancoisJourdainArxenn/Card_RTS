@@ -42,11 +42,141 @@ public class OneCreatureManager : OneLivableManager
     // Sur la créature réelle en cours de déplacement, référence vers son ghost dans la zone cible :
     [HideInInspector] public GameObject PendingMoveGhost;
 
+    // Vrai tant qu'un embarquement (Board) est en attente sur cette créature — pendant de
+    // (PendingMoveGhost != null) pour un déplacement classique, mais Board ne crée jamais de ghost
+    // (voir DragCreatureActions.Board). Protège le visuel "pending" (voir Player.HighlightPlayableCards)
+    // d'un refresh qui l'écraserait sinon.
+    [HideInInspector] public bool HasPendingBoard;
+    // Référence live vers le transport ciblé par un embarquement en attente — sans ceci, la flèche
+    // (voir Update()) n'a qu'un instantané figé de sa position (ShowPendingMoveArrow), qui devient
+    // faux dès que la rangée se réorganise (ex: d'autres passagers marqués en bout de rangée).
+    [HideInInspector] public OneCreatureManager PendingBoardTarget;
+
+    // Non-null sur les deux tant qu'un déplacement en attente emprunte le réseau de téléporteurs
+    // (voir TeleporterNetwork) — la flèche fait alors un crochet par ces deux positions plutôt que
+    // de viser directement le ghost. Références live (comme PendingBoardTarget ci-dessus) pour
+    // suivre un réordonnancement des téléporteurs dans leur zone respective.
+    [HideInInspector] public OneCreatureManager PendingMoveViaSourceTeleporter;
+    [HideInInspector] public OneCreatureManager PendingMoveViaDestTeleporter;
+
     [Header("Pending State Icons")]
     // Les deux sprites partagent le même Image (pendingIcon, voir OneLivableManager) : une créature
     // ne peut jamais être à la fois "jouée de la main en attente" et "en pendingMove".
     [SerializeField] private Sprite pendingPlaySprite; // carte jouée de la main, en attente de confirmation
     [SerializeField] private Sprite pendingMoveSprite; // déplacement en attente (origine uniquement, pas le ghost)
+
+    [Header("Transport")]
+    // Conteneur des petits portraits des unités actuellement embarquées — un enfant par passager,
+    // reconstruit à chaque changement (voir RefreshPassengerPortraits). Assigné dans l'Inspecteur
+    // sur le prefab de créature (Card_Board_Unit).
+    [SerializeField] private RectTransform passengerPortraitsContainer;
+    // Prefab custom instancié par passager — doit porter un composant PassengerPortraitView
+    // (n'importe où dans sa hiérarchie) référençant l'Image à remplir ; le reste de la hiérarchie
+    // (bordure, fond, taille...) est entièrement libre, voir PassengerPortraitView.
+    [SerializeField] private GameObject passengerPortraitPrefab;
+
+    // Reconstruit la bande de portraits à partir de CreatureLogic.BoardedCreatureIDs (résolus) et
+    // LocalPendingBoardIDs (en attente, ce client uniquement — voir CreatureLogic.LocalPendingBoardIDs).
+    // Appelée à chaque changement de cargaison, résolue ou non : embarquement mis en attente ou annulé
+    // (DragCreatureActions.Board/CancelPendingMove), et résolution (CreatureMoveVisual.Board/DisembarkCargo).
+    public void RefreshPassengerPortraits()
+    {
+        if (passengerPortraitsContainer == null)
+        {
+            Debug.Log($"[Transport] RefreshPassengerPortraits — abort, passengerPortraitsContainer not assigned on {name}");
+            return;
+        }
+
+        for (int i = passengerPortraitsContainer.childCount - 1; i >= 0; i--)
+            Destroy(passengerPortraitsContainer.GetChild(i).gameObject);
+
+        IDHolder idHolder = GetComponent<IDHolder>();
+        if (idHolder == null) return;
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic transportLogic)) return;
+
+        Debug.Log($"[Transport] RefreshPassengerPortraits — {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) rebuilding {transportLogic.BoardedCreatureIDs.Count} boarded + {transportLogic.LocalPendingBoardIDs.Count} pending portrait(s)");
+
+        foreach (int passengerID in transportLogic.BoardedCreatureIDs)
+            CreatePassengerPortrait(passengerID);
+        foreach (int passengerID in transportLogic.LocalPendingBoardIDs)
+            CreatePassengerPortrait(passengerID);
+    }
+
+    private void CreatePassengerPortrait(int passengerID)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passenger)) return;
+        if (passengerPortraitPrefab == null)
+        {
+            Debug.Log($"[Transport] CreatePassengerPortrait — abort, passengerPortraitPrefab not assigned on {name}");
+            return;
+        }
+
+        GameObject portraitGO = Instantiate(passengerPortraitPrefab, passengerPortraitsContainer);
+        portraitGO.name = passenger.DisplayName + "_Portrait";
+        PassengerPortraitView view = portraitGO.GetComponent<PassengerPortraitView>();
+        if (view != null)
+            view.SetSprite(passenger.ca.CardImage);
+        else
+            Debug.LogWarning($"[Transport] CreatePassengerPortrait — {passengerPortraitPrefab.name} has no PassengerPortraitView component");
+    }
+
+    // Halo affiché sur ce transport pendant qu'un joueur fait glisser une unité pouvant l'embarquer —
+    // même idée que PlayerArea.tableVisual.SetHighlight, mais sur une créature (voir
+    // DragCreatureActions.HighlightBoardableTransports).
+    public void SetTransportHighlight(bool active, bool targeted = false)
+    {
+        if (glow == null) return;
+        if (active)
+        {
+            glow.enabled = true;
+            glow.color = targeted ? Color.yellow : Color.cyan;
+        }
+        else
+        {
+            UpdateGlow();
+        }
+    }
+
+    // Vrai si screenPoint (ex: Input.mousePosition) tombe dans le rectangle écran de cette carte —
+    // même technique que MultiSelectionManager.SelectUnits (bounds via GetWorldCorners projetés en
+    // écran). Utilisé pendant un drag plutôt qu'un raycast physique classique : le collider de la
+    // poignée de drag (voir DragCreatureActions/Draggable) suit la souris et masquerait tout ce qui
+    // se trouve en-dessous à un raycast physique.
+    private static readonly Vector3[] _screenCheckCorners = new Vector3[4];
+    // Diagnostic ponctuel — voir MultiSelectionManager.ConfirmGroupMove, appelé uniquement quand
+    // aucun transport candidat n'a matché au clic, pour savoir si frame est null / hors hiérarchie
+    // active, ou si les bounds calculés sont simplement loin du point testé.
+    public string DebugScreenBoundsInfo(Vector2 screenPoint)
+    {
+        if (frame == null) return $"{name}: frame IS NULL";
+        if (!gameObject.activeInHierarchy) return $"{name}: gameObject NOT active in hierarchy";
+        frame.rectTransform.GetWorldCorners(_screenCheckCorners);
+        Vector2 dmin = new Vector2(float.MaxValue, float.MaxValue);
+        Vector2 dmax = new Vector2(float.MinValue, float.MinValue);
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2 p = Camera.main.WorldToScreenPoint(_screenCheckCorners[i]);
+            dmin = Vector2.Min(dmin, p);
+            dmax = Vector2.Max(dmax, p);
+        }
+        return $"{name}: screenRect min={dmin} max={dmax} vs testedPoint={screenPoint}";
+    }
+
+    public bool IsScreenPointOver(Vector2 screenPoint)
+    {
+        if (frame == null || !gameObject.activeInHierarchy) return false;
+
+        frame.rectTransform.GetWorldCorners(_screenCheckCorners);
+        Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
+        Vector2 max = new Vector2(float.MinValue, float.MinValue);
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2 p = Camera.main.WorldToScreenPoint(_screenCheckCorners[i]);
+            min = Vector2.Min(min, p);
+            max = Vector2.Max(max, p);
+        }
+        return screenPoint.x >= min.x && screenPoint.x <= max.x && screenPoint.y >= min.y && screenPoint.y <= max.y;
+    }
 
     [Header("Flying")]
     // Décalage vertical/arrière appliqué aux enfants directs de la racine (Canvas/Target/CenterPoint),
@@ -104,10 +234,29 @@ public class OneCreatureManager : OneLivableManager
         // une fois créé (il peut lui aussi bouger si le joueur le réordonne), pour relier visuellement
         // les deux éléments.
         pendingMoveArrow.SetPosition(0, CenterPointPosition + arrowOriginOffset);
-        Vector3 targetPos = PendingMoveGhost != null
-            ? PendingMoveGhost.GetComponent<OneCreatureManager>().CenterPointPosition
-            : _pendingMoveArrowFallbackTarget;
-        pendingMoveArrow.SetPosition(1, targetPos);
+
+        if (PendingMoveViaSourceTeleporter != null && PendingMoveViaDestTeleporter != null)
+        {
+            // Crochet par le téléporteur de départ, puis redirigé vers celui d'arrivée — les deux
+            // positions restent live pour suivre un réordonnancement dans leur zone respective.
+            pendingMoveArrow.SetPosition(1, PendingMoveViaSourceTeleporter.CenterPointPosition);
+            pendingMoveArrow.SetPosition(2, PendingMoveViaDestTeleporter.CenterPointPosition);
+        }
+        else
+        {
+            // Un téléporteur emprunté peut mourir pendant qu'un déplacement est en attente : retombe
+            // proprement sur une ligne à 2 points (voir positionCount mis à 3 par
+            // ShowPendingMoveArrowViaTeleporter) plutôt que de laisser un 3e point figé.
+            if (pendingMoveArrow.positionCount != 2)
+                pendingMoveArrow.positionCount = 2;
+
+            Vector3 targetPos = PendingMoveGhost != null
+                ? PendingMoveGhost.GetComponent<OneCreatureManager>().CenterPointPosition
+                : PendingBoardTarget != null
+                    ? PendingBoardTarget.CenterPointPosition
+                    : _pendingMoveArrowFallbackTarget;
+            pendingMoveArrow.SetPosition(1, targetPos);
+        }
 
         if (pendingMoveArrowMat == null) return;
         float offset = Time.time * arrowScrollSpeed;
@@ -162,6 +311,7 @@ public class OneCreatureManager : OneLivableManager
         float v = pendingMoveDarkenAmount;
         art.color = pending ? new Color(v, v, v) : Color.white;
         SetPendingIcon(pending, pending ? (isPendingMove ? pendingMoveSprite : pendingPlaySprite) : null);
+        Debug.Log($"[Transport] SetPending — {name} pending={pending} isPendingMove={isPendingMove} -> art.color={art.color}, art.enabled={art.enabled}, art GO active={art.gameObject.activeInHierarchy}");
     }
 
     public void OnCreatureClicked()
@@ -277,9 +427,29 @@ public class OneCreatureManager : OneLivableManager
     public void ShowPendingMoveArrow(Vector3 targetWorldPos)
     {
         if (pendingMoveArrow == null) return;
+        PendingMoveViaSourceTeleporter = null;
+        PendingMoveViaDestTeleporter = null;
+        pendingMoveArrow.positionCount = 2;
         _pendingMoveArrowFallbackTarget = targetWorldPos;
         pendingMoveArrow.SetPosition(0, CenterPointPosition + arrowOriginOffset);
         pendingMoveArrow.SetPosition(1, targetWorldPos);
+        isArrowVisible = true;
+        ShowArrowFullyVisible();
+        ScheduleArrowFadeAfterDelay(pendingMoveArrowVisibleDuration);
+    }
+
+    // Variante empruntant le réseau de téléporteurs (voir TeleporterNetwork) : la flèche fait un
+    // crochet par sourceTeleporter (dans la zone de départ) avant de rejoindre destTeleporter (dans
+    // la zone d'arrivée), au lieu de viser directement le ghost — voir Update() pour le suivi live.
+    public void ShowPendingMoveArrowViaTeleporter(OneCreatureManager sourceTeleporter, OneCreatureManager destTeleporter)
+    {
+        if (pendingMoveArrow == null) return;
+        PendingMoveViaSourceTeleporter = sourceTeleporter;
+        PendingMoveViaDestTeleporter = destTeleporter;
+        pendingMoveArrow.positionCount = 3;
+        pendingMoveArrow.SetPosition(0, CenterPointPosition + arrowOriginOffset);
+        pendingMoveArrow.SetPosition(1, sourceTeleporter.CenterPointPosition);
+        pendingMoveArrow.SetPosition(2, destTeleporter.CenterPointPosition);
         isArrowVisible = true;
         ShowArrowFullyVisible();
         ScheduleArrowFadeAfterDelay(pendingMoveArrowVisibleDuration);
@@ -289,11 +459,16 @@ public class OneCreatureManager : OneLivableManager
     {
         DOTween.Kill(pendingMoveArrow);
         if (pendingMoveArrow != null)
+        {
             pendingMoveArrow.enabled = false;
+            pendingMoveArrow.positionCount = 2;
+        }
         isArrowVisible = false;
         _isHovered = false;
         _isGhostHovered = false;
         _arrowAlpha = 1f;
+        PendingMoveViaSourceTeleporter = null;
+        PendingMoveViaDestTeleporter = null;
     }
 
     public void Select()

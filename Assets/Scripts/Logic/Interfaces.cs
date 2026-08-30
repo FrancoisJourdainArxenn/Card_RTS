@@ -20,6 +20,9 @@ public interface ILivable: IIdentifiable
     // planning (see CreatureLogic.ResolvePredictedBattleDeath) — excluded from targeting just
     // like IsPendingDeath, even though the "real" death hasn't been applied yet.
     public bool OnDeathResolvedInBattle => false;
+    // True while this entity is boarded aboard a Transport creature — safe from targeting/combat
+    // until it disembarks. See CreatureLogic.TransportCarrierID.
+    public bool IsBoarded => false;
     public bool IsMelee => false;
     public bool IsRanged => false;
     public bool IsFlying => false;

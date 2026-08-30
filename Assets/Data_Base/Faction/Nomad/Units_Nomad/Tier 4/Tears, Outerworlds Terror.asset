@@ -10,71 +10,57 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Mad Engineer
+  m_Name: Tears, Outerworlds Terror
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 6
+  subType: 7
   tier: 4
-  Description: <b>On Death :</b> Create a Bully and gain a Great Invention !
-  CardImage: {fileID: 21300000, guid: ec9706a28d59ec04ab1de74a3baec7d9, type: 3}
+  Description: '<b>Arcing & Piercing Attacks.</b>
+
+    When I take damage, I gain
+    +1/+0. '
+  CardImage: {fileID: 21300000, guid: c815b92e7e833e8489a75e2b70a18bd7, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 4
-  MaxHealth: 2
+  Attack: 3
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
-  ReferencedCards:
-  - {fileID: 11400000, guid: 76a7e553ecf3ca745952cf8b12fd476b, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Frankenstein Creature
-    Effect: {fileID: 11400000, guid: eed6c4a6d1813324c86b4cc5e45fd6b7, type: 2}
-    Trigger: 1
+  - EffectName: Now you die.
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 16
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+        onlySource: 1
+        queries: []
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0
-        includesSource: 0
+        includesSource: 1
         includesEventSubject: 0
-        queries:
-        - team: 0
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
         queries: []
-      scalingSource: 0
-  - EffectName: Frankenstein Invetions
-    Effect: {fileID: 11400000, guid: acd3eee4b86637849bc23d7e03cf5e2d, type: 2}
-    Trigger: 1
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
