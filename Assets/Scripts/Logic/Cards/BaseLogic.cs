@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 using UnityEngine;
 
@@ -59,7 +60,17 @@ public class BaseLogic: ILivable
         get{ return baseMainRessourceIncome; }
     }
 
-    public bool IsUnderAttack => Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
+    public bool IsUnderAttack
+    {
+        get
+        {
+            bool result = Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
+                string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
+            return result;
+        }
+    }
     public int EffectiveIncome => IsUnderAttack ? Mathf.Max(0, MainRessourceIncome - 1) : MainRessourceIncome;
 
     public int BaseID {get; private set;}

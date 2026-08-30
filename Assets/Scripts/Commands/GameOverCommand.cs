@@ -8,7 +8,7 @@ public class GameOverCommand : Command
     public readonly int WinnerPlayerID; // -1 si égalité
     public readonly bool IsDraw;
 
-    const float ReturnToMenuDelay = 10f;
+    const float ReturnToMenuDelay = 5f;
 
     public GameOverCommand(int winnerPlayerID, bool isDraw)
     {

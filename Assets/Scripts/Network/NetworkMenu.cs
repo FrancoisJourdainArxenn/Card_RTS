@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -19,7 +20,7 @@ public class NetworkMenu : MonoBehaviour
 
     [Header("Multiplayer (Relay)")]
     public TMP_InputField relayJoinCodeInputField;
-    public TMP_Text relayCodeDisplayText;
+    public TMP_InputField relayCodeDisplayText;
 
     [Header("Selectable")]
     [SerializeField] MenuRegistry menuRegistry;
@@ -32,6 +33,8 @@ public class NetworkMenu : MonoBehaviour
 
 
     private const ushort Port = 7777;
+
+    private ISession _currentSession;
 
     void Start()
     {
@@ -55,9 +58,11 @@ public class NetworkMenu : MonoBehaviour
         return System.Array.IndexOf(menuRegistry.decks, selected);
     }
 
-    public void StartHost()
+    public async void StartHost()
     {
         statusText.text = "Démarrage du serveur...";
+        await EnsureNetworkShutdownAsync();
+
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData("0.0.0.0", Port);
         NetworkManager.Singleton.StartHost();
     }
@@ -101,6 +106,7 @@ public class NetworkMenu : MonoBehaviour
     {
         statusText.text = "Connexion aux services Unity...";
         await UgsBootstrap.EnsureReadyAsync();
+        await EnsureNetworkShutdownAsync();
 
         statusText.text = "Création de la session distante...";
         NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
@@ -114,6 +120,7 @@ public class NetworkMenu : MonoBehaviour
         try
         {
             IHostSession session = await MultiplayerService.Instance.CreateSessionAsync(options);
+            _currentSession = session;
             statusText.text = $"Session créée ! Code à partager : {session.Code}";
             if (relayCodeDisplayText != null)
                 relayCodeDisplayText.text = session.Code;
@@ -130,18 +137,62 @@ public class NetworkMenu : MonoBehaviour
 
         statusText.text = "Connexion aux services Unity...";
         await UgsBootstrap.EnsureReadyAsync();
+        await EnsureNetworkShutdownAsync();
 
         statusText.text = $"Connexion à {joinCode}...";
         NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
 
         try
         {
-            await MultiplayerService.Instance.JoinSessionByCodeAsync(joinCode);
+            _currentSession = await MultiplayerService.Instance.JoinSessionByCodeAsync(joinCode);
             mapDropdown.gameObject.SetActive(false);
         }
         catch (SessionException e)
         {
             statusText.text = $"Erreur : {e.Message}";
+        }
+    }
+
+    public async void ResetNetworkState()
+    {
+        if (_connectRoutine != null)
+        {
+            StopCoroutine(_connectRoutine);
+            _connectRoutine = null;
+        }
+
+        statusText.text = "Réinitialisation...";
+        await EnsureNetworkShutdownAsync();
+
+        if (relayCodeDisplayText != null)
+            relayCodeDisplayText.text = string.Empty;
+        if (relayJoinCodeInputField != null)
+            relayJoinCodeInputField.text = string.Empty;
+
+        mapDropdown.gameObject.SetActive(true);
+        statusText.text = "Prêt.";
+    }
+
+    private async Task EnsureNetworkShutdownAsync()
+    {
+        if (_currentSession != null)
+        {
+            try
+            {
+                await _currentSession.LeaveAsync();
+            }
+            catch (SessionException e)
+            {
+                statusText.text = $"Erreur en quittant la session : {e.Message}";
+            }
+            _currentSession = null;
+        }
+
+        if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.ShutdownInProgress)
+        {
+            NetworkManager.Singleton.Shutdown();
+            while (NetworkManager.Singleton.ShutdownInProgress || NetworkManager.Singleton.IsListening)
+                await Task.Yield();
         }
     }
 

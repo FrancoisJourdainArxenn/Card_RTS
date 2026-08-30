@@ -323,8 +323,9 @@ public class TurnManager : MonoBehaviour
 
         TurnPhases next = currentPhase switch
         {
-            TurnPhases.Command     => TurnPhases.BeginCombat,
-            TurnPhases.BeginCombat => TurnPhases.Battle,
+            // TurnPhases.Command     => TurnPhases.BeginCombat, // Begin Combat désactivé temporairement
+            TurnPhases.Command     => TurnPhases.Battle, // Begin Combat désactivé temporairement — Command saute directement à Battle
+            // TurnPhases.BeginCombat => TurnPhases.Battle,
             TurnPhases.Battle      => TurnPhases.EndBattle,
             TurnPhases.EndBattle   => TurnPhases.EndTurn,
             TurnPhases.EndTurn     => TurnPhases.Regroup,
@@ -432,13 +433,15 @@ public class TurnManager : MonoBehaviour
                 foreach (Player p in Player.Players)
                     p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
                 break;
-            case TurnPhases.BeginCombat:
-                foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnBeginCombatPhaseEntered();
-                StartCoroutine(AutoAdvanceFromBeginCombat());
-                break;
+            // case TurnPhases.BeginCombat: // désactivé temporairement — Command saute directement à Battle
+            //     foreach (Player p in Player.Players)
+            //         p.GetComponent<TurnMaker>().OnBeginCombatPhaseEntered();
+            //     StartCoroutine(AutoAdvanceFromBeginCombat());
+            //     break;
             case TurnPhases.Battle:
                 // new ShowMessageCommand("Battle", 1.5f).AddToQueue();
+                foreach (Player p in Player.Players)
+                    p.DiscardHand(); // Begin Combat désactivé temporairement — discard déplacé ici (voir TurnMaker.OnBeginCombatPhaseEntered)
                 if (!AnyZoneHasPossibleCombat())
                 {
                     StartCoroutine(AutoAdvanceFromBattle());

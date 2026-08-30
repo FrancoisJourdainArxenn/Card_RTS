@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Shield
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Shield
-  description: Absorb damages. Shield does not stack up but can be replaced by a
-    greater amount of shield.
+  description: Absorb damages. Shield can stack up.
+  icon: {fileID: 0}

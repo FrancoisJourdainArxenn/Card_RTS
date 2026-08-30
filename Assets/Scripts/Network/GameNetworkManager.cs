@@ -1313,6 +1313,20 @@ public class GameNetworkManager : NetworkBehaviour
         }
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ConcedeServerRpc(int concedingPlayerIndex)
+    {
+        Debug.Log($"[GameNetworkManager] Concede reçu — joueur {concedingPlayerIndex}");
+        ConcedeClientRpc(concedingPlayerIndex);
+    }
+
+    [ClientRpc]
+    void ConcedeClientRpc(int concedingPlayerIndex)
+    {
+        Player winner = Player.Players[concedingPlayerIndex].otherPlayer;
+        new GameOverCommand(winner.PlayerID, false).AddToQueue();
+    }
+
     void FlushPendingEndPhase(TurnManager.TurnPhases phase)
     {
         if (!_pendingEndPhase.TryGetValue(phase, out var pending)) return;

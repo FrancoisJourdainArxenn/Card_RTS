@@ -155,6 +155,17 @@ public class TableVisual : MonoBehaviour
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
         if (isFogged) creature.SetActive(false);
+
+        // Sans ce resync, une créature dont la révélation visuelle est différée (reveal au flush,
+        // voir PlayACreatureCommand) peut rester mal placée dans playedCards.Creatures — la liste qui
+        // détermine réellement l'ordre d'attaque (voir ZoneCombatResolver.GetCreaturesInMyZone) —
+        // si un reorder a eu lieu pendant qu'elle était encore pending sur cette machine (fallback
+        // pendingWithoutGO de ResyncCreatureOrderForArea, qui la pousse en fin de liste faute de
+        // GameObject visuel à ce moment-là). MoveCreatureToIndex fait déjà ce resync ; AddCreatureAtIndex
+        // ne le faisait pas, d'où un décalage silencieux entre position visuelle et ordre de combat.
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+
         if (completeCommand)
             PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
         else
