@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 2
   Description: <b>On Death :</b> Create an Egg Sack in your hand, it cost 0.
   CardImage: {fileID: 21300000, guid: 81f9a2926b929d348b0482bbebf49ea4, type: 3}
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards:
   - {fileID: 11400000, guid: b9b9844b024231c48b43895cf386c0b8, type: 2}

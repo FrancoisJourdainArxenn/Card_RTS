@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 3
   Description: Every 5 ally units that die, your Raptors gain +1/+0 (<i>wherever
     they are</i>).
@@ -33,7 +33,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards: []
   Effects:

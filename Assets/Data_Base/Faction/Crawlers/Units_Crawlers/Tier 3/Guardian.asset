@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 0}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 3
   Description: <b>On Play:</b> I gain +1/+1 per Egg Sack (<i>in my zone</i>).
   CardImage: {fileID: 21300000, guid: edfa35e9818d03c4493820882c22d9a2, type: 3}

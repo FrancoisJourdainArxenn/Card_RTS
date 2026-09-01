@@ -15,9 +15,12 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 4
-  Description: <b>On Play:</b> Gives +2/+2 to ally units until end of turn.
+  Description: '<b>Flying
+
+    On Play:</b> Gives +2/+2 to ally units until end of
+    turn.'
   CardImage: {fileID: 21300000, guid: 4ef6c30508eb17b4398da7d6a60ccc13, type: 3}
   MainCost: 1
   IsHero: 0
@@ -32,8 +35,12 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 1
+  TransportCapacity: 0
   IsStructureUnit: 0
-  Keywords: []
+  IsTeleporter: 0
+  Keywords:
+  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: 

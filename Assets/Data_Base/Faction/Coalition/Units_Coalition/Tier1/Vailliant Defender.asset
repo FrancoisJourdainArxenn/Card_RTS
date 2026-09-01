@@ -37,16 +37,26 @@ MonoBehaviour:
   IsStructureUnit: 0
   IsTeleporter: 0
   Keywords:
-  - {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
+  - {fileID: 11400000, guid: 427cfb015ea83a446a4ae2df72836cfb, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 0}
+    Effect: {fileID: 11400000, guid: 8289fd6539174714ab2bf1171d0225b9, type: 2}
     Trigger: 14
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: 1835b0e1bc29014468923f12b7781114, type: 2}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

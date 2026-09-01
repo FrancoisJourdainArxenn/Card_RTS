@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 1
   Description: '<b>Start of turn:</b> Create a 1/1 Raptor.
 
@@ -35,7 +35,10 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 1
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards: []
   Effects:

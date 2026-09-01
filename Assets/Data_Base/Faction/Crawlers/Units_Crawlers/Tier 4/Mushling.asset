@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: Mushling
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 4
   Description: "<b>On Death:</b> Your Raptors gain +0/+1 (<i>wherever they are.</i>).\t"
   CardImage: {fileID: 21300000, guid: 11a7b4b220bf0c8438c37bd5a05dda22, type: 3}
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}
   ReferencedCards: []

@@ -16,7 +16,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
   Type: 0
   subType: 2
-  tier: 5
+  tier: 4
   Description: '<b>Piercing Attacks.</b>
 
     Every 3 Ressources you spend, I gain
@@ -36,7 +36,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   ReferencedCards: []
@@ -44,7 +47,7 @@ MonoBehaviour:
   - EffectName: 
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 13
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: db3fba0aa58f95e498f98e8d4b524867, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0

@@ -18,7 +18,7 @@ MonoBehaviour:
   subType: 2
   tier: 1
   Description: <b>On Play:</b> +1 Ressource.
-  CardImage: {fileID: 21300000, guid: aab9ed96352cd3e45bd4d292ea0da708, type: 3}
+  CardImage: {fileID: 21300000, guid: e20ddfbc5bc138e48b23e7364d001477, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 6df518099e142544f8fa563765e3421c, type: 2}
   ReferencedCards: []

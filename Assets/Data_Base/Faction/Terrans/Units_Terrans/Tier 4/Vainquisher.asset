@@ -10,36 +10,36 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Transport Worm
+  m_Name: Vainquisher
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 0}
   Type: 0
-  subType: 5
-  tier: 3
-  Description: '<b>Back-Up, Commander</b>
+  subType: 0
+  tier: 4
+  Description: '<b>Flying</b>
 
-    <i>(This unit can''t move or Attack.)</i>'
-  CardImage: {fileID: 21300000, guid: efeebae1f1db26d419f9d1c13a0226cf, type: 3}
+    I count as a <i>Teleporter</i>.'
+  CardImage: {fileID: 0}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 2
+  Attack: 1
+  MaxHealth: 3
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
-  Commandement: 1
-  Renfort: 1
+  Commandement: 0
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 1
   Flying: 0
   TransportCapacity: 0
-  IsStructureUnit: 1
-  IsTeleporter: 0
+  IsStructureUnit: 0
+  IsTeleporter: 1
   Keywords:
-  - {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
-  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
-  ReferencedCards: []
+  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
+  ReferencedCards:
+  - {fileID: 11400000, guid: f118ba3d0f450ff41a044551c73cfc4f, type: 2}
   Effects: []

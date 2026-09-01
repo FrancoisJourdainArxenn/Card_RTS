@@ -10,63 +10,61 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Stinger
+  m_Name: Hunter
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Stinger
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Name: 
+  Faction: {fileID: 0}
   Type: 0
-  subType: 5
+  subType: 2
   tier: 2
-  Description: '<b>Celerity
+  Description: '<b>Flying
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    their stats.'
-  CardImage: {fileID: 21300000, guid: a426c8e875510e34ba7eb04c046f4521, type: 3}
+    On Play:</b> I gain +1/+0 for each base you control.'
+  CardImage: {fileID: 21300000, guid: 4eb84f5e181f9894fbd577d6a203501a, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 1
+  Attack: 0
+  MaxHealth: 2
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
-  melee: 1
-  Flying: 0
+  Celerity: 0
+  melee: 0
+  Flying: 1
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
-  Keywords:
-  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
+  Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Need More Juice
-    Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
+        includesTarget: 0
+        includesSource: 1
         includesEventSubject: 0
         queries: []
       repartition: 0
-      useScalingCount: 0
+      useScalingCount: 1
       scalingQuery:
-        targetType: 0
-        queries: []
+        targetType: 2
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
       scalingSource: 0

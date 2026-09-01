@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
   Type: 0
-  subType: 3
+  subType: 2
   tier: 3
   Description: <b>On Regroup:</b> Create a Mining Probe in your hand.
   CardImage: {fileID: 21300000, guid: 207088c120dd5c249a3812bf18fbeab4, type: 3}
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards: []
   Effects:

@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
   m_Name: Defense
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Scout
-  description: Indicates with a "!" if enemy units are in adjacent zones.
+  displayName: Defense
+  description: Something happens when this unit as an ally base in it's zone.
+  icon: {fileID: 0}

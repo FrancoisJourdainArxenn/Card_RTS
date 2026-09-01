@@ -34,7 +34,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
   ReferencedCards: []
