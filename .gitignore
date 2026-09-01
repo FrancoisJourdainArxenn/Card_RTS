@@ -73,3 +73,6 @@ Thumbs.db
 
 # Unity AI Assistant package (contains large native binaries, resolved via Packages/manifest.json instead)
 Packages/com.unity.ai.assistant/
+
+# FMOD
+fmod_editor.log

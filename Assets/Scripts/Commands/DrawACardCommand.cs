@@ -26,6 +26,8 @@ public class DrawACardCommand : Command {
 
         if (isLocalPlayer || isSolo)
         {
+            AudioManager.Instance.PlayDrawCard();
+
             if (visualData?.vfxPrefab != null)
             {
                 Vector3 spawnPos = p.handVisual.OtherCardDrawSourceTransform.position;
