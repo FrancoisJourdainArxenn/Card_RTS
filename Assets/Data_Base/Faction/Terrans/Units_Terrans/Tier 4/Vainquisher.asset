@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Vainquisher
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
   Type: 0
-  subType: 0
+  subType: 3
   tier: 4
   Description: '<b>Flying</b>
 
