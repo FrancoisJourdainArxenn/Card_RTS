@@ -10,40 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Assimilator
+  m_Name: Tyra-Rex
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
-  tier: 3
-  Description: '<b>Flying
+  subType: 5
+  tier: 4
+  Description: '<b>Arcing Attacks
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    their stats.'
-  CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
+    On Play:</b> Assimilates the units to the
+    right and left of it to gain their stats.'
+  CardImage: {fileID: 21300000, guid: d2f79ae5b471c7e4a89a45222e829968, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 2
+  Attack: 3
+  MaxHealth: 3
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackSpeedMultiplier: 4
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
-  Flying: 1
+  melee: 1
+  Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
   Keywords:
-  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
+  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
   ReferencedCards: []
   Effects:
-  - EffectName: Miam
+  - EffectName: Empower me !
     Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
@@ -55,9 +56,9 @@ MonoBehaviour:
         queries:
         - team: 1
           statusFilter: 0
-          zoneFilter: 1
+          zoneFilter: 3
           cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 1

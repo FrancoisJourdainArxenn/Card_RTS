@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Recon Probe
+  m_Name: Mining Drill
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
+  Faction: {fileID: 0}
   Type: 0
   subType: 2
-  tier: 1
-  Description: <b>Flying, Scout.</b>
-  CardImage: {fileID: 21300000, guid: 246f8b7966edd38498cedbd36115be3e, type: 3}
+  tier: 4
+  Description: <b>Start of Turn:</b> +1 Ressource.
+  CardImage: {fileID: 21300000, guid: 60d5f4e1da04e9648bc2bdc620483a9e, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
-  MaxHealth: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -32,31 +32,13 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
-  Flying: 1
-  TransportCapacity: 0
   IsStructureUnit: 0
-  IsTeleporter: 0
-  Keywords:
-  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
-  - {fileID: 11400000, guid: a5416abf016aec34eacb915942ab6efd, type: 2}
+  Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Intel
-    Effect: {fileID: 11400000, guid: 4a4eb16e30db07a4f80ebaf3473745de, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
-  - EffectName: Intel
-    Effect: {fileID: 11400000, guid: 3a89841769b488e42b5e485220586cb3, type: 2}
-    Trigger: 1
+  - EffectName: Juice !
+    Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
+    Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []

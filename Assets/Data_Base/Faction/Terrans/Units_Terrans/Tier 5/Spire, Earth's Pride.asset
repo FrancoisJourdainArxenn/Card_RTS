@@ -10,63 +10,63 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Assimilator
+  m_Name: Spire, Earth's Pride
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
   Type: 0
-  subType: 1
-  tier: 3
-  Description: '<b>Flying
+  subType: 3
+  tier: 5
+  Description: '<b>Flying, Arcing Attacks</b>.
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    their stats.'
-  CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
+    <b>On Play:</b> I gain +2/+2
+    for each base you control.'
+  CardImage: {fileID: 21300000, guid: 031cab3bf650e9b49943d43369ab4c32, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 2
+  Attack: 4
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
-  Flying: 1
+  melee: 1
+  Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
-  Keywords:
-  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
+  Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Miam
-    Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: fbde9110f8bc44741860133b3a5bdb95, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
+        includesTarget: 0
+        includesSource: 1
         includesEventSubject: 0
         queries: []
       repartition: 0
-      useScalingCount: 0
+      useScalingCount: 1
       scalingQuery:
-        targetType: 0
-        queries: []
+        targetType: 2
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
       scalingSource: 0

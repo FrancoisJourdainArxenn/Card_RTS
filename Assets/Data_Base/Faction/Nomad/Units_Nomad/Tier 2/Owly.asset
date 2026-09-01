@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Assimilator
+  m_Name: Owly
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 0}
   Type: 0
-  subType: 1
+  subType: 2
   tier: 3
   Description: '<b>Flying
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    their stats.'
-  CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
+    On Play:</b> Create a Long Range Scanner card in your
+    hand.'
+  CardImage: {fileID: 21300000, guid: 7790568ae7d25134ea6f81bfe3f6f29b, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 2
-  MaxHealth: 2
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -41,29 +41,16 @@ MonoBehaviour:
   IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
-  ReferencedCards: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: 5d46088114cda6a4d9bbf1e0decff726, type: 2}
   Effects:
-  - EffectName: Miam
-    Effect: {fileID: 11400000, guid: e815d255c70a5d24fb30a1f9c27095e7, type: 2}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: d1d49f6a0456f2540a87a08bab22a48a, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries: []
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

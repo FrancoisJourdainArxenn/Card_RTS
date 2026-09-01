@@ -10,8 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
-  m_Name: Back up
+  m_Name: Invade
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Back up
-  description: You can play me in any zone where you already have a Unit.
-  icon: {fileID: 0}
+  displayName: Scout
+  description: Indicates with a "!" if enemy units are in adjacent zones.

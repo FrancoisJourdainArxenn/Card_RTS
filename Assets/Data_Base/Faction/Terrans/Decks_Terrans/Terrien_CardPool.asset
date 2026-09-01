@@ -14,13 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
   baseAsset: {fileID: 11400000, guid: 704948a74f4a38b4f8cde941d084b1c6, type: 2}
   cards:
-  - {fileID: 11400000, guid: 53f1f9bbc9e9e43458259dac45febdcd, type: 2}
   - {fileID: 11400000, guid: 7c547edd7511e8344904e9c4cefaf5c4, type: 2}
   - {fileID: 11400000, guid: 521a5c2e94f529948b95c97ceb2fb7af, type: 2}
   - {fileID: 11400000, guid: b5fcda89bd29d8c4b8908f3da5b39196, type: 2}
   - {fileID: 11400000, guid: 36f751d1045c2e14b90b7d83851ce4dd, type: 2}
   - {fileID: 11400000, guid: 691b876e44d2cb34e8e2570c67d2a514, type: 2}
-  - {fileID: 11400000, guid: 5c9e22e9fd9c70743bc74e90faed160a, type: 2}
   - {fileID: 11400000, guid: fc812e1ce99b61c4e85b422e8c97b4cf, type: 2}
   - {fileID: 11400000, guid: f0b086eda811cf24288b59ee880141a1, type: 2}
   - {fileID: 11400000, guid: 44fdfb085f63d904d80fb87a514e61ce, type: 2}

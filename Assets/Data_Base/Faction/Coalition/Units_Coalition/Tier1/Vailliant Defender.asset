@@ -10,38 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Teleporter
+  m_Name: Vailliant Defender
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: e3aba731ee1977b40b74221b21eb7039, type: 2}
+  Faction: {fileID: 0}
   Type: 0
-  subType: 3
-  tier: 3
-  Description: '<b>Back Up</b>
-
-    Ally units can move to a zone with another <i>Teleporter</i>
-    as if they were adjacent.
-
-    <i>(This unit can''t move or Attack.)</i>'
-  CardImage: {fileID: 21300000, guid: bd54a17af6f1808448d3f0efdc5586de, type: 3}
+  subType: 0
+  tier: 2
+  Description: <b>Batlle Start:</b> If I defend, I gain +0/+1.
+  CardImage: {fileID: 21300000, guid: 7a9a635597b79994eaa4ed220daf3786, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 0
-  MaxHealth: 1
-  AttacksForOneTurn: 0
-  AttackSpeedMultiplier: 0
+  Attack: 2
+  MaxHealth: 2
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
-  Renfort: 1
+  Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
-  IsStructureUnit: 1
-  IsTeleporter: 1
+  IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 0}
+    Trigger: 14
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
