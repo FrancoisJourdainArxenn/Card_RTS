@@ -739,10 +739,46 @@ public class GameNetworkManager : NetworkBehaviour
         List<PendingAction> p0Actions = _actionBuffer.FindAll(a => a.playerIndex == 0);
         List<PendingAction> p1Actions = _actionBuffer.FindAll(a => a.playerIndex == 1);
 
+        // Réordonne uniquement les BoardCreature entre elles (mêlée avant distance, gauche avant
+        // droite — voir SortBoardActionsInPlace) : les autres types d'action gardent exactement leur
+        // position, comme TableVisual.SortListByIDs.
+        SortBoardActionsInPlace(p0Actions);
+        SortBoardActionsInPlace(p1Actions);
+
         foreach (PendingAction action in p0Actions) ExecuteAction(action);
         foreach (PendingAction action in p1Actions) ExecuteAction(action);
 
         _actionBuffer.Clear();
+    }
+
+    // Trie les actions BoardCreature de actions par (mêlée avant distance, boardOrderPos croissant —
+    // voir DragCreatureActions.Board/PendingAction.param3), en conservant leurs emplacements d'origine
+    // dans la liste pour ne jamais déplacer une action d'un autre type (même principe que
+    // TableVisual.SortListByIDs). Un tri global tous transports confondus suffit : BoardCreature ne
+    // touche que l'état propre à SON transporteur, donc l'ordre relatif entre deux transports
+    // différents n'a aucune conséquence — et deux joueurs ne peuvent jamais partager un transport.
+    private static void SortBoardActionsInPlace(List<PendingAction> actions)
+    {
+        List<int> slots = new List<int>();
+        List<PendingAction> boardActions = new List<PendingAction>();
+        for (int i = 0; i < actions.Count; i++)
+        {
+            if (actions[i].type != ActionType.BoardCreature) continue;
+            slots.Add(i);
+            boardActions.Add(actions[i]);
+        }
+        if (boardActions.Count <= 1) return;
+
+        boardActions.Sort((a, b) =>
+        {
+            bool aMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(a.param1, out CreatureLogic ac) && ac.IsMelee;
+            bool bMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(b.param1, out CreatureLogic bc) && bc.IsMelee;
+            int rowCompare = (aMelee ? 0 : 1).CompareTo(bMelee ? 0 : 1);
+            return rowCompare != 0 ? rowCompare : a.param3.CompareTo(b.param3);
+        });
+
+        for (int k = 0; k < slots.Count; k++)
+            actions[slots[k]] = boardActions[k];
     }
 
     /// <summary>
@@ -1670,15 +1706,16 @@ public class GameNetworkManager : NetworkBehaviour
 
     //Boarding a Transport
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void BoardCreatureServerRpc(int passengerUniqueID, int transportUniqueID, int playerIndex)
+    public void BoardCreatureServerRpc(int passengerUniqueID, int transportUniqueID, int playerIndex, int boardOrderPos)
     {
-        Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}");
+        Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}, boardOrderPos={boardOrderPos}");
         RegisterAction(new PendingAction
         {
             type = ActionType.BoardCreature,
             playerIndex = playerIndex,
             param1 = passengerUniqueID,
-            param2 = transportUniqueID
+            param2 = transportUniqueID,
+            param3 = boardOrderPos
         });
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = true;

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: InDefense
   m_EditorClassIdentifier: Assembly-CSharp::CondEntityCount
   query:
-    targetType: 3
+    targetType: 2
     queries:
     - team: 1
       statusFilter: 0

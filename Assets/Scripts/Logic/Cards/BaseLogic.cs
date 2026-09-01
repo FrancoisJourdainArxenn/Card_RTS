@@ -11,13 +11,16 @@ public class BaseLogic: ILivable
     public BaseAsset ba;
     public NeutralZoneController neutralBaseController;
     private int uniqueBaseID;
-    private ZoneLogic _homeZone;
 
     public bool IsHomeBase => neutralBaseController == null;
 
     public int ID => uniqueBaseID;
     public string DisplayName => ba.name;
-    public ZoneLogic Zone => IsHomeBase ? _homeZone : neutralBaseController?.zone?.Logic;
+    // Lu en direct (jamais mis en cache) : owner.MainPArea n'est assigné qu'après la construction de
+    // homeBaseLogic (GlobalSettings.InitFromMap tourne après Player.Awake), donc un _homeZone figé à
+    // la construction restait null pour toute la partie et cassait IsUnderAttack (malus "-1 ressource"
+    // jamais appliqué même avec des créatures ennemies dans la home zone).
+    public ZoneLogic Zone => IsHomeBase ? owner.MainPArea?.parentZone?.Logic : neutralBaseController?.zone?.Logic;
 
     private int baseHealth;
     public int MaxHealth
@@ -123,12 +126,11 @@ public class BaseLogic: ILivable
     }
 
     // Constructeur pour les home bases des joueurs
-    public BaseLogic(Player owner, ZoneLogic homeZone)
+    public BaseLogic(Player owner)
     {
         this.ba = owner.baseAsset;
         CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         this.neutralBaseController = null;
-        this._homeZone = homeZone;
         baseHealth = ba.MaxHealth;
         health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;

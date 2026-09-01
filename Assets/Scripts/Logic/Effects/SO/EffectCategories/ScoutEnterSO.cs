@@ -13,7 +13,7 @@ public class ScoutEnterSO : EffectSO
             if (scout.owner != localPlayer) continue;
             if (scout.Zone == null) continue;
             if (zone == scout.Zone) continue;
-            if (zone.IsAdjacentTo(scout.Zone))
+            if (zone.IsAdjacentTo(scout.Zone, includeAerialPaths: false))
                 return true;
         }
         return false;

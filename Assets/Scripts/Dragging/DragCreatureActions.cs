@@ -651,6 +651,20 @@ public class DragCreatureActions : DraggingActions {
             _hoveredTransport.SetTransportHighlight(true, targeted: true);
     }
 
+    // Position gauche-à-droite (0 = le plus à gauche), ghost-free, de creatureLogic dans sa propre
+    // rangée mêlée/distance au sein de area — voir TableVisual.ToNetworkTablePos. N'a de sens que
+    // relativement aux autres passagers d'un même embarquement groupé (voir MultiSelectionManager.
+    // ConfirmGroupMove) ; pour un drag simple la valeur n'est jamais comparée à rien.
+    private static int BoardOrderPosition(CreatureLogic creatureLogic, PlayerArea area)
+    {
+        bool isMelee = creatureLogic.IsMelee;
+        GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureLogic.UniqueCreatureID);
+        List<GameObject> row = isMelee ? area.tableVisual.MeleeCreaturesOnTable : area.tableVisual.RangedCreaturesOnTable;
+        int rawIndex = creatureGO != null ? row.IndexOf(creatureGO) : -1;
+        if (rawIndex < 0) rawIndex = row.Count;
+        return area.tableVisual.ToNetworkTablePos(isMelee, rawIndex);
+    }
+
     // Embarque cette créature à bord de transportManager — même déroulé qu'un déplacement en attente
     // (Move) : réseau/solo différé bufferisent jusqu'à la résolution, immédiat résout tout de suite.
     // Contrairement à Move, aucun ghost n'est créé dans une zone cible (voir CreatureMoveVisual.Board) :
@@ -690,12 +704,19 @@ public class DragCreatureActions : DraggingActions {
 
         Debug.Log($"[Transport] Board — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) -> {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) | NetworkSession={NetworkSessionData.IsNetworkSession} DeferredSolo={GlobalSettings.Instance?.UseDeferredMovesInSolo}");
 
+        // Capturée avant toute mutation (CancelPendingMove ne touche pas l'ordre réel de la rangée
+        // d'origine, seul son affichage "en bout de rangée" — voir MarkPendingMoveAtRowEnd) : position
+        // gauche-à-droite (ghost-free) de ce passager dans sa propre rangée mêlée/distance, utilisée à
+        // la résolution pour trier l'ordre d'embarquement (mêlée avant distance, gauche avant droite)
+        // au lieu de l'ordre chronologique des drags — voir FlushSoloBoardBuffer / FlushBuffer.
+        int boardOrderPos = BoardOrderPosition(creatureLogic, originArea);
+
         CancelPendingMove();
 
         if (NetworkSessionData.IsNetworkSession)
         {
-            Debug.Log($"[Transport] Board — sending BoardCreatureServerRpc (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, playerIndex={playerOwner.playerIndex})");
-            GameNetworkManager.Instance.BoardCreatureServerRpc(idHolder.UniqueID, transportIdHolder.UniqueID, playerOwner.playerIndex);
+            Debug.Log($"[Transport] Board — sending BoardCreatureServerRpc (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, playerIndex={playerOwner.playerIndex}, boardOrderPos={boardOrderPos})");
+            GameNetworkManager.Instance.BoardCreatureServerRpc(idHolder.UniqueID, transportIdHolder.UniqueID, playerOwner.playerIndex, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
@@ -707,8 +728,8 @@ public class DragCreatureActions : DraggingActions {
         }
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
-            Debug.Log($"[Transport] Board — queued via EnqueueSoloBoard (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID})");
-            TurnManager.Instance.EnqueueSoloBoard(idHolder.UniqueID, transportIdHolder.UniqueID);
+            Debug.Log($"[Transport] Board — queued via EnqueueSoloBoard (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, boardOrderPos={boardOrderPos})");
+            TurnManager.Instance.EnqueueSoloBoard(idHolder.UniqueID, transportIdHolder.UniqueID, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
             originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);

@@ -20,7 +20,7 @@ MonoBehaviour:
   Description: '<b>Flying</b>
 
     I count as a <i>Teleporter</i>.'
-  CardImage: {fileID: 0}
+  CardImage: {fileID: 21300000, guid: b8697e0840869d848af8dce8d9245027, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
@@ -34,7 +34,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
-  Flying: 0
+  Flying: 1
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 1

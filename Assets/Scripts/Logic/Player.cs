@@ -223,7 +223,7 @@ public class Player : MonoBehaviour, ILivable
         PlayerID = IDFactory.GetUniqueID();
         matchStats.OwnerLabel = $"Player {PlayerID} ({name})";
         controlledBaseAssets.Add(baseAsset);
-        homeBaseLogic = new BaseLogic(this, MainPArea?.parentZone?.Logic);
+        homeBaseLogic = new BaseLogic(this);
 
     }
 
@@ -243,7 +243,7 @@ public class Player : MonoBehaviour, ILivable
         if (baseVisual != null && baseVisual.baseManager != null)
             baseVisual.baseManager.ResetValues(baseAsset);
 
-        homeBaseLogic = new BaseLogic(this, MainPArea?.parentZone?.Logic);
+        homeBaseLogic = new BaseLogic(this);
     }
 
     void Start()

@@ -19,6 +19,6 @@ public class ZoneLogic : IIdentifiable
     public void AddPath(ZonePathLogic path) => AdjacentPaths.Add(path);
     public void RemovePath(ZonePathLogic path) => AdjacentPaths.Remove(path);
 
-    public bool IsAdjacentTo(ZoneLogic other)
-        => AdjacentPaths.Exists(p => p.ConnectsTo(other));
+    public bool IsAdjacentTo(ZoneLogic other, bool includeAerialPaths = true)
+        => AdjacentPaths.Exists(p => p.ConnectsTo(other) && (includeAerialPaths || !p.RequiresFlying));
 }

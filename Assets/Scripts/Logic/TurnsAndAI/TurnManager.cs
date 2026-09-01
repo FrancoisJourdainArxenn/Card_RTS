@@ -33,7 +33,7 @@ public class TurnManager : MonoBehaviour
     private readonly List<(int creatureUniqueID, int targetBaseID, int tablePos)> _soloMoveBuffer = new();
     // Embarquements en attente, résolus AVANT _soloMoveBuffer (voir FlushSoloBoardBuffer) pour qu'un
     // embarquement et le départ de son transporteur ordonnés le même tour se résolvent ensemble.
-    private readonly List<(int passengerUniqueID, int transportUniqueID)> _soloBoardBuffer = new();
+    private readonly List<(int passengerUniqueID, int transportUniqueID, int boardOrderPos)> _soloBoardBuffer = new();
     // Issue du round de combat solo en cours, calculée dans DelayedBattleStart juste avant l'enqueue
     // ordonné, consommée par AutoAdvanceFromBattleAfterCombat pour savoir si la transition normale
     // vers EndBattle doit être sautée (partie déjà terminée via GameOverCommand). Miroir solo de
@@ -741,10 +741,10 @@ public class TurnManager : MonoBehaviour
             creature.IsPendingMove = false;
     }
 
-    public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID)
+    public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID, int boardOrderPos)
     {
-        Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID} (buffer now {_soloBoardBuffer.Count + 1})");
-        _soloBoardBuffer.Add((passengerUniqueID, transportUniqueID));
+        Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID}, boardOrderPos={boardOrderPos} (buffer now {_soloBoardBuffer.Count + 1})");
+        _soloBoardBuffer.Add((passengerUniqueID, transportUniqueID, boardOrderPos));
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = true;
     }
@@ -760,7 +760,21 @@ public class TurnManager : MonoBehaviour
     private void FlushSoloBoardBuffer()
     {
         Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
-        foreach (var (passengerID, transportID) in _soloBoardBuffer)
+
+        // Mêlée avant distance, puis gauche avant droite dans la rangée d'origine (boardOrderPos, voir
+        // DragCreatureActions.Board) — pas l'ordre chronologique des drags. Un tri global (toutes
+        // rangées/tous transports mélangés) suffit : Board() ne touche que l'état propre à SON
+        // transporteur (_boardedCreatureIDs), donc l'ordre relatif entre deux transports différents
+        // n'a aucune conséquence.
+        _soloBoardBuffer.Sort((a, b) =>
+        {
+            bool aMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(a.passengerUniqueID, out CreatureLogic ac) && ac.IsMelee;
+            bool bMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(b.passengerUniqueID, out CreatureLogic bc) && bc.IsMelee;
+            int rowCompare = (aMelee ? 0 : 1).CompareTo(bMelee ? 0 : 1);
+            return rowCompare != 0 ? rowCompare : a.boardOrderPos.CompareTo(b.boardOrderPos);
+        });
+
+        foreach (var (passengerID, transportID, _) in _soloBoardBuffer)
         {
             GameObject passengerGO = IDHolder.GetGameObjectWithID(passengerID);
             if (passengerGO != null && passengerGO.TryGetComponent(out OneCreatureManager ocm))

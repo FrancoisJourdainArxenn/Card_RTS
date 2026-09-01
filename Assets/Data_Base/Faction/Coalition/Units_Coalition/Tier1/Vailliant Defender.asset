@@ -16,7 +16,7 @@ MonoBehaviour:
   Faction: {fileID: 0}
   Type: 0
   subType: 0
-  tier: 2
+  tier: 1
   Description: <b>Batlle Start:</b> If I defend, I gain +0/+1.
   CardImage: {fileID: 21300000, guid: 7a9a635597b79994eaa4ed220daf3786, type: 3}
   MainCost: 1

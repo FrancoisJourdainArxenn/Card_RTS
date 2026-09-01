@@ -30,7 +30,7 @@ MonoBehaviour:
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
+  Celerity: 0
   melee: 0
   Flying: 1
   TransportCapacity: 3

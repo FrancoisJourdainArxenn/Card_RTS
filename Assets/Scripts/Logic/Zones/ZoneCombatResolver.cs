@@ -442,6 +442,10 @@ public class ZoneCombatResolver : MonoBehaviour
 
         // Un attaquant Melee qui n'est pas lui-même Flying ne peut pas cibler une créature Flying.
         bool attackerIsGroundedMelee = IsMeleeAttacker(attacker.id, attacker.isBuilding) && !(attackerLogic?.IsFlying ?? false);
+        // Un attaquant Melee Flying ne subit pas la contre-attaque d'une créature Melee au sol (non-Flying) :
+        // elle ne peut pas l'atteindre en retour. Elle continue en revanche de subir la riposte d'une
+        // créature Ranged ou d'une autre créature Flying (voir Tier 3 / Tier 2 selon le cas).
+        bool attackerIsFlyingMelee = IsMeleeAttacker(attacker.id, attacker.isBuilding) && (attackerLogic?.IsFlying ?? false);
 
         // Tier 1 : bâtiments mêlée
         List<BuildingLogic> eligibleMeleeBuildings = new List<BuildingLogic>();
@@ -489,7 +493,8 @@ public class ZoneCombatResolver : MonoBehaviour
             AddPendingCreatureDamage(t.UniqueCreatureID, assign, stepIndex, 0);
             // Debug.Log($"[Assign:{zoneView.name}][Tier2:CréatureMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             int counter2 = 0;
-            if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
+            bool groundMeleeCantReachFlying = attackerIsFlyingMelee && !t.IsFlying;
+            if (IsMeleeAttacker(attacker.id, attacker.isBuilding) && !groundMeleeCantReachFlying)
             {
                 counter2 = t.Attack;
                 if (!attacker.isBuilding)
