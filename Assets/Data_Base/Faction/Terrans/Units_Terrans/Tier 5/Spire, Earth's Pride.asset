@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 5
   Description: '<b>Flying, Arcing Attacks</b>.
 
-    <b>On Play:</b> I gain +2/+2
+    <b>On Play:</b> I gain +0/+2
     for each base you control.'
   CardImage: {fileID: 21300000, guid: 031cab3bf650e9b49943d43369ab4c32, type: 3}
   MainCost: 1
@@ -36,7 +36,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
-  Flying: 0
+  Flying: 1
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0

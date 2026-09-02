@@ -673,6 +673,15 @@ public class ZoneCombatResolver : MonoBehaviour
             BattleStepRecord step = steps[zeroBasedStepIdx];
             int stepIdx = zeroBasedStepIdx + 1;
             int attackerHP = GetAttackerCurrentHP(step);
+            
+            if (!step.attackerIsBuilding
+                && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic statsAttackerCreature))
+            {
+                if (statsAttackerCreature.IsRanged)
+                    statsAttackerCreature.owner.matchStats.Add(MatchStatType.RangedUnitAttack);
+                else
+                    statsAttackerCreature.owner.matchStats.Add(MatchStatType.MeleeUnitAttack);
+            }
             switch (step.targetKind)
             {
                 case TargetKind.Creature:

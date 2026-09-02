@@ -32,7 +32,7 @@ MonoBehaviour:
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 1
+  MoveSpeed: 0
   Celerity: 0
   melee: 0
   Flying: 0

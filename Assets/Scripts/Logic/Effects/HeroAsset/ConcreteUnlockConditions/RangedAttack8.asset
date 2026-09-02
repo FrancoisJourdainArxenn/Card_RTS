@@ -9,8 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96cef1d7f20c0ea478d2015d61be3154, type: 3}
-  m_Name: SoldiersPlayed
-  m_EditorClassIdentifier: Assembly-CSharp::SubTypePlayedUnlockCondition
-  RequiredSubType: 0
-  Threshold: 12
+  m_Script: {fileID: 11500000, guid: 1803b7996b93605489e54de52222cd0f, type: 3}
+  m_Name: RangedAttack8
+  m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockCondition
+  Stat: 14
+  Threshold: 6

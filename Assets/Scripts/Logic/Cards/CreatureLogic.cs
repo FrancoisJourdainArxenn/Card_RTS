@@ -37,10 +37,27 @@ public class CreatureLogic: ILivable
     private readonly int baseHealth;
     private int permMaxHealthBonus;
     private int tempMaxHealthBonus;
+
+    // Suspendu pendant une correction de désync réseau (GameNetworkManager.SyncFullGameStateClientRpc) :
+    // cette correction écrase Attack/MaxHealth avec la valeur autoritaire du serveur, ce n'est pas un
+    // vrai gain de stats et ne doit pas compter comme un buff (progression UnitsUpgraded).
+    internal static bool SuppressUpgradeTracking;
+
+    private void TrackUpgrade(int delta)
+    {
+        if (SuppressUpgradeTracking || delta <= 0 || owner == null) return;
+        owner.matchStats.Add(MatchStatType.UnitsUpgraded, delta);
+    }
+
     public int MaxHealth
     {
         get => baseHealth + permMaxHealthBonus + tempMaxHealthBonus;
-        set => permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+        set
+        {
+            int delta = value - MaxHealth;
+            permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+            TrackUpgrade(delta);
+        }
     }
 
     // current health of this creature
@@ -326,7 +343,9 @@ public class CreatureLogic: ILivable
         set
         {
             if (ca.IsStructureUnit) return;
+            int delta = value - Attack;
             permAttackBonus = value - baseAttack - tempAttackBonus;
+            TrackUpgrade(delta);
         }
     }
      
