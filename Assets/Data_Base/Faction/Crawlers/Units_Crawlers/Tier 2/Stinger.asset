@@ -17,10 +17,10 @@ MonoBehaviour:
   Type: 0
   subType: 5
   tier: 2
-  Description: '<b>Celerity
+  Description: '<b>Piercing Attack
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    their stats.'
+    On Play:</b> Assimilates target ALLY unit
+    to gain their stats.'
   CardImage: {fileID: 21300000, guid: a426c8e875510e34ba7eb04c046f4521, type: 3}
   MainCost: 1
   IsHero: 0
@@ -29,18 +29,20 @@ MonoBehaviour:
   MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 1
+  Celerity: 0
   melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
-  - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
+  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Need More Juice

@@ -728,7 +728,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4940465294265197691, guid: 7ed0e3028ce4a4644b57718997b47b69, type: 3}
       propertyPath: _curveOffset
-      value: 5.04
+      value: -5.04
       objectReference: {fileID: 0}
     - target: {fileID: 5305668548273406545, guid: 7ed0e3028ce4a4644b57718997b47b69, type: 3}
       propertyPath: m_Name

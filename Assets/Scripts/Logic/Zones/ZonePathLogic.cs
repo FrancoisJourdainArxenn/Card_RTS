@@ -72,6 +72,8 @@ public class ZonePathLogic : IIdentifiable
             if (!from.SubZoneIDs.Contains(creature.BaseID)) continue;
             // Sur un path aérien, seules les créatures volantes ennemies bloquent l'avancée.
             if (RequiresFlying && !creature.IsFlying) continue;
+            // Une créature avec 0 d'attaque ne bloque pas les déplacements adverses.
+            if (creature.Attack <= 0) continue;
             return false;
         }
         return true;
