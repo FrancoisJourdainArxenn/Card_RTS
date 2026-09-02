@@ -89,6 +89,11 @@ public class Player : MonoBehaviour, ILivable
     public PlayedCards playedCards;
     public HeroCountUnlock matchStats = new HeroCountUnlock();
     [HideInInspector] public BaseLogic homeBaseLogic;
+    // Non-null quand le CardPool de ce joueur définit CardPoolSO.homeUnit : cette créature remplace
+    // la base principale comme condition de victoire (voir SpawnHomeUnitIfConfigured). homeBaseLogic
+    // continue d'exister en parallèle pour l'income/les tiers — seul son rôle "point de vie
+    // destructible" est désactivé (voir BaseLogic.Zone, ZoneCombatResolver.AssignSingleAttack).
+    [HideInInspector] public CreatureLogic HomeUnit;
 
 
     // a static array that will store both players, should always have 2 players
@@ -224,7 +229,108 @@ public class Player : MonoBehaviour, ILivable
         matchStats.OwnerLabel = $"Player {PlayerID} ({name})";
         controlledBaseAssets.Add(baseAsset);
         homeBaseLogic = new BaseLogic(this);
+        // Contrairement à baseVisual (vrai GameObject, correctement détruit par Unity à la sortie du
+        // Play précédent) ou à homeBaseLogic ci-dessus (toujours réassigné, jamais gardé "si déjà
+        // là"), HomeUnit est une simple référence C# — Unity ne la remet pas à null entre deux
+        // sessions Play (Domain/Scene Reload désactivés en test). ResetForNewGame() la nettoie aussi,
+        // mais bien plus tard (TurnManager.OnGameStart, tourne APRÈS GlobalSettings.Awake ->
+        // InitFromMap -> SpawnMainBase -> CalculatePlayerIncome -> BaseLogic.EffectiveIncome, qui la
+        // lit dès Awake) : sans ce reset ICI, une HomeUnit fantôme d'une partie précédente y est
+        // encore lue avant que GlobalSettings ait fini d'initialiser les zones de la map, et
+        // CreatureLogic.Zone plante ou résout un BaseID obsolète.
+        HomeUnit = null;
+    }
 
+    // Remet à zéro tout l'état "par partie" de ce joueur avant que TurnManager.OnGameStart() (re)joue
+    // une partie. Nécessaire parce que les objets Player — et leurs composants Deck/Hand/PlayedCards —
+    // survivent à plusieurs parties dans la même session Editor (Domain/Scene Reload désactivés en
+    // test réseau, voir CreatureAttackVisual.ResetFlightCounter plus haut dans OnGameStart pour la
+    // même remarque) : sans ce nettoyage explicite, tout ce qui a été muté pendant une partie
+    // précédente (créatures encore dans playedCards, cartes encore en main, tiers/income, bonus
+    // accordés par ID de source...) contaminerait silencieusement la partie suivante.
+    //
+    // Ne touche PAS à Health/matchStats/deck.playerDeck-_runtimeCards-timesDrawn : déjà réinitialisés
+    // séparément par LoadCharacterInfoFromAsset/matchStats.Reset()/deck.LoadDeck (voir
+    // TurnManager.OnGameStart) — les dupliquer ici risquerait de désynchroniser l'ordre déjà établi.
+    //
+    // Doit tourner APRÈS BaseLogic.BasesCreatedThisGame.Clear() (sinon la homeBaseLogic fraîche créée
+    // ici serait aussitôt effacée avec le reste) et APRÈS ApplyBaseAssetOverride (pour recréer
+    // homeBaseLogic avec le bon baseAsset déjà résolu pour cette partie).
+    public void ResetForNewGame()
+    {
+        // --- HomeUnit / base principale ---
+        HomeUnit = null;
+        if (baseVisual != null)
+            baseVisual.gameObject.SetActive(true);
+        homeBaseLogic = new BaseLogic(this);
+        controlledBaseAssets.Clear();
+        controlledBaseAssets.Add(baseAsset);
+
+        // --- Ressources / bonus accordés par source (clés = ID d'entité, régénérées chaque partie —
+        // une entrée fantôme d'une partie précédente pourrait collisionner avec un nouvel ID) ---
+        // mainRessourceTotal N'EST PAS remis à 0 ici (même raison que deck.drawConfig plus bas) :
+        // c'est une simple valeur int câblée dans l'Inspector (20, voir BattleScene.unity), qu'Unity
+        // restaure déjà correctement entre deux sessions Play — rien dans le code ne la fait jamais
+        // remonter au-delà de 0 par la suite (voir OnTurnStart, qui ne fait que plafonner
+        // mainRessourceAvailable dessus). La mettre à 0 ici bloquait la jauge de ressources à 0 pour
+        // le reste de la partie, quel que soit l'income (symptôme : cartes en main injouables, un
+        // nouveau tour ne change rien).
+        mainRessourceAvailable = 0;
+        playerMainIncome = 0;
+        bonusMainIncome = 0;
+        bonusMainRessource = 0;
+        bonusHandDrawCount = 0;
+        _incomeFromSources.Clear();
+        _drawCountFromSources.Clear();
+        _shieldBonusFromSources.Clear();
+        _effectAmplifiersFromSources.Clear();
+        permanentCreatureBuffs.Clear();
+        ReservedCard = null;
+
+        // --- Plateau / main / pioche pondérée ---
+        playedCards.Creatures.Clear();
+        playedCards.Buildings.Clear();
+        hand.CardsInHand.Clear();
+        // deck.drawConfig N'EST PAS remis à null ici, volontairement : contrairement à HomeUnit
+        // (classe C# custom, non correctement revert par Unity entre deux sessions Play), drawConfig
+        // est une simple référence vers un ScriptableObject (WeightedDrawConfig) — Unity la restaure
+        // déjà correctement à sa valeur Tier 1 câblée dans l'Inspector à chaque sortie de Play. La
+        // vider ici la laissait à null jusqu'à un upgrade manuel de tier (TryUpgrade, jamais appelé
+        // pour Tier 1, qui est l'état de départ) : la toute première pioche de la partie plantait
+        // (WeightedDraw.Draw retombait sur ce garde et retournait null, voir Deck.DrawWeightedCard).
+    }
+
+    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.sharedPool)
+    // l'unité qui remplace la base principale comme condition de victoire (voir HomeUnit) : une
+    // CreatureLogic tout à fait normale, spawnée directement dans MainPArea sans passer par la main
+    // — même idiome que NetworkSpawnTokenToZone. networkID doit être identique sur toutes les
+    // machines en session réseau (voir TurnManager.OnGameStart) ; -1 en solo génère un ID local.
+    // No-op si le pool ne définit pas homeUnit, ou si déjà spawnée (voir ResetForNewGame, appelé
+    // juste avant dans TurnManager.OnGameStart, qui remet HomeUnit à null pour CETTE partie).
+    // homeBaseLogic continue d'exister pour l'income/les tiers (voir CalculatePlayerIncome) — seul
+    // son rôle de bâtiment ciblable/point de vie est retiré ici (baseVisual désactivé, plus jamais
+    // touché par AssignSingleAttack une fois HomeUnit assignée).
+    public void SpawnHomeUnitIfConfigured(int networkID = -1)
+    {
+        if (HomeUnit != null) return;
+        CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.sharedPool?.homeUnit : null;
+        if (homeUnitAsset == null || MainPArea == null) return;
+
+        int baseID = MainPArea.baseID;
+        int creatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
+
+        CardLogic homeUnitCard = new CardLogic(homeUnitAsset);
+        homeUnitCard.owner = this;
+
+        HomeUnit = new CreatureLogic(this, homeUnitAsset, baseID, creatureID);
+        int logicalIndex = GetLogicalInsertIndex(homeUnitAsset.melee, baseID, 0);
+        playedCards.Creatures.Insert(logicalIndex, HomeUnit);
+        FogOfWarManager.Refresh();
+
+        new PlayACreatureCommand(homeUnitCard, this, 0, HomeUnit.UniqueCreatureID, MainPArea).AddToQueue();
+
+        if (baseVisual != null)
+            baseVisual.gameObject.SetActive(false);
     }
 
     // Applique un BaseAsset différent de celui câblé dans l'Inspector (ex: celui du CardPoolSO du
@@ -974,6 +1080,11 @@ public class Player : MonoBehaviour, ILivable
 
     public PlayerArea GetPlayerAreaByID(int baseID)
     {
+        // PAreas n'est assigné que par GlobalSettings.InitFromMap (après Player.Awake) — un appel
+        // trop tôt (ex: CreatureLogic.Zone d'une HomeUnit restée assignée d'une partie précédente,
+        // lu par BaseLogic.EffectiveIncome pendant GlobalSettings.SpawnMainBase) le trouverait encore
+        // null plutôt que de planter ici.
+        if (PAreas == null) return null;
         foreach (PlayerArea area in PAreas)
         {
             if (area.baseID == baseID)
@@ -1018,7 +1129,11 @@ public class Player : MonoBehaviour, ILivable
     {
         if (area == null) return false;
         if (!System.Array.Exists(PAreas, a => a == area)) return false;
-        if (area == MainPArea) return true;
+        // Zone de déploiement "gratuite" (pas besoin de Commandement/Renfort/base neutre possédée) :
+        // MainPArea pour une base classique toujours présente, ou la zone où se trouve HomeUnit pour
+        // une base mobile (même principe que BaseLogic.Zone) — sans base ni HomeUnit physiquement là,
+        // MainPArea retombe sur les mêmes règles que n'importe quelle autre zone.
+        if (HomeUnit != null ? area.baseID == HomeUnit.BaseID : area == MainPArea) return true;
         if (HasCommandCreatureInArea(area)) return true;
         if (cardToPlay != null && cardToPlay.Renfort && HasFriendlyCreatureInArea(area)) return true;
         NeutralZoneController c = GetNeutralControllerForArea(area);
@@ -1125,9 +1240,28 @@ public class Player : MonoBehaviour, ILivable
             }
         }
 
+        RefreshHomeUnitRessourcePanel();
+
         if (this == GlobalSettings.Instance.localPlayer && GlobalSettings.Instance.UiPlayerVisual != null)
             GlobalSettings.Instance.UiPlayerVisual.RefreshUI();
         baseVisual.ApplyLookFromAsset();
+    }
+
+    // Affiche l'income/Under Attack de homeBaseLogic directement sur HomeUnit (voir OneCreatureManager.
+    // RessourcePanel) — homeBaseLogic reste la source d'économie même en mode HomeUnit (voir
+    // BaseLogic.Zone), seul son affichage se déplace de MainBaseVisual (désactivée, voir
+    // SpawnHomeUnitIfConfigured) vers la créature elle-même. Rappelée à chaque CalculatePlayerIncome,
+    // donc pas besoin d'un hook dédié "au spawn" : le panel s'active dès que le GameObject de la
+    // créature existe (revealed par PlayACreatureCommand, potentiellement après ce premier appel —
+    // no-op silencieux jusque-là, comme HighlightPlayableCards ailleurs).
+    private void RefreshHomeUnitRessourcePanel()
+    {
+        if (HomeUnit == null || homeBaseLogic == null) return;
+        GameObject go = IDHolder.GetGameObjectWithID(HomeUnit.UniqueCreatureID);
+        OneCreatureManager mgr = go != null ? go.GetComponent<OneCreatureManager>() : null;
+        if (mgr == null) return;
+        mgr.ActivateRessourcePanel();
+        mgr.RefreshIncomeDisplay(homeBaseLogic.EffectiveIncome, homeBaseLogic.IsUnderAttack);
     }
 
 

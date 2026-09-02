@@ -20,7 +20,12 @@ public class BaseLogic: ILivable
     // homeBaseLogic (GlobalSettings.InitFromMap tourne après Player.Awake), donc un _homeZone figé à
     // la construction restait null pour toute la partie et cassait IsUnderAttack (malus "-1 ressource"
     // jamais appliqué même avec des créatures ennemies dans la home zone).
-    public ZoneLogic Zone => IsHomeBase ? owner.MainPArea?.parentZone?.Logic : neutralBaseController?.zone?.Logic;
+    // Quand owner.HomeUnit est assignée (base principale = unité mobile, voir Player.HomeUnit), la
+    // zone suit l'unité au lieu de rester figée sur MainPArea — IsUnderAttack/EffectiveIncome (dérivés
+    // de Zone ci-dessous) s'appliquent alors automatiquement là où l'unité se trouve réellement.
+    public ZoneLogic Zone => IsHomeBase
+        ? (owner.HomeUnit != null ? owner.HomeUnit.Zone : owner.MainPArea?.parentZone?.Logic)
+        : neutralBaseController?.zone?.Logic;
 
     private int baseHealth;
     public int MaxHealth

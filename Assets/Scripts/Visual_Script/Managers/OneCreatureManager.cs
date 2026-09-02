@@ -65,6 +65,16 @@ public class OneCreatureManager : OneLivableManager
     [SerializeField] private Sprite pendingPlaySprite; // carte jouée de la main, en attente de confirmation
     [SerializeField] private Sprite pendingMoveSprite; // déplacement en attente (origine uniquement, pas le ghost)
 
+    [Header("Ressource Panel (Home Unit)")]
+    // Caché par défaut sur le prefab (voir Card_Board_Unit) — activé uniquement quand cette créature
+    // est la HomeUnit d'un joueur (voir Player.RefreshHomeUnitRessourcePanel), sur le même principe
+    // que RessourcePanel sur Card_Board_Main-Base (OneBaseManager), mais porté ici par la créature.
+    [SerializeField] private GameObject ressourcePanel;
+    [SerializeField] private TMP_Text mainRessourceText;
+    [SerializeField] private Image mainRessourceBGColor;
+    [SerializeField] private Sprite underAttackBGSprite;
+    private Sprite _normalRessourceBGSprite;
+
     [Header("Transport")]
     // Conteneur des petits portraits des unités actuellement embarquées — un enfant par passager,
     // reconstruit à chaque changement (voir RefreshPassengerPortraits). Assigné dans l'Inspecteur
@@ -223,6 +233,28 @@ public class OneCreatureManager : OneLivableManager
             pendingMoveArrowMat = pendingMoveArrow.material;
             _arrowBaseColor = pendingMoveArrowMat.color;
         }
+        if (mainRessourceBGColor != null)
+            _normalRessourceBGSprite = mainRessourceBGColor.sprite;
+    }
+
+    // Affiche RessourcePanel (caché par défaut) — appelé uniquement quand cette créature est HomeUnit
+    // pour un joueur (voir Player.RefreshHomeUnitRessourcePanel). Idempotent : peut être rappelé sans
+    // risque à chaque refresh d'income.
+    public void ActivateRessourcePanel()
+    {
+        if (ressourcePanel != null)
+            ressourcePanel.SetActive(true);
+    }
+
+    // Même logique que OneBaseManager.RefreshIncomeDisplay/SetUnderAttackVisual, portée ici par la
+    // créature — voir Player.RefreshHomeUnitRessourcePanel pour la source (homeBaseLogic.EffectiveIncome/
+    // IsUnderAttack, toujours la source d'économie même en mode HomeUnit).
+    public void RefreshIncomeDisplay(int income, bool underAttack)
+    {
+        if (mainRessourceText != null)
+            mainRessourceText.text = "+" + income.ToString();
+        if (mainRessourceBGColor != null && underAttackBGSprite != null)
+            mainRessourceBGColor.sprite = underAttack ? underAttackBGSprite : _normalRessourceBGSprite;
     }
 
     private void Update()

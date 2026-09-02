@@ -64,7 +64,7 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
     {
         EffectRegistry.Reset();
         // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
@@ -90,6 +90,20 @@ public class TurnManager : MonoBehaviour
                     if (preset.sharedPool != null && preset.sharedPool.baseAsset != null)
                         p.ApplyBaseAssetOverride(preset.sharedPool.baseAsset);
                 }
+            }
+        }
+        else
+        {
+            // Solo/hotseat : deck.playerDeck est déjà câblé directement dans l'Inspector (pas de
+            // sélection réseau à charger via GetDeckPresetForPlayer) — mais son CardPoolSO.baseAsset
+            // n'était jamais appliqué, contrairement au chemin réseau ci-dessus : le joueur gardait le
+            // BaseAsset par défaut de l'Inspector plutôt que celui du pool réellement utilisé
+            // (symptôme : mauvaise base/économie affichée en solo pour un deck avec un pool dédié).
+            foreach (Player p in Player.Players)
+            {
+                BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.sharedPool?.baseAsset : null;
+                if (poolBaseAsset != null)
+                    p.ApplyBaseAssetOverride(poolBaseAsset);
             }
         }
 
@@ -127,6 +141,34 @@ public class TurnManager : MonoBehaviour
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
+        // Sans ça, une base neutre capturée pendant une partie précédente (jamais retirée de ce
+        // dictionnaire statique tant qu'elle n'est pas détruite en jeu) resterait comptée dans
+        // Player.controlledBases de la partie suivante — voir Player.ResetForNewGame ci-dessous, qui
+        // recrée homeBaseLogic juste après et dépend de ce Clear() pour ne pas être effacée avec.
+        BaseLogic.BasesCreatedThisGame.Clear();
+
+        // Doit tourner après les Clear() ci-dessus (sinon l'entrée CreaturesCreatedThisGame/
+        // BasesCreatedThisGame fraîchement créée serait aussitôt effacée) et avant tout tirage de
+        // main — même idiome ID que heroCardIDs ci-dessous : l'ID doit être identique sur toutes les
+        // machines en session réseau. ResetForNewGame d'abord, sur TOUS les joueurs, avant qu'aucun
+        // ne rejoue — les objets Player (et leurs composants Deck/Hand/PlayedCards) peuvent survivre
+        // à plusieurs parties dans la même session Editor ; sans ce nettoyage, l'état muté par la
+        // partie précédente (créatures encore sur le plateau, HomeUnit fantôme, tiers/income...)
+        // contaminerait celle-ci.
+        foreach (Player p in Player.Players)
+            p.ResetForNewGame();
+
+        for (int idx = 0; idx < Player.Players.Length; idx++)
+        {
+            Player p = Player.Players[idx];
+            // InitBaseIDs() re-appelée ici (idempotente, même formule que Player.Start()) : l'ordre
+            // entre deux Start() de scripts différents n'est pas garanti par Unity, et
+            // SpawnHomeUnitIfConfigured a besoin de MainPArea.baseID déjà résolu (sinon l'unité
+            // hérite du BaseID par défaut 0, une zone qui n'est pas forcément la sienne).
+            p.InitBaseIDs();
+            int homeUnitID = (NetworkSessionData.IsNetworkSession && homeUnitCreatureIDs != null) ? homeUnitCreatureIDs[idx] : -1;
+            p.SpawnHomeUnitIfConfigured(homeUnitID);
+        }
 
         EnsurePhaseReadyMatchesPlayers();
         ResetPhaseReadyFlags();

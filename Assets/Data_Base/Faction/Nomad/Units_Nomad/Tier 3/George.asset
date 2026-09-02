@@ -10,39 +10,44 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Goon
+  m_Name: George
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 2
-  tier: 2
-  Description: <b>Battle Start:</b> I gain +X/+0, where X is my <b>Shield</b> value.
-  CardImage: {fileID: 21300000, guid: 23b4340c246e7364cac6f16e3a23e048, type: 3}
+  tier: 3
+  Description: '<b>Arcing Attacks
+
+    On Play:</b> I gain <b>Shield 1</b> for each
+    Engineer <i>(in my zone)</i>.'
+  CardImage: {fileID: 21300000, guid: ee65233843f7c634ea67d56d233e1cc2, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
+  Attack: 3
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
   Keywords:
+  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
   ReferencedCards: []
   Effects:
-  - EffectName: Let's Rumble
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 14
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -61,5 +66,9 @@ MonoBehaviour:
       useScalingCount: 1
       scalingQuery:
         targetType: 0
-        queries: []
-      scalingSource: 1
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 4b4f9d3be69b9224795b8d2e48885035, type: 2}
+      scalingSource: 0

@@ -967,8 +967,14 @@ public class GameNetworkManager : NetworkBehaviour
             {
                 cardInHandIDs[i] = IDFactory.GetUniqueID();
             }
+
+            int[] homeUnitCreatureIDs = new int[Player.Players.Length];
+            for (int i = 0; i < homeUnitCreatureIDs.Length; i++)
+            {
+                homeUnitCreatureIDs[i] = IDFactory.GetUniqueID();
+            }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs, homeUnitCreatureIDs);
         }
     }
 
@@ -976,13 +982,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
     {
         // 1. Assigner le local player
         AssignLocalPlayerControl();
 
         // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs);
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs, homeUnitCreatureIDs);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();

@@ -343,7 +343,10 @@ public class CreatureLogic: ILivable
     // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
     public bool HasSummoningSickness { get; private set; }
 
-    public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
+    // parentZone?. (pas juste GetPlayerAreaByID(BaseID)?.) : une PlayerArea peut exister sans que son
+    // parentZone soit encore câblé (ex: HomeUnit.Zone lu très tôt par BaseLogic.EffectiveIncome, depuis
+    // GlobalSettings.SpawnMainBase, avant que l'initialisation complète des zones de la map soit finie).
+    public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone?.Logic;
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;

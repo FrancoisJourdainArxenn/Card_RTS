@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Nomade_CardPool
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
   baseAsset: {fileID: 11400000, guid: 36ff9ff878158864f8139fc090e3a9d8, type: 2}
+  homeUnit: {fileID: 11400000, guid: 0f2dbfa314a19ff44b543b5a72c8b5a1, type: 2}
   cards:
   - {fileID: 11400000, guid: 68ec01feb52ff2746800873cee7c9fda, type: 2}
   - {fileID: 11400000, guid: c087c10c20b543c4db2ab8e99c362a94, type: 2}
