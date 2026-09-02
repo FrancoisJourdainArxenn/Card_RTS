@@ -319,7 +319,15 @@ public class Player : MonoBehaviour, ILivable
         int baseID = MainPArea.baseID;
         int creatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
 
-        CardLogic homeUnitCard = new CardLogic(homeUnitAsset);
+        // ID purement local (jamais lu sur le réseau, voir PlayACreatureCommand qui ne s'en sert que
+        // pour un lookup IDHolder local) : IDFactory.GetUniqueID() piocherait dans le même pool que
+        // les IDs distribués par le serveur (heroCardIDs/cardInHandIDs), mais son compteur diverge
+        // entre host et client puisque seul le serveur incrémente pour ces tableaux-là avant l'RPC.
+        // Sur le client, ce CardLogic consommait donc un ID qui collisionnait ensuite avec un ID
+        // serveur légitime, d'où l'ArgumentException "same key" dans CardsCreatedThisGame.
+        // GetLocalOnlyID() (toujours négatif) ne peut jamais entrer en collision avec un ID positif
+        // distribué par le serveur.
+        CardLogic homeUnitCard = new CardLogic(homeUnitAsset, IDFactory.GetLocalOnlyID());
         homeUnitCard.owner = this;
 
         HomeUnit = new CreatureLogic(this, homeUnitAsset, baseID, creatureID);
