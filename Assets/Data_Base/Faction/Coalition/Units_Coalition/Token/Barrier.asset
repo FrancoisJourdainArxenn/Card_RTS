@@ -23,7 +23,7 @@ MonoBehaviour:
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
-  MaxHealth: 2
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 1
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:

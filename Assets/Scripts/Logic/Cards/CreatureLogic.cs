@@ -156,6 +156,7 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
         HasSummoningSickness = false;
+        extraSummoningSicknessTurns = 0;
         HasRuntimeCelerity = true;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
@@ -343,6 +344,11 @@ public class CreatureLogic: ILivable
     // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
     public bool HasSummoningSickness { get; private set; }
 
+    // Nombre de OnTurnStart restant à ignorer avant de lever HasSummoningSickness — voir
+    // CardAsset.ExtraSummoningSicknessTurns. 0 = comportement par défaut (levé au tout prochain
+    // OnTurnStart du propriétaire).
+    private int extraSummoningSicknessTurns;
+
     // parentZone?. (pas juste GetPlayerAreaByID(BaseID)?.) : une PlayerArea peut exister sans que son
     // parentZone soit encore câblé (ex: HomeUnit.Zone lu très tôt par BaseLogic.EffectiveIncome, depuis
     // GlobalSettings.SpawnMainBase, avant que l'initialisation complète des zones de la map soit finie).
@@ -470,6 +476,7 @@ public class CreatureLogic: ILivable
         if (ca.Celerity)
             MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = !ca.Celerity;
+        extraSummoningSicknessTurns = ca.Celerity ? 0 : Mathf.Max(0, ca.ExtraSummoningSicknessTurns);
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
@@ -488,6 +495,14 @@ public class CreatureLogic: ILivable
     // METHODS
     public void OnTurnStart()
     {
+        // Tant qu'il reste des tours de mal d'invocation "supplémentaires" à purger (voir
+        // CardAsset.ExtraSummoningSicknessTurns), on consomme ce tour sans rien débloquer :
+        // HasSummoningSickness reste vrai, AttacksLeftThisTurn/MovementsLeftThisTurn restent à 0.
+        if (extraSummoningSicknessTurns > 0)
+        {
+            extraSummoningSicknessTurns--;
+            return;
+        }
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = false;

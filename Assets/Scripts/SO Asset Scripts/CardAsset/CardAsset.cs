@@ -95,6 +95,14 @@ public class CardAsset : ScriptableObject
     // Relie entre elles, en maillage complet, toutes les zones où le même joueur a un téléporteur
     // vivant — voir TeleporterNetwork/CreatureLogic.IsTeleporter.
     public bool IsTeleporter = false;
+    // Nombre de OnTurnStart (côté propriétaire) supplémentaires à ignorer avant de lever le mal
+    // d'invocation, au-delà du comportement par défaut (1 tour, levé au prochain OnTurnStart de
+    // son propriétaire — voir CreatureLogic.HasSummoningSickness). Sert notamment pour la HomeUnit
+    // ("The Fort"), spawnée avant le tout premier OnTurnStart de la partie : sans ce délai
+    // supplémentaire, ce premier OnTurnStart lève instantanément son mal d'invocation, lui
+    // permettant d'agir dès le tour 1 sans jamais avoir "attendu" un tour comme une créature posée
+    // normalement en jeu. Voir CreatureLogic.extraSummoningSicknessTurns.
+    public int ExtraSummoningSicknessTurns = 0;
 
 
 

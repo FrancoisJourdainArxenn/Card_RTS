@@ -16,13 +16,13 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 9
-  tier: 3
+  tier: 2
   Description: <b>On Attack:</b> I cast Primordial Touch.
   CardImage: {fileID: 21300000, guid: 82e94dc9452d27e4683028e6e494fa1a, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
+  Attack: 1
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards:
   - {fileID: 11400000, guid: f74acab878122a045b85ae6636174894, type: 2}

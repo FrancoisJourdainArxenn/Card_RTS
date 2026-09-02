@@ -146,6 +146,14 @@ public class TurnManager : MonoBehaviour
         // Player.controlledBases de la partie suivante — voir Player.ResetForNewGame ci-dessous, qui
         // recrée homeBaseLogic juste après et dépend de ce Clear() pour ne pas être effacée avec.
         BaseLogic.BasesCreatedThisGame.Clear();
+        // Une mort décisive (ex: HomeUnit tuée) saute la phase EndBattle — voir
+        // AutoAdvanceFromBattleAfterCombat, "wasDecisive" — donc DrainPendingDeaths() ne tourne jamais
+        // pour la traiter : sans ce Clear(), la créature morte de la partie précédente reste coincée
+        // ici, réapparaît au premier DrainPendingDeaths() de la partie suivante et son Die() (rejoué
+        // sur un ID désormais réutilisé par IDFactory) corrompt/détruit la créature actuelle qui
+        // partage cet ID — typiquement la nouvelle HomeUnit.
+        CreatureLogic.PendingDeathList.Clear();
+        BuildingLogic.PendingDeathVisualQueue.Clear();
 
         // Doit tourner après les Clear() ci-dessus (sinon l'entrée CreaturesCreatedThisGame/
         // BasesCreatedThisGame fraîchement créée serait aussitôt effacée) et avant tout tirage de

@@ -67,6 +67,8 @@ public class PauseMenuController : MonoBehaviour
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
+        CreatureLogic.PendingDeathList.Clear();
+        BuildingLogic.PendingDeathVisualQueue.Clear();
         Command.CommandQueue.Clear();
         Command.CommandExecutionComplete();
         NetworkSessionData.IsNetworkSession = false;

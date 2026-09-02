@@ -16,7 +16,7 @@ MonoBehaviour:
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
-  tier: 2
+  tier: 3
   Description: <b>Begin Battle:</b> Create a Barrier.
   CardImage: {fileID: 21300000, guid: 9ef36d62f4127874b8719f4d1ef36c8b, type: 3}
   MainCost: 1
@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards:
   - {fileID: 11400000, guid: dd6cf9dfb35e895498a4715c7cea383d, type: 2}
