@@ -40,11 +40,14 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
-  Keywords: []
+  ExtraSummoningSicknessTurns: 0
+  Keywords:
+  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
+  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: fbde9110f8bc44741860133b3a5bdb95, type: 2}
+    Effect: {fileID: 11400000, guid: 366f3e826255d384f85ff358a018be67, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

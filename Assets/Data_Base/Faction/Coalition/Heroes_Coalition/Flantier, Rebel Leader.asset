@@ -25,7 +25,7 @@ MonoBehaviour:
   MainCost: 0
   IsHero: 1
   UnlockCondition: {fileID: 11400000, guid: 081f4f23eaac0674b859f5d9907a0213, type: 2}
-  Attack: 4
+  Attack: 3
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -35,7 +35,7 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0

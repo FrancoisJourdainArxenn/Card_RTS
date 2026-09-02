@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: RangedAttack8
   m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockCondition
   Stat: 14
-  Threshold: 6
+  Threshold: 8

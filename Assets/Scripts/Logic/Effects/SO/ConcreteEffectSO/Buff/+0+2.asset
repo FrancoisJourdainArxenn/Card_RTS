@@ -12,15 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
   m_Name: +0+2
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: Gives +2 ATK.
+  Description: Gives +0/+2.
   EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
-  AttackBonus: 2
-  HealthBonus: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
+  AttackBonus: 0
+  HealthBonus: 2
   IsTempEffect: 0
   RevertVisual:
     vfxPrefab: {fileID: 0}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
+  PersistentFilter: {fileID: 0}
+  MatchSameNameAsTarget: 0
