@@ -25,8 +25,8 @@ MonoBehaviour:
   MainCost: 0
   IsHero: 1
   UnlockCondition: {fileID: 11400000, guid: ed150932a08217a4fbba8110d209eb0b, type: 2}
-  Attack: 1
-  MaxHealth: 1
+  Attack: 3
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers:
@@ -37,7 +37,11 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 1
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
   - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}

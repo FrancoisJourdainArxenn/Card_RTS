@@ -21,11 +21,11 @@ MonoBehaviour:
 
     <b>On Play:</b> Your Soldiers
     gains +1/+1, wherever they are.'
-  CardImage: {fileID: 21300000, guid: 4a7059cd19de40e4d95b4789019eb400, type: 3}
+  CardImage: {fileID: 21300000, guid: 6879e44cd95108b4ca4b40c7f0a19d1d, type: 3}
   MainCost: 0
   IsHero: 1
   UnlockCondition: {fileID: 11400000, guid: 081f4f23eaac0674b859f5d9907a0213, type: 2}
-  Attack: 4
+  Attack: 3
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
@@ -35,11 +35,12 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
