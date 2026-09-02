@@ -627,55 +627,63 @@ public class GameNetworkManager : NetworkBehaviour
 
         var serverCreatureIDSet = new System.Collections.Generic.HashSet<int>(creatureIDs);
 
-        for (int i = 0; i < creatureIDs.Length; i++)
+        CreatureLogic.SuppressUpgradeTracking = true;
+        try
         {
-            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+            for (int i = 0; i < creatureIDs.Length; i++)
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
-                continue;
-            }
-
-            bool statsChanged = false;
-
-            if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
-                creature.Health = creatureHealths[i];
-                statsChanged = true;
-            }
-            if (creature.MaxHealth != creatureMaxHealths[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
-                creature.MaxHealth = creatureMaxHealths[i];
-                statsChanged = true;
-            }
-            if (creature.Attack != creatureAttacks[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
-                creature.Attack = creatureAttacks[i];
-                statsChanged = true;
-            }
-
-            if (statsChanged)
-            {
-                GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureIDs[i]);
-                OneCreatureManager manager = creatureGO != null ? creatureGO.GetComponent<OneCreatureManager>() : null;
-                if (manager != null)
+                if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
                 {
-                    manager.AttackText.text = creature.Attack.ToString();
-                    manager.HealthText.text = creature.Health.ToString();
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
+                    continue;
+                }
+
+                bool statsChanged = false;
+
+                if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
+                    creature.Health = creatureHealths[i];
+                    statsChanged = true;
+                }
+                if (creature.MaxHealth != creatureMaxHealths[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
+                    creature.MaxHealth = creatureMaxHealths[i];
+                    statsChanged = true;
+                }
+                if (creature.Attack != creatureAttacks[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
+                    creature.Attack = creatureAttacks[i];
+                    statsChanged = true;
+                }
+
+                if (statsChanged)
+                {
+                    GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureIDs[i]);
+                    OneCreatureManager manager = creatureGO != null ? creatureGO.GetComponent<OneCreatureManager>() : null;
+                    if (manager != null)
+                    {
+                        manager.AttackText.text = creature.Attack.ToString();
+                        manager.HealthText.text = creature.Health.ToString();
+                    }
+                }
+                if (creature.AttacksLeftThisTurn != attacksLeft[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
+                    creature.AttacksLeftThisTurn = attacksLeft[i];
+                }
+                if (creature.MovementsLeftThisTurn != movementsLeft[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
+                    creature.MovementsLeftThisTurn = movementsLeft[i];
                 }
             }
-            if (creature.AttacksLeftThisTurn != attacksLeft[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
-                creature.AttacksLeftThisTurn = attacksLeft[i];
-            }
-            if (creature.MovementsLeftThisTurn != movementsLeft[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
-                creature.MovementsLeftThisTurn = movementsLeft[i];
-            }
+        }
+        finally
+        {
+            CreatureLogic.SuppressUpgradeTracking = false;
         }
 
         foreach (int localID in CreatureLogic.CreaturesCreatedThisGame.Keys)

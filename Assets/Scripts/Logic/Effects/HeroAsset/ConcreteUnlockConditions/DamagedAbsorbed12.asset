@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1803b7996b93605489e54de52222cd0f, type: 3}
-  m_Name: DamagedAbsorbed15
+  m_Name: DamagedAbsorbed12
   m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockConditionSO
   Stat: 8
-  Threshold: 15
+  Threshold: 12

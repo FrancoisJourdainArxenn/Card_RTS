@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Raynor, Rebel Leader
+  m_Name: Flantier, Rebel Leader
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Raynor, Rebel Leader
+  Name: Flantier, Rebel Leader
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
   subType: 0
@@ -36,7 +36,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}

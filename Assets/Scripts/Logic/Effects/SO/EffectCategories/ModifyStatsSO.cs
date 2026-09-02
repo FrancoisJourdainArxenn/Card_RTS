@@ -133,7 +133,6 @@ public class ModifyStatsSO : EffectSO, IRevertable
             int actualAttackDelta = target.Attack - attackBefore;
             new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, scaledHealth, target.Health, EffectVisual).AddToQueue();
             QueueSourceVfx(EffectVisual);
-            TrackUpgradeStat(target, scaledAttack, scaledHealth);
 
             if (IsTempEffect)
             {
@@ -155,7 +154,6 @@ public class ModifyStatsSO : EffectSO, IRevertable
         ApplyStatsDelta(target, _amplifiedAttackBonus, _amplifiedHealthBonus);
         int actualAttackDelta = target.Attack - attackBefore;
         new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, _amplifiedHealthBonus, target.Health, EffectVisual).AddToQueue();
-        TrackUpgradeStat(target, _amplifiedAttackBonus, _amplifiedHealthBonus);
     }
 
     public void Revert(ILivable target, int? _ = null)
@@ -171,16 +169,6 @@ public class ModifyStatsSO : EffectSO, IRevertable
         target.Attack += attackDelta;
         target.MaxHealth += healthDelta;
         target.Health += healthDelta;
-    }
-
-    // Compte uniquement la part "gain" (upgrade) du delta — un debuff (ATK/Vie négatif) ne doit pas
-    // faire progresser la condition de héros "Upgrade your units". Pas appelé depuis Revert : l'expiration
-    // d'un buff temporaire ne doit pas retirer le crédit déjà accordé au joueur.
-    private static void TrackUpgradeStat(ILivable target, int attackDelta, int healthDelta)
-    {
-        if (target is not CreatureLogic creature || creature.owner == null) return;
-        int upgradeValue = Mathf.Max(0, attackDelta) + Mathf.Max(0, healthDelta);
-        if (upgradeValue > 0) creature.owner.matchStats.Add(MatchStatType.UnitsUpgraded, upgradeValue);
     }
 
     protected override bool IsTargetSaturated(EffectTarget target) => false;
