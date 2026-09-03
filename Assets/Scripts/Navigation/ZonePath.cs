@@ -6,10 +6,15 @@ public class ZonePath : MonoBehaviour
     [SerializeField] private ZoneManager _zoneA;
     [SerializeField] private ZoneManager _zoneB;
     [SerializeField] private float _lateralThreshold = 0.5f;
+    [SerializeField] private bool _requiresFlying;
+    [SerializeField] private ZonePathAnchor _anchorOverrideA;
+    [SerializeField] private ZonePathAnchor _anchorOverrideB;
 
     public ZonePathLogic Logic { get; private set; }
     public ZoneManager ZoneA => _zoneA;
     public ZoneManager ZoneB => _zoneB;
+    public ZonePathAnchor AnchorOverrideA => _anchorOverrideA;
+    public ZonePathAnchor AnchorOverrideB => _anchorOverrideB;
 
     public static Dictionary<int, ZonePath> AllPaths { get; } = new Dictionary<int, ZonePath>();
 
@@ -28,10 +33,14 @@ public class ZonePath : MonoBehaviour
             return;
         }
         if (_zoneA.transform.position.z > _zoneB.transform.position.z)
+        {
             (_zoneA, _zoneB) = (_zoneB, _zoneA);
+            (_anchorOverrideA, _anchorOverrideB) = (_anchorOverrideB, _anchorOverrideA);
+        }
 
         int id = _zoneA.Logic.ID ^ _zoneB.Logic.ID;
         Logic = new ZonePathLogic(id, _zoneA.Logic, _zoneB.Logic);
+        Logic.SetRequiresFlying(_requiresFlying);
 
         float deltaZ = _zoneA.transform.position.z - _zoneB.transform.position.z;
         Logic.SetLateral(Mathf.Abs(deltaZ) < _lateralThreshold);

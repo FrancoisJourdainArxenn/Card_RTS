@@ -48,6 +48,18 @@ public class PauseMenuController : MonoBehaviour
         EventSystem.current.SetSelectedGameObject(null);
     }
 
+    public void Concede()
+    {
+        Close();
+
+        Player localPlayer = GlobalSettings.Instance.localPlayer;
+
+        if (NetworkSessionData.IsNetworkSession)
+            GameNetworkManager.Instance.ConcedeServerRpc(localPlayer.playerIndex);
+        else
+            new GameOverCommand(localPlayer.otherPlayer.PlayerID, false).AddToQueue();
+    }
+
     public void GoToMainMenu()
     {
         IDFactory.ResetIDs();
@@ -55,6 +67,8 @@ public class PauseMenuController : MonoBehaviour
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
         BuildingLogic.BuildingsCreatedThisGame.Clear();
+        CreatureLogic.PendingDeathList.Clear();
+        BuildingLogic.PendingDeathVisualQueue.Clear();
         Command.CommandQueue.Clear();
         Command.CommandExecutionComplete();
         NetworkSessionData.IsNetworkSession = false;

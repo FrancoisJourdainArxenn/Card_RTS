@@ -192,10 +192,15 @@ public class FogOfWarManager : MonoBehaviour
         }
 
         // --- Bases joueur (fog comme les bases neutres) ---
-        // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV)
+        // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV) —
+        // sauf si HomeUnit est assignée : le bâtiment n'existe plus comme objet de jeu (voir
+        // Player.SpawnHomeUnitIfConfigured, qui le désactive), donc le fog ne doit jamais le
+        // réafficher — sans ce garde, ApplyFogForObserver(true) le SetActive(true) inconditionnellement
+        // dès le premier recalcul de fog qui suit.
         if (observer.MainPArea != null
             && observer.MainPArea.parentZone == zone
-            && observer.baseVisual != null)
+            && observer.baseVisual != null
+            && observer.HomeUnit == null)
         {
             observer.baseVisual.ApplyFogForObserver(true);
         }
@@ -204,7 +209,8 @@ public class FogOfWarManager : MonoBehaviour
         if (enemy != null
             && enemy.MainPArea != null
             && enemy.MainPArea.parentZone == zone
-            && enemy.baseVisual != null)
+            && enemy.baseVisual != null
+            && enemy.HomeUnit == null)
         {
             enemy.baseVisual.ApplyFogForObserver(observerHasPresence);
         }

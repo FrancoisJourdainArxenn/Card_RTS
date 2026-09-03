@@ -8,6 +8,7 @@ public class ZonePathLogic : IIdentifiable
     public ZoneLogic ZoneA { get; }
     public ZoneLogic ZoneB { get; }
     public bool IsLateral { get; private set; }
+    public bool RequiresFlying { get; private set; }
 
     private IPathBlocker _blocker;
     public bool IsBlocked => _blocker != null && _blocker.IsActive;
@@ -24,6 +25,11 @@ public class ZonePathLogic : IIdentifiable
     public void SetLateral(bool isLateral)
     {
         IsLateral = isLateral;
+    }
+
+    public void SetRequiresFlying(bool requiresFlying)
+    {
+        RequiresFlying = requiresFlying;
     }
 
     public void SetBlocker(IPathBlocker blocker)
@@ -49,8 +55,9 @@ public class ZonePathLogic : IIdentifiable
 
     public ZoneLogic OtherEnd(ZoneLogic from) => from == ZoneA ? ZoneB : ZoneA;
 
-    public bool CanTraverse(Player player, ZoneLogic from)
+    public bool CanTraverse(Player player, ZoneLogic from, bool moverIsFlying = false)
     {
+        if (RequiresFlying && !moverIsFlying) return false;
         if (IsBlocked) return false;
         if (IsLateral) return true;
 
@@ -62,11 +69,13 @@ public class ZonePathLogic : IIdentifiable
 
         foreach (CreatureLogic creature in player.otherPlayer.playedCards.Creatures)
         {
-            if (from.SubZoneIDs.Contains(creature.BaseID))
-                return false;
+            if (!from.SubZoneIDs.Contains(creature.BaseID)) continue;
+            // Sur un path aérien, seules les créatures volantes ennemies bloquent l'avancée.
+            if (RequiresFlying && !creature.IsFlying) continue;
+            // Une créature avec 0 d'attaque ne bloque pas les déplacements adverses.
+            if (creature.Attack <= 0) continue;
+            return false;
         }
         return true;
     }
-
-
 }

@@ -15,13 +15,13 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 0}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 3
-  Description: '<b>Piercing Attacks
+  Description: '<b>Flying
 
-    On Play:</b> Assimilates target ALLY unit
-    to gain their stats.'
-  CardImage: {fileID: 21300000, guid: f71ee7542ea62794184726b96bd78c93, type: 3}
+    On Play:</b> Assimilates target ALLY unit to gain
+    their stats.'
+  CardImage: {fileID: 21300000, guid: fbd051b05286f4e4ca42069b3d7563d1, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
@@ -29,15 +29,19 @@ MonoBehaviour:
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers:
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 0
+  Flying: 1
+  TransportCapacity: 0
   IsStructureUnit: 0
-  Keywords: []
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
+  Keywords:
+  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Miam

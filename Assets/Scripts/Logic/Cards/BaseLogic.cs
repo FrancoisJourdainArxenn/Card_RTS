@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 using UnityEngine;
 
@@ -10,13 +11,21 @@ public class BaseLogic: ILivable
     public BaseAsset ba;
     public NeutralZoneController neutralBaseController;
     private int uniqueBaseID;
-    private ZoneLogic _homeZone;
 
     public bool IsHomeBase => neutralBaseController == null;
 
     public int ID => uniqueBaseID;
     public string DisplayName => ba.name;
-    public ZoneLogic Zone => IsHomeBase ? _homeZone : neutralBaseController?.zone?.Logic;
+    // Lu en direct (jamais mis en cache) : owner.MainPArea n'est assigné qu'après la construction de
+    // homeBaseLogic (GlobalSettings.InitFromMap tourne après Player.Awake), donc un _homeZone figé à
+    // la construction restait null pour toute la partie et cassait IsUnderAttack (malus "-1 ressource"
+    // jamais appliqué même avec des créatures ennemies dans la home zone).
+    // Quand owner.HomeUnit est assignée (base principale = unité mobile, voir Player.HomeUnit), la
+    // zone suit l'unité au lieu de rester figée sur MainPArea — IsUnderAttack/EffectiveIncome (dérivés
+    // de Zone ci-dessous) s'appliquent alors automatiquement là où l'unité se trouve réellement.
+    public ZoneLogic Zone => IsHomeBase
+        ? (owner.HomeUnit != null ? owner.HomeUnit.Zone : owner.MainPArea?.parentZone?.Logic)
+        : neutralBaseController?.zone?.Logic;
 
     private int baseHealth;
     public int MaxHealth
@@ -59,7 +68,17 @@ public class BaseLogic: ILivable
         get{ return baseMainRessourceIncome; }
     }
 
-    public bool IsUnderAttack => Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
+    public bool IsUnderAttack
+    {
+        get
+        {
+            bool result = Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
+            string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
+            Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
+                string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
+            return result;
+        }
+    }
     public int EffectiveIncome => IsUnderAttack ? Mathf.Max(0, MainRessourceIncome - 1) : MainRessourceIncome;
 
     public int BaseID {get; private set;}
@@ -112,12 +131,11 @@ public class BaseLogic: ILivable
     }
 
     // Constructeur pour les home bases des joueurs
-    public BaseLogic(Player owner, ZoneLogic homeZone)
+    public BaseLogic(Player owner)
     {
         this.ba = owner.baseAsset;
         CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         this.neutralBaseController = null;
-        this._homeZone = homeZone;
         baseHealth = ba.MaxHealth;
         health = baseHealth;
         baseMainRessourceIncome = ba.mainRessourceIncome;

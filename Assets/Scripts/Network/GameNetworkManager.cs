@@ -627,55 +627,63 @@ public class GameNetworkManager : NetworkBehaviour
 
         var serverCreatureIDSet = new System.Collections.Generic.HashSet<int>(creatureIDs);
 
-        for (int i = 0; i < creatureIDs.Length; i++)
+        CreatureLogic.SuppressUpgradeTracking = true;
+        try
         {
-            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+            for (int i = 0; i < creatureIDs.Length; i++)
             {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
-                continue;
-            }
-
-            bool statsChanged = false;
-
-            if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
-                creature.Health = creatureHealths[i];
-                statsChanged = true;
-            }
-            if (creature.MaxHealth != creatureMaxHealths[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
-                creature.MaxHealth = creatureMaxHealths[i];
-                statsChanged = true;
-            }
-            if (creature.Attack != creatureAttacks[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
-                creature.Attack = creatureAttacks[i];
-                statsChanged = true;
-            }
-
-            if (statsChanged)
-            {
-                GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureIDs[i]);
-                OneCreatureManager manager = creatureGO != null ? creatureGO.GetComponent<OneCreatureManager>() : null;
-                if (manager != null)
+                if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
                 {
-                    manager.AttackText.text = creature.Attack.ToString();
-                    manager.HealthText.text = creature.Health.ToString();
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} : présente côté serveur (HP={creatureHealths[i]}/{creatureMaxHealths[i]}, ATK={creatureAttacks[i]}) mais absente côté client.");
+                    continue;
+                }
+
+                bool statsChanged = false;
+
+                if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : HP local={creature.Health}, serveur={creatureHealths[i]}. Correction appliquée.");
+                    creature.Health = creatureHealths[i];
+                    statsChanged = true;
+                }
+                if (creature.MaxHealth != creatureMaxHealths[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MaxHP local={creature.MaxHealth}, serveur={creatureMaxHealths[i]}. Correction appliquée.");
+                    creature.MaxHealth = creatureMaxHealths[i];
+                    statsChanged = true;
+                }
+                if (creature.Attack != creatureAttacks[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : ATK locale={creature.Attack}, serveur={creatureAttacks[i]}. Correction appliquée.");
+                    creature.Attack = creatureAttacks[i];
+                    statsChanged = true;
+                }
+
+                if (statsChanged)
+                {
+                    GameObject creatureGO = IDHolder.GetGameObjectWithID(creatureIDs[i]);
+                    OneCreatureManager manager = creatureGO != null ? creatureGO.GetComponent<OneCreatureManager>() : null;
+                    if (manager != null)
+                    {
+                        manager.AttackText.text = creature.Attack.ToString();
+                        manager.HealthText.text = creature.Health.ToString();
+                    }
+                }
+                if (creature.AttacksLeftThisTurn != attacksLeft[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
+                    creature.AttacksLeftThisTurn = attacksLeft[i];
+                }
+                if (creature.MovementsLeftThisTurn != movementsLeft[i])
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
+                    creature.MovementsLeftThisTurn = movementsLeft[i];
                 }
             }
-            if (creature.AttacksLeftThisTurn != attacksLeft[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : AttacksLeft local={creature.AttacksLeftThisTurn}, serveur={attacksLeft[i]}. Correction appliquée.");
-                creature.AttacksLeftThisTurn = attacksLeft[i];
-            }
-            if (creature.MovementsLeftThisTurn != movementsLeft[i])
-            {
-                Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : MovementsLeft local={creature.MovementsLeftThisTurn}, serveur={movementsLeft[i]}. Correction appliquée.");
-                creature.MovementsLeftThisTurn = movementsLeft[i];
-            }
+        }
+        finally
+        {
+            CreatureLogic.SuppressUpgradeTracking = false;
         }
 
         foreach (int localID in CreatureLogic.CreaturesCreatedThisGame.Keys)
@@ -739,10 +747,46 @@ public class GameNetworkManager : NetworkBehaviour
         List<PendingAction> p0Actions = _actionBuffer.FindAll(a => a.playerIndex == 0);
         List<PendingAction> p1Actions = _actionBuffer.FindAll(a => a.playerIndex == 1);
 
+        // Réordonne uniquement les BoardCreature entre elles (mêlée avant distance, gauche avant
+        // droite — voir SortBoardActionsInPlace) : les autres types d'action gardent exactement leur
+        // position, comme TableVisual.SortListByIDs.
+        SortBoardActionsInPlace(p0Actions);
+        SortBoardActionsInPlace(p1Actions);
+
         foreach (PendingAction action in p0Actions) ExecuteAction(action);
         foreach (PendingAction action in p1Actions) ExecuteAction(action);
 
         _actionBuffer.Clear();
+    }
+
+    // Trie les actions BoardCreature de actions par (mêlée avant distance, boardOrderPos croissant —
+    // voir DragCreatureActions.Board/PendingAction.param3), en conservant leurs emplacements d'origine
+    // dans la liste pour ne jamais déplacer une action d'un autre type (même principe que
+    // TableVisual.SortListByIDs). Un tri global tous transports confondus suffit : BoardCreature ne
+    // touche que l'état propre à SON transporteur, donc l'ordre relatif entre deux transports
+    // différents n'a aucune conséquence — et deux joueurs ne peuvent jamais partager un transport.
+    private static void SortBoardActionsInPlace(List<PendingAction> actions)
+    {
+        List<int> slots = new List<int>();
+        List<PendingAction> boardActions = new List<PendingAction>();
+        for (int i = 0; i < actions.Count; i++)
+        {
+            if (actions[i].type != ActionType.BoardCreature) continue;
+            slots.Add(i);
+            boardActions.Add(actions[i]);
+        }
+        if (boardActions.Count <= 1) return;
+
+        boardActions.Sort((a, b) =>
+        {
+            bool aMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(a.param1, out CreatureLogic ac) && ac.IsMelee;
+            bool bMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(b.param1, out CreatureLogic bc) && bc.IsMelee;
+            int rowCompare = (aMelee ? 0 : 1).CompareTo(bMelee ? 0 : 1);
+            return rowCompare != 0 ? rowCompare : a.param3.CompareTo(b.param3);
+        });
+
+        for (int k = 0; k < slots.Count; k++)
+            actions[slots[k]] = boardActions[k];
     }
 
     /// <summary>
@@ -843,6 +887,9 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.MoveCreature:
                 MoveCreatureClientRpc(action.param1, action.param2, action.param3);
                 break;
+            case ActionType.BoardCreature:
+                BoardCreatureClientRpc(action.param1, action.param2);
+                break;
             case ActionType.PlaceBuilding:
                 PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
                 break;
@@ -928,8 +975,14 @@ public class GameNetworkManager : NetworkBehaviour
             {
                 cardInHandIDs[i] = IDFactory.GetUniqueID();
             }
+
+            int[] homeUnitCreatureIDs = new int[Player.Players.Length];
+            for (int i = 0; i < homeUnitCreatureIDs.Length; i++)
+            {
+                homeUnitCreatureIDs[i] = IDFactory.GetUniqueID();
+            }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs, homeUnitCreatureIDs);
         }
     }
 
@@ -937,13 +990,13 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
     {
         // 1. Assigner le local player
         AssignLocalPlayerControl();
 
         // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs);
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs, homeUnitCreatureIDs);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();
@@ -1310,6 +1363,20 @@ public class GameNetworkManager : NetworkBehaviour
         }
     }
 
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ConcedeServerRpc(int concedingPlayerIndex)
+    {
+        Debug.Log($"[GameNetworkManager] Concede reçu — joueur {concedingPlayerIndex}");
+        ConcedeClientRpc(concedingPlayerIndex);
+    }
+
+    [ClientRpc]
+    void ConcedeClientRpc(int concedingPlayerIndex)
+    {
+        Player winner = Player.Players[concedingPlayerIndex].otherPlayer;
+        new GameOverCommand(winner.PlayerID, false).AddToQueue();
+    }
+
     void FlushPendingEndPhase(TurnManager.TurnPhases phase)
     {
         if (!_pendingEndPhase.TryGetValue(phase, out var pending)) return;
@@ -1649,6 +1716,85 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         creature.Move(targetBaseID, tablePos);
+    }
+
+    //Boarding a Transport
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void BoardCreatureServerRpc(int passengerUniqueID, int transportUniqueID, int playerIndex, int boardOrderPos)
+    {
+        Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}, boardOrderPos={boardOrderPos}");
+        RegisterAction(new PendingAction
+        {
+            type = ActionType.BoardCreature,
+            playerIndex = playerIndex,
+            param1 = passengerUniqueID,
+            param2 = transportUniqueID,
+            param3 = boardOrderPos
+        });
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = true;
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void CancelBoardCreatureServerRpc(int passengerUniqueID, int playerIndex, RpcParams rpcParams = default)
+    {
+        int removed = _actionBuffer.RemoveAll(a =>
+            a.type == ActionType.BoardCreature &&
+            a.param1 == passengerUniqueID &&
+            a.playerIndex == playerIndex);
+
+        Debug.Log($"[Transport][Server] CancelBoardCreatureServerRpc — passenger={passengerUniqueID}, playerIndex={playerIndex}, removed={removed}");
+
+        if (removed == 0)
+            return;
+
+        if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+            creature.IsPendingMove = false;
+
+        // Même raison que CancelMoveCreatureServerRpc : l'auteur de l'annulation a déjà nettoyé sa
+        // propre flèche en local, on ne relaie donc qu'aux autres clients.
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        List<ulong> otherClients = new List<ulong>();
+        foreach (ulong id in NetworkManager.ConnectedClientsIds)
+        {
+            if (id != senderId)
+                otherClients.Add(id);
+        }
+
+        if (otherClients.Count == 0)
+            return;
+
+        ClientRpcParams targetParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = otherClients.ToArray() }
+        };
+        CancelBoardCreatureClientRpc(passengerUniqueID, targetParams);
+    }
+
+    [ClientRpc]
+    void CancelBoardCreatureClientRpc(int passengerUniqueID, ClientRpcParams clientRpcParams = default)
+    {
+        IDHolder.GetGameObjectWithID(passengerUniqueID)
+            ?.GetComponent<OneCreatureManager>()
+            ?.ClearPendingMoveArrow();
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients : résout l'embarquement avec les mêmes paramètres.
+    /// </summary>
+    [ClientRpc]
+    void BoardCreatureClientRpc(int passengerUniqueID, int transportUniqueID)
+    {
+        Debug.Log($"[Transport][{(IsServer ? "Server" : "Client")}] BoardCreatureClientRpc received — passenger={passengerUniqueID}, transport={transportUniqueID}");
+        OneCreatureManager ocm = IDHolder.GetGameObjectWithID(passengerUniqueID)?.GetComponent<OneCreatureManager>();
+        ocm?.ClearPendingMoveArrow();
+
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
+        {
+            Debug.LogError($"[GameNetworkManager] BoardCreature: créature introuvable id={passengerUniqueID}");
+            return;
+        }
+        creature.Board(transportUniqueID);
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

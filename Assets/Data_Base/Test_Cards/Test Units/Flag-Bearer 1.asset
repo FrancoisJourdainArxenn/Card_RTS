@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: <b>Start of Combat:</b> Gives +1/+1 to a Soldier.
+  Description: 
   CardImage: {fileID: 21300000, guid: a9a2546dc379857478d8672a4f142a3e, type: 3}
   MainCost: 0
   IsHero: 0
@@ -26,44 +26,17 @@ MonoBehaviour:
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 1
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards: []
-  Effects:
-  - EffectName: Inspire
-    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
-    Trigger: 16
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
-        includesEventSubject: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-      repartition: 3
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
+  Effects: []

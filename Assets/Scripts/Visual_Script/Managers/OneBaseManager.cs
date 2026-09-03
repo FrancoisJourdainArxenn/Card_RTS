@@ -114,7 +114,7 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
     public void RefreshIncomeDisplay(int income, bool underAttack = false)
     {
         if (MainRessourceIncome != null)
-            MainRessourceIncome.text = "+ " + income.ToString();
+            MainRessourceIncome.text = "+" + income.ToString();
         SetUnderAttackVisual(underAttack);
     }
 

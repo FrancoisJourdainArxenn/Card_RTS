@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:
@@ -47,7 +51,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 1
+          statusFilter: 0
           zoneFilter: 0
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 1

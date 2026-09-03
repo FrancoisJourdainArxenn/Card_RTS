@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
   baseAsset: {fileID: 11400000, guid: f97714bea66458c4c9dbec3e63e30d35, type: 2}
   cards:
-  - {fileID: 11400000, guid: 94b52bea38bf0314287c5eb343d51905, type: 2}
-  - {fileID: 11400000, guid: 36107567660666647aff4c93fa11fa43, type: 2}
+  - {fileID: 11400000, guid: d2514188ee7d7e249aa64153480712d8, type: 2}
+  - {fileID: 11400000, guid: 7d8aa53131a4fe24d97c8dda6ad114f8, type: 2}
+  - {fileID: 11400000, guid: edded2afcfffa73419622b797008f9ae, type: 2}
   buildings: []

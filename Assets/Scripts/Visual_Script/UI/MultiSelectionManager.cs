@@ -13,9 +13,21 @@ public class MultiSelectionManager : MonoBehaviour
     public List<OneCreatureManager> AllSelectableObjects = new List<OneCreatureManager>();
     public List <OneCreatureManager> CurrSelectedObjects = new List<OneCreatureManager>();
 
+    // Vrai tant qu'un clic de confirmation de group-move/board est attendu — même convention que
+    // OnPlayTargetingSession.IsActive (voir DragSpellNoTarget/DragSpellOnTarget.CanDrag) : empêche
+    // Draggable.OnMouseDown() de détourner ce clic en un nouveau drag sur la créature/le transport
+    // survolé (ex: cliquer sur le transport ciblé le fait sinon glisser lui-même au lieu de confirmer
+    // l'embarquement du groupe dessus).
+    public static bool IsConfirmingGroupMove;
+
     bool isMouseDown, isDragging, groupMoveActive;
     Vector3 MouseStartPos;
     readonly List<PlayerArea> highlightedAreas = new List<PlayerArea>();
+    readonly List<OneCreatureManager> boardableTransports = new List<OneCreatureManager>();
+    // Suivi en continu (comme DragCreatureActions.UpdateHoveredTransport) plutôt qu'un test ponctuel
+    // au moment du clic : sans retour visuel pendant le survol, le joueur n'a aucun moyen de savoir
+    // s'il est précisément sur la petite hitbox du transport avant de cliquer.
+    OneCreatureManager hoveredGroupTransport;
 
     Vector2 ScreenToLocal(Vector3 screenPos)
     {
@@ -58,6 +70,7 @@ public class MultiSelectionManager : MonoBehaviour
 
         if (groupMoveActive)
         {
+            UpdateGroupMoveHover();
             if (Input.GetMouseButtonDown(0))
                 ConfirmGroupMove();
             return;
@@ -171,20 +184,38 @@ public class MultiSelectionManager : MonoBehaviour
     void StartGroupMove()
     {
         HashSet<PlayerArea> reachable = new HashSet<PlayerArea>();
+        HashSet<OneCreatureManager> boardable = new HashSet<OneCreatureManager>();
         foreach (OneCreatureManager so in CurrSelectedObjects)
         {
             DragCreatureActions dca = so.GetComponentInChildren<DragCreatureActions>();
-            if (dca != null) dca.GetReachableAreasInto(reachable);
+            if (dca != null)
+            {
+                dca.GetReachableAreasInto(reachable);
+                dca.GetBoardableTransportsInto(boardable);
+            }
         }
 
-        if (reachable.Count == 0) return;
+        List<string> boardableNames = new List<string>();
+        foreach (OneCreatureManager t in boardable)
+            boardableNames.Add(t.cardAsset != null ? t.cardAsset.name : "?");
+        Debug.Log($"[Transport] StartGroupMove — {CurrSelectedObjects.Count} selected, reachable={reachable.Count}, boardable={boardable.Count} [{string.Join(", ", boardableNames)}]");
+
+        if (reachable.Count == 0 && boardable.Count == 0) return;
 
         groupMoveActive = true;
+        IsConfirmingGroupMove = true;
         highlightedAreas.Clear();
         foreach (PlayerArea pa in reachable)
         {
             pa.tableVisual.SetHighlight(true);
             highlightedAreas.Add(pa);
+        }
+
+        boardableTransports.Clear();
+        foreach (OneCreatureManager t in boardable)
+        {
+            t.SetTransportHighlight(true);
+            boardableTransports.Add(t);
         }
 
         Vector3 centroid = Vector3.zero;
@@ -196,10 +227,65 @@ public class MultiSelectionManager : MonoBehaviour
         groupMoveArrow.ShowToMouse();
     }
 
+    // Survole les transports embarquables chaque frame pendant groupMoveActive (bounds écran, voir
+    // OneCreatureManager.IsScreenPointOver) — même technique que DragCreatureActions.UpdateHoveredTransport,
+    // pour donner un retour visuel (vert) avant le clic plutôt qu'un test ponctuel au moment du clic.
+    void UpdateGroupMoveHover()
+    {
+        OneCreatureManager newHover = null;
+        foreach (OneCreatureManager t in boardableTransports)
+        {
+            if (t != null && t.IsScreenPointOver(Input.mousePosition))
+            {
+                newHover = t;
+                break;
+            }
+        }
+
+        if (newHover == hoveredGroupTransport) return;
+
+        if (hoveredGroupTransport != null)
+            hoveredGroupTransport.SetTransportHighlight(true);
+        hoveredGroupTransport = newHover;
+        if (hoveredGroupTransport != null)
+            hoveredGroupTransport.SetTransportHighlight(true, targeted: true);
+    }
+
     void ConfirmGroupMove()
     {
+        // Un transport survolé prime sur une zone : même hiérarchie que le drag simple (voir
+        // DragCreatureActions.OnEndDrag), boarder le groupe plutôt que le déplacer vers une zone.
+        OneCreatureManager targetTransport = hoveredGroupTransport;
+
+        Debug.Log($"[Transport] ConfirmGroupMove — mousePos={Input.mousePosition}, boardableTransports.Count={boardableTransports.Count}, targetTransport={(targetTransport != null ? targetTransport.cardAsset?.name : "null")}");
+
+        if (targetTransport == null)
+        {
+            foreach (OneCreatureManager t in boardableTransports)
+                if (t != null)
+                    Debug.Log($"[Transport] ConfirmGroupMove — miss detail: {t.DebugScreenBoundsInfo(Input.mousePosition)}");
+        }
+
+        if (targetTransport != null)
+        {
+            int boardedCount = 0;
+            foreach (OneCreatureManager so in CurrSelectedObjects)
+            {
+                DragCreatureActions dca = so.GetComponentInChildren<DragCreatureActions>();
+                if (dca != null && dca.TryGroupBoardTo(targetTransport))
+                    boardedCount++;
+            }
+            if (boardedCount < CurrSelectedObjects.Count)
+                new ShowMessageCommand("Not all Units could board that transport.", 1f).AddToQueue();
+
+            EndGroupMove();
+            return;
+        }
+
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         PlayerArea targetArea = localPlayer != null ? localPlayer.SelectedPArea() : null;
+
+        Debug.Log($"[Transport] ConfirmGroupMove — no transport hit, targetArea={(targetArea != null ? targetArea.name : "null")}, highlightedAreas.Contains={highlightedAreas.Contains(targetArea)}");
 
         if (targetArea != null && highlightedAreas.Contains(targetArea))
         {
@@ -253,10 +339,16 @@ public class MultiSelectionManager : MonoBehaviour
     void EndGroupMove()
     {
         groupMoveActive = false;
+        IsConfirmingGroupMove = false;
         groupMoveArrow.Hide();
         foreach (PlayerArea pa in highlightedAreas)
             pa.tableVisual.SetHighlight(false);
         highlightedAreas.Clear();
+
+        foreach (OneCreatureManager t in boardableTransports)
+            if (t != null) t.SetTransportHighlight(false);
+        boardableTransports.Clear();
+        hoveredGroupTransport = null;
 
         foreach (OneCreatureManager so in CurrSelectedObjects)
             so.Deselect();

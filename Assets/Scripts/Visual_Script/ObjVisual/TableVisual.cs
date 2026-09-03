@@ -155,6 +155,17 @@ public class TableVisual : MonoBehaviour
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
 
         if (isFogged) creature.SetActive(false);
+
+        // Sans ce resync, une créature dont la révélation visuelle est différée (reveal au flush,
+        // voir PlayACreatureCommand) peut rester mal placée dans playedCards.Creatures — la liste qui
+        // détermine réellement l'ordre d'attaque (voir ZoneCombatResolver.GetCreaturesInMyZone) —
+        // si un reorder a eu lieu pendant qu'elle était encore pending sur cette machine (fallback
+        // pendingWithoutGO de ResyncCreatureOrderForArea, qui la pousse en fin de liste faute de
+        // GameObject visuel à ce moment-là). MoveCreatureToIndex fait déjà ce resync ; AddCreatureAtIndex
+        // ne le faisait pas, d'où un décalage silencieux entre position visuelle et ordre de combat.
+        ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
+            baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);
+
         if (completeCommand)
             PlaceCreaturesOnNewSlots(Command.CommandExecutionComplete);
         else
@@ -644,9 +655,11 @@ public class TableVisual : MonoBehaviour
 
     private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position, int? overrideAttack = null, int? overrideHealth = null)
     {
-        GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
+        GameObject creaturePrefab = ca.IsHero ? GlobalSettings.Instance.HeroCreaturePrefab : GlobalSettings.Instance.CreaturePrefab;
+        GameObject creature = GameObject.Instantiate(creaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
         manager.BaseID   = baseID;
+        manager.Owner    = owner;
         manager.cardAsset = ca;
         manager.ReadCreatureFromAsset();
         foreach (Transform t in creature.GetComponentsInChildren<Transform>())
@@ -692,11 +705,13 @@ public class TableVisual : MonoBehaviour
             OneCreatureManager ocm = c.GetComponent<OneCreatureManager>();
             if (ocm?.cardAsset == null) continue;
 
-            GameObject ghost = Instantiate(GlobalSettings.Instance.CreaturePrefab,
+            GameObject ghostPrefab = ocm.cardAsset.IsHero ? GlobalSettings.Instance.HeroCreaturePrefab : GlobalSettings.Instance.CreaturePrefab;
+            GameObject ghost = Instantiate(ghostPrefab,
                 c.transform.position, Quaternion.identity, slots.transform);
 
             OneCreatureManager ghostOcm = ghost.GetComponent<OneCreatureManager>();
             ghostOcm.BaseID = ocm.BaseID;
+            ghostOcm.Owner = owner;
             ghostOcm.cardAsset = ocm.cardAsset;
             ghostOcm.ReadCreatureFromAsset();
             ghostOcm.HealthText.text = ocm.HealthText.text;

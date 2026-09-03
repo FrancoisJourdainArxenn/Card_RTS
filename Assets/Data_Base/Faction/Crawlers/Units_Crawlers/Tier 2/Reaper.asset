@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
-  subType: 1
+  subType: 5
   tier: 2
   Description: <b>On Attack:</b> Other Melee units gain +0/+1 until end of turn.
   CardImage: {fileID: 21300000, guid: 2cc180bf48a906945b5e29a006b4cdd7, type: 3}
@@ -32,7 +32,10 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
   Keywords: []
   ReferencedCards: []
   Effects:

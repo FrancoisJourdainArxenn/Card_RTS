@@ -223,21 +223,27 @@ public class ZoneCombatResolver : MonoBehaviour
         bool p2HasBuildingAtk = GetBuildingsInMyZone(p2, zoneView).Count > 0;
         int p1CreatureCount = GetCreaturesInMyZone(p1, zoneView).Count;
         int p2CreatureCount = GetCreaturesInMyZone(p2, zoneView).Count;
+        // Quand pX.HomeUnit est assignée, sa zone de départ (MainPArea) n'est plus un point de vie
+        // destructible (voir AssignSingleAttack) — un ennemi non bloqué là-bas ne doit donc plus
+        // compter comme "combat possible" ici non plus, sinon les popups OnBattleStart et le focus
+        // caméra (ZoneBattleStartRevealCommand) se déclenchent pour un combat qui n'aura jamais lieu.
+        bool p1MainZoneIsLiveTarget = p1.HomeUnit == null && zoneView.subZones.Contains(p1.MainPArea);
+        bool p2MainZoneIsLiveTarget = p2.HomeUnit == null && zoneView.subZones.Contains(p2.MainPArea);
 
         if (
             (p1CreatureCount > 0 && p2CreatureCount > 0) ||
             (FindDefenderBaseInZone(p1) != null && p2CreatureCount > 0) ||
             (FindDefenderBaseInZone(p2) != null && p1CreatureCount > 0) ||
-            (zoneView.subZones.Contains(p1.MainPArea) && p2CreatureCount > 0) ||
-            (zoneView.subZones.Contains(p2.MainPArea) && p1CreatureCount > 0) ||
+            (p1MainZoneIsLiveTarget && p2CreatureCount > 0) ||
+            (p2MainZoneIsLiveTarget && p1CreatureCount > 0) ||
             (p1HasBuildingAtk && p2CreatureCount > 0) ||
             (p2HasBuildingAtk && p1CreatureCount > 0) ||
             (p1CreatureCount > 0 && GetAllBuildingsInMyZone(p2, zoneView).Count > 0) ||
             (p2CreatureCount > 0 && GetAllBuildingsInMyZone(p1, zoneView).Count > 0) ||
             (p1HasBuildingAtk && FindDefenderBaseInZone(p2) != null) ||
             (p2HasBuildingAtk && FindDefenderBaseInZone(p1) != null) ||
-            (p1HasBuildingAtk && zoneView.subZones.Contains(p2.MainPArea)) ||
-            (p2HasBuildingAtk && zoneView.subZones.Contains(p1.MainPArea))
+            (p1HasBuildingAtk && p2MainZoneIsLiveTarget) ||
+            (p2HasBuildingAtk && p1MainZoneIsLiveTarget)
         )
             return true;
         return false;
@@ -440,6 +446,13 @@ public class ZoneCombatResolver : MonoBehaviour
         // que OnDeath, qui n'affecte jamais l'évènement qui l'a déclenché) — seulement les suivantes.
         CreatureLogic attackerLogic = !attacker.isBuilding && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attacker.id, out CreatureLogic al) ? al : null;
 
+        // Un attaquant Melee qui n'est pas lui-même Flying ne peut pas cibler une créature Flying.
+        bool attackerIsGroundedMelee = IsMeleeAttacker(attacker.id, attacker.isBuilding) && !(attackerLogic?.IsFlying ?? false);
+        // Un attaquant Melee Flying ne subit pas la contre-attaque d'une créature Melee au sol (non-Flying) :
+        // elle ne peut pas l'atteindre en retour. Elle continue en revanche de subir la riposte d'une
+        // créature Ranged ou d'une autre créature Flying (voir Tier 3 / Tier 2 selon le cas).
+        bool attackerIsFlyingMelee = IsMeleeAttacker(attacker.id, attacker.isBuilding) && (attackerLogic?.IsFlying ?? false);
+
         // Tier 1 : bâtiments mêlée
         List<BuildingLogic> eligibleMeleeBuildings = new List<BuildingLogic>();
         foreach (BuildingLogic b in buildings)
@@ -475,6 +488,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (CreatureLogic t in creatures)
         {
             if (!t.IsMelee || IsEffectivelyDead(t)) continue;
+            if (t.IsFlying && attackerIsGroundedMelee) continue;
             eligibleMeleeCreatures.Add(t);
         }
         if (eligibleMeleeCreatures.Count > 0)
@@ -485,7 +499,8 @@ public class ZoneCombatResolver : MonoBehaviour
             AddPendingCreatureDamage(t.UniqueCreatureID, assign, stepIndex, 0);
             // Debug.Log($"[Assign:{zoneView.name}][Tier2:CréatureMêlée] attaquant={attacker.id}({(attacker.isBuilding ? "bât" : "créat")}) cible créat={t.UniqueCreatureID}({t.DisplayName}) dégâts={assign} overflow={dmg - assign}");
             int counter2 = 0;
-            if (IsMeleeAttacker(attacker.id, attacker.isBuilding))
+            bool groundMeleeCantReachFlying = attackerIsFlyingMelee && !t.IsFlying;
+            if (IsMeleeAttacker(attacker.id, attacker.isBuilding) && !groundMeleeCantReachFlying)
             {
                 counter2 = t.Attack;
                 if (!attacker.isBuilding)
@@ -506,6 +521,7 @@ public class ZoneCombatResolver : MonoBehaviour
         foreach (CreatureLogic t in creatures)
         {
             if (t.IsMelee || IsEffectivelyDead(t)) continue;
+            if (t.IsFlying && attackerIsGroundedMelee) continue;
             eligibleRangedCreatures.Add(t);
         }
         if (eligibleRangedCreatures.Count > 0)
@@ -571,7 +587,11 @@ public class ZoneCombatResolver : MonoBehaviour
             attackerLogic?.ResolvePredictedOnAttack(defenderBase);
             return (0, new BattleStepRecord { attackerID = attacker.id, attackerIsBuilding = attacker.isBuilding, targetID = defenderBase.ID, targetKind = TargetKind.Base, damage = dmg, targetOwnerPlayerID = defender.PlayerID });
         }
-        if (zoneView.subZones.Contains(defender.MainPArea))
+        // Quand defender.HomeUnit est assignée, la base principale n'est plus un point de vie
+        // destructible dans sa zone de départ : le seul moyen de blesser ce joueur est de tuer
+        // l'unité elle-même (déjà couverte plus haut, tiers 2/3, comme n'importe quelle créature, où
+        // qu'elle se trouve). Un attaquant sans cible dans cette zone n'inflige donc plus rien ici.
+        if (defender.HomeUnit == null && zoneView.subZones.Contains(defender.MainPArea))
         {
             pendingPlayerDamage.TryGetValue(defender.PlayerID, out int existing);
             pendingPlayerDamage[defender.PlayerID] = existing + dmg;
@@ -599,6 +619,11 @@ public class ZoneCombatResolver : MonoBehaviour
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(attackerID, out CreatureLogic attackerCreature)) return allHits;
         if (attackerCreature.AttackModifiers == null) return allHits;
 
+        // Un attaquant Melee au sol ne peut pas toucher de Flying, même comme cible secondaire
+        // d'un modificateur (Piercing/Row/Circular/...) — même règle que pour la cible principale
+        // (voir attackerIsGroundedMelee dans AssignSingleAttack).
+        bool attackerIsGroundedMelee = attackerCreature.IsMelee && !attackerCreature.IsFlying;
+
         foreach (AttackModifierSO mod in attackerCreature.AttackModifiers)
         {
             if (mod == null) continue; // slot vide/cassé — voir le même garde-fou dans EnqueueBattleCommands
@@ -607,6 +632,11 @@ public class ZoneCombatResolver : MonoBehaviour
 
             foreach (AttackHitResult hit in resolved)
             {
+                if (attackerIsGroundedMelee
+                    && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(hit.TargetUniqueID, out CreatureLogic hitCreature)
+                    && hitCreature.IsFlying)
+                    continue;
+
                 pendingDamage.TryGetValue(hit.TargetUniqueID, out int existing);
                 AddPendingCreatureDamage(hit.TargetUniqueID, hit.Damage, stepIndex, 2 + allHits.Count);
                 allHits.Add(hit);
@@ -643,6 +673,15 @@ public class ZoneCombatResolver : MonoBehaviour
             BattleStepRecord step = steps[zeroBasedStepIdx];
             int stepIdx = zeroBasedStepIdx + 1;
             int attackerHP = GetAttackerCurrentHP(step);
+            
+            if (!step.attackerIsBuilding
+                && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic statsAttackerCreature))
+            {
+                if (statsAttackerCreature.IsRanged)
+                    statsAttackerCreature.owner.matchStats.Add(MatchStatType.RangedUnitAttack);
+                else
+                    statsAttackerCreature.owner.matchStats.Add(MatchStatType.MeleeUnitAttack);
+            }
             switch (step.targetKind)
             {
                 case TargetKind.Creature:
@@ -1109,8 +1148,15 @@ public class ZoneCombatResolver : MonoBehaviour
             if (pa.owner == GetAreaPosition(player))
             {
                 foreach (CreatureLogic c in player.playedCards.Creatures)
-                    if (c.BaseID == pa.baseID)
-                        result.Add(c);
+                {
+                    if (c.BaseID != pa.baseID) continue;
+                    if (c.IsBoarded)
+                    {
+                        Debug.Log($"[Transport] GetCreaturesInMyZone — excluding boarded {c.DisplayName}(ID:{c.UniqueCreatureID}) from combat in zone {zone.name}");
+                        continue;
+                    }
+                    result.Add(c);
+                }
             }
         }
         return result;
@@ -1148,21 +1194,28 @@ public class ZoneCombatResolver : MonoBehaviour
         return player == GlobalSettings.Instance.LowPlayer ? AreaPosition.Low : AreaPosition.Top;
     }
 
-    public static bool WouldSurvive(CreatureLogic creature)
+    public static bool WouldSurvive(CreatureLogic creature) => PredictedHealth(creature) > 0;
+
+    // Santé prédite de cette créature à l'issue de ce round (dégâts en attente moins bouclier,
+    // jamais sous 0) — version numérique de WouldSurvive, nécessaire pour ComputeRoundOutcome quand
+    // un joueur utilise une HomeUnit (voir Player.HomeUnit) : contrairement à Player.Health, une
+    // simple comparaison à 0 ne suffit pas, il faut aussi comparer les PV finaux des deux joueurs
+    // entre eux pour décider qui joue en premier.
+    public static int PredictedHealth(CreatureLogic creature)
     {
         // IsPendingDeath ne couvre que la mort EN combat (MarkPendingDeath) — une créature tuée hors
         // combat (ex: Die() direct, voir Assimilate) ne le pose jamais. Sans le check Health <= 0,
         // une créature déjà morte mais restée fautivement dans playedCards.Creatures (voir
         // Player.ResyncCreatureOrderForArea) compterait comme occupant une place de rangée.
         if (creature.IsPendingDeath || creature.Health <= 0)
-            return false;
+            return 0;
         foreach (ZoneCombatResolver r in allResolvers)
             if (r.pendingDamage.TryGetValue(creature.UniqueCreatureID, out int dmg))
             {
                 int effectiveDamage = Mathf.Max(0, dmg - creature.ShieldValue);
-                return effectiveDamage < creature.Health;
+                return Mathf.Max(0, creature.Health - effectiveDamage);
             }
-        return true; // no pending damage → survives
+        return creature.Health; // no pending damage → unchanged
     }
     public int GetRemainingPool(AreaPosition attackerSide)
     {
@@ -1436,16 +1489,40 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         Player low = GlobalSettings.Instance.LowPlayer;
         Player top = GlobalSettings.Instance.TopPlayer;
-        ZoneCombatResolver lowResolver = FindResolverForPlayer(low);
-        ZoneCombatResolver topResolver = FindResolverForPlayer(top);
 
-        int lowPending = lowResolver != null && lowResolver.pendingPlayerDamage.TryGetValue(low.PlayerID, out int lp) ? lp : 0;
-        int topPending = topResolver != null && topResolver.pendingPlayerDamage.TryGetValue(top.PlayerID, out int tp) ? tp : 0;
-        int finalLowHP = low.Health - lowPending;
-        int finalTopHP = top.Health - topPending;
+        int finalLowHP, finalTopHP, lowIdx, topIdx;
 
-        int lowIdx = lowResolver != null ? lowResolver.resolverIndex : 0;
-        int topIdx = topResolver != null ? topResolver.resolverIndex : lowIdx;
+        // Pour un joueur en mode HomeUnit (voir Player.HomeUnit), les PV finaux et la zone à rejouer
+        // en priorité (voir EnqueueOrderedBattleCommands) viennent de l'unité elle-même — où qu'elle
+        // se trouve sur la carte — plutôt que de Player.Health/MainPArea, ancrés sur la zone de
+        // départ fixe et sans plus aucun sens une fois la base principale mobile.
+        if (low.HomeUnit != null)
+        {
+            ZoneCombatResolver lowHomeResolver = FindForBase(low.HomeUnit.BaseID);
+            finalLowHP = PredictedHealth(low.HomeUnit);
+            lowIdx = lowHomeResolver != null ? lowHomeResolver.resolverIndex : 0;
+        }
+        else
+        {
+            ZoneCombatResolver lowResolver = FindResolverForPlayer(low);
+            int lowPending = lowResolver != null && lowResolver.pendingPlayerDamage.TryGetValue(low.PlayerID, out int lp) ? lp : 0;
+            finalLowHP = low.Health - lowPending;
+            lowIdx = lowResolver != null ? lowResolver.resolverIndex : 0;
+        }
+
+        if (top.HomeUnit != null)
+        {
+            ZoneCombatResolver topHomeResolver = FindForBase(top.HomeUnit.BaseID);
+            finalTopHP = PredictedHealth(top.HomeUnit);
+            topIdx = topHomeResolver != null ? topHomeResolver.resolverIndex : lowIdx;
+        }
+        else
+        {
+            ZoneCombatResolver topResolver = FindResolverForPlayer(top);
+            int topPending = topResolver != null && topResolver.pendingPlayerDamage.TryGetValue(top.PlayerID, out int tp) ? tp : 0;
+            finalTopHP = top.Health - topPending;
+            topIdx = topResolver != null ? topResolver.resolverIndex : lowIdx;
+        }
 
         bool decisive = finalLowHP <= 0 || finalTopHP <= 0;
         bool isDraw = decisive && finalLowHP == finalTopHP;

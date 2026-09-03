@@ -16,6 +16,8 @@ public enum MatchStatType
     UnitsUpgraded,        // somme des +ATK/+Vie conférés à mes unités via ModifyStats (upgrades uniquement, pas les debuffs)
     RangedUnitsSummoned,  // unités Ranged créées (jouées ou tokens), toutes sources confondues
     MeleeUnitsSummoned,   // unités Melee créées (jouées ou tokens), toutes sources confondues
+    MeleeUnitAttack,     // nombre d'attaques initiées par des unités Melee (une par step de combat, hors ripostes)
+    RangedUnitAttack,     // nombre d'attaques initiées par des unités Ranged (une par step de combat, hors ripostes)
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 

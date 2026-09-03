@@ -39,6 +39,7 @@ public class GlobalSettings : MonoBehaviour
     public GameObject CreatureCardPrefab;
     public GameObject HeroCardPrefab;
     public GameObject CreaturePrefab;
+    public GameObject HeroCreaturePrefab;
     public GameObject DamageEffectPrefab;
     public GameObject ExplosionPrefab;
     public GameObject RangedProjectilePrefab;

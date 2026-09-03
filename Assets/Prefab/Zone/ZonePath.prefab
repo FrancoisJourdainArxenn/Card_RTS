@@ -49,6 +49,9 @@ MonoBehaviour:
   _zoneA: {fileID: 0}
   _zoneB: {fileID: 0}
   _lateralThreshold: 1
+  _requiresFlying: 0
+  _anchorOverrideA: {fileID: 0}
+  _anchorOverrideB: {fileID: 0}
 --- !u!114 &6050056020828229010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91,7 +94,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 674916c7650d7bc47ad051fcb87e52f5, type: 2}
+  - {fileID: 2100000, guid: 5a6d2e6ab99f37e41a22bae0a448c35f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

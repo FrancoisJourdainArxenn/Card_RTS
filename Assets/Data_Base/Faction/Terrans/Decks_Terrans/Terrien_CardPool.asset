@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83b16d44f0fdc5c42b5a304e1dbb87f9, type: 3}
+  m_Name: Terrien_CardPool
+  m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
+  baseAsset: {fileID: 11400000, guid: 704948a74f4a38b4f8cde941d084b1c6, type: 2}
+  cards:
+  - {fileID: 11400000, guid: 7c547edd7511e8344904e9c4cefaf5c4, type: 2}
+  - {fileID: 11400000, guid: 521a5c2e94f529948b95c97ceb2fb7af, type: 2}
+  - {fileID: 11400000, guid: b5fcda89bd29d8c4b8908f3da5b39196, type: 2}
+  - {fileID: 11400000, guid: 691b876e44d2cb34e8e2570c67d2a514, type: 2}
+  - {fileID: 11400000, guid: f2e0c3ff7766300458ce74adfa89bf35, type: 2}
+  - {fileID: 11400000, guid: 36f751d1045c2e14b90b7d83851ce4dd, type: 2}
+  - {fileID: 11400000, guid: 44fdfb085f63d904d80fb87a514e61ce, type: 2}
+  - {fileID: 11400000, guid: aa5572c3530ec9e498b265a95626936f, type: 2}
+  - {fileID: 11400000, guid: fc812e1ce99b61c4e85b422e8c97b4cf, type: 2}
+  - {fileID: 11400000, guid: f118ba3d0f450ff41a044551c73cfc4f, type: 2}
+  - {fileID: 11400000, guid: 52d430687d159ef4994e9c0470a2856e, type: 2}
+  - {fileID: 11400000, guid: c21192de5c42bc7478c16bd1e3be3bd3, type: 2}
+  - {fileID: 11400000, guid: 24b0d276860b55c48954d4f9b91e1e59, type: 2}
+  - {fileID: 11400000, guid: f0b086eda811cf24288b59ee880141a1, type: 2}
+  - {fileID: 11400000, guid: 624463bd30f4f4442a1d5f65d8726a22, type: 2}
+  - {fileID: 11400000, guid: 17b0464c7399c8e428f4e9653cad22a7, type: 2}
+  - {fileID: 11400000, guid: c5798783f606d1d41b6e47493302931c, type: 2}
+  buildings: []

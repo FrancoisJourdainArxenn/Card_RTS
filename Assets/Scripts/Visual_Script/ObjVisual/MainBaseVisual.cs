@@ -26,7 +26,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
         HealthText.text = player.Health.ToString();
         if (player.homeBaseLogic != null)
         {
-            MainRessourceText.text = "+ " + player.homeBaseLogic.EffectiveIncome.ToString();
+            MainRessourceText.text = "+" + player.homeBaseLogic.EffectiveIncome.ToString();
             baseManager?.SetUnderAttackVisual(player.homeBaseLogic.IsUnderAttack);
         }
         RefreshTierIcon();

@@ -59,12 +59,45 @@ public class ZoneManager : MonoBehaviour, ITargetableVisual, IPointerClickHandle
         Logic.RemovePath(path.Logic);
     }
 
-    public ZonePath GetPathTo(ZoneManager other)
-        => _registeredPaths.Find(p =>
-            (p.ZoneA == this && p.ZoneB == other) ||
-            (p.ZoneA == other && p.ZoneB == this));
+    public ZonePath GetPathTo(ZoneManager other, Player player, bool isFlying = false)
+    {
+        ZonePath fallback = null;
+        foreach (ZonePath p in _registeredPaths)
+        {
+            bool connects = (p.ZoneA == this && p.ZoneB == other) || (p.ZoneA == other && p.ZoneB == this);
+            if (!connects) continue;
+            if (p.Logic.RequiresFlying && !isFlying) continue;
 
-    public bool IsAdjacentTo(ZoneManager other) => GetPathTo(other) != null;
+            fallback ??= p;
+            if (p.Logic.CanTraverse(player, Logic, isFlying))
+                return p;
+        }
+        return fallback;
+    }
+
+    public bool IsAdjacentTo(ZoneManager other) => _registeredPaths.Exists(p =>
+        (p.ZoneA == this && p.ZoneB == other) || (p.ZoneA == other && p.ZoneB == this));
+
+    // Légalité de déplacement complète : chemin physique (ZonePath) OU réseau de téléporteurs.
+    // À utiliser à la place de GetPathTo partout où seule la légalité importe (le ZonePath renvoyé
+    // par GetPathTo n'est jamais réutilisé après le check dans ces cas-là).
+    public bool CanReach(ZoneManager other, Player player, CreatureLogic mover)
+        => CanReach(other, player, mover, out _, out _);
+
+    // Variante utilisée par l'affichage (flèche de mouvement en attente) : identique, mais renvoie
+    // aussi les téléporteurs concrets empruntés si c'est le réseau de téléportation (et non un
+    // ZonePath physique) qui a rendu le déplacement légal — restent null sinon.
+    public bool CanReach(ZoneManager other, Player player, CreatureLogic mover, out CreatureLogic viaSourceTeleporter, out CreatureLogic viaDestTeleporter)
+    {
+        viaSourceTeleporter = null;
+        viaDestTeleporter = null;
+
+        ZonePath path = GetPathTo(other, player, mover.IsFlying);
+        if (path != null && path.Logic.CanTraverse(player, Logic, mover.IsFlying))
+            return true;
+
+        return TeleporterNetwork.TryGetLink(player, this, other, mover, out viaSourceTeleporter, out viaDestTeleporter);
+    }
 
     public void UpdateTargetableVisual(bool targetable, bool targeted = false)
     {

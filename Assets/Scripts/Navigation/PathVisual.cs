@@ -52,10 +52,17 @@ public class PathVisual : MonoBehaviour
         return best;
     }
 
+    private Vector3 GetAnchorPosition(ZoneManager zone, ZonePathAnchor anchorOverride, Vector3 target)
+    {
+        if (anchorOverride != null)
+            return anchorOverride.transform.position;
+        return GetNearestAnchor(zone, target);
+    }
+
     private void DrawCurve()
     {
-        Vector3 a = GetNearestAnchor(_path.ZoneA, _path.ZoneB.transform.position);
-        Vector3 b = GetNearestAnchor(_path.ZoneB, _path.ZoneA.transform.position);
+        Vector3 a = GetAnchorPosition(_path.ZoneA, _path.AnchorOverrideA, _path.ZoneB.transform.position);
+        Vector3 b = GetAnchorPosition(_path.ZoneB, _path.AnchorOverrideB, _path.ZoneA.transform.position);
         Vector3 dir = (b - a).normalized;
 
         float diagonality = 2f * Mathf.Abs(dir.x) * Mathf.Abs(dir.z);
@@ -89,7 +96,7 @@ public class PathVisual : MonoBehaviour
             ZoneManager fromZone  = isLowPlayer ? _path.ZoneA        : _path.ZoneB;
 
             bool hasvision = !FogOfWarManager.Instance.IsZoneFogged(fromZone);
-            isBlocked = hasvision && !_path.Logic.CanTraverse(local, fromLogic);
+            isBlocked = hasvision && !_path.Logic.CanTraverse(local, fromLogic, _path.Logic.RequiresFlying);
         }
 
         Color c = isBlocked ? _blockedColor : _openColor;
@@ -103,8 +110,8 @@ public class PathVisual : MonoBehaviour
         var zonePath = GetComponent<ZonePath>();
         if (zonePath == null || zonePath.ZoneA == null || zonePath.ZoneB == null) return;
 
-        Vector3 a = GetNearestAnchor(zonePath.ZoneA, zonePath.ZoneB.transform.position);
-        Vector3 b = GetNearestAnchor(zonePath.ZoneB, zonePath.ZoneA.transform.position);
+        Vector3 a = GetAnchorPosition(zonePath.ZoneA, zonePath.AnchorOverrideA, zonePath.ZoneB.transform.position);
+        Vector3 b = GetAnchorPosition(zonePath.ZoneB, zonePath.AnchorOverrideB, zonePath.ZoneA.transform.position);
         Vector3 dir = (b - a).normalized;
 
         float diagonality = 2f * Mathf.Abs(dir.x) * Mathf.Abs(dir.z);

@@ -37,10 +37,27 @@ public class CreatureLogic: ILivable
     private readonly int baseHealth;
     private int permMaxHealthBonus;
     private int tempMaxHealthBonus;
+
+    // Suspendu pendant une correction de désync réseau (GameNetworkManager.SyncFullGameStateClientRpc) :
+    // cette correction écrase Attack/MaxHealth avec la valeur autoritaire du serveur, ce n'est pas un
+    // vrai gain de stats et ne doit pas compter comme un buff (progression UnitsUpgraded).
+    internal static bool SuppressUpgradeTracking;
+
+    private void TrackUpgrade(int delta)
+    {
+        if (SuppressUpgradeTracking || delta <= 0 || owner == null) return;
+        owner.matchStats.Add(MatchStatType.UnitsUpgraded, delta);
+    }
+
     public int MaxHealth
     {
         get => baseHealth + permMaxHealthBonus + tempMaxHealthBonus;
-        set => permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+        set
+        {
+            int delta = value - MaxHealth;
+            permMaxHealthBonus = value - baseHealth - tempMaxHealthBonus;
+            TrackUpgrade(delta);
+        }
     }
 
     // current health of this creature
@@ -156,6 +173,7 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
         HasSummoningSickness = false;
+        extraSummoningSicknessTurns = 0;
         HasRuntimeCelerity = true;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
@@ -305,6 +323,11 @@ public class CreatureLogic: ILivable
         get
         {
             if (ca.IsStructureUnit) return false;
+            if (IsBoarded)
+            {
+                Debug.Log($"[Transport] CanMove — {DisplayName}(ID:{UniqueCreatureID}) is boarded, CanMove=false");
+                return false;
+            }
             bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
             bool ownersTurn = commandPhase && TurnManager.Instance.MayPlayerUseControlsInPhase(owner);
             return ownersTurn && (MovementsLeftThisTurn > 0);
@@ -321,7 +344,9 @@ public class CreatureLogic: ILivable
         set
         {
             if (ca.IsStructureUnit) return;
+            int delta = value - Attack;
             permAttackBonus = value - baseAttack - tempAttackBonus;
+            TrackUpgrade(delta);
         }
     }
      
@@ -338,11 +363,52 @@ public class CreatureLogic: ILivable
     // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
     public bool HasSummoningSickness { get; private set; }
 
-    public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone.Logic;
+    // Nombre de OnTurnStart restant à ignorer avant de lever HasSummoningSickness — voir
+    // CardAsset.ExtraSummoningSicknessTurns. 0 = comportement par défaut (levé au tout prochain
+    // OnTurnStart du propriétaire).
+    private int extraSummoningSicknessTurns;
+
+    // parentZone?. (pas juste GetPlayerAreaByID(BaseID)?.) : une PlayerArea peut exister sans que son
+    // parentZone soit encore câblé (ex: HomeUnit.Zone lu très tôt par BaseLogic.EffectiveIncome, depuis
+    // GlobalSettings.SpawnMainBase, avant que l'initialisation complète des zones de la map soit finie).
+    public ZoneLogic Zone => owner.GetPlayerAreaByID(BaseID)?.parentZone?.Logic;
 
     public bool IsMelee => ca.melee;
     public bool IsRanged => !ca.melee;
+    public bool IsFlying => ca.Flying;
     public bool IsShielded => ShieldValue > 0;
+
+    // --- Transport ---
+    public int TransportCapacity => ca.TransportCapacity;
+    // Un Transport ne peut pas lui-même être embarqué (pas de transports imbriqués).
+    public bool CanTransport => TransportCapacity > 0;
+
+    // Vrai tant que cette créature est vivante et sur le plateau — voir TeleporterNetwork, qui
+    // relie entre elles toutes les zones où le même joueur a un téléporteur.
+    public bool IsTeleporter => ca.IsTeleporter;
+
+    // IDs des créatures actuellement embarquées (portées), dans l'ordre d'embarquement (FIFO —
+    // détermine la priorité de débarquement si la zone d'arrivée n'a pas assez de place, voir
+    // CreatureMoveVisual.DisembarkCargo).
+    private readonly List<int> _boardedCreatureIDs = new List<int>();
+    public IReadOnlyList<int> BoardedCreatureIDs => _boardedCreatureIDs;
+
+    // Non-null tant que cette créature est embarquée (en attente OU réellement à bord) — sa "position"
+    // logique est alors le transporteur, pas une rangée. Voir Board()/DisembarkAt().
+    public int? TransportCarrierID { get; private set; }
+    public bool IsBoarded => TransportCarrierID.HasValue;
+
+    // IDs purement locaux (jamais répliqués), ajoutés/retirés par DragCreatureActions.Board/
+    // CancelPendingMove sur le TRANSPORT ciblé — pour que le joueur ne puisse pas faire glisser plus
+    // de passagers vers ce transport que TransportCapacity ne le permet dans la même phase de
+    // Commandement, avant même que le premier embarquement ait eu le temps de se résoudre. Servent
+    // aussi à afficher immédiatement un portrait (voir OneCreatureManager.RefreshPassengerPortraits)
+    // pour un embarquement encore en attente, avant sa résolution.
+    private readonly List<int> _localPendingBoardIDs = new List<int>();
+    public IReadOnlyList<int> LocalPendingBoardIDs => _localPendingBoardIDs;
+    public int LocalPendingBoardCount => _localPendingBoardIDs.Count;
+    public void AddLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Add(passengerID);
+    public void RemoveLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Remove(passengerID);
 
     // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :
     // ca est un ScriptableObject PARTAGÉ par toutes les instances de cette carte dans la partie, donc y
@@ -429,6 +495,7 @@ public class CreatureLogic: ILivable
         if (ca.Celerity)
             MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = !ca.Celerity;
+        extraSummoningSicknessTurns = ca.Celerity ? 0 : Mathf.Max(0, ca.ExtraSummoningSicknessTurns);
         this.owner = owner;
         this.BaseID = baseID;
         UniqueCreatureID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
@@ -447,6 +514,14 @@ public class CreatureLogic: ILivable
     // METHODS
     public void OnTurnStart()
     {
+        // Tant qu'il reste des tours de mal d'invocation "supplémentaires" à purger (voir
+        // CardAsset.ExtraSummoningSicknessTurns), on consomme ce tour sans rien débloquer :
+        // HasSummoningSickness reste vrai, AttacksLeftThisTurn/MovementsLeftThisTurn restent à 0.
+        if (extraSummoningSicknessTurns > 0)
+        {
+            extraSummoningSicknessTurns--;
+            return;
+        }
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = false;
@@ -461,6 +536,18 @@ public class CreatureLogic: ILivable
 
     public void Die()
     {
+        // Une créature transportée meurt avec son transporteur — pas de "largage" à la mort, voir
+        // la conception du mot-clé Transport. Snapshot avant de boucler : Die() en cascade retire
+        // chaque passager de playedCards.Creatures mais ne touche jamais _boardedCreatureIDs lui-même.
+        if (_boardedCreatureIDs.Count > 0)
+        {
+            Debug.Log($"[Transport] Die — {DisplayName}(ID:{UniqueCreatureID}) sinks with {_boardedCreatureIDs.Count} passenger(s) aboard: [{string.Join(", ", _boardedCreatureIDs)}]");
+            foreach (int passengerID in new List<int>(_boardedCreatureIDs))
+                if (CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passenger))
+                    passenger.Die();
+            _boardedCreatureIDs.Clear();
+        }
+
         // Le setter Health (case value<=0, branche hors-combat) appelle Die() directement sans jamais
         // assigner le backing field — contrairement à MarkPendingDeath() qui, elle, fait health = 0.
         // Sans cette ligne, Health continue de renvoyer sa valeur d'AVANT la mort indéfiniment (l'entrée
@@ -995,6 +1082,46 @@ public class CreatureLogic: ILivable
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
+    }
+
+    // Résout un embarquement (appelé à la résolution — fin de phase Command, RPC réseau, ou
+    // immédiatement en solo non différé — jamais à l'instant où le joueur dépose la créature sur le
+    // transport, exactement comme Move()). Consomme le mouvement du passager, pas celui du transporteur.
+    public void Board(int transportCreatureID)
+    {
+        if (!CreaturesCreatedThisGame.TryGetValue(transportCreatureID, out CreatureLogic transport))
+        {
+            Debug.Log($"[Transport] Board — RESOLVE ABORTED, transport ID:{transportCreatureID} not found");
+            return;
+        }
+
+        MovementsLeftThisTurn--;
+        TransportCarrierID = transportCreatureID;
+        BaseID = transport.BaseID;
+        IsPendingMove = false;
+        transport._boardedCreatureIDs.Add(UniqueCreatureID);
+        // Sans ce retrait, l'ID resterait dans la liste "en attente" après résolution et le transport
+        // paraîtrait plein pour toujours, même une fois ses passagers redescendus (BoardedCreatureIDs
+        // vidé par DisembarkAt) — voir DragCreatureActions.Board pour l'ajout correspondant.
+        transport.RemoveLocalPendingBoard(UniqueCreatureID);
+        Debug.Log($"[Transport] Board — RESOLVED {DisplayName}(ID:{UniqueCreatureID}) aboard {transport.DisplayName}(ID:{transport.UniqueCreatureID}) | transport now carries {transport._boardedCreatureIDs.Count}/{transport.TransportCapacity} | MovementsLeftThisTurn={MovementsLeftThisTurn}");
+        new CreatureBoardCommand(UniqueCreatureID, transportCreatureID).AddToQueue();
+    }
+
+    // Débarque cette créature (embarquée) dans la rangée de baseID, à la position réseau (ghost-free)
+    // tablePos — que ce soit la zone d'arrivée du transporteur (débarquement normal) ou sa zone de
+    // départ (laissée derrière faute de place, voir CreatureMoveVisual.DisembarkCargo). Ne consomme
+    // aucun mouvement : déjà payé lors de l'embarquement (Board), ce n'est pas une action du joueur.
+    public void DisembarkAt(int baseID, int tablePos)
+    {
+        int? fromCarrier = TransportCarrierID;
+        if (TransportCarrierID.HasValue && CreaturesCreatedThisGame.TryGetValue(TransportCarrierID.Value, out CreatureLogic carrier))
+            carrier._boardedCreatureIDs.Remove(UniqueCreatureID);
+        TransportCarrierID = null;
+        BaseID = baseID;
+        FogOfWarManager.Refresh();
+        Debug.Log($"[Transport] DisembarkAt — {DisplayName}(ID:{UniqueCreatureID}) leaves carrier ID:{fromCarrier} -> baseID={baseID}, networkTablePos={tablePos}");
+        new CreatureDisembarkCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 
     public static void ProcessPendingDeaths()
