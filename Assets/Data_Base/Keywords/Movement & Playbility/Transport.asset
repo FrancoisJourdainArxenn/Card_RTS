@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Transport
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Transport
-  description: This units can move with X other units.
+  description: This units can move with X other units. To Embark move units INTO
+    this one, then move this unit.
   icon: {fileID: 0}

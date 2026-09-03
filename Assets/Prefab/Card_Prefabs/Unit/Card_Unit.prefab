@@ -992,8 +992,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 58.6, y: 81.1}
-  m_SizeDelta: {x: 63.24, y: 58.01}
+  m_AnchoredPosition: {x: 60, y: 80}
+  m_SizeDelta: {x: 60, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8492605506075884285
 CanvasRenderer:
@@ -1106,6 +1106,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OneCardManager
   cardAsset: {fileID: 0}
   owner: {fileID: 0}
+  sourceCreature:
+    owner: {fileID: 0}
+    ca: {fileID: 0}
+    UniqueCreatureID: 0
+  sourceBuilding:
+    owner: {fileID: 0}
+    ca: {fileID: 0}
+    UniqueBuildingID: 0
   NameText: {fileID: 3210977288471384358}
   subType: {fileID: 2417086422155912971}
   MainCostText: {fileID: 6955613804869879659}
@@ -1172,6 +1180,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d68a108c9ae774941bddb8e59e6ce581, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WhereIsTheCardOrCreature
+  HoldSlot: {fileID: 0}
 --- !u!1 &6883041736997603746
 GameObject:
   m_ObjectHideFlags: 0

@@ -655,7 +655,8 @@ public class TableVisual : MonoBehaviour
 
     private GameObject CreateCreatureGO(CardAsset ca, int uniqueID, int baseID, Vector3 position, int? overrideAttack = null, int? overrideHealth = null)
     {
-        GameObject creature = GameObject.Instantiate(GlobalSettings.Instance.CreaturePrefab, position, Quaternion.identity);
+        GameObject creaturePrefab = ca.IsHero ? GlobalSettings.Instance.HeroCreaturePrefab : GlobalSettings.Instance.CreaturePrefab;
+        GameObject creature = GameObject.Instantiate(creaturePrefab, position, Quaternion.identity);
         OneCreatureManager manager = creature.GetComponent<OneCreatureManager>();
         manager.BaseID   = baseID;
         manager.Owner    = owner;
@@ -704,7 +705,8 @@ public class TableVisual : MonoBehaviour
             OneCreatureManager ocm = c.GetComponent<OneCreatureManager>();
             if (ocm?.cardAsset == null) continue;
 
-            GameObject ghost = Instantiate(GlobalSettings.Instance.CreaturePrefab,
+            GameObject ghostPrefab = ocm.cardAsset.IsHero ? GlobalSettings.Instance.HeroCreaturePrefab : GlobalSettings.Instance.CreaturePrefab;
+            GameObject ghost = Instantiate(ghostPrefab,
                 c.transform.position, Quaternion.identity, slots.transform);
 
             OneCreatureManager ghostOcm = ghost.GetComponent<OneCreatureManager>();

@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 10
   tier: 1
-  Description: Gives +{0}/+{1} target Melee unit.
+  Description: Gives +{0}/+{1} target unit.
   CardImage: {fileID: 21300000, guid: 50f67ae254a21294f8998e30626f754e, type: 3}
   MainCost: 0
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:
@@ -50,7 +51,7 @@ MonoBehaviour:
         onlySource: 0
         queries:
         - team: 1
-          statusFilter: 1
+          statusFilter: 0
           zoneFilter: 0
           cardFilter: {fileID: 0}
         requiresPlayerSelection: 1

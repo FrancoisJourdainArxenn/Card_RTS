@@ -209,13 +209,19 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         _wasLocked = isLocked;
     }
 
+    private Tween _popTween;
+
+    // Ne tue que le punch-scale précédent (évite l'empilement d'échelle en cas de déclenchements
+    // rapides), sans toucher aux autres tweens du même transform (repositionnement de main,
+    // dépôt dans un CardHoldSlotVisual...) qu'un DOKill() global interromprait en plein vol.
     private void PopCard()
     {
         float strength = VisualManager.Instance != null ? VisualManager.Instance.popStrength : 1f;
         float duration = VisualManager.Instance != null ? VisualManager.Instance.popDuration : 1f;
-        transform.DOKill();
+
+        _popTween?.Kill();
         transform.localScale = originalScale;
-        transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
+        _popTween = transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

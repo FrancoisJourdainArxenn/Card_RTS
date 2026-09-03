@@ -17,10 +17,10 @@ MonoBehaviour:
   Type: 0
   subType: 1
   tier: 1
-  Description: '<b>Piercing & Arcing Attacks, Celerity</b>
+  Description: '<b>Splash Attack, Celerity</b>
 
-    <b>On Play:</b> Assimilates
-    ALL FRIENDLY units to gain their stats.</b>'
+    <b>On Play:</b> Assimilates ALL
+    FRIENDLY units to gain their stats.</b>'
   CardImage: {fileID: 21300000, guid: 04ce51c31efb6404398baad4b51b98ca, type: 3}
   MainCost: 0
   IsHero: 1
@@ -30,8 +30,7 @@ MonoBehaviour:
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers:
-  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
@@ -44,8 +43,7 @@ MonoBehaviour:
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
-  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
-  - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
+  - {fileID: 11400000, guid: ba63f570a19b14145869245e404c3173, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Total Assimilation

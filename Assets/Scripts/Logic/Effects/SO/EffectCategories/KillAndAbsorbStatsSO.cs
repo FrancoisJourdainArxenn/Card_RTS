@@ -45,7 +45,15 @@ public class KillAndAbsorbStatsSO : HealthEffectSO
             GameObject sourceGO = IDHolder.GetGameObjectWithID(_sourceID);
             GameObject targetGO = IDHolder.GetGameObjectWithID(target.ID);
             if (sourceGO != null && targetGO != null)
-                new PlayAssimilateVFXCommand(beamPrefab, sourceGO.transform.position, targetGO.transform.position).AddToQueue();
+            {
+                // Le beam s'ancre sur la target (voir PlayAssimilateVFXCommand) : sa visibilité
+                // suit donc le fog de la zone de la target, comme les autres VFX (VfxManager, TokenGenerationSO).
+                ZoneManager targetZone = targetGO.GetComponentInParent<ZoneManager>();
+                bool isVisible = targetZone == null || FogOfWarManager.Instance == null
+                                || !FogOfWarManager.Instance.IsZoneFogged(targetZone);
+                if (isVisible)
+                    new PlayAssimilateVFXCommand(beamPrefab, sourceGO.transform.position, targetGO.transform.position).AddToQueue();
+            }
         }
 
         // Stats capturées avant la mort — vie ACTUELLE, pas la vie max.

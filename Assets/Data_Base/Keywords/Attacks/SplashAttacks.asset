@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
   m_Name: SplashAttacks
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Piercing Attack
+  displayName: Splash Attack
   description: Also deals damage to the Units adjacent to whomever this attacks.
+  icon: {fileID: 0}

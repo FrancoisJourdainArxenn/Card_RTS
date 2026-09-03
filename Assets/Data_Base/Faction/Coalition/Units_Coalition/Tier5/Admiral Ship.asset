@@ -17,16 +17,16 @@ MonoBehaviour:
   Type: 0
   subType: 3
   tier: 5
-  Description: '<b>Flying, Transport 5, Splash Attacks</b>
+  Description: '<b>Flying, Splash Attacks</b>
 
-    <i>(This unit costs
-    2 Ressources).</i>'
+    <b>Battle Start:</b> If I defend,
+    I gain +2/+2 unti end of turn.'
   CardImage: {fileID: 21300000, guid: 9ec4848c34cb3dc49bce44f5f78c3e4e, type: 3}
   MainCost: 2
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 3
-  MaxHealth: 7
+  MaxHealth: 5
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers:
@@ -40,9 +40,32 @@ MonoBehaviour:
   TransportCapacity: 5
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
-  - {fileID: 11400000, guid: 327a69365b56a6d4cb4ef446fa157ace, type: 2}
   - {fileID: 11400000, guid: ba63f570a19b14145869245e404c3173, type: 2}
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: For Ilyisum
+    Effect: {fileID: 11400000, guid: bb40a90c7367ace4781f73f2761730cc, type: 2}
+    Trigger: 14
+    Condition: {fileID: 11400000, guid: 1835b0e1bc29014468923f12b7781114, type: 2}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

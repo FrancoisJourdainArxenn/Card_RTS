@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Grouillant_CardPool
   m_EditorClassIdentifier: Assembly-CSharp::CardPoolSO
   baseAsset: {fileID: 11400000, guid: 3e7cd87c75453004482d30f04ea8ab4f, type: 2}
+  homeUnit: {fileID: 0}
   cards:
   - {fileID: 11400000, guid: b08912143a0c11b458b534f0b141c85d, type: 2}
   - {fileID: 11400000, guid: e01826662916e4c45a4f97f2114b24e6, type: 2}
@@ -28,7 +29,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fd6daaf4727090345b9ad461bc3ee6dc, type: 2}
   - {fileID: 11400000, guid: f4101c1205d4fdb46a9816e3c341291a, type: 2}
   - {fileID: 11400000, guid: ecac3d1eac14865458f113cf57ec705a, type: 2}
-  - {fileID: 11400000, guid: 97a90577dfba71d4cae086846f2580ae, type: 2}
   - {fileID: 11400000, guid: 934cdef1eba6d4b4b8685c2301457b30, type: 2}
   - {fileID: 11400000, guid: 2f5f496b71282124ba32e435b6e5d4d3, type: 2}
   - {fileID: 11400000, guid: 6281bfbff2b81814f8420fa6c964b22c, type: 2}

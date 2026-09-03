@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 2
   Description: Gives "Arcing Attacks" to target ally unit.
   CardImage: {fileID: 21300000, guid: 4ee3f3b9d8ac5314badd37e0ae7e7cf9, type: 3}
-  MainCost: 2
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:

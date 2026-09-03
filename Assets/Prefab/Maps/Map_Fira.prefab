@@ -129,7 +129,7 @@ MonoBehaviour:
   clampMiddlePan: 1
   middlePanMin: {x: -20, y: -20}
   middlePanMax: {x: 20, y: 20}
-  topHeight: 80
+  topHeight: 100
   topPanMin: {x: 0, y: 0}
   topPanMax: {x: 0, y: 0}
   TopPlayerBaseSpawn: {fileID: 4177301966669779287}

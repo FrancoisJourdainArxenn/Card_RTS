@@ -36,8 +36,10 @@ MonoBehaviour:
   TransportCapacity: 3
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
   - {fileID: 11400000, guid: 327a69365b56a6d4cb4ef446fa157ace, type: 2}
+  - {fileID: 11400000, guid: 427cfb015ea83a446a4ae2df72836cfb, type: 2}
   ReferencedCards: []
   Effects: []

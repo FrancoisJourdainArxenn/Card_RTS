@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 5
   tier: 3
-  Description: <b>On Play:</b> I gain +1/+1 per Egg Sack (<i>in my zone</i>).
+  Description: <b>On Death:</b> Create a Raptor.
   CardImage: {fileID: 21300000, guid: edfa35e9818d03c4493820882c22d9a2, type: 3}
   MainCost: 1
   IsHero: 0
@@ -36,34 +36,20 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
-  ReferencedCards:
-  - {fileID: 11400000, guid: 1d718c790f068234eb86d193c9d92bc0, type: 2}
+  ReferencedCards: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 0
-    Condition: {fileID: 11400000, guid: d10d22cac02600742b50c63e8d9b6d0d, type: 2}
+    Effect: {fileID: 11400000, guid: 0339fd8f4a0d630408f7f5f7f8bad261, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 1
-        queries: []
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
-        includesEventSubject: 0
-        queries: []
+      effectTargets: []
+      affectedElements: []
       repartition: 0
-      useScalingCount: 1
+      useScalingCount: 0
       scalingQuery:
         targetType: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: 8fcafd03a3b594042a0bc9c359c48bec, type: 2}
+        queries: []
       scalingSource: 0
