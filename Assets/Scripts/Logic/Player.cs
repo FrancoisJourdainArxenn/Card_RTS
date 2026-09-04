@@ -738,6 +738,25 @@ public class Player : MonoBehaviour, ILivable
         return playedCards.Creatures.Count;
     }
 
+    // Nombre de créatures de cette rangée déjà commises en logique (payées, présentes dans
+    // playedCards.Creatures) mais pas encore révélées visuellement — leur PlayACreatureCommand est
+    // toujours dans Command.CommandQueue, pas encore résolue (voir PlayACreatureCommand.StartCommandExecution,
+    // qui n'appelle Command.CommandExecutionComplete qu'à la fin du tween de replacement de la pose
+    // précédente, jamais en synchrone). Sans ce compte, poser plusieurs cartes plus vite que cette
+    // animation ne permet à chaque nouvelle pose de vérifier la place contre une rangée visuelle qui
+    // ignore encore les cartes juste commises avant elle — voir DragCreatureOnTable.DragSuccessful.
+    public int PendingRevealCount(int baseID, bool isMelee)
+    {
+        int count = 0;
+        foreach (CreatureLogic cl in playedCards.Creatures)
+        {
+            if (cl.BaseID == baseID && cl.IsMelee == isMelee && !cl.IsPendingDeath && cl.Health > 0
+                && IDHolder.GetGameObjectWithID(cl.UniqueCreatureID) == null)
+                count++;
+        }
+        return count;
+    }
+
     // Resync l'ordre logique après un repositionnement visuel
     public void ResyncCreatureOrderForArea(int baseID, List<GameObject> meleeGOs, List<GameObject> rangedGOs)
     {

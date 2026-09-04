@@ -64,8 +64,11 @@ public class TableVisual : MonoBehaviour
             && !go.GetComponent<OneCreatureManager>().HasPendingMove);
     }
 
-    public bool RowHasSpace(bool isMelee) =>
-        EffectiveRowCount(isMelee) < GlobalSettings.Instance.MaxCreaturePerRow;
+    // extraCommitted : créatures déjà comptées ailleurs (pas dans cette rangée visuelle) mais qui vont
+    // s'y ajouter de façon certaine — voir Player.PendingRevealCount, pour les cartes commises mais
+    // pas encore révélées visuellement (DragCreatureOnTable.DragSuccessful).
+    public bool RowHasSpace(bool isMelee, int extraCommitted = 0) =>
+        EffectiveRowCount(isMelee) + extraCommitted < GlobalSettings.Instance.MaxCreaturePerRow;
 
 
     public static bool CursorOverSomeTable
@@ -251,7 +254,7 @@ public class TableVisual : MonoBehaviour
         return row.Count;
     }
 
-    private static bool IsGhost(GameObject go)
+    public static bool IsGhost(GameObject go)
     {
         OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
         return ocm != null && ocm.IsPendingMoveGhost;
@@ -468,6 +471,12 @@ public class TableVisual : MonoBehaviour
         foreach (GameObject go in group)
         {
             if (go == excluded) continue;
+            // Embarquement en attente : la créature est cachée tout de suite (voir DragCreatureActions.Board)
+            // mais reste dans cette liste jusqu'à résolution/annulation — contrairement au "pending move"
+            // classique (toujours visible, juste repoussé en bout de rangée), elle ne doit occuper AUCUN
+            // slot ici, sinon le reste de la rangée se recentre en laissant un trou côté droit.
+            OneCreatureManager ocm = go != null ? go.GetComponent<OneCreatureManager>() : null;
+            if (ocm != null && ocm.HasPendingBoard) continue;
             if (_pendingRowEndCreatures.Contains(go))
                 pendingTail.Add(go);
             else

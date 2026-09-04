@@ -400,6 +400,7 @@ public class TurnManager : MonoBehaviour
             {
                 FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
+                ResolveStationaryTransportDisembarks();
             }
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle      ||
@@ -869,6 +870,22 @@ public class TurnManager : MonoBehaviour
             }
         }
         _soloMoveBuffer.Clear();
+    }
+
+    /// <summary>
+    /// Fin de la phase Command : les créatures Transport qui n'ont pas bougé de zone ce tour
+    /// débarquent quand même leurs passagers si la place le permet (sinon ils restent à bord).
+    /// Appelé une fois, en solo comme en réseau (voir GameNetworkManager.ApplyDeathDrainAndTransition),
+    /// après résolution des Board/Move de la phase — les transports qui ont bougé ont déjà débarqué
+    /// leur cargaison via CreatureMoveVisual.Move.
+    /// </summary>
+    public void ResolveStationaryTransportDisembarks()
+    {
+        foreach (CreatureLogic creature in new List<CreatureLogic>(CreatureLogic.CreaturesCreatedThisGame.Values))
+        {
+            if (!creature.CanTransport || creature.BoardedCreatureIDs.Count == 0) continue;
+            IDHolder.GetGameObjectWithID(creature.UniqueCreatureID)?.GetComponent<CreatureMoveVisual>()?.DisembarkCargoInPlace();
+        }
     }
 
     IEnumerator CombatPhaseTransitionCoroutine(TurnPhases next, bool roundEnded)

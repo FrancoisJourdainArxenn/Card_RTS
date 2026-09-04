@@ -1515,6 +1515,9 @@ public class GameNetworkManager : NetworkBehaviour
         yield return new WaitWhile(() => Command.playingQueue);
         // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
 
+        if (nextPhase == TurnManager.TurnPhases.Battle)
+            TurnManager.Instance.ResolveStationaryTransportDisembarks();
+
         TurnManager.Instance.EnterPhase(nextPhase);
 
         if (IsServer)
@@ -1881,6 +1884,43 @@ public class GameNetworkManager : NetworkBehaviour
     //     }
     //     attacker.AttackBaseWithID(targetBaseID);
     // }
+
+    //Transport — reorder du manifeste (voir OneCreatureManager.CommitManifestOrderFromUI)
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ReorderManifestServerRpc(int transportUniqueID, int[] order)
+    {
+        ReorderManifestClientRpc(transportUniqueID, order);
+    }
+
+    [ClientRpc]
+    void ReorderManifestClientRpc(int transportUniqueID, int[] order)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(transportUniqueID, out CreatureLogic transportLogic))
+        {
+            Debug.LogError($"[GameNetworkManager] ReorderManifest: transport introuvable id={transportUniqueID}");
+            return;
+        }
+        transportLogic.SetManifestOrder(order);
+        IDHolder.GetGameObjectWithID(transportUniqueID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+    }
+
+    //Transport — débarquement manuel, gratuit et instantané (voir OneCreatureManager.RequestDisembarkPassenger)
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void DisembarkPassengerServerRpc(int passengerUniqueID, int targetBaseID, int tablePos)
+    {
+        DisembarkPassengerClientRpc(passengerUniqueID, targetBaseID, tablePos);
+    }
+
+    [ClientRpc]
+    void DisembarkPassengerClientRpc(int passengerUniqueID, int targetBaseID, int tablePos)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic passenger))
+        {
+            Debug.LogError($"[GameNetworkManager] DisembarkPassenger: passager introuvable id={passengerUniqueID}");
+            return;
+        }
+        passenger.DisembarkAt(targetBaseID, tablePos);
+    }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void GoFaceServerRpc(int attackerID)

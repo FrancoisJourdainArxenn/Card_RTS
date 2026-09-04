@@ -393,6 +393,40 @@ public class CreatureLogic: ILivable
     private readonly List<int> _boardedCreatureIDs = new List<int>();
     public IReadOnlyList<int> BoardedCreatureIDs => _boardedCreatureIDs;
 
+    // Ordre d'affichage/atterrissage du "manifeste" d'embarquement : les IDs des passagers PLUS
+    // l'ID du transport lui-même (UniqueCreatureID, jamais confondu avec un ID de passager), utilisé
+    // comme repère de position — voir OneCreatureManager.RefreshPassengerPortraits (bande de
+    // portraits réordonnable) et CreatureMoveVisual.DisembarkCargo (les passagers placés avant le
+    // transport dans cette liste atterrissent à sa gauche dans la rangée d'arrivée, ceux après à sa
+    // droite). Piloté par le joueur via un glisser-déposer UI — voir PassengerPortraitDrag.
+    private readonly List<int> _manifestOrder = new List<int>();
+    public IReadOnlyList<int> ManifestOrder => _manifestOrder;
+
+    // Ajoute id au manifeste s'il n'y est pas déjà (idempotent : un passager en attente local, déjà
+    // ajouté par AddLocalPendingBoard, ne doit pas être déplacé en fin de liste quand Board() résout
+    // ensuite). Amorce la liste avec le transport lui-même au tout premier ajout.
+    private void AddToManifest(int id)
+    {
+        if (_manifestOrder.Count == 0)
+            _manifestOrder.Add(UniqueCreatureID);
+        if (!_manifestOrder.Contains(id))
+            _manifestOrder.Add(id);
+    }
+
+    // Public : uniquement pour l'annulation d'un embarquement en attente (voir
+    // DragCreatureActions.CancelPendingMove) — un embarquement RÉSOLU (Board()) ne doit jamais retirer
+    // du manifeste, seulement en sortir via un vrai débarquement (voir DisembarkAt()).
+    public void RemoveFromManifest(int id) => _manifestOrder.Remove(id);
+
+    // Remplace l'ordre complet du manifeste — appelé après un glisser-déposer local (voir
+    // OneCreatureManager.CommitManifestOrderFromUI) ou la réception du même ordre via réseau (voir
+    // GameNetworkManager.ReorderManifestClientRpc).
+    public void SetManifestOrder(IReadOnlyList<int> order)
+    {
+        _manifestOrder.Clear();
+        _manifestOrder.AddRange(order);
+    }
+
     // Non-null tant que cette créature est embarquée (en attente OU réellement à bord) — sa "position"
     // logique est alors le transporteur, pas une rangée. Voir Board()/DisembarkAt().
     public int? TransportCarrierID { get; private set; }
@@ -407,7 +441,14 @@ public class CreatureLogic: ILivable
     private readonly List<int> _localPendingBoardIDs = new List<int>();
     public IReadOnlyList<int> LocalPendingBoardIDs => _localPendingBoardIDs;
     public int LocalPendingBoardCount => _localPendingBoardIDs.Count;
-    public void AddLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Add(passengerID);
+    public void AddLocalPendingBoard(int passengerID)
+    {
+        _localPendingBoardIDs.Add(passengerID);
+        AddToManifest(passengerID);
+    }
+    // Ne touche PAS au manifeste : appelée aussi bien à la résolution (Board(), où le passager doit
+    // rester au manifeste — juste sortir de la liste "en attente") qu'à l'annulation (où
+    // DragCreatureActions.CancelPendingMove retire explicitement du manifeste via RemoveFromManifest).
     public void RemoveLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Remove(passengerID);
 
     // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :
@@ -1100,6 +1141,7 @@ public class CreatureLogic: ILivable
         BaseID = transport.BaseID;
         IsPendingMove = false;
         transport._boardedCreatureIDs.Add(UniqueCreatureID);
+        transport.AddToManifest(UniqueCreatureID); // no-op si déjà ajouté via AddLocalPendingBoard
         // Sans ce retrait, l'ID resterait dans la liste "en attente" après résolution et le transport
         // paraîtrait plein pour toujours, même une fois ses passagers redescendus (BoardedCreatureIDs
         // vidé par DisembarkAt) — voir DragCreatureActions.Board pour l'ajout correspondant.
@@ -1109,14 +1151,20 @@ public class CreatureLogic: ILivable
     }
 
     // Débarque cette créature (embarquée) dans la rangée de baseID, à la position réseau (ghost-free)
-    // tablePos — que ce soit la zone d'arrivée du transporteur (débarquement normal) ou sa zone de
-    // départ (laissée derrière faute de place, voir CreatureMoveVisual.DisembarkCargo). Ne consomme
-    // aucun mouvement : déjà payé lors de l'embarquement (Board), ce n'est pas une action du joueur.
+    // tablePos — zone d'arrivée du transporteur (débarquement automatique, voir
+    // CreatureMoveVisual.DisembarkCargo), sa zone de départ (laissée derrière faute de place, même
+    // méthode), ou zone actuelle du transporteur (débarquement manuel au clic, voir
+    // OneCreatureManager.RequestDisembarkPassenger). Ne consomme jamais de mouvement : déjà payé lors
+    // de l'embarquement (Board) pour le cas automatique, gratuit par conception pour le cas manuel.
     public void DisembarkAt(int baseID, int tablePos)
     {
         int? fromCarrier = TransportCarrierID;
         if (TransportCarrierID.HasValue && CreaturesCreatedThisGame.TryGetValue(TransportCarrierID.Value, out CreatureLogic carrier))
+        {
             carrier._boardedCreatureIDs.Remove(UniqueCreatureID);
+            carrier.RemoveFromManifest(UniqueCreatureID);
+            IDHolder.GetGameObjectWithID(carrier.UniqueCreatureID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+        }
         TransportCarrierID = null;
         BaseID = baseID;
         FogOfWarManager.Refresh();

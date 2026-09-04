@@ -184,7 +184,9 @@ public class DragCreatureOnTable : DraggingActions {
             new ShowMessageCommand("You don't control a base in this zone", 2f).AddToQueue();
             return false;
         }
-        bool RowNotFull = selectedPArea.tableVisual.RowHasSpace(manager.cardAsset.melee);
+        bool isMelee = manager.cardAsset.melee;
+        int pendingReveal = playerOwner.PendingRevealCount(selectedPArea.baseID, isMelee);
+        bool RowNotFull = selectedPArea.tableVisual.RowHasSpace(isMelee, pendingReveal);
         if (!RowNotFull)
         {
             new ShowMessageCommand("You can't control more units in that zone.", 2f).AddToQueue();

@@ -105,47 +105,154 @@ public class CreatureMoveVisual : MonoBehaviour
         targetArea.tableVisual.MoveCreatureToIndex(gameObject, id.UniqueID, rawTablePos, baseID);
     }
 
-    // Débarque tous les passagers de carrier à son arrivée dans destArea — dans l'ordre d'embarquement
-    // (FIFO), chacun dans sa propre rangée mêlée/distance si la place le permet, sinon laissé derrière
-    // dans originArea (sa zone de départ). Compte réel (hors ghosts, voir TableVisual.ToNetworkTablePos)
-    // : les ghosts de déplacement en attente sont locaux à un seul client et ne doivent JAMAIS influencer
-    // une décision qui doit être identique sur toutes les machines (contrairement à la vérification de
-    // place faite une seule fois, côté client, au moment de la commande — voir DragCreatureActions.Move).
-    private void DisembarkCargo(CreatureLogic carrier, PlayerArea originArea, PlayerArea destArea)
+    // Fin de phase Command pour un transport qui n'a pas changé de zone ce tour — tente quand même
+    // de débarquer ses passagers dans sa zone actuelle (voir TurnManager.ResolveStationaryTransportDisembarks).
+    // Contrairement à DisembarkCargo appelé depuis Move (où origin != dest), un passager qui ne
+    // rentre pas ici reste simplement à bord (pas de zone de départ où le "laisser derrière").
+    public void DisembarkCargoInPlace()
     {
-        List<int> passengers = new List<int>(carrier.BoardedCreatureIDs);
-        int meleeUsed = 0, rangedUsed = 0;
+        IDHolder id = GetComponent<IDHolder>();
+        if (id == null || !CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id.UniqueID, out CreatureLogic creatureLogic))
+            return;
+        if (creatureLogic.BoardedCreatureIDs.Count == 0)
+            return;
+
+        PlayerArea area = creatureLogic.owner.GetPlayerAreaByID(manager.BaseID);
+        if (area == null)
+            return;
+
+        Debug.Log($"[Transport] DisembarkCargoInPlace — {creatureLogic.DisplayName}(ID:{id.UniqueID}) stayed put with {creatureLogic.BoardedCreatureIDs.Count} passenger(s), attempting in-place disembark...");
+        DisembarkCargo(creatureLogic, area, area, inPlace: true);
+    }
+
+    // Débarque tous les passagers de carrier à son arrivée dans destArea — dans l'ordre du manifeste
+    // (voir CreatureLogic.ManifestOrder), gauche/droite du transport respecté pour ceux de son propre
+    // type mêlée/distance, sinon simplement à la suite (pas de "côté" du transport dans l'autre
+    // rangée). Chacun dans sa propre rangée si la place le permet, sinon laissé derrière dans
+    // originArea. Compte réel (hors ghosts, voir TableVisual.ToNetworkTablePos) : les ghosts de
+    // déplacement en attente sont locaux à un seul client et ne doivent JAMAIS influencer une décision
+    // qui doit être identique sur toutes les machines (contrairement à la vérification de place faite
+    // une seule fois, côté client, au moment de la commande — voir DragCreatureActions.Move).
+    private void DisembarkCargo(CreatureLogic carrier, PlayerArea originArea, PlayerArea destArea, bool inPlace = false)
+    {
+        List<int> manifest = new List<int>(carrier.ManifestOrder);
         int maxPerRow = GlobalSettings.Instance.MaxCreaturePerRow;
-        Debug.Log($"[Transport] DisembarkCargo — {carrier.DisplayName}(ID:{carrier.UniqueCreatureID}) processing {passengers.Count} passenger(s) FIFO order=[{string.Join(", ", passengers)}], origin baseID={originArea.baseID}, dest baseID={destArea.baseID}, maxPerRow={maxPerRow}");
+        Debug.Log($"[Transport] DisembarkCargo — {carrier.DisplayName}(ID:{carrier.UniqueCreatureID}) processing manifest=[{string.Join(", ", manifest)}], origin baseID={originArea.baseID}, dest baseID={destArea.baseID}, maxPerRow={maxPerRow}, inPlace={inPlace}");
 
-        foreach (int passengerID in passengers)
+        int landed = DisembarkRow(carrier, manifest, true, originArea, destArea, maxPerRow, inPlace)
+                   + DisembarkRow(carrier, manifest, false, originArea, destArea, maxPerRow, inPlace);
+
+        int totalPassengers = manifest.Count - (manifest.Contains(carrier.UniqueCreatureID) ? 1 : 0);
+        if (totalPassengers > landed && !inPlace)
+            new ShowMessageCommand("Not all transported units could reach that zone.", 1f).AddToQueue();
+
+        Debug.Log($"[Transport] DisembarkCargo — done: {landed}/{totalPassengers} landed, {totalPassengers - landed} {(inPlace ? "still boarded" : "left behind")}");
+    }
+
+    // Débarque, dans la rangée mêlée ou distance (isMelee) de destArea, tous les passagers du
+    // manifeste partageant ce type — ceux placés avant le transport dans le manifeste atterrissent à
+    // sa gauche (indices juste avant sa position déjà fixée par CreatureMoveVisual.Move, qui place le
+    // transporteur avant d'appeler DisembarkCargo), ceux après à sa droite. Un passager d'un type
+    // différent du transporteur n'a pas de "côté" à respecter : simple suite, comme avant. Retourne le
+    // nombre de passagers ayant effectivement atterri (les autres sont laissés derrière à originArea).
+    private int DisembarkRow(CreatureLogic carrier, List<int> manifest, bool isMelee, PlayerArea originArea, PlayerArea destArea, int maxPerRow, bool inPlace)
+    {
+        List<int> sameTypeIDs = new List<int>();
+        int carrierPos = -1;
+        foreach (int id in manifest)
         {
-            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passenger)) continue;
-            bool isMelee = passenger.IsMelee;
-            int usedSoFar = isMelee ? meleeUsed : rangedUsed;
-
-            int destRaw = isMelee ? destArea.tableVisual.MeleeCreaturesOnTable.Count : destArea.tableVisual.RangedCreaturesOnTable.Count;
-            int destReal = destArea.tableVisual.ToNetworkTablePos(isMelee, destRaw);
-
-            if (destReal + usedSoFar < maxPerRow)
+            if (id == carrier.UniqueCreatureID)
             {
-                Debug.Log($"[Transport] DisembarkCargo — {passenger.DisplayName}(ID:{passengerID}) FITS at destination (row occupancy {destReal + usedSoFar}/{maxPerRow}, isMelee={isMelee})");
-                passenger.DisembarkAt(destArea.baseID, destReal + usedSoFar);
-                if (isMelee) meleeUsed++; else rangedUsed++;
+                if (carrier.IsMelee == isMelee)
+                    carrierPos = sameTypeIDs.Count;
+                continue;
+            }
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic passenger)) continue;
+            if (passenger.IsMelee != isMelee) continue;
+            sameTypeIDs.Add(id);
+        }
+        if (sameTypeIDs.Count == 0) return 0;
+
+        List<GameObject> destRow = isMelee ? destArea.tableVisual.MeleeCreaturesOnTable : destArea.tableVisual.RangedCreaturesOnTable;
+        int destRawCountBefore = destRow.Count;
+        int destOccupied = destArea.tableVisual.ToNetworkTablePos(isMelee, destRawCountBefore);
+
+        GameObject carrierGO = IDHolder.GetGameObjectWithID(carrier.UniqueCreatureID);
+        int carrierRawIndex = (carrierPos >= 0 && carrierGO != null) ? destRow.IndexOf(carrierGO) : -1;
+
+        // Étape 1 : qui atterrit (place disponible) vs qui reste derrière, dans l'ordre du manifeste —
+        // même priorité "premier arrivé, premier servi" qu'avant, juste relue depuis le manifeste.
+        List<int> landingLeft = new List<int>();
+        List<int> landingRight = new List<int>();
+        int landed = 0;
+        for (int i = 0; i < sameTypeIDs.Count; i++)
+        {
+            int passengerID = sameTypeIDs[i];
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passenger)) continue;
+
+            if (destOccupied + landed < maxPerRow)
+            {
+                landed++;
+                bool isLeft = carrierRawIndex >= 0 && i < carrierPos;
+                if (isLeft) landingLeft.Add(passengerID);
+                else landingRight.Add(passengerID);
+                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) FITS ({(isLeft ? "left" : "right")} of carrier, isMelee={isMelee}, destOccupied={destOccupied}, landed={landed}/{maxPerRow})");
+            }
+            else if (inPlace)
+            {
+                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) STAYS BOARDED (zone full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
             }
             else
             {
-                Debug.Log($"[Transport] DisembarkCargo — {passenger.DisplayName}(ID:{passengerID}) LEFT BEHIND at origin (destination row full: {destReal + usedSoFar}/{maxPerRow}, isMelee={isMelee})");
+                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) LEFT BEHIND at origin (destination row full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
                 int originRaw = isMelee ? originArea.tableVisual.MeleeCreaturesOnTable.Count : originArea.tableVisual.RangedCreaturesOnTable.Count;
                 int originReal = originArea.tableVisual.ToNetworkTablePos(isMelee, originRaw);
                 passenger.DisembarkAt(originArea.baseID, originReal);
             }
         }
 
-        if (passengers.Count > (meleeUsed + rangedUsed))
-            new ShowMessageCommand("Not all transported units could reach that zone.", 1f).AddToQueue();
+        // Étape 2 : position finale — forme fermée autour de la position déjà fixée du transporteur :
+        // landingLeft[j] prend l'indice carrierRawIndex+j, landingRight[k] prend
+        // carrierRawIndex+landingLeft.Count+1+k. Si le transporteur n'est pas de ce type, tout le
+        // monde s'ajoute simplement à la suite (comportement identique à l'ancien code).
+        // Simulation locale de destRow : CreatureLogic.DisembarkAt() ne l'insère jamais tout de
+        // suite (la CreatureDisembarkCommand créée est seulement mise en file — voir
+        // Command.AddToQueueImmediate, playingQueue déjà vrai pendant ce Move). Sans cette
+        // simulation, ToNetworkTablePos relirait la même rangée non modifiée pour chaque passager
+        // et les ferait tous cibler le même index réseau.
+        List<GameObject> simulatedRow = new List<GameObject>(destRow);
+        int baseRaw = carrierRawIndex >= 0 ? carrierRawIndex : destRawCountBefore;
+        for (int j = 0; j < landingLeft.Count; j++)
+        {
+            int networkTarget = SimulatedNetworkPos(simulatedRow, baseRaw + j);
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(landingLeft[j], out CreatureLogic p))
+            {
+                p.DisembarkAt(destArea.baseID, networkTarget);
+                simulatedRow.Insert(Mathf.Min(baseRaw + j, simulatedRow.Count), IDHolder.GetGameObjectWithID(landingLeft[j]));
+            }
+        }
+        int rightStart = baseRaw + landingLeft.Count + (carrierRawIndex >= 0 ? 1 : 0);
+        for (int k = 0; k < landingRight.Count; k++)
+        {
+            int networkTarget = SimulatedNetworkPos(simulatedRow, rightStart + k);
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(landingRight[k], out CreatureLogic p))
+            {
+                p.DisembarkAt(destArea.baseID, networkTarget);
+                simulatedRow.Insert(Mathf.Min(rightStart + k, simulatedRow.Count), IDHolder.GetGameObjectWithID(landingRight[k]));
+            }
+        }
 
-        Debug.Log($"[Transport] DisembarkCargo — done: {meleeUsed + rangedUsed}/{passengers.Count} landed at destination, {passengers.Count - (meleeUsed + rangedUsed)} left behind");
-        IDHolder.GetGameObjectWithID(carrier.UniqueCreatureID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+        return landed;
+    }
+
+    // Équivalent local de TableVisual.ToNetworkTablePos, mais sur une rangée simulée en mémoire —
+    // voir le commentaire dans DisembarkRow ci-dessus pour pourquoi destRow elle-même ne peut pas
+    // être relue directement entre deux passagers de la même boucle.
+    private static int SimulatedNetworkPos(List<GameObject> row, int rawVisualIndex)
+    {
+        int logical = 0;
+        for (int i = 0; i < rawVisualIndex && i < row.Count; i++)
+            if (!TableVisual.IsGhost(row[i])) logical++;
+        return logical;
     }
 }
