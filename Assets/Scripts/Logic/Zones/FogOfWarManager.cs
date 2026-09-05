@@ -225,11 +225,16 @@ public class FogOfWarManager : MonoBehaviour
 
     bool HasPresenceInZone(Player player, ZoneManager zone, NeutralZoneController nbc)
     {
-        if(player.MainPArea.parentZone == zone)
+        // Base classique (pas de HomeUnit) : toujours présente dans sa zone d'origine.
+        // Si HomeUnit est assignée (base mobile), la présence suit HomeUnit comme n'importe
+        // quelle autre créature (voir la boucle playedCards.Creatures ci-dessous, même principe
+        // que Player.CanPlayCreatureInArea) — MainPArea ne garantit plus la vision une fois que
+        // HomeUnit a physiquement quitté la zone.
+        if (player.HomeUnit == null && player.MainPArea.parentZone == zone)
         {
             return true;
         }
-        
+
         // Find which of this player's areas is inside this zone.
         PlayerArea playerAreaInZone = null;
         

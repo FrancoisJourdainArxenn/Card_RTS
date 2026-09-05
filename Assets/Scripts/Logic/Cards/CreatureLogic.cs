@@ -185,6 +185,35 @@ public class CreatureLogic: ILivable
     // main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
     public bool HasRuntimeCelerity { get; private set; }
 
+    // Vrai dès que GrantMultiStrike() a été appelé — distinct de ca.AttacksForOneTurn (l'inné, déjà
+    // écrit à la main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
+    public bool HasRuntimeMultiStrike { get; private set; }
+
+    // Octroie des coups supplémentaires par bataille (Multi-Strike), en plus de attacksForOneTurn —
+    // contrairement à Célérité (on/off), c'est un nombre qui peut s'additionner. Débloque aussi
+    // immédiatement les coups gagnés pour la bataille en cours (voir AttacksLeftThisTurn).
+    public void GrantMultiStrike(int additionalAttacks = 1)
+    {
+        if (additionalAttacks <= 0) return;
+        attacksForOneTurn += additionalAttacks;
+        AttacksLeftThisTurn += additionalAttacks;
+        HasRuntimeMultiStrike = true;
+    }
+
+    // Vrai dès que GrantCommandement() a été appelé — distinct de ca.Commandement (l'inné). Contrairement
+    // à Célérité/Multi-Strike, a aussi un effet de jeu réel : voir Player.HasCommandCreatureInArea, qui
+    // vérifie ce flag en plus de ca.Commandement.
+    public bool HasRuntimeCommandement { get; private set; }
+    public void GrantCommandement() => HasRuntimeCommandement = true;
+
+    // Vrai dès que GrantRenfort() a été appelé — distinct de ca.Renfort (l'inné). Purement structurel
+    // pour l'instant : contrairement à Commandement/Transport, Renfort est aujourd'hui vérifié sur la
+    // CARTE en main au moment de la poser (Player.CanPlayCreatureInArea lit cardToPlay.Renfort), pas sur
+    // une créature déjà en jeu — ce flag n'a donc pas encore d'effet de jeu réel, seulement l'affichage
+    // du reminder, en attendant un éventuel mécanisme d'octroi côté carte en main.
+    public bool HasRuntimeRenfort { get; private set; }
+    public void GrantRenfort() => HasRuntimeRenfort = true;
+
 
     public int TakeDamage(int dmg)
     {
@@ -363,8 +392,10 @@ public class CreatureLogic: ILivable
         }
     }
      
-    // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
+    // Nombre de coups portés par bataille (auto-battle) si (attacksForOneTurn==2) => Multi-Strike 2 —
+    // voir CardAsset.AttacksForOneTurn et ZoneCombatResolver.BuildAttackQueue (une entrée par coup).
     private int attacksForOneTurn = 1;
+    public int AttacksForOneTurn => attacksForOneTurn;
     public int AttacksLeftThisTurn { get; set; }
 
     // number of movements for one turn if (movementsForOneTurn==2) => Celerity
@@ -392,9 +423,18 @@ public class CreatureLogic: ILivable
     public bool IsShielded => ShieldValue > 0;
 
     // --- Transport ---
-    public int TransportCapacity => ca.TransportCapacity;
+    // Capacité supplémentaire octroyée en jeu, en plus de ca.TransportCapacity (l'inné) — un simple
+    // nombre qui s'additionne, comme Multi-Strike, plutôt qu'un flag on/off comme Célérité.
+    private int runtimeBonusTransportCapacity = 0;
+    public int TransportCapacity => ca.TransportCapacity + runtimeBonusTransportCapacity;
     // Un Transport ne peut pas lui-même être embarqué (pas de transports imbriqués).
     public bool CanTransport => TransportCapacity > 0;
+
+    public void GrantTransport(int additionalCapacity = 1)
+    {
+        if (additionalCapacity <= 0) return;
+        runtimeBonusTransportCapacity += additionalCapacity;
+    }
 
     // Vrai tant que cette créature est vivante et sur le plateau — voir TeleporterNetwork, qui
     // relie entre elles toutes les zones où le même joueur a un téléporteur.
@@ -579,6 +619,7 @@ public class CreatureLogic: ILivable
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = false;
+        IDHolder.GetGameObjectWithID(UniqueCreatureID)?.GetComponent<CreatureAttackVisual>()?.ResetExhaustedRotation();
     }
 
     public void ApplyBuff(int attackDelta, int healthDelta)

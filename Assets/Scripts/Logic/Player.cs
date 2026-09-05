@@ -1172,7 +1172,7 @@ public class Player : MonoBehaviour, ILivable
     // à poser depuis la main dans SA zone (BaseID), même sans base contrôlée là-bas.
     private bool HasCommandCreatureInArea(PlayerArea area)
     {
-        return Creatures.Exists(c => c.ca.Commandement && c.BaseID == area.baseID);
+        return Creatures.Exists(c => (c.ca.Commandement || c.HasRuntimeCommandement) && c.BaseID == area.baseID);
     }
 
     // "Renfort" : la carte en main peut être posée dans toute zone où le joueur a déjà

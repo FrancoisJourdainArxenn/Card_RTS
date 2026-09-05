@@ -37,13 +37,14 @@ MonoBehaviour:
   IsStructureUnit: 0
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
-  Keywords: []
+  Keywords:
+  - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
   ReferencedCards: []
   Effects:
-  - EffectName: Endure !
+  - EffectName: Get Mad !
     Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
     Trigger: 18
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: d0d5ea2d817e404095ae0cd5aeb2562d, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0

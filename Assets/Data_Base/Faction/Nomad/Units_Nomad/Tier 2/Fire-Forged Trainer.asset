@@ -10,28 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Fire-Forged Champion
+  m_Name: Fire-Forged Trainer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 0
-  tier: 4
-  Description: '<b>Arcing & Piercing Attacks.</b>
-
-    When I take damage, I gain
-    +1/+0. '
-  CardImage: {fileID: 21300000, guid: 334bf1aae2e4aa340a80cc95dbc5a6e1, type: 3}
+  subType: 7
+  tier: 2
+  Description: '<b>On Play</b>: Deal 1 to target ALLY unit, it gains +2/+0.'
+  CardImage: {fileID: 21300000, guid: d095413ec125c0a4a8138b89bdc96525, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
-  MaxHealth: 4
+  Attack: 2
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers:
-  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
@@ -45,21 +40,25 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Now you die.
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 16
+  - EffectName: Motivate ?
+    Effect: {fileID: 11400000, guid: df4721e2e955a0a4494d9f90b960a5b7, type: 2}
+    Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 1
-        queries: []
-        requiresPlayerSelection: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 1
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
+        includesTarget: 1
+        includesSource: 0
         includesEventSubject: 0
         queries: []
       repartition: 0

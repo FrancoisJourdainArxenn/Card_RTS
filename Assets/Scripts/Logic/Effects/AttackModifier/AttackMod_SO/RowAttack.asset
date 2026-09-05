@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 294f329615a1d864a830c466c187b841, type: 3}
   m_Name: RowAttack
   m_EditorClassIdentifier: Assembly-CSharp::RowAttackModifierSO
+  AssociatedKeyword: {fileID: 11400000, guid: 859f94f758b1dce43b540cb7053237e6, type: 2}
