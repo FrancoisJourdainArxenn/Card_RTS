@@ -227,25 +227,29 @@ public class CreatureLogic: ILivable
     //    avec la même seed pour reproduire les mêmes cibles, donc rappelle TakeDamage() lui-même).
     private void ResolveOnTakeDamageFromEffect(int dmg)
     {
-        if (ca.Effects == null) return;
-
         int? activeDeferKey = Command.CurrentDeferSourceID;
 
         if (!activeDeferKey.HasValue)
         {
-            for (int i = 0; i < ca.Effects.Count; i++)
+            if (ca.Effects != null)
             {
-                CardEffectData data = ca.Effects[i];
-                if (data.Trigger != TriggerType.OnTakeDamage) continue;
-                try
+                for (int i = 0; i < ca.Effects.Count; i++)
                 {
-                    EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this });
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                    CardEffectData data = ca.Effects[i];
+                    if (data.Trigger != TriggerType.OnTakeDamage) continue;
+                    try
+                    {
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this });
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                    }
                 }
             }
+            // Inconditionnel (pas dans le bloc ca.Effects != null) : une créature SANS aucun effet
+            // propre peut quand même faire réagir un allié (OnAllyTakeDamage).
+            EffectRegistry.NotifyCreatureTookDamage(this, owner);
             return;
         }
 
@@ -253,56 +257,65 @@ public class CreatureLogic: ILivable
         if (NetworkSessionData.IsNetworkSession && !NetworkManager.Singleton.IsServer)
             return;
 
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnTakeDamage) continue;
-
-            try
+            bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!isNetworkServer)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+                try
                 {
-                    Command.RunDeferred(activeDeferKey.Value, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    // Sauvegarde/restauration explicite (pas ClearNetworkRng) : on peut être imbriqué
-                    // dans le SetNetworkRng d'un trigger englobant encore actif (ex: Acid Explosion
-                    // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
-                    // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
-                    System.Random previousRng = EffectSO.CurrentNetworkRng;
-                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
-                    bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
-                    List<(int id, int amount)> allocation;
-                    try
+                    if (!isNetworkServer)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        EffectSO.ClearForcedAllocation();
-                        EffectSO.ResetLastAllocation();
-                        if (!alreadyResolving)
-                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(activeDeferKey.Value, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                        allocation = EffectSO.LastAllocation;
                     }
-                    finally
+                    else
                     {
-                        if (!alreadyResolving)
-                            ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.SetNetworkRng(previousRng);
-                        EffectSO.SetLastAllocation(previousAllocation);
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        // Sauvegarde/restauration explicite (pas ClearNetworkRng) : on peut être imbriqué
+                        // dans le SetNetworkRng d'un trigger englobant encore actif (ex: Acid Explosion
+                        // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
+                        // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
+                        System.Random previousRng = EffectSO.CurrentNetworkRng;
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+                        List<(int id, int amount)> allocation;
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
+                            if (!alreadyResolving)
+                                ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(activeDeferKey.Value, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            allocation = EffectSO.LastAllocation;
+                        }
+                        finally
+                        {
+                            if (!alreadyResolving)
+                                ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.SetNetworkRng(previousRng);
+                            EffectSO.SetLastAllocation(previousAllocation);
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value, allocation: allocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value, allocation: allocation);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
                 }
             }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
-            }
         }
+
+        // Contexte différé déjà actif (nested, ex: dégâts causés par un effet en cours de résolution
+        // prédictive) : on reste déterministe côté réseau en passant par la variante Predicted, sous la
+        // MÊME clé de report que l'effet englobant — même raisonnement que la boucle OnTakeDamage
+        // ci-dessus dans cette branche.
+        EffectRegistry.NotifyCreatureTookDamagePredicted(this, owner, activeDeferKey.Value);
     }
 
     // returns true if we can attack with this creature now
@@ -872,54 +885,61 @@ public class CreatureLogic: ILivable
     // ZoneCombatResolver.OnTakeDamageDeferKey.
     public void ResolvePredictedOnTakeDamage(int hitDeferKey)
     {
-        if (ca.Effects == null) return;
-
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnTakeDamage) continue;
-
-            Debug.Log($"[OnTakeDamage] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
-
-            try
+            bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!NetworkSessionData.IsNetworkSession)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+                Debug.Log($"[OnTakeDamage] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
+
+                try
                 {
-                    Command.RunDeferred(hitDeferKey, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else if (isNetworkServer)
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
-                    List<(int id, int amount)> allocation;
-                    try
+                    if (!NetworkSessionData.IsNetworkSession)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        EffectSO.ClearForcedAllocation();
-                        EffectSO.ResetLastAllocation();
-                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(hitDeferKey, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                        allocation = EffectSO.LastAllocation;
                     }
-                    finally
+                    else if (isNetworkServer)
                     {
-                        ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.ClearNetworkRng();
-                        EffectSO.SetLastAllocation(previousAllocation);
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        List<(int id, int amount)> allocation;
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(hitDeferKey, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            allocation = EffectSO.LastAllocation;
+                        }
+                        finally
+                        {
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.ClearNetworkRng();
+                            EffectSO.SetLastAllocation(previousAllocation);
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey, allocation: allocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey, allocation: allocation);
+                    // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                    // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
-                // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
             }
         }
+
+        // Notifie immédiatement les AUTRES créatures alliées qui réagissent à ce coup (trigger
+        // OnAllyTakeDamage) — même logique "immédiate sous le defer key du coup" que ci-dessus pour le
+        // OnTakeDamage propre à cette créature. Inconditionnel (pas dans le bloc ca.Effects != null) :
+        // une créature SANS aucun effet propre peut quand même faire réagir un allié.
+        EffectRegistry.NotifyCreatureTookDamagePredicted(this, owner, hitDeferKey);
     }
 
     // Rejeu côté client (jamais côté serveur, qui a déjà résolu l'effet réellement dans

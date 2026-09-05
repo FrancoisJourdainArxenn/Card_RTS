@@ -1603,6 +1603,18 @@ public class GameNetworkManager : NetworkBehaviour
             player.GetBonusRessources(amount);
     }
 
+    public void BroadCastReduceUpgradeCost(int playerIndex, int amount)
+    {
+        if (!IsServer) return;
+        ReduceUpgradeCostClientRpc(playerIndex, amount);
+    }
+
+    [ClientRpc]
+    public void ReduceUpgradeCostClientRpc(int playerIndex, int amount)
+    {
+        Player.Players[playerIndex].homeBaseLogic?.ReduceUpgradeCost(amount);
+    }
+
     public void BroadCastShieldBonus(int playerIndex, int amount, int sourceID)
     {
         if (!IsServer) return;

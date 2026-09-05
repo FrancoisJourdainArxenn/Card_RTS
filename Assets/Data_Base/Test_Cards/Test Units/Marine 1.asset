@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: 
+  Description: When an Ally takes damage, it gains +1/+0.
   CardImage: {fileID: 21300000, guid: c79e860526283f94d9c972fff3604f41, type: 3}
   MainCost: 0
   IsHero: 0
@@ -26,8 +26,7 @@ MonoBehaviour:
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
-  AttackModifiers:
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
@@ -37,6 +36,34 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 18
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 1
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 1
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

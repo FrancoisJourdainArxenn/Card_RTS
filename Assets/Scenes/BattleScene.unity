@@ -6845,7 +6845,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.0999999
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -6882,6 +6882,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive
@@ -9912,7 +9916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.0999999
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9949,6 +9953,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive
@@ -10585,7 +10593,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -10622,6 +10630,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive

@@ -15,6 +15,10 @@ public class ZoneCombatResolver : MonoBehaviour
     private int p2FreePool;
     private List<BattleStepRecord> _lastBattleSteps;
 
+    [Header("Combat de rencontre")]
+    [Tooltip("À cocher manuellement sur les zones qui servent à résoudre un \"combat de rencontre\" (deux armées qui se croisent), par opposition aux zones de base et aux zones \"classiques\" de la map. Zone_Empty n'implique rien par défaut — coche zone par zone.")]
+    public bool isEncounterZone = false;
+
     // Files d'attaque en cours de planification (non nulles seulement pendant l'exécution de
     // BuildAutoBattleSequence) — permet à un token créé à la volée (TokenGenerationSO, via un
     // OnDeath résolu par anticipation, voir CreatureLogic.ResolvePredictedBattleDeath) de
@@ -1538,15 +1542,36 @@ public class ZoneCombatResolver : MonoBehaviour
         };
     }
 
-    // Ordre de traversée : les deux zones de base principale d'abord (dans l'ordre décidé par
-    // ComputeRoundOutcome), puis toutes les autres zones dans leur ordre naturel d'enregistrement.
-    static List<int> BuildEnqueueOrder(int firstIdx, int secondIdx)
+    // Ordre de traversée : les combats de rencontre d'abord, puis les deux zones de base principale
+    // (dans l'ordre décidé par ComputeRoundOutcome), puis les zones de base neutre en dernier.
+    // `decisiveZoneCount` (rencontres + base principale) donne le nombre d'entrées en tête qui
+    // doivent toujours s'appliquer même si le round est décisif — le reste (bases neutres) est
+    // purgé sans dégâts si la partie se termine avant de les atteindre.
+    static List<int> BuildEnqueueOrder(int firstIdx, int secondIdx, out int decisiveZoneCount)
     {
-        List<int> order = new List<int> { firstIdx };
-        if (secondIdx != firstIdx) order.Add(secondIdx);
+        List<int> encounters = new List<int>();
+        List<int> neutralBases = new List<int>();
         for (int i = 0; i < allResolvers.Count; i++)
-            if (i != firstIdx && i != secondIdx) order.Add(i);
+        {
+            if (i == firstIdx || i == secondIdx) continue;
+            if (IsNeutralBaseZone(allResolvers[i])) neutralBases.Add(i);
+            else encounters.Add(i);
+        }
+
+        List<int> order = new List<int>(encounters);
+        order.Add(firstIdx);
+        if (secondIdx != firstIdx) order.Add(secondIdx);
+        decisiveZoneCount = order.Count;
+        order.AddRange(neutralBases);
         return order;
+    }
+
+    static bool IsNeutralBaseZone(ZoneCombatResolver resolver)
+    {
+        foreach (BaseLogic b in BaseLogic.BasesCreatedThisGame.Values)
+            if (b.neutralBaseController != null && b.neutralBaseController.zone == resolver.zoneView)
+                return true;
+        return false;
     }
 
     // Coeur partagé du rejeu ordonné — utilisé par le chemin réseau
@@ -1554,18 +1579,17 @@ public class ZoneCombatResolver : MonoBehaviour
     // (EnqueueAllPlannedBattleCommandsSolo). `resolveSteps` fournit les BattleStepRecord déjà connus
     // pour un resolver donné (reçus du réseau, ou déjà planifiés localement en solo).
     //
-    // Si le round est décisif, seules les zones de base principale (dans l'ordre voulu) jouent leurs
-    // vraies commandes d'attaque ; toutes les zones suivantes sont "sautées" — mais doivent quand
-    // même purger leurs commandes différées OnBattleStart/OnAttack/OnTakeDamage déjà enregistrées
-    // (voir FlushSkippedZoneDeferredCommands) pour ne pas reproduire le bug de fuite déjà rencontré
-    // avec Sniper 1. Un GameOverCommand est inséré juste après les commandes réelles de la dernière
-    // zone décisive — il se déclenche dès qu'il est dépilé, sans attendre les zones sautées.
+    // Si le round est décisif, seules les zones de rencontre et de base principale (dans l'ordre
+    // voulu) jouent leurs vraies commandes d'attaque ; les zones de base neutre restantes sont
+    // "sautées" — mais doivent quand même purger leurs commandes différées
+    // OnBattleStart/OnAttack/OnTakeDamage déjà enregistrées (voir FlushSkippedZoneDeferredCommands)
+    // pour ne pas reproduire le bug de fuite déjà rencontré avec Sniper 1. Un GameOverCommand est
+    // inséré juste après les commandes réelles de la dernière zone décisive — il se déclenche dès
+    // qu'il est dépilé, sans attendre les zones sautées.
     static void EnqueueOrderedBattleCommands(RoundOutcome outcome, System.Func<int, List<BattleStepRecord>> resolveSteps)
     {
-        List<int> order = BuildEnqueueOrder(outcome.FirstMainBaseResolverIdx, outcome.SecondMainBaseResolverIdx);
-        int decisiveZoneCount = !outcome.Decisive
-            ? order.Count
-            : (outcome.FirstMainBaseResolverIdx == outcome.SecondMainBaseResolverIdx ? 1 : 2);
+        List<int> order = BuildEnqueueOrder(outcome.FirstMainBaseResolverIdx, outcome.SecondMainBaseResolverIdx, out int decisiveZoneCount);
+        if (!outcome.Decisive) decisiveZoneCount = order.Count;
 
         for (int pos = 0; pos < order.Count; pos++)
         {

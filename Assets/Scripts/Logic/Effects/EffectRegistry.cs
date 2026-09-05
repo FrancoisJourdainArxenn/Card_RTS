@@ -191,6 +191,28 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster != dyingOwner);
     }
 
+    // Notifie les alliés qui réagissent aux dégâts subis par une autre créature (dégâts hors combat
+    // prédictif, ex: DealDamageSO joué en Commandement). Même filtre ally/enemy que NotifyCreatureDied :
+    // Caster == hitOwner car RegisterCreatureEffects met toujours le propriétaire du LISTENER dans Caster.
+    public static void NotifyCreatureTookDamage(CreatureLogic hit, Player hitOwner)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = hit };
+        // OwnerID != hit.UniqueCreatureID : la créature touchée ne réagit pas à ses propres dégâts via
+        // ce trigger réactif — seuls les AUTRES alliés (son propre OnTakeDamage couvre déjà son cas).
+        FireListeners(TriggerType.OnAllyTakeDamage, eventCtx,
+            re => re.ContextFactory().Caster == hitOwner && re.OwnerID != hit.UniqueCreatureID);
+    }
+
+    // Variante prédictive (combat), même principe que NotifyCreatureDiedPredicted : résolue immédiatement
+    // sous le hitDeferKey du coup qui vient d'être assigné, pour que la réaction soit visible au même
+    // moment que l'impact plutôt qu'en fin de Battle.
+    public static void NotifyCreatureTookDamagePredicted(CreatureLogic hit, Player hitOwner, int hitDeferKey)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = hit };
+        FireListenersPredicted(TriggerType.OnAllyTakeDamage, eventCtx, hitDeferKey,
+            re => re.ContextFactory().Caster == hitOwner && re.OwnerID != hit.UniqueCreatureID);
+    }
+
     // Variante de FireListeners qui exécute chaque listener tout de suite (au lieu d'attendre le
     // drain de fin de Battle) au lieu de le laisser à NotifyCreatureDied, reportée visuellement sous
     // deferKey (l'ID de la créature qui meurt et cause ces réactions) exactement comme le OnDeath de

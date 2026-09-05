@@ -10,56 +10,56 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Tears, Outerworlds Terror
+  m_Name: Fire-Forged Protector
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 7
+  subType: 6
   tier: 4
-  Description: '<b>Arcing & Piercing Attacks.</b>
-
-    When I take damage, I gain
-    +1/+0. '
-  CardImage: {fileID: 21300000, guid: c815b92e7e833e8489a75e2b70a18bd7, type: 3}
+  Description: When an ally takes damages, it gains <b>Shield 1</b>.
+  CardImage: {fileID: 21300000, guid: ec3e165f0b56beb4789a83e83c6fdb8d, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 3
-  MaxHealth: 4
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers:
-  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
-  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
-  Commandement: 0
+  AttackModifiers: []
+  Commandement: 1
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 1
+  melee: 0
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Now you die.
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 16
+  - EffectName: Endure !
+    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
+    Trigger: 18
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 1
-        queries: []
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
         includesTarget: 0
-        includesSource: 1
-        includesEventSubject: 0
+        includesSource: 0
+        includesEventSubject: 1
         queries: []
       repartition: 0
       useScalingCount: 0

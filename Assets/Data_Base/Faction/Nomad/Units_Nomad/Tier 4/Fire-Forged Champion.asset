@@ -10,52 +10,56 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Back Lane Protector
+  m_Name: Fire-Forged Champion
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 6
-  tier: 2
-  Description: <b>Battle Start:</b> ally Melee units gain <b>Shield 1</b>.
-  CardImage: {fileID: 21300000, guid: a1fa6c7b1889a4b44a3dbf0d2eadaaca, type: 3}
+  subType: 0
+  tier: 4
+  Description: '<b>Arcing & Piercing Attacks.</b>
+
+    When I take damage, I gain
+    +1/+0. '
+  CardImage: {fileID: 21300000, guid: 334bf1aae2e4aa340a80cc95dbc5a6e1, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 2
+  Attack: 3
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers: []
+  AttackModifiers:
+  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  - {fileID: 11400000, guid: 8712d00d79ffd7142a2b1f596d8bb4af, type: 2}
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
-  Keywords:
-  - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
+  Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Shield'up
-    Effect: {fileID: 11400000, guid: f38b4b6e6ad36ad488b6cd2d68994e75, type: 2}
-    Trigger: 14
+  - EffectName: Now you die.
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 16
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 1
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+        onlySource: 1
+        queries: []
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
+        includesTarget: 0
+        includesSource: 1
         includesEventSubject: 0
         queries: []
       repartition: 0
