@@ -49,7 +49,7 @@ MonoBehaviour:
   - EffectName: 
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
     Trigger: 18
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: d0d5ea2d817e404095ae0cd5aeb2562d, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
