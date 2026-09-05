@@ -29,6 +29,10 @@ public class ApplyShieldCommand : Command
             else
                 vfx.HideShieldVfx();
         }
+        else
+        {
+            Debug.LogWarning($"[Shield/VFX] ApplyShieldCommand — objet visuel introuvable pour targetID={targetID} (amount={amount}) — affichage NON mis à jour, désync probable");
+        }
 
         CommandExecutionComplete();
     }

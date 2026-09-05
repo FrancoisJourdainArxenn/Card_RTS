@@ -134,7 +134,7 @@ public class Player : MonoBehaviour, ILivable
             // Die() is no longer triggered reactively here — the game-over decision is now made
             // ahead of time by ZoneCombatResolver.ComputeRoundOutcome() and acted upon explicitly
             // by GameOverCommand once the decisive main-base combat(s) finish animating. See
-            // GameOverCommand.cs / ZoneCombatResolver.EnqueueOrderedBattleCommands.
+            // GameOverCommand.cs / ZoneCombatResolver.EnqueueMainBaseBattleCommands.
         }
     }
 

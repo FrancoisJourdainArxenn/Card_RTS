@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -31,7 +31,7 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
     {
         this.transportManager = transportManager;
         RepresentedCreatureID = representedCreatureID;
-        Debug.Log($"[Transport][Drag] Setup — {gameObject.name} representedCreatureID={representedCreatureID}, transportManager={(transportManager != null ? transportManager.name : "NULL")}");
+        //Debug.Log($"[Transport][Drag] Setup — {gameObject.name} representedCreatureID={representedCreatureID}, transportManager={(transportManager != null ? transportManager.name : "NULL")}");
     }
 
     private void Awake()
@@ -54,7 +54,7 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
         layoutElement = GetComponent<LayoutElement>();
         if (layoutElement == null) layoutElement = gameObject.AddComponent<LayoutElement>();
 
-        Debug.Log($"[Transport][Drag] Awake — {gameObject.name} initialized (rt={(rt != null ? "ok" : "NULL")}, canvasGroup={(canvasGroup != null ? "ok" : "NULL")}, layoutElement={(layoutElement != null ? "ok" : "NULL")})");
+        //Debug.Log($"[Transport][Drag] Awake — {gameObject.name} initialized (rt={(rt != null ? "ok" : "NULL")}, canvasGroup={(canvasGroup != null ? "ok" : "NULL")}, layoutElement={(layoutElement != null ? "ok" : "NULL")})");
     }
 
     private bool IsTransportSelf
@@ -69,15 +69,15 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        Debug.Log($"[Transport][Drag] OnPointerClick — {gameObject.name} (representedCreatureID={RepresentedCreatureID}, isDragging={isDragging}, transportManager={(transportManager != null ? transportManager.name : "NULL")}, IsTransportSelf={IsTransportSelf})");
+        //Debug.Log($"[Transport][Drag] OnPointerClick — {gameObject.name} (representedCreatureID={RepresentedCreatureID}, isDragging={isDragging}, transportManager={(transportManager != null ? transportManager.name : "NULL")}, IsTransportSelf={IsTransportSelf})");
         if (isDragging || transportManager == null || IsTransportSelf) return;
-        Debug.Log($"[Transport][Drag] OnPointerClick — calling RequestDisembarkPassenger({RepresentedCreatureID}) on {transportManager.name}");
+        //Debug.Log($"[Transport][Drag] OnPointerClick — calling RequestDisembarkPassenger({RepresentedCreatureID}) on {transportManager.name}");
         transportManager.RequestDisembarkPassenger(RepresentedCreatureID);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log($"[Transport][Drag] OnBeginDrag — {gameObject.name} (transportManager={(transportManager != null ? transportManager.name : "NULL")}, CanReorderNow={(transportManager != null ? transportManager.CanReorderNow.ToString() : "n/a")})");
+        //Debug.Log($"[Transport][Drag] OnBeginDrag — {gameObject.name} (transportManager={(transportManager != null ? transportManager.name : "NULL")}, CanReorderNow={(transportManager != null ? transportManager.CanReorderNow.ToString() : "n/a")})");
         if (transportManager == null || !transportManager.CanReorderNow) return;
 
         isDragging = true;
@@ -86,7 +86,7 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
         canvasGroup.blocksRaycasts = false;
         layoutElement.ignoreLayout = true;
         transform.SetAsLastSibling();
-        Debug.Log($"[Transport][Drag] OnBeginDrag — started, originalSiblingIndex={originalSiblingIndex}");
+        //Debug.Log($"[Transport][Drag] OnBeginDrag — started, originalSiblingIndex={originalSiblingIndex}");
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -115,14 +115,14 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
         }
         if (targetIndex != transform.GetSiblingIndex())
         {
-            Debug.Log($"[Transport][Drag] OnDrag — {gameObject.name} moving to sibling index {targetIndex} (rt.position.x={rt.position.x})");
+            //Debug.Log($"[Transport][Drag] OnDrag — {gameObject.name} moving to sibling index {targetIndex} (rt.position.x={rt.position.x})");
             transform.SetSiblingIndex(targetIndex);
         }
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log($"[Transport][Drag] OnEndDrag — {gameObject.name} (isDragging={isDragging})");
+        //Debug.Log($"[Transport][Drag] OnEndDrag — {gameObject.name} (isDragging={isDragging})");
         if (!isDragging) return;
         isDragging = false;
         IsDraggingAny = false;
@@ -132,12 +132,12 @@ public class PassengerPortraitDrag : MonoBehaviour, IBeginDragHandler, IDragHand
 
         if (transportManager == null || !transportManager.CanReorderNow)
         {
-            Debug.Log($"[Transport][Drag] OnEndDrag — reverting to originalSiblingIndex={originalSiblingIndex} (transportManager={(transportManager != null ? transportManager.name : "NULL")}, CanReorderNow={(transportManager != null ? transportManager.CanReorderNow.ToString() : "n/a")})");
+            //Debug.Log($"[Transport][Drag] OnEndDrag — reverting to originalSiblingIndex={originalSiblingIndex} (transportManager={(transportManager != null ? transportManager.name : "NULL")}, CanReorderNow={(transportManager != null ? transportManager.CanReorderNow.ToString() : "n/a")})");
             transform.SetSiblingIndex(originalSiblingIndex);
             return;
         }
 
-        Debug.Log($"[Transport][Drag] OnEndDrag — committing new order via CommitManifestOrderFromUI()");
+        //Debug.Log($"[Transport][Drag] OnEndDrag — committing new order via CommitManifestOrderFromUI()");
         transportManager.CommitManifestOrderFromUI();
     }
 }

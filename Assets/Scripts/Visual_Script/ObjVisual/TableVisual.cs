@@ -574,7 +574,7 @@ public class TableVisual : MonoBehaviour
         int insertIndex = _previewIndex;
         targetList.Remove(creature);
         targetList.Insert(Mathf.Min(insertIndex, targetList.Count), creature);
-        Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
+        // Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
 
         _previewIndex = -1;
         _movingCreature = null;
@@ -593,12 +593,12 @@ public class TableVisual : MonoBehaviour
 
     public void ApplyCreatureOrder(int[] meleeIDs, int[] rangedIDs)
     {
-        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} avant-melee=[{RowNames(MeleeCreaturesOnTable)}] avant-ranged=[{RowNames(RangedCreaturesOnTable)}] meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
+        // Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} avant-melee=[{RowNames(MeleeCreaturesOnTable)}] avant-ranged=[{RowNames(RangedCreaturesOnTable)}] meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         _lastKnownMeleeOrder  = meleeIDs;
         _lastKnownRangedOrder = rangedIDs;
         SortListByIDs(MeleeCreaturesOnTable, meleeIDs);
         SortListByIDs(RangedCreaturesOnTable, rangedIDs);
-        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} après-melee=[{RowNames(MeleeCreaturesOnTable)}] après-ranged=[{RowNames(RangedCreaturesOnTable)}]");
+        // Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} après-melee=[{RowNames(MeleeCreaturesOnTable)}] après-ranged=[{RowNames(RangedCreaturesOnTable)}]");
         PlaceCreaturesOnNewSlots();
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);

@@ -26,6 +26,10 @@ public class ConsumeShieldCommand : Command
             else
                 vfx.HideShieldVfx();
         }
+        else
+        {
+            Debug.LogWarning($"[Shield/VFX] ConsumeShieldCommand — objet visuel introuvable pour targetID={targetID} (remainingShield={remainingShield}) — affichage NON mis à jour, désync probable");
+        }
 
         CommandExecutionComplete();
     }

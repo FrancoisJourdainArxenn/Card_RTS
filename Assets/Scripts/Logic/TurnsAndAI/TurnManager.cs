@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -34,11 +34,6 @@ public class TurnManager : MonoBehaviour
     // Embarquements en attente, résolus AVANT _soloMoveBuffer (voir FlushSoloBoardBuffer) pour qu'un
     // embarquement et le départ de son transporteur ordonnés le même tour se résolvent ensemble.
     private readonly List<(int passengerUniqueID, int transportUniqueID, int boardOrderPos)> _soloBoardBuffer = new();
-    // Issue du round de combat solo en cours, calculée dans DelayedBattleStart juste avant l'enqueue
-    // ordonné, consommée par AutoAdvanceFromBattleAfterCombat pour savoir si la transition normale
-    // vers EndBattle doit être sautée (partie déjà terminée via GameOverCommand). Miroir solo de
-    // GameNetworkManager._pendingRoundOutcome.
-    private ZoneCombatResolver.RoundOutcome? _lastRoundOutcome;
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -539,40 +534,64 @@ public class TurnManager : MonoBehaviour
         };
         phaseText.text = label;
     }
+    // Battle Phase en 3 étapes séquentielles — Rencontres, puis Base principale, puis Bases
+    // neutres (voir ZoneCombatResolver.BattleStage). Chaque étape est planifiée avec le plateau tel
+    // qu'il est APRÈS les morts et déplacements de l'étape précédente, contrairement à l'ancien
+    // comportement où tout était planifié d'un coup avant la moindre animation — c'est ce qui permet
+    // à une créature survivante d'un combat de rencontre, relocalisée immédiatement après (voir
+    // CommandMoveTracker.ApplyCrossingDispatch ci-dessous), de réellement participer au combat de
+    // sa zone d'arrivée plutôt que d'y apparaître après coup, une fois l'issue déjà figée.
     IEnumerator DelayedBattleStart()
     {
         yield return new WaitForSeconds(combatSequenceDelay);
-        Debug.Log($"[Battle] DelayedBattleStart — {ZoneCombatResolver.AllResolvers.Count} resolver(s) à traiter");
-        int idx = 0;
-        foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
+
+        // Une fois par round, avant la planification de la toute première étape (Rencontres) — sur
+        // chaque machine (sans effet côté client : seul le "planner", solo ou serveur, appelle
+        // jamais BuildAttackQueue). Voir ZoneCombatResolver.MarkAttackedThisRound.
+        ZoneCombatResolver.ResetAttackedThisRound();
+
+        if (NetworkSessionData.IsNetworkSession)
         {
-            Debug.Log($"[Battle] OnBattlePhaseStart resolver #{idx} ({r.name})");
-            try
-            {
-                r.OnBattlePhaseStart();
-            }
-            catch (System.Exception e)
-            {
-                // Sans ce try/catch, une exception ici arrête la coroutine : tous les resolvers suivants
-                // dans cette liste (donc tous leurs combats) ne sont jamais traités, et AutoSubmitBattleAssignment
-                // (réseau) n'est jamais appelé non plus — ce qui bloque la partie pour les deux joueurs.
-                Debug.LogError($"[Battle] EXCEPTION dans OnBattlePhaseStart du resolver #{idx} ({r.name}) — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
-            }
-            idx++;
-        }
-        Debug.Log($"[Battle] Tous les resolvers traités (planification) — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
-        if (!NetworkSessionData.IsNetworkSession)
-        {
-            // Planification de TOUS les resolvers terminée avant tout enqueue (voir
-            // ZoneCombatResolver.OnBattlePhaseStart) — le round est donc déjà connu ici, avant la
-            // moindre animation, exactement comme côté réseau (SubmitBattleAssignmentServerRpc).
-            ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
-            _lastRoundOutcome = outcome;
-            ZoneCombatResolver.EnqueueAllPlannedBattleCommandsSolo(outcome);
-            StartCoroutine(AutoAdvanceFromBattleAfterCombat());
-        }
-        else
+            // Le séquençage par étapes est géré côté serveur (voir GameNetworkManager.
+            // ServerPlanAndBroadcastStage) — ce client ne fait que signaler qu'il est prêt.
             AutoSubmitBattleAssignment();
+            yield break;
+        }
+
+        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
+        Debug.Log($"[Battle] DelayedBattleStart (solo, par étapes) — rencontres={plan.EncounterResolverIdxs.Count} baseprincipale={plan.MainBaseResolverIdxs.Count} basesneutres={plan.NeutralBaseResolverIdxs.Count}");
+
+        // Étape 1 — Rencontres.
+        ZoneCombatResolver.PlanStage(plan.EncounterResolverIdxs);
+        ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.EncounterResolverIdxs);
+        yield return null; // laisser la file démarrer avant d'attendre qu'elle se vide (voir DrainPendingDeaths)
+        yield return StartCoroutine(DrainPendingDeaths());
+        // Déplacement immédiat des survivantes de croisement — déplacé ici (au lieu de la fin de
+        // toute la Battle Phase, voir AutoAdvanceFromEndBattle) précisément pour qu'elles arrivent
+        // avant la planification de l'étape suivante.
+        CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
+        CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
+
+        // Étape 2 — Base principale : planifiée avec le plateau à jour. C'est ici, et seulement ici,
+        // que l'issue du round est connue (voir ComputeRoundOutcome).
+        ZoneCombatResolver.PlanStage(plan.MainBaseResolverIdxs);
+        ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
+        ZoneCombatResolver.EnqueueMainBaseBattleCommandsSolo(outcome);
+        if (outcome.Decisive)
+        {
+            // GameOverCommand déjà enfilé inline (voir EnqueueMainBaseBattleCommands) — la partie est
+            // terminée, l'étape Bases neutres n'a plus lieu d'être.
+            Debug.Log("[Battle] Round décisif en étape Base principale — étape Bases neutres sautée (partie terminée)");
+            yield break;
+        }
+        yield return null;
+        yield return StartCoroutine(DrainPendingDeaths());
+
+        // Étape 3 — Bases neutres.
+        ZoneCombatResolver.PlanStage(plan.NeutralBaseResolverIdxs);
+        ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.NeutralBaseResolverIdxs);
+
+        StartCoroutine(AutoAdvanceFromBattleAfterCombat());
     }
 
     public static void RefreshAllPlayableHighlights()
@@ -684,6 +703,8 @@ public class TurnManager : MonoBehaviour
             AdvancePhaseWhenAllReady();
     }
 
+    // Appelée uniquement quand le round n'est PAS décisif (voir DelayedBattleStart, étape Base
+    // principale) — le cas décisif court-circuite déjà cette coroutine plus haut.
     IEnumerator AutoAdvanceFromBattleAfterCombat()
     {
         yield return null; // one frame so the queue can start
@@ -696,16 +717,6 @@ public class TurnManager : MonoBehaviour
                 Debug.LogWarning($"[Battle] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — playingQueue={Command.playingQueue} restants={Command.CommandQueue.Count} — la file de commandes de combat est probablement gelée");
             return stuck;
         });
-        bool wasDecisive = _lastRoundOutcome?.Decisive ?? false;
-        _lastRoundOutcome = null;
-        if (wasDecisive)
-        {
-            // Round décisif — GameOverCommand a déjà tourné (voir ZoneCombatResolver.
-            // EnqueueOrderedBattleCommands). Pas de transition vers EndBattle : currentPhase reste
-            // figé sur Battle, les contrôles sont déjà désactivés.
-            Debug.Log("[Battle] Round décisif — transition vers EndBattle sautée (partie terminée)");
-            yield break;
-        }
 
         Debug.Log($"[Battle] File vidée après {Time.realtimeSinceStartup - t0:F1}s → passage à EndBattle");
         if (currentPhase == TurnPhases.Battle)
@@ -752,21 +763,17 @@ public class TurnManager : MonoBehaviour
             List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
             Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
 
-            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
-            if (crossingDispatch.Relocations.Count > 0)
-            {
-                CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
-                GameNetworkManager.Instance.BroadcastCrossingDispatch(crossingDispatch);
-            }
-
+            // Le déplacement des survivantes de croisement se fait désormais juste après l'étape
+            // Rencontres (voir GameNetworkManager.ServerDrainStageAndBroadcast) — plus rien à
+            // relocaliser ici, tous les CrossingZoneSlot de ce round ont déjà été libérés.
             GameNetworkManager.Instance.BroadcastDeathDrain(events, TurnPhases.EndTurn);
             // La transition vers EndTurn est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
         }
         else
         {
+            // Même remarque : le déplacement des survivantes de croisement se fait désormais juste
+            // après l'étape Rencontres (voir DelayedBattleStart) — rien à relocaliser ici.
             yield return StartCoroutine(DrainPendingDeaths());
-            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
-            CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
             EnterPhase(TurnPhases.EndTurn);
         }
     }
@@ -794,7 +801,7 @@ public class TurnManager : MonoBehaviour
 
     public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID, int boardOrderPos)
     {
-        Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID}, boardOrderPos={boardOrderPos} (buffer now {_soloBoardBuffer.Count + 1})");
+        //Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID}, boardOrderPos={boardOrderPos} (buffer now {_soloBoardBuffer.Count + 1})");
         _soloBoardBuffer.Add((passengerUniqueID, transportUniqueID, boardOrderPos));
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = true;
@@ -803,14 +810,14 @@ public class TurnManager : MonoBehaviour
     public void CancelSoloBoard(int passengerUniqueID)
     {
         int removed = _soloBoardBuffer.RemoveAll(b => b.passengerUniqueID == passengerUniqueID);
-        Debug.Log($"[Transport] CancelSoloBoard — passenger={passengerUniqueID}, removed={removed}");
+        //Debug.Log($"[Transport] CancelSoloBoard — passenger={passengerUniqueID}, removed={removed}");
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = false;
     }
 
     private void FlushSoloBoardBuffer()
     {
-        Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
+        //Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
 
         // Mêlée avant distance, puis gauche avant droite dans la rangée d'origine (boardOrderPos, voir
         // DragCreatureActions.Board) — pas l'ordre chronologique des drags. Un tri global (toutes

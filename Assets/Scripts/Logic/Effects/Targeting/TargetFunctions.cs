@@ -26,7 +26,7 @@ public partial class EffectContext
                 if (t is not ILivable l) return true;
                 if (l.IsBoarded)
                 {
-                    UnityEngine.Debug.Log($"[Transport] GetTargetsByTeam — excluding boarded {(t as IIdentifiable)?.DisplayName} from targeting pool");
+                    //UnityEngine.Debug.Log($"[Transport] GetTargetsByTeam — excluding boarded {(t as IIdentifiable)?.DisplayName} from targeting pool");
                     return false;
                 }
                 return !(l.IsPendingDeath || l.OnDeathResolvedInBattle);

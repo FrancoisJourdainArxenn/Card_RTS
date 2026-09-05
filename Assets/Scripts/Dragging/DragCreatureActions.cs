@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -326,12 +326,12 @@ public class DragCreatureActions : DraggingActions {
             if (checkCapacity && pendingBoardCreatureLogic != null && originArea != null
                 && !originArea.tableVisual.RowHasSpace(pendingBoardCreatureLogic.IsMelee))
             {
-                Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — stays boarded");
+                //Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — stays boarded");
                 new ShowMessageCommand("No room to bring that unit back — it stays aboard.", 1f).AddToQueue();
                 return;
             }
 
-            Debug.Log($"[Transport] CancelPendingMove — cancelling pending board of ID:{idHolder.UniqueID} onto transport ID:{_pendingBoardTransportID.Value}");
+            //Debug.Log($"[Transport] CancelPendingMove — cancelling pending board of ID:{idHolder.UniqueID} onto transport ID:{_pendingBoardTransportID.Value}");
             if (NetworkSessionData.IsNetworkSession)
                 GameNetworkManager.Instance.CancelBoardCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
             else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
@@ -370,7 +370,7 @@ public class DragCreatureActions : DraggingActions {
         if (checkCapacity && pendingMoveCreatureLogic != null && originArea != null
             && !originArea.tableVisual.RowHasSpace(pendingMoveCreatureLogic.IsMelee))
         {
-            Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — move stays pending");
+            //Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — move stays pending");
             new ShowMessageCommand("No room to cancel that move — another unit took its place.", 1f).AddToQueue();
             return;
         }
@@ -622,14 +622,14 @@ public class DragCreatureActions : DraggingActions {
         CreatureLogic creatureLogic = GetCreatureLogic();
         if (creatureLogic == null || creatureLogic.CanTransport)
         {
-            Debug.Log($"[Transport] HighlightBoardableTransports — skip (creatureLogic={(creatureLogic == null ? "null" : creatureLogic.DisplayName)}, CanTransport={creatureLogic?.CanTransport})");
+            //Debug.Log($"[Transport] HighlightBoardableTransports — skip (creatureLogic={(creatureLogic == null ? "null" : creatureLogic.DisplayName)}, CanTransport={creatureLogic?.CanTransport})");
             return;
         }
 
         ZoneLogic myZone = creatureLogic.Zone;
         if (myZone == null)
         {
-            Debug.Log($"[Transport] HighlightBoardableTransports — skip, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) has no Zone");
+            //Debug.Log($"[Transport] HighlightBoardableTransports — skip, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) has no Zone");
             return;
         }
 
@@ -640,7 +640,7 @@ public class DragCreatureActions : DraggingActions {
             if (other.Zone != myZone) continue;
             if (other.BoardedCreatureIDs.Count + other.LocalPendingBoardCount >= other.TransportCapacity)
             {
-                Debug.Log($"[Transport] HighlightBoardableTransports — {other.DisplayName}(ID:{other.UniqueCreatureID}) full ({other.BoardedCreatureIDs.Count} boarded + {other.LocalPendingBoardCount} pending / {other.TransportCapacity})");
+                //Debug.Log($"[Transport] HighlightBoardableTransports — {other.DisplayName}(ID:{other.UniqueCreatureID}) full ({other.BoardedCreatureIDs.Count} boarded + {other.LocalPendingBoardCount} pending / {other.TransportCapacity})");
                 continue;
             }
 
@@ -651,7 +651,7 @@ public class DragCreatureActions : DraggingActions {
             _candidateTransports.Add(ocm);
             ocm.SetTransportHighlight(true);
         }
-        Debug.Log($"[Transport] HighlightBoardableTransports — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) found {_candidateTransports.Count} candidate(s): [{string.Join(", ", _candidateTransports.ConvertAll(o => o.cardAsset != null ? o.cardAsset.name : "?"))}]");
+        //Debug.Log($"[Transport] HighlightBoardableTransports — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) found {_candidateTransports.Count} candidate(s): [{string.Join(", ", _candidateTransports.ConvertAll(o => o.cardAsset != null ? o.cardAsset.name : "?"))}]");
     }
 
     private void ClearTransportHighlights()
@@ -680,7 +680,7 @@ public class DragCreatureActions : DraggingActions {
         if (newHover == _hoveredTransport)
             return;
 
-        Debug.Log($"[Transport] UpdateHoveredTransport — {(_hoveredTransport != null ? _hoveredTransport.cardAsset?.name : "none")} -> {(newHover != null ? newHover.cardAsset?.name : "none")}");
+        //Debug.Log($"[Transport] UpdateHoveredTransport — {(_hoveredTransport != null ? _hoveredTransport.cardAsset?.name : "none")} -> {(newHover != null ? newHover.cardAsset?.name : "none")}");
 
         if (_hoveredTransport != null)
             _hoveredTransport.SetTransportHighlight(true);
@@ -712,7 +712,7 @@ public class DragCreatureActions : DraggingActions {
         CreatureLogic creatureLogic = GetCreatureLogic();
         if (creatureLogic == null)
         {
-            Debug.Log("[Transport] Board — abort, no CreatureLogic for dragged creature");
+            //Debug.Log("[Transport] Board — abort, no CreatureLogic for dragged creature");
             return false;
         }
 
@@ -723,35 +723,35 @@ public class DragCreatureActions : DraggingActions {
         // sélection s'embarquerait lui-même (ou un autre transport) dès que le groupe cible un transport.
         if (creatureLogic.CanTransport)
         {
-            Debug.Log($"[Transport] Board — abort, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) is itself a Transport (no nested transports)");
+            //Debug.Log($"[Transport] Board — abort, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) is itself a Transport (no nested transports)");
             return false;
         }
 
         IDHolder transportIdHolder = transportManager.GetComponent<IDHolder>();
         if (transportIdHolder == null)
         {
-            Debug.Log("[Transport] Board — abort, transport has no IDHolder");
+            //Debug.Log("[Transport] Board — abort, transport has no IDHolder");
             return false;
         }
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(transportIdHolder.UniqueID, out CreatureLogic transportLogic))
         {
-            Debug.Log($"[Transport] Board — abort, transport ID:{transportIdHolder.UniqueID} not found in CreaturesCreatedThisGame");
+            //Debug.Log($"[Transport] Board — abort, transport ID:{transportIdHolder.UniqueID} not found in CreaturesCreatedThisGame");
             return false;
         }
         if (!transportLogic.CanTransport)
         {
-            Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) is not a Transport (capacity={transportLogic.TransportCapacity})");
+            //Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) is not a Transport (capacity={transportLogic.TransportCapacity})");
             return false;
         }
         if (transportLogic.BoardedCreatureIDs.Count + transportLogic.LocalPendingBoardCount >= transportLogic.TransportCapacity)
         {
-            Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) full ({transportLogic.BoardedCreatureIDs.Count} boarded + {transportLogic.LocalPendingBoardCount} pending / {transportLogic.TransportCapacity})");
+            //Debug.Log($"[Transport] Board — abort, {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) full ({transportLogic.BoardedCreatureIDs.Count} boarded + {transportLogic.LocalPendingBoardCount} pending / {transportLogic.TransportCapacity})");
             if (!silent)
                 new ShowMessageCommand("That transport is full.", 1f).AddToQueue();
             return false;
         }
 
-        Debug.Log($"[Transport] Board — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) -> {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) | NetworkSession={NetworkSessionData.IsNetworkSession} DeferredSolo={GlobalSettings.Instance?.UseDeferredMovesInSolo}");
+        //Debug.Log($"[Transport] Board — {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) -> {transportLogic.DisplayName}(ID:{transportLogic.UniqueCreatureID}) | NetworkSession={NetworkSessionData.IsNetworkSession} DeferredSolo={GlobalSettings.Instance?.UseDeferredMovesInSolo}");
 
         // Capturée avant toute mutation (CancelPendingMove ne touche pas l'ordre réel de la rangée
         // d'origine, seul son affichage "en bout de rangée" — voir MarkPendingMoveAtRowEnd) : position
@@ -764,7 +764,7 @@ public class DragCreatureActions : DraggingActions {
 
         if (NetworkSessionData.IsNetworkSession)
         {
-            Debug.Log($"[Transport] Board — sending BoardCreatureServerRpc (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, playerIndex={playerOwner.playerIndex}, boardOrderPos={boardOrderPos})");
+            //Debug.Log($"[Transport] Board — sending BoardCreatureServerRpc (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, playerIndex={playerOwner.playerIndex}, boardOrderPos={boardOrderPos})");
             GameNetworkManager.Instance.BoardCreatureServerRpc(idHolder.UniqueID, transportIdHolder.UniqueID, playerOwner.playerIndex, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
@@ -786,7 +786,7 @@ public class DragCreatureActions : DraggingActions {
         }
         else if (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo)
         {
-            Debug.Log($"[Transport] Board — queued via EnqueueSoloBoard (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, boardOrderPos={boardOrderPos})");
+            //Debug.Log($"[Transport] Board — queued via EnqueueSoloBoard (passenger={idHolder.UniqueID}, transport={transportIdHolder.UniqueID}, boardOrderPos={boardOrderPos})");
             TurnManager.Instance.EnqueueSoloBoard(idHolder.UniqueID, transportIdHolder.UniqueID, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
@@ -801,7 +801,7 @@ public class DragCreatureActions : DraggingActions {
         }
         else
         {
-            Debug.Log($"[Transport] Board — resolving immediately (no deferral)");
+            //Debug.Log($"[Transport] Board — resolving immediately (no deferral)");
             creatureLogic.Board(transportIdHolder.UniqueID);
         }
 

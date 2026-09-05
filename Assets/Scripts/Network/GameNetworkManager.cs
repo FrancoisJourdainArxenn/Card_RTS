@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -80,12 +80,27 @@ public class GameNetworkManager : NetworkBehaviour
     private ZoneCombatResolver.RoundOutcome? _pendingRoundOutcome;
 
     /// <summary>
-    /// Reçu par le serveur quand un joueur termine la Battle phase.
-    /// Stocke la soumission pour compter les deux joueurs. Quand les deux ont soumis :
-    ///   1. Sérialise l'état calculé par le serveur (BuildAutoBattleSequence déjà exécuté dans OnBattlePhaseStart)
-    ///   2. Diffuse l'état canonique via ApplyCanonicalBattleAssignmentClientRpc
-    ///   3. Déclenche la transition de phase via ForceRegisterEndPhase
-    /// Les données soumises par les clients sont ignorées — le serveur est la source de vérité.
+    /// Étape de Battle Phase en cours côté serveur (Rencontres → Base principale → Bases neutres,
+    /// voir ZoneCombatResolver.BattleStage) — pilote ReportBattleAnimationsDoneServerRpc pour savoir
+    /// quelle étape planifier/diffuser ensuite une fois les deux joueurs confirmés.
+    /// </summary>
+    private ZoneCombatResolver.BattleStage _currentBattleStage;
+
+    /// <summary>
+    /// true entre l'envoi de BroadcastStageDrainClientRpc (morts + relocalisations de fin d'étape)
+    /// et la réception des 2 confirmations correspondantes — distingue, dans
+    /// ReportBattleAnimationsDoneServerRpc, une confirmation "animations de combat terminées" d'une
+    /// confirmation "drain de fin d'étape terminé" (même RPC de confirmation utilisé pour les deux).
+    /// </summary>
+    private bool _awaitingDrainConfirmation;
+
+    /// <summary>
+    /// Reçu par le serveur quand un joueur termine la Battle phase. Stocke la soumission pour
+    /// compter les deux joueurs — sert seulement de porte "les deux joueurs sont prêts" ; les
+    /// données soumises par les clients elles-mêmes sont ignorées, le serveur est la source de
+    /// vérité. Une fois les deux reçues, lance l'étape Rencontres via ServerPlanAndBroadcastStage —
+    /// les étapes suivantes (Base principale, Bases neutres) s'enchaînent ensuite depuis
+    /// ReportBattleAnimationsDoneServerRpc, jamais par un nouvel appel à cette méthode.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void SubmitBattleAssignmentServerRpc(
@@ -111,17 +126,41 @@ public class GameNetworkManager : NetworkBehaviour
         }
 
         _battleSubmissions.Clear();
-        Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — sérialisation de l'état canonique et broadcast");
+        Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — début de la Battle Phase par étapes");
 
-        ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAllAssignments();
+        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
+        ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.Encounters, plan.EncounterResolverIdxs);
+    }
 
-        // Calculé maintenant, avant toute diffusion : le serveur connaît déjà l'issue de ce round
-        // (via pendingPlayerDamage, déjà rempli par la planification de tous les resolvers) avant
-        // qu'aucune animation ne parte. Stocké pour ReportBattleAnimationsDoneServerRpc, et transmis
-        // ci-dessous à BroadcastBattleStepsClientRpc pour que chaque machine rejoue le même ordre/
-        // découpage — jamais recalculé indépendamment côté client.
-        ZoneCombatResolver.RoundOutcome roundOutcome = ZoneCombatResolver.ComputeRoundOutcome();
-        _pendingRoundOutcome = roundOutcome;
+    /// <summary>
+    /// Serveur uniquement. Planifie une étape de la Battle Phase (Rencontres, Base principale ou
+    /// Bases neutres — voir ZoneCombatResolver.BattleStage) avec le plateau tel qu'il est APRÈS les
+    /// morts/relocalisations de l'étape précédente (voir ServerDrainStageAndBroadcast), puis diffuse
+    /// l'état canonique et les steps de combat de CETTE étape uniquement à tous les clients.
+    /// ComputeRoundOutcome n'est calculé que pour l'étape Base principale — avant, l'issue du round
+    /// n'a pas de sens (les PV de base principale ne sont pas encore touchés) ; après, elle est déjà
+    /// connue et figée.
+    /// </summary>
+    void ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage stage, List<int> resolverIdxs)
+    {
+        _currentBattleStage = stage;
+        ZoneCombatResolver.PlanStage(resolverIdxs);
+        Debug.Log($"[BattleAssignment][Server] Étape {stage} planifiée — {resolverIdxs.Count} resolver(s)");
+
+        ZoneCombatResolver.RoundOutcome roundOutcome = default;
+        if (stage == ZoneCombatResolver.BattleStage.MainBase)
+        {
+            // Calculé maintenant, avant toute diffusion de cette étape : le serveur connaît déjà
+            // l'issue de ce round (via pendingPlayerDamage, rempli par la planification qui vient de
+            // tourner ci-dessus) avant qu'aucune animation de Base principale ne parte. Stocké pour
+            // ReportBattleAnimationsDoneServerRpc, et transmis ci-dessous à BroadcastBattleStepsClientRpc
+            // pour que chaque machine rejoue le même ordre/découpage — jamais recalculé indépendamment
+            // côté client.
+            roundOutcome = ZoneCombatResolver.ComputeRoundOutcome();
+            _pendingRoundOutcome = roundOutcome;
+        }
+
+        ZoneCombatResolver.BattleAssignment canonical = ZoneCombatResolver.SerializeAssignmentsForResolvers(resolverIdxs);
 
         // Contient à la fois les effets OnDeath et OnAttack résolus par anticipation pendant la
         // planification, dans l'ordre chronologique réel — voir ZoneCombatResolver.PredictedTriggerReplay.
@@ -135,7 +174,7 @@ public class GameNetworkManager : NetworkBehaviour
         // Allocation (cible, montant) résolue par Random/RandomMeleeFirst/RandomSingleTarget, à plat :
         // predictedAllocCounts[i] = nombre d'entrées pour le replay i, consommées dans l'ordre depuis
         // predictedAllocIDs/predictedAllocAmounts — même idiome que secondaryCounts/secondaryTargetIDs
-        // dans SerializeAllBattleSteps.
+        // dans SerializeBattleStepsForResolvers.
         List<int> predictedAllocCounts  = new();
         List<int> predictedAllocIDs     = new();
         List<int> predictedAllocAmounts = new();
@@ -228,7 +267,8 @@ public class GameNetworkManager : NetworkBehaviour
             battleStartAllocCounts.ToArray(), battleStartAllocIDs.ToArray(), battleStartAllocAmounts.ToArray()
         );
 
-        ZoneCombatResolver.SerializeAllBattleSteps(
+        ZoneCombatResolver.SerializeBattleStepsForResolvers(
+            resolverIdxs,
             out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
             out int[] stepOwnerPlayerIDs,
@@ -239,12 +279,14 @@ public class GameNetworkManager : NetworkBehaviour
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
             stepCounterDamages, stepAttackerExhausted,
+            (int)stage,
             roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
             roundOutcome.FirstMainBaseResolverIdx, roundOutcome.SecondMainBaseResolverIdx);
 
-        // La transition vers EndBattle est désormais déclenchée depuis ReportBattleAnimationsDoneServerRpc,
-        // une fois que CHAQUE client a confirmé que sa file de commandes locale a fini de jouer les
-        // animations de combat (voir BroadcastBattleStepsClientRpc / WaitForBattleAnimationsThenReport).
+        // La suite (étape suivante, ou transition vers EndBattle) est déclenchée depuis
+        // ReportBattleAnimationsDoneServerRpc, une fois que CHAQUE client a confirmé que sa file de
+        // commandes locale a fini de jouer les animations de cette étape (voir
+        // BroadcastBattleStepsClientRpc / WaitForBattleAnimationsThenReport).
     }
 
     /// <summary>
@@ -258,6 +300,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
         int[] counterDamages, int[] attackerExhausted,
+        int stage,
         bool decisive, bool isDraw, int winnerPlayerID,
         int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
     {
@@ -267,12 +310,12 @@ public class GameNetworkManager : NetworkBehaviour
             switch (targetKinds[i]) { case 0: nCreature++; break; case 1: nBuilding++; break; case 2: nBase++; break; case 3: nPlayer++; break; }
             // Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Bât,2=Base,3=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
         }
-        // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
-        ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
+        // Debug.Log($"[BroadcastSteps] étape={(ZoneCombatResolver.BattleStage)stage} {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
+        ZoneCombatResolver.EnqueueStageReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
             secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
-            decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
-        // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
+            (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
+        // Debug.Log($"[BroadcastSteps] EnqueueStageReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }
 
@@ -282,7 +325,7 @@ public class GameNetworkManager : NetworkBehaviour
     /// </summary>
     IEnumerator WaitForBattleAnimationsThenReport()
     {
-        yield return null; // laisser EnqueueAllReconstructedBattleCommands démarrer la file (synchrone)
+        yield return null; // laisser EnqueueStageReconstructedBattleCommands démarrer la file (synchrone)
         yield return new WaitWhile(() => Command.playingQueue);
 
         int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
@@ -296,32 +339,173 @@ public class GameNetworkManager : NetworkBehaviour
     }
 
     /// <summary>
-    /// Reçu par le serveur quand un client (ou le host) a fini de jouer les animations de combat
-    /// localement. Une fois les deux joueurs confirmés, déclenche la transition vers EndBattle.
+    /// Reçu par le serveur quand un client (ou le host) a fini de jouer, localement, soit les
+    /// animations de combat d'une étape, soit un drain de fin d'étape (morts + relocalisations) —
+    /// même RPC pour les deux, distingués par _awaitingDrainConfirmation. Une fois les deux joueurs
+    /// confirmés : si on venait de confirmer un drain, avance à l'étape suivante ; sinon, si le round
+    /// vient d'être décidé en Base principale ou si on termine l'étape Bases neutres, déclenche
+    /// (ou saute) la transition vers EndBattle ; sinon, drain la fin de l'étape courante avant de
+    /// passer à la suivante.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void ReportBattleAnimationsDoneServerRpc(int playerIndex)
     {
         _battleAnimationsDone.Add(playerIndex);
-        Debug.Log($"[BattleAssignment][Server] Animations terminées — joueur {playerIndex} | total confirmé: {_battleAnimationsDone.Count}/2");
+        Debug.Log($"[BattleAssignment][Server] Confirmation reçue — joueur {playerIndex} | étape={_currentBattleStage} drain={_awaitingDrainConfirmation} | total confirmé: {_battleAnimationsDone.Count}/2");
         if (_battleAnimationsDone.Count < 2)
             return;
 
         _battleAnimationsDone.Clear();
 
-        bool wasDecisive = _pendingRoundOutcome?.Decisive ?? false;
-        _pendingRoundOutcome = null;
-        if (wasDecisive)
+        if (_awaitingDrainConfirmation)
         {
-            // Le round a mis fin à la partie — GameOverCommand a déjà tourné localement sur chaque
-            // machine (voir ZoneCombatResolver.EnqueueOrderedBattleCommands). Pas de transition vers
-            // EndBattle : currentPhase reste figé sur Battle, les contrôles sont déjà désactivés.
-            Debug.Log("[BattleAssignment][Server] Round décisif — transition vers EndBattle sautée (partie terminée)");
+            _awaitingDrainConfirmation = false;
+            ServerAdvanceToNextStageAfterDrain();
             return;
         }
 
-        TurnManager.Instance.ForceRegisterEndPhase(0);
-        TurnManager.Instance.ForceRegisterEndPhase(1);
+        bool wasDecisive = _pendingRoundOutcome?.Decisive ?? false;
+        _pendingRoundOutcome = null;
+        if (_currentBattleStage == ZoneCombatResolver.BattleStage.MainBase && wasDecisive)
+        {
+            // Le round a mis fin à la partie — GameOverCommand a déjà tourné localement sur chaque
+            // machine (voir ZoneCombatResolver.EnqueueMainBaseBattleCommands). Pas de transition vers
+            // EndBattle : currentPhase reste figé sur Battle, les contrôles sont déjà désactivés.
+            Debug.Log("[BattleAssignment][Server] Round décisif — étape Bases neutres et transition vers EndBattle sautées (partie terminée)");
+            return;
+        }
+
+        if (_currentBattleStage == ZoneCombatResolver.BattleStage.NeutralBases)
+        {
+            TurnManager.Instance.ForceRegisterEndPhase(0);
+            TurnManager.Instance.ForceRegisterEndPhase(1);
+            return;
+        }
+
+        // Étape Rencontres, ou Base principale non décisive : drainer les morts de cette étape
+        // (+ relocaliser les survivantes de croisement, uniquement après Rencontres) avant de passer
+        // à l'étape suivante.
+        StartCoroutine(ServerDrainStageAndBroadcast(_currentBattleStage == ZoneCombatResolver.BattleStage.Encounters));
+    }
+
+    /// <summary>
+    /// Serveur uniquement. Drain les morts de l'étape qui vient de s'animer sur toutes les machines
+    /// puis — uniquement après l'étape Rencontres — relocalise immédiatement les survivantes de
+    /// croisement (voir CommandMoveTracker.ComputeCrossingDispatch), pour qu'elles soient bien sur
+    /// le plateau avant que ServerAdvanceToNextStageAfterDrain ne planifie l'étape suivante. Diffuse
+    /// le tout en un seul RPC toujours envoyé (même avec des tableaux vides) : contrairement à
+    /// l'ancien BroadcastCrossingDispatch (envoyé seulement si Relocations.Count > 0), on ne peut
+    /// pas se permettre un RPC conditionnel ici — le client doit avoir un signal fiable sur lequel
+    /// confirmer, à chaque étape.
+    /// </summary>
+    IEnumerator ServerDrainStageAndBroadcast(bool needsCrossingDispatch)
+    {
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
+
+        DeathDrainRecorder.Begin();
+        while (CreatureLogic.PendingDeathList.Count > 0)
+            CreatureLogic.ProcessPendingDeaths();
+        List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
+
+        int[] relocCreatureIDs = System.Array.Empty<int>();
+        int[] relocBaseIDs = System.Array.Empty<int>();
+        if (needsCrossingDispatch)
+        {
+            CommandMoveTracker.CrossingDispatchResult dispatch = CommandMoveTracker.ComputeCrossingDispatch();
+            if (dispatch.Relocations.Count > 0)
+            {
+                CommandMoveTracker.ApplyCrossingDispatch(dispatch);
+                BroadcastOrderUpdates(dispatch.OrderUpdates);
+                relocCreatureIDs = new int[dispatch.Relocations.Count];
+                relocBaseIDs = new int[dispatch.Relocations.Count];
+                for (int i = 0; i < dispatch.Relocations.Count; i++)
+                {
+                    relocCreatureIDs[i] = dispatch.Relocations[i].creatureID;
+                    relocBaseIDs[i] = dispatch.Relocations[i].baseID;
+                }
+            }
+        }
+
+        int n = events.Count;
+        int[] types = new int[n], creatureIDs = new int[n], sourceIDs = new int[n];
+        int[] targetIDs = new int[n], damages = new int[n], healthAfters = new int[n];
+        for (int i = 0; i < n; i++)
+        {
+            types[i]        = (int)events[i].Type;
+            creatureIDs[i]  = events[i].CreatureID;
+            sourceIDs[i]    = events[i].SourceID;
+            targetIDs[i]    = events[i].TargetID;
+            damages[i]      = events[i].Damage;
+            healthAfters[i] = events[i].HealthAfter;
+        }
+
+        _awaitingDrainConfirmation = true;
+        BroadcastStageDrainClientRpc(types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters, relocCreatureIDs, relocBaseIDs);
+    }
+
+    [ClientRpc]
+    void BroadcastStageDrainClientRpc(int[] types, int[] creatureIDs, int[] sourceIDs, int[] targetIDs,
+        int[] damages, int[] healthAfters, int[] relocCreatureIDs, int[] relocBaseIDs)
+    {
+        StartCoroutine(ApplyStageDrainAndReport(types, creatureIDs, sourceIDs, targetIDs, damages, healthAfters, relocCreatureIDs, relocBaseIDs));
+    }
+
+    /// <summary>
+    /// Reçu par TOUS les clients (y compris le serveur/host) : rejoue localement les morts de
+    /// l'étape qui vient de s'animer PUIS les relocalisations de croisement éventuelles (le serveur
+    /// a déjà appliqué les deux directement, voir ServerDrainStageAndBroadcast) — dans cet ordre,
+    /// pour que RelocateAfterCombat ne trouve jamais une créature morte encore dans
+    /// playedCards.Creatures. Confirme ensuite via ReportBattleAnimationsDoneServerRpc, le même RPC
+    /// que pour les animations de combat.
+    /// </summary>
+    IEnumerator ApplyStageDrainAndReport(int[] types, int[] creatureIDs, int[] sourceIDs, int[] targetIDs,
+        int[] damages, int[] healthAfters, int[] relocCreatureIDs, int[] relocBaseIDs)
+    {
+        if (!IsServer)
+        {
+            for (int i = 0; i < types.Length; i++)
+            {
+                if (types[i] == (int)DeathDrainRecorder.EventType.Death)
+                {
+                    if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
+                        creature.SilentDie();
+                }
+                else
+                {
+                    new DealDamageCommand(targetIDs[i], damages[i], healthAfters[i], sourceIDs[i], null).AddToQueue();
+                }
+            }
+            CreatureLogic.PendingDeathList.Clear();
+
+            for (int i = 0; i < relocCreatureIDs.Length; i++)
+                if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(relocCreatureIDs[i], out CreatureLogic creature))
+                    creature.RelocateAfterCombat(relocBaseIDs[i], 0);
+        }
+
+        yield return new WaitWhile(() => Command.playingQueue);
+
+        int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
+        if (localIndex < 0)
+        {
+            Debug.LogWarning("[Battle] ApplyStageDrainAndReport — localIndex introuvable, confirmation ANNULÉE (le serveur restera bloqué à attendre)");
+            yield break;
+        }
+        ReportBattleAnimationsDoneServerRpc(localIndex);
+    }
+
+    /// <summary>Serveur uniquement. Enchaîne sur l'étape suivante après le drain de l'étape courante.</summary>
+    void ServerAdvanceToNextStageAfterDrain()
+    {
+        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
+        switch (_currentBattleStage)
+        {
+            case ZoneCombatResolver.BattleStage.Encounters:
+                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.MainBase, plan.MainBaseResolverIdxs);
+                break;
+            case ZoneCombatResolver.BattleStage.MainBase:
+                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.NeutralBases, plan.NeutralBaseResolverIdxs);
+                break;
+        }
     }
 
     /// <summary>
@@ -843,38 +1027,6 @@ public class GameNetworkManager : NetworkBehaviour
             Debug.Log($"[Crossing][Server] Broadcast ordre — playerIndex={playerIndex} baseID={update.baseID} meleeIDs=[{string.Join(",", update.meleeIDs)}] rangedIDs=[{string.Join(",", update.rangedIDs)}]");
             ReorderCreaturesClientRpc(playerIndex, update.baseID, update.meleeIDs, update.rangedIDs);
         }
-    }
-
-    /// <summary>
-    /// Serveur uniquement. Le serveur a déjà appliqué le dispatch (relocalisation + ordre)
-    /// localement (voir TurnManager.AutoAdvanceFromEndBattle) — ceci le réplique aux clients.
-    /// </summary>
-    public void BroadcastCrossingDispatch(CommandMoveTracker.CrossingDispatchResult dispatch)
-    {
-        if (!IsServer) return;
-        BroadcastOrderUpdates(dispatch.OrderUpdates);
-
-        int n = dispatch.Relocations.Count;
-        int[] creatureIDs = new int[n];
-        int[] baseIDs = new int[n];
-        for (int i = 0; i < n; i++)
-        {
-            creatureIDs[i] = dispatch.Relocations[i].creatureID;
-            baseIDs[i] = dispatch.Relocations[i].baseID;
-        }
-        BroadcastCrossingDispatchClientRpc(creatureIDs, baseIDs);
-    }
-
-    [ClientRpc]
-    void BroadcastCrossingDispatchClientRpc(int[] creatureIDs, int[] baseIDs)
-    {
-        if (IsServer) return; // le serveur a déjà appliqué directement.
-        Debug.Log($"[Crossing][Client] Dispatch reçu — créatures=[{string.Join(",", creatureIDs)}] baseIDs=[{string.Join(",", baseIDs)}]");
-        for (int i = 0; i < creatureIDs.Length; i++)
-            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureIDs[i], out CreatureLogic creature))
-                creature.RelocateAfterCombat(baseIDs[i], 0);
-            else
-                Debug.LogError($"[Crossing][Client] Dispatch: créature introuvable id={creatureIDs[i]}");
     }
 
     private void ExecuteAction(PendingAction action)
@@ -1737,7 +1889,7 @@ public class GameNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void BoardCreatureServerRpc(int passengerUniqueID, int transportUniqueID, int playerIndex, int boardOrderPos)
     {
-        Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}, boardOrderPos={boardOrderPos}");
+        //Debug.Log($"[Transport][Server] BoardCreatureServerRpc — passenger={passengerUniqueID}, transport={transportUniqueID}, playerIndex={playerIndex}, boardOrderPos={boardOrderPos}");
         RegisterAction(new PendingAction
         {
             type = ActionType.BoardCreature,
@@ -1758,7 +1910,7 @@ public class GameNetworkManager : NetworkBehaviour
             a.param1 == passengerUniqueID &&
             a.playerIndex == playerIndex);
 
-        Debug.Log($"[Transport][Server] CancelBoardCreatureServerRpc — passenger={passengerUniqueID}, playerIndex={playerIndex}, removed={removed}");
+        //Debug.Log($"[Transport][Server] CancelBoardCreatureServerRpc — passenger={passengerUniqueID}, playerIndex={playerIndex}, removed={removed}");
 
         if (removed == 0)
             return;
@@ -1800,7 +1952,7 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void BoardCreatureClientRpc(int passengerUniqueID, int transportUniqueID)
     {
-        Debug.Log($"[Transport][{(IsServer ? "Server" : "Client")}] BoardCreatureClientRpc received — passenger={passengerUniqueID}, transport={transportUniqueID}");
+        //Debug.Log($"[Transport][{(IsServer ? "Server" : "Client")}] BoardCreatureClientRpc received — passenger={passengerUniqueID}, transport={transportUniqueID}");
         OneCreatureManager ocm = IDHolder.GetGameObjectWithID(passengerUniqueID)?.GetComponent<OneCreatureManager>();
         ocm?.ClearPendingMoveArrow();
 
@@ -1815,7 +1967,7 @@ public class GameNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void ReorderCreaturesServerRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
     {
-        Debug.Log($"[ReorderRpc][Server] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
+        // Debug.Log($"[ReorderRpc][Server] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         // Update buffered tablePos so the flush sends creatures in the correct final order to remote clients.
         // Remote clients have no pending creatures, so the ClientRpc alone would sort an empty list — too early.
         for (int i = 0; i < _actionBuffer.Count; i++)
@@ -1843,7 +1995,7 @@ public class GameNetworkManager : NetworkBehaviour
                     if (IsResidentCreature(row[j], baseID))
                         logicalPos++;
 
-                Debug.Log($"[ReorderRpc][Server] patch PlayCreature creatureID={creatureID} rawPos={rawPos} → param3={logicalPos}");
+                // Debug.Log($"[ReorderRpc][Server] patch PlayCreature creatureID={creatureID} rawPos={rawPos} → param3={logicalPos}");
                 a.param3 = logicalPos;
                 _actionBuffer[i] = a;
             }
@@ -1858,7 +2010,7 @@ public class GameNetworkManager : NetworkBehaviour
     [ClientRpc]
     void ReorderCreaturesClientRpc(int playerIndex, int baseID, int[] meleeIDs, int[] rangedIDs)
     {
-        Debug.Log($"[ReorderRpc][Client] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
+        // Debug.Log($"[ReorderRpc][Client] playerIndex={playerIndex} baseID={baseID} meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         Player.Players[playerIndex].NetworkApplyCreatureOrder(baseID, meleeIDs, rangedIDs);
     }
 

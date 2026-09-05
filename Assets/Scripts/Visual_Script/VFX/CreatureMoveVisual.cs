@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
@@ -50,7 +50,7 @@ public class CreatureMoveVisual : MonoBehaviour
         // partout, une seule fois.
         if (creatureLogic.BoardedCreatureIDs.Count > 0)
         {
-            Debug.Log($"[Transport] Move — {creatureLogic.DisplayName}(ID:{id.UniqueID}) arrived at baseID={baseID} carrying {creatureLogic.BoardedCreatureIDs.Count} passenger(s), disembarking...");
+            //Debug.Log($"[Transport] Move — {creatureLogic.DisplayName}(ID:{id.UniqueID}) arrived at baseID={baseID} carrying {creatureLogic.BoardedCreatureIDs.Count} passenger(s), disembarking...");
             DisembarkCargo(creatureLogic, startingArea, targetArea);
         }
     }
@@ -74,7 +74,7 @@ public class CreatureMoveVisual : MonoBehaviour
         // pour toujours après son prochain débarquement (Disembark réactive le même GameObject).
         manager.HasPendingBoard = false;
         manager.PendingBoardTarget = null;
-        Debug.Log($"[Transport] Visual.Board — {creatureLogic.DisplayName}(ID:{id.UniqueID}) removed from row and hidden (GameObject.activeSelf={gameObject.activeSelf})");
+        //Debug.Log($"[Transport] Visual.Board — {creatureLogic.DisplayName}(ID:{id.UniqueID}) removed from row and hidden (GameObject.activeSelf={gameObject.activeSelf})");
 
         IDHolder.GetGameObjectWithID(transportCreatureID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
     }
@@ -101,7 +101,7 @@ public class CreatureMoveVisual : MonoBehaviour
         manager.BaseID = baseID;
         gameObject.SetActive(true);
         int rawTablePos = targetArea.tableVisual.FromNetworkTablePos(creatureLogic.IsMelee, tablePos);
-        Debug.Log($"[Transport] Visual.Disembark — {creatureLogic.DisplayName}(ID:{id.UniqueID}) reactivated into baseID={baseID}, rawTablePos={rawTablePos}");
+        //Debug.Log($"[Transport] Visual.Disembark — {creatureLogic.DisplayName}(ID:{id.UniqueID}) reactivated into baseID={baseID}, rawTablePos={rawTablePos}");
         targetArea.tableVisual.MoveCreatureToIndex(gameObject, id.UniqueID, rawTablePos, baseID);
     }
 
@@ -121,7 +121,7 @@ public class CreatureMoveVisual : MonoBehaviour
         if (area == null)
             return;
 
-        Debug.Log($"[Transport] DisembarkCargoInPlace — {creatureLogic.DisplayName}(ID:{id.UniqueID}) stayed put with {creatureLogic.BoardedCreatureIDs.Count} passenger(s), attempting in-place disembark...");
+        //Debug.Log($"[Transport] DisembarkCargoInPlace — {creatureLogic.DisplayName}(ID:{id.UniqueID}) stayed put with {creatureLogic.BoardedCreatureIDs.Count} passenger(s), attempting in-place disembark...");
         DisembarkCargo(creatureLogic, area, area, inPlace: true);
     }
 
@@ -137,7 +137,7 @@ public class CreatureMoveVisual : MonoBehaviour
     {
         List<int> manifest = new List<int>(carrier.ManifestOrder);
         int maxPerRow = GlobalSettings.Instance.MaxCreaturePerRow;
-        Debug.Log($"[Transport] DisembarkCargo — {carrier.DisplayName}(ID:{carrier.UniqueCreatureID}) processing manifest=[{string.Join(", ", manifest)}], origin baseID={originArea.baseID}, dest baseID={destArea.baseID}, maxPerRow={maxPerRow}, inPlace={inPlace}");
+        //Debug.Log($"[Transport] DisembarkCargo — {carrier.DisplayName}(ID:{carrier.UniqueCreatureID}) processing manifest=[{string.Join(", ", manifest)}], origin baseID={originArea.baseID}, dest baseID={destArea.baseID}, maxPerRow={maxPerRow}, inPlace={inPlace}");
 
         int landed = DisembarkRow(carrier, manifest, true, originArea, destArea, maxPerRow, inPlace)
                    + DisembarkRow(carrier, manifest, false, originArea, destArea, maxPerRow, inPlace);
@@ -146,7 +146,7 @@ public class CreatureMoveVisual : MonoBehaviour
         if (totalPassengers > landed && !inPlace)
             new ShowMessageCommand("Not all transported units could reach that zone.", 1f).AddToQueue();
 
-        Debug.Log($"[Transport] DisembarkCargo — done: {landed}/{totalPassengers} landed, {totalPassengers - landed} {(inPlace ? "still boarded" : "left behind")}");
+        //Debug.Log($"[Transport] DisembarkCargo — done: {landed}/{totalPassengers} landed, {totalPassengers - landed} {(inPlace ? "still boarded" : "left behind")}");
     }
 
     // Débarque, dans la rangée mêlée ou distance (isMelee) de destArea, tous les passagers du
@@ -196,15 +196,15 @@ public class CreatureMoveVisual : MonoBehaviour
                 bool isLeft = carrierRawIndex >= 0 && i < carrierPos;
                 if (isLeft) landingLeft.Add(passengerID);
                 else landingRight.Add(passengerID);
-                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) FITS ({(isLeft ? "left" : "right")} of carrier, isMelee={isMelee}, destOccupied={destOccupied}, landed={landed}/{maxPerRow})");
+                //Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) FITS ({(isLeft ? "left" : "right")} of carrier, isMelee={isMelee})");
             }
             else if (inPlace)
             {
-                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) STAYS BOARDED (zone full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
+                //Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) STAYS BOARDED (zone full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
             }
             else
             {
-                Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) LEFT BEHIND at origin (destination row full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
+                //Debug.Log($"[Transport] DisembarkRow — {passenger.DisplayName}(ID:{passengerID}) LEFT BEHIND at origin (destination row full: {destOccupied + landed}/{maxPerRow}, isMelee={isMelee})");
                 int originRaw = isMelee ? originArea.tableVisual.MeleeCreaturesOnTable.Count : originArea.tableVisual.RangedCreaturesOnTable.Count;
                 int originReal = originArea.tableVisual.ToNetworkTablePos(isMelee, originRaw);
                 passenger.DisembarkAt(originArea.baseID, originReal);

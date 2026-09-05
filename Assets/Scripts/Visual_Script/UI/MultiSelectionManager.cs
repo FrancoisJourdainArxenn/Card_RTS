@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.UI;
@@ -204,7 +204,7 @@ public class MultiSelectionManager : MonoBehaviour
         List<string> boardableNames = new List<string>();
         foreach (OneCreatureManager t in boardable)
             boardableNames.Add(t.cardAsset != null ? t.cardAsset.name : "?");
-        Debug.Log($"[Transport] StartGroupMove — {CurrSelectedObjects.Count} selected, reachable={reachable.Count}, boardable={boardable.Count} [{string.Join(", ", boardableNames)}]");
+        //Debug.Log($"[Transport] StartGroupMove — {CurrSelectedObjects.Count} selected, reachable={reachable.Count}, boardable={boardable.Count} [{string.Join(", ", boardableNames)}]");
 
         if (reachable.Count == 0 && boardable.Count == 0) return;
 
@@ -263,13 +263,13 @@ public class MultiSelectionManager : MonoBehaviour
         // DragCreatureActions.OnEndDrag), boarder le groupe plutôt que le déplacer vers une zone.
         OneCreatureManager targetTransport = hoveredGroupTransport;
 
-        Debug.Log($"[Transport] ConfirmGroupMove — mousePos={Input.mousePosition}, boardableTransports.Count={boardableTransports.Count}, targetTransport={(targetTransport != null ? targetTransport.cardAsset?.name : "null")}");
+        //Debug.Log($"[Transport] ConfirmGroupMove — mousePos={Input.mousePosition}, boardableTransports.Count={boardableTransports.Count}, targetTransport={(targetTransport != null ? targetTransport.cardAsset?.name : "null")}");
 
         if (targetTransport == null)
         {
-            foreach (OneCreatureManager t in boardableTransports)
-                if (t != null)
-                    Debug.Log($"[Transport] ConfirmGroupMove — miss detail: {t.DebugScreenBoundsInfo(Input.mousePosition)}");
+            //foreach (OneCreatureManager t in boardableTransports)
+                //if (t != null)
+                    //Debug.Log($"[Transport] ConfirmGroupMove — miss detail: {t.DebugScreenBoundsInfo(Input.mousePosition)}");
         }
 
         if (targetTransport != null)
@@ -291,7 +291,7 @@ public class MultiSelectionManager : MonoBehaviour
         Player localPlayer = GlobalSettings.Instance.localPlayer;
         PlayerArea targetArea = localPlayer != null ? localPlayer.SelectedPArea() : null;
 
-        Debug.Log($"[Transport] ConfirmGroupMove — no transport hit, targetArea={(targetArea != null ? targetArea.name : "null")}, highlightedAreas.Contains={highlightedAreas.Contains(targetArea)}");
+        //Debug.Log($"[Transport] ConfirmGroupMove — no transport hit, targetArea={(targetArea != null ? targetArea.name : "null")}, highlightedAreas.Contains={highlightedAreas.Contains(targetArea)}");
 
         if (targetArea != null && highlightedAreas.Contains(targetArea))
         {

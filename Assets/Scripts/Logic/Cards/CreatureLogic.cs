@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -135,7 +135,9 @@ public class CreatureLogic: ILivable
 
     public void ApplyShield(int value, GameObject vfxPrefab = null)
     {
+        int before = ShieldValue;
         ShieldValue += value;
+        Debug.Log($"[Shield/Gain] {DisplayName} (ID:{UniqueCreatureID}) — +{value} Shield ({before} → {ShieldValue}) | IsPendingDeath={IsPendingDeath} OnDeathResolvedInBattle={OnDeathResolvedInBattle}");
         if (vfxPrefab != null)
             ShieldVfxPrefab = vfxPrefab;
     }
@@ -367,7 +369,7 @@ public class CreatureLogic: ILivable
             if (ca.IsStructureUnit) return false;
             if (IsBoarded)
             {
-                Debug.Log($"[Transport] CanMove — {DisplayName}(ID:{UniqueCreatureID}) is boarded, CanMove=false");
+                //Debug.Log($"[Transport] CanMove — {DisplayName}(ID:{UniqueCreatureID}) is boarded, CanMove=false");
                 return false;
             }
             bool commandPhase = TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase;
@@ -636,7 +638,7 @@ public class CreatureLogic: ILivable
         // chaque passager de playedCards.Creatures mais ne touche jamais _boardedCreatureIDs lui-même.
         if (_boardedCreatureIDs.Count > 0)
         {
-            Debug.Log($"[Transport] Die — {DisplayName}(ID:{UniqueCreatureID}) sinks with {_boardedCreatureIDs.Count} passenger(s) aboard: [{string.Join(", ", _boardedCreatureIDs)}]");
+            //Debug.Log($"[Transport] Die — {DisplayName}(ID:{UniqueCreatureID}) sinks with {_boardedCreatureIDs.Count} passenger(s) aboard: [{string.Join(", ", _boardedCreatureIDs)}]");
             foreach (int passengerID in new List<int>(_boardedCreatureIDs))
                 if (CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passenger))
                     passenger.Die();
@@ -1193,7 +1195,7 @@ public class CreatureLogic: ILivable
     {
         if (!CreaturesCreatedThisGame.TryGetValue(transportCreatureID, out CreatureLogic transport))
         {
-            Debug.Log($"[Transport] Board — RESOLVE ABORTED, transport ID:{transportCreatureID} not found");
+            //Debug.Log($"[Transport] Board — RESOLVE ABORTED, transport ID:{transportCreatureID} not found");
             return;
         }
 
@@ -1207,7 +1209,7 @@ public class CreatureLogic: ILivable
         // paraîtrait plein pour toujours, même une fois ses passagers redescendus (BoardedCreatureIDs
         // vidé par DisembarkAt) — voir DragCreatureActions.Board pour l'ajout correspondant.
         transport.RemoveLocalPendingBoard(UniqueCreatureID);
-        Debug.Log($"[Transport] Board — RESOLVED {DisplayName}(ID:{UniqueCreatureID}) aboard {transport.DisplayName}(ID:{transport.UniqueCreatureID}) | transport now carries {transport._boardedCreatureIDs.Count}/{transport.TransportCapacity} | MovementsLeftThisTurn={MovementsLeftThisTurn}");
+        //Debug.Log($"[Transport] Board — RESOLVED {DisplayName}(ID:{UniqueCreatureID}) aboard {transport.DisplayName}(ID:{transport.UniqueCreatureID}) | transport now carries {transport._boardedCreatureIDs.Count}/{transport.TransportCapacity} | MovementsLeftThisTurn={MovementsLeftThisTurn}");
         new CreatureBoardCommand(UniqueCreatureID, transportCreatureID).AddToQueue();
     }
 
@@ -1229,7 +1231,7 @@ public class CreatureLogic: ILivable
         TransportCarrierID = null;
         BaseID = baseID;
         FogOfWarManager.Refresh();
-        Debug.Log($"[Transport] DisembarkAt — {DisplayName}(ID:{UniqueCreatureID}) leaves carrier ID:{fromCarrier} -> baseID={baseID}, networkTablePos={tablePos}");
+        //Debug.Log($"[Transport] DisembarkAt — {DisplayName}(ID:{UniqueCreatureID}) leaves carrier ID:{fromCarrier} -> baseID={baseID}, networkTablePos={tablePos}");
         new CreatureDisembarkCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 
