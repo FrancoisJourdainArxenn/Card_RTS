@@ -74,17 +74,14 @@ public class ApplyShieldSO : EffectSO
     protected override void ApplyToTarget(ILivable target, EffectVisualData visualData, int? amount = null)
     {
         int value = amount ?? Amount;
-        // On capture ShieldValue juste après l'application (donc le total réel affiché, pas le delta
-        // "value") pour que la commande visuelle montre toujours le bouclier vraiment accordé à cet
-        // instant — même si un combat prédit plus tard dans la même séquence le consomme entièrement
-        // avant que la file de commandes n'ait rejoué ce gain (voir ApplyShieldCommand/ConsumeShieldCommand).
-        int displayAmount = value;
         if (target is CreatureLogic creature)
-        {
             creature.ApplyShield(value, visualData?.vfxPrefab);
-            displayAmount = creature.ShieldValue;
-        }
-        new ApplyShieldCommand(target.ID, displayAmount, visualData).AddToQueue();
+        // "value" est le DELTA de ce gain, pas un total — ApplyShieldCommand l'ajoute à ce qui est déjà
+        // affiché plutôt que d'écraser avec un total capturé ici (voir ApplyShieldCommand/VfxManager.
+        // AddShieldVfx) : un instantané de ShieldValue pris à cet instant de la planification ne reflète
+        // que les gains déjà survenus, jamais la consommation à venir (qui n'a lieu qu'à l'exécution),
+        // et écraserait donc l'affichage correct laissé par un ConsumeShieldCommand déjà rejoué.
+        new ApplyShieldCommand(target.ID, value, visualData).AddToQueue();
     }
 
     protected override bool IsTargetSaturated(EffectTarget target) => false;

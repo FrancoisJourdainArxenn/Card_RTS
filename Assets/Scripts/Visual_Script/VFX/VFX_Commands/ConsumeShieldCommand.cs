@@ -7,12 +7,16 @@ using UnityEngine;
 public class ConsumeShieldCommand : Command
 {
     private readonly int targetID;
-    private readonly int remainingShield;
+    // Montant réellement absorbé par CE coup (delta) — pas un total restant. VfxManager.ConsumeShieldVfx
+    // le soustrait à ce qui est déjà affiché, cohérent avec les gains rejoués par ApplyShieldCommand
+    // dans le même ordre visuel, plutôt que d'écraser avec CreatureLogic.ShieldValue (qui peut déjà
+    // refléter des gains bien plus tardifs de la même planification — voir VfxManager._shieldAmount).
+    private readonly int absorbed;
 
-    public ConsumeShieldCommand(int targetID, int remainingShield)
+    public ConsumeShieldCommand(int targetID, int absorbed)
     {
         this.targetID = targetID;
-        this.remainingShield = remainingShield;
+        this.absorbed = absorbed;
     }
 
     public override void StartCommandExecution()
@@ -21,14 +25,11 @@ public class ConsumeShieldCommand : Command
 
         if (target != null && target.TryGetComponent(out VfxManager vfx))
         {
-            if (remainingShield > 0)
-                vfx.UpdateShieldVfx(remainingShield);
-            else
-                vfx.HideShieldVfx();
+            vfx.ConsumeShieldVfx(absorbed);
         }
         else
         {
-            Debug.LogWarning($"[Shield/VFX] ConsumeShieldCommand — objet visuel introuvable pour targetID={targetID} (remainingShield={remainingShield}) — affichage NON mis à jour, désync probable");
+            Debug.LogWarning($"[Shield/VFX] ConsumeShieldCommand — objet visuel introuvable pour targetID={targetID} (absorbed={absorbed}) — affichage NON mis à jour, désync probable");
         }
 
         CommandExecutionComplete();

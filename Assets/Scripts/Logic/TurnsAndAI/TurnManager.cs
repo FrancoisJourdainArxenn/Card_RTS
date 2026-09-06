@@ -563,20 +563,28 @@ public class TurnManager : MonoBehaviour
 
         // Étape 1 — Rencontres.
         ZoneCombatResolver.PlanStage(plan.EncounterResolverIdxs);
+        Debug.Log("[DiagStage] Étape 1 planifiée");
         ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.EncounterResolverIdxs);
+        Debug.Log("[DiagStage] Étape 1 enfilée");
         yield return null; // laisser la file démarrer avant d'attendre qu'elle se vide (voir DrainPendingDeaths)
         yield return StartCoroutine(DrainPendingDeaths());
+        Debug.Log("[DiagStage] Étape 1 — DrainPendingDeaths terminé");
         // Déplacement immédiat des survivantes de croisement — déplacé ici (au lieu de la fin de
         // toute la Battle Phase, voir AutoAdvanceFromEndBattle) précisément pour qu'elles arrivent
         // avant la planification de l'étape suivante.
         CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
+        Debug.Log($"[DiagStage] ComputeCrossingDispatch — relocations={crossingDispatch.Relocations.Count}");
         CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
+        Debug.Log("[DiagStage] ApplyCrossingDispatch terminé — planification étape 2");
 
         // Étape 2 — Base principale : planifiée avec le plateau à jour. C'est ici, et seulement ici,
         // que l'issue du round est connue (voir ComputeRoundOutcome).
         ZoneCombatResolver.PlanStage(plan.MainBaseResolverIdxs);
+        Debug.Log("[DiagStage] Étape 2 planifiée");
         ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
+        Debug.Log($"[DiagStage] ComputeRoundOutcome — Decisive={outcome.Decisive} First={outcome.FirstMainBaseResolverIdx} Second={outcome.SecondMainBaseResolverIdx}");
         ZoneCombatResolver.EnqueueMainBaseBattleCommandsSolo(outcome);
+        Debug.Log("[DiagStage] Étape 2 enfilée");
         if (outcome.Decisive)
         {
             // GameOverCommand déjà enfilé inline (voir EnqueueMainBaseBattleCommands) — la partie est
@@ -586,10 +594,12 @@ public class TurnManager : MonoBehaviour
         }
         yield return null;
         yield return StartCoroutine(DrainPendingDeaths());
+        Debug.Log("[DiagStage] Étape 2 — DrainPendingDeaths terminé — planification étape 3");
 
         // Étape 3 — Bases neutres.
         ZoneCombatResolver.PlanStage(plan.NeutralBaseResolverIdxs);
         ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.NeutralBaseResolverIdxs);
+        Debug.Log("[DiagStage] Étape 3 enfilée — fin de DelayedBattleStart");
 
         StartCoroutine(AutoAdvanceFromBattleAfterCombat());
     }

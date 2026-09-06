@@ -168,7 +168,11 @@ public class CreatureLogic: ILivable
     {
         if (absorbed <= 0) return;
         ShieldValue -= absorbed;
-        new ConsumeShieldCommand(UniqueCreatureID, ShieldValue).AddToQueue();
+        // Le delta absorbé, pas ShieldValue (le total réel) — voir ConsumeShieldCommand/
+        // VfxManager.ConsumeShieldVfx : la file visuelle rejoue gains et consommations un par un dans
+        // leur ordre réel, ShieldValue peut déjà refléter des gains bien plus tardifs de cette même
+        // planification qui n'ont pas encore été révélés côté affichage.
+        new ConsumeShieldCommand(UniqueCreatureID, absorbed).AddToQueue();
     }
 
     public void GrantCelerity()

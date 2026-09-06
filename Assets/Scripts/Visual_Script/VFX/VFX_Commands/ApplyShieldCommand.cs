@@ -17,15 +17,14 @@ public class ApplyShieldCommand : Command
     {
         GameObject target = IDHolder.GetGameObjectWithID(targetID);
 
-        // "amount" est le total de bouclier capturé au moment où il a réellement été accordé (voir
-        // ApplyShieldSO.ApplyToTarget) — pas relu en direct ici : un combat prédit plus loin dans la
-        // même séquence peut avoir déjà entièrement consommé ce bouclier avant que cette commande ne
-        // rejoue, et le lire en direct afficherait alors 0 (bouclier jamais visible). La consommation,
-        // elle, rejoue séparément via ConsumeShieldCommand, mise en file après celle-ci.
+        // "amount" est le DELTA de ce gain (voir ApplyShieldSO.ApplyToTarget), pas un total absolu :
+        // AddShieldVfx l'ajoute à ce qui est déjà affiché (créant la bulle au premier gain) plutôt que
+        // d'écraser avec un total capturé côté logique — celui-ci peut être bien plus avancé, toute la
+        // planification d'un round de combat tournant avant que la moindre commande visuelle ne joue.
         if (target != null && target.TryGetComponent(out VfxManager vfx))
         {
             if (amount > 0)
-                vfx.ShowShieldVfx(visualData?.vfxPrefab, amount);
+                vfx.AddShieldVfx(visualData?.vfxPrefab, amount);
             else
                 vfx.HideShieldVfx();
         }

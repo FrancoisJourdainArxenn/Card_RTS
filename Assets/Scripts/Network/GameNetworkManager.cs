@@ -273,12 +273,14 @@ public class GameNetworkManager : NetworkBehaviour
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
             out int[] stepOwnerPlayerIDs,
             out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
-            out int[] stepCounterDamages, out int[] stepAttackerExhausted);
+            out int[] stepCounterDamages, out int[] stepAttackerExhausted,
+            out int[] stepShieldAbsorbed, out int[] stepAttackerShieldAbsorbed, out int[] stepSecondaryAbsorbed);
         BroadcastBattleStepsClientRpc(
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
             stepCounterDamages, stepAttackerExhausted,
+            stepShieldAbsorbed, stepAttackerShieldAbsorbed, stepSecondaryAbsorbed,
             (int)stage,
             roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
             roundOutcome.FirstMainBaseResolverIdx, roundOutcome.SecondMainBaseResolverIdx);
@@ -300,6 +302,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
         int[] counterDamages, int[] attackerExhausted,
+        int[] shieldAbsorbed, int[] attackerShieldAbsorbed, int[] secondaryAbsorbed,
         int stage,
         bool decisive, bool isDraw, int winnerPlayerID,
         int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
@@ -314,6 +317,7 @@ public class GameNetworkManager : NetworkBehaviour
         ZoneCombatResolver.EnqueueStageReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
             secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
+            shieldAbsorbed, attackerShieldAbsorbed, secondaryAbsorbed,
             (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
         // Debug.Log($"[BroadcastSteps] EnqueueStageReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
