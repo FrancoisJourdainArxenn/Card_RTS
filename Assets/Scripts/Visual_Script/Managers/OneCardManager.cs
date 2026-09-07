@@ -168,11 +168,20 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
         List<string> grantedNames = new List<string>();
 
+        // Octroyé en jeu UNIQUEMENT ici — l'inné est déjà couvert par le tooltip à icône
+        // (CardPreviewUI.BuildTooltipKeywords), jamais réécrit une seconde fois dans la description.
         if (sourceCreature.HasRuntimeCelerity && !cardAsset.Celerity)
         {
             Keyword celerityKeyword = VisualManager.Instance?.CelerityKeyword;
             if (celerityKeyword != null)
                 grantedNames.Add(celerityKeyword.displayName);
+        }
+
+        if (sourceCreature.HasRuntimeMultiStrike && cardAsset.AttacksForOneTurn <= 1)
+        {
+            Keyword multiStrikeKeyword = VisualManager.Instance?.MultiStrikeKeyword;
+            if (multiStrikeKeyword != null)
+                grantedNames.Add(multiStrikeKeyword.displayName);
         }
 
         foreach (AttackModifierSO modifier in sourceCreature.GrantedAttackModifiers)

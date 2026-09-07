@@ -20,6 +20,13 @@ public class CondEventSubjectMatch : ConditionSO
         PlayedCard, // context.PlayedCard — un sort/action joué (OnActionPlayed), sans entité de plateau
     }
 
+    public enum EncounterCombatTarget
+    {
+        EventSubject, // le sujet de l'évènement (EventSubjectCreature/Building) — cohérent avec le reste de la condition
+        Source,       // context.Source — l'unité qui porte l'effet/trigger
+        Either        // vrai si l'un des deux est dans un combat de rencontre
+    }
+
     [Header("Subject")]
     public SubjectSource subjectSource = SubjectSource.Entity;
 
@@ -36,20 +43,35 @@ public class CondEventSubjectMatch : ConditionSO
     [Header("Zone")]
     public bool requireSameZoneAsSource;
 
+    [Header("Encounter Combat")]
+    public bool requireEncounterZone;
+    public EncounterCombatTarget encounterCombatTarget = EncounterCombatTarget.EventSubject;
+    [Tooltip("Si coché, exige aussi qu'un combat soit réellement en cours ce round dans la zone (HasPossibleCombat). Si décoché, seul le fait d'être dans une zone de rencontre compte.")]
+    public bool requireActiveCombatThisRound = false;
+
     [Header("Card")]
     public CardFilterSO cardFilter;
 
     public override bool Evaluate(EffectContext context)
     {
-        // Sort/action joué : ni Team, ni Melee/Ranged, ni Zone n'ont de sens pour une carte sans
-        // entité de plateau — seul le filtre de carte s'applique.
+        // Sort/action joué : ni Team, ni Melee/Ranged, ni Zone, ni Encounter Combat n'ont de sens
+        // pour une carte sans entité de plateau — seul le filtre de carte s'applique.
         if (subjectSource == SubjectSource.PlayedCard)
+        {
+            if (requireEncounterZone) return false;
             return context.PlayedCard != null && (cardFilter == null || cardFilter.Matches(context.PlayedCard));
+        }
 
         CreatureLogic creature = context.EventSubjectCreature;
         BuildingLogic building = context.EventSubjectBuilding;
         ILivable subject = (ILivable)creature ?? (ILivable)building;
-        if (subject == null) return false;
+
+        // Un trigger "direct" (ex: OnBattleStart) n'a pas de sujet d'évènement — seul context.Source
+        // existe. On ne bloque donc que si un filtre a réellement besoin du sujet (tout sauf un check
+        // Encounter Combat ciblant uniquement la Source).
+        bool needsSubject = filterByTeam || filterByType || requireSameZoneAsSource || cardFilter != null
+            || (requireEncounterZone && encounterCombatTarget != EncounterCombatTarget.Source);
+        if (needsSubject && subject == null) return false;
 
         CardAsset ca = creature != null ? creature.ca : building?.ca;
 
@@ -67,9 +89,28 @@ public class CondEventSubjectMatch : ConditionSO
         if (requireSameZoneAsSource && (context.Source?.Zone == null || subject.Zone != context.Source.Zone))
             return false;
 
+        if (requireEncounterZone)
+        {
+            bool subjectOk = encounterCombatTarget != EncounterCombatTarget.Source && IsInEncounterCombat(subject);
+            bool sourceOk  = encounterCombatTarget != EncounterCombatTarget.EventSubject && IsInEncounterCombat(context.Source);
+            if (!subjectOk && !sourceOk) return false;
+        }
+
         if (cardFilter != null && !cardFilter.Matches(ca))
             return false;
 
         return true;
+    }
+
+    bool IsInEncounterCombat(ILivable livable)
+    {
+        ZoneCombatResolver resolver = livable switch
+        {
+            CreatureLogic creature => ZoneCombatResolver.FindForBase(creature.BaseID),
+            BuildingLogic building => ZoneCombatResolver.FindForBuilding(building),
+            _ => null,
+        };
+        if (resolver == null || !resolver.isEncounterZone) return false;
+        return !requireActiveCombatThisRound || resolver.HasPossibleCombat();
     }
 }

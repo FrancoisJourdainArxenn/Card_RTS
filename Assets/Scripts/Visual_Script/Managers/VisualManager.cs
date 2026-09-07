@@ -23,6 +23,8 @@ public class VisualManager : MonoBehaviour
     public float MeleeMultiTargetVfxLifetime = 1.5f; // délai avant destruction du Melee VFX (cibles secondaires), le temps qu'il finisse de se jouer
     public float RaiseEffectVisualDelay = 0.5f; // délai avant que RaiseEffectVisualCommand ne se termine
     public float RowReorderDuration = 0.3f; // durée du glissement des créatures vers leur nouveau slot après une mort
+    public float ExhaustedRotationAngle = 45f; // rotation en Y appliquée quand l'unité a épuisé ses attaques du tour
+    public float ExhaustedRotationDuration = 0.3f; // durée du tween de rotation (aller et retour au reset)
 
     [Header("Pop Animation")]
     public float popStrength = 2f;
@@ -45,6 +47,10 @@ public class VisualManager : MonoBehaviour
 
     [Header("Granted Keywords")]
     public Keyword CelerityKeyword;
+    public Keyword MultiStrikeKeyword;
+    public Keyword CommanderKeyword;
+    public Keyword BackUpKeyword;
+    public Keyword TransportKeyword;
 
     void Awake()
     {

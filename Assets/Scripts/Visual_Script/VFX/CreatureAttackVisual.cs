@@ -181,7 +181,7 @@ public class CreatureAttackVisual : MonoBehaviour
     // Phase 2 : charge (mêlée) ou tir (ranged), impact, retour. Part de transform.position tel quel
     // (déjà au point de wind-up, PlayWindup vient de l'y amener) ; relit _pendingOriginalPosition/
     // _pendingTempState posés par PlayWindup pour le retour et la restauration du VisualState.
-    public void PlayResolve(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
+    public void PlayResolve(int targetUniqueID, int damageTakenByTarget, int damageTakenByAttacker, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null, bool attackerExhausted = false)
     {
         // // Debug.Log($"[AttackVisual] {gameObject.name} → résolution vers cible ID:{targetUniqueID} | dégâts cible:{damageTakenByTarget} dégâts attaquant:{damageTakenByAttacker}");
         // L'attaquant peut avoir été détruit entre le wind-up et la résolution (ex: par les commandes
@@ -414,6 +414,13 @@ public class CreatureAttackVisual : MonoBehaviour
                     w.SetTableSortingOrder();
                     w.VisualState = tempState;
 
+                    if (attackerExhausted)
+                    {
+                        float rotationAngle = VisualManager.Instance != null ? VisualManager.Instance.ExhaustedRotationAngle : 45f;
+                        float rotationDuration = VisualManager.Instance != null ? VisualManager.Instance.ExhaustedRotationDuration : 0.3f;
+                        transform.DORotate(new Vector3(0f, transform.eulerAngles.y + rotationAngle, 0f), rotationDuration);
+                    }
+
                     bool seqDone = false;
                     Sequence s = DOTween.Sequence();
                     s.AppendInterval(postDel);
@@ -439,4 +446,12 @@ public class CreatureAttackVisual : MonoBehaviour
             });
     }
 
+    // Annule la rotation "attaques épuisées" (voir attackerExhausted dans PlayResolve) — appelée par
+    // CreatureLogic.OnTurnStart quand AttacksLeftThisTurn est rechargé pour le nouveau tour du propriétaire.
+    public void ResetExhaustedRotation()
+    {
+        float duration = VisualManager.Instance != null ? VisualManager.Instance.ExhaustedRotationDuration : 0.2f;
+        Vector3 e = transform.eulerAngles;
+        transform.DORotate(new Vector3(e.x, 0f, e.z), duration);
+    }
 }

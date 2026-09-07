@@ -65,6 +65,7 @@ public class DragCreatureActions : DraggingActions {
                 manager != null
                 && base.CanDrag
                 && !MultiSelectionManager.IsConfirmingGroupMove
+                && PhaseEffectPipeline.IsPlayerTargetingComplete(playerOwner)
                 && (
                     manager.CanMoveNow
                     || manager.CanReorderNow
@@ -306,13 +307,30 @@ public class DragCreatureActions : DraggingActions {
         BroadcastRowOrder(originArea);
     }
 
-    // Annule le déplacement en attente de la créature en cours de drag (RPC serveur / buffer solo) et
-    // nettoie son état visuel (flèche, ghost dans la zone cible, affichage en bout de rangée). Sans
-    // effet si la créature n'a pas de déplacement en attente.
-    private void CancelPendingMove()
+    // Annule le déplacement (ou embarquement) en attente de cette créature (RPC serveur / buffer
+    // solo) et nettoie son état visuel (flèche, ghost dans la zone cible, affichage en bout de
+    // rangée). Sans effet si la créature n'a pas de déplacement en attente.
+    // checkCapacity : la créature n'a jamais quitté la liste de sa rangée d'origine pendant l'attente
+    // (juste cachée/exclue du calcul de place via HasPendingMove — voir Board()/TableVisual.PlaceRowOnSlots),
+    // donc une autre carte jouée entre-temps a pu légitimement prendre sa place. true pour une
+    // annulation autonome (portrait cliqué — voir OneCreatureManager.RequestDisembarkPassenger, seul
+    // appelant externe) où il faut vérifier avant de la réafficher ; false (défaut) pour les 3 appels
+    // internes (Reorder/Move/Board ci-dessous) qui appellent ceci juste avant d'établir eux-mêmes un
+    // nouvel état en attente — y bloquer la restauration laisserait un double état en attente au lieu
+    // de remplacer proprement l'ancien.
+    public void CancelPendingMove(bool checkCapacity = false)
     {
         if (_pendingBoardTransportID.HasValue)
         {
+            CreatureLogic pendingBoardCreatureLogic = checkCapacity ? GetCreatureLogic() : null;
+            if (checkCapacity && pendingBoardCreatureLogic != null && originArea != null
+                && !originArea.tableVisual.RowHasSpace(pendingBoardCreatureLogic.IsMelee))
+            {
+                Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — stays boarded");
+                new ShowMessageCommand("No room to bring that unit back — it stays aboard.", 1f).AddToQueue();
+                return;
+            }
+
             Debug.Log($"[Transport] CancelPendingMove — cancelling pending board of ID:{idHolder.UniqueID} onto transport ID:{_pendingBoardTransportID.Value}");
             if (NetworkSessionData.IsNetworkSession)
                 GameNetworkManager.Instance.CancelBoardCreatureServerRpc(idHolder.UniqueID, playerOwner.playerIndex);
@@ -322,18 +340,38 @@ public class DragCreatureActions : DraggingActions {
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(_pendingBoardTransportID.Value, out CreatureLogic transportLogic))
             {
                 transportLogic.RemoveLocalPendingBoard(idHolder.UniqueID);
+                // Contrairement à la résolution (Board(), qui laisse le passager au manifeste), une
+                // annulation doit l'en retirer explicitement — voir CreatureLogic.RemoveLocalPendingBoard.
+                transportLogic.RemoveFromManifest(idHolder.UniqueID);
                 IDHolder.GetGameObjectWithID(_pendingBoardTransportID.Value)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
             }
 
             // Un embarquement n'a jamais de ghost (voir Board) — DestroyPendingMoveGhost() no-opterait
             // silencieusement (elle sort tôt si PendingMoveGhost est null) sans jamais restaurer la
             // couleur normale de la créature, contrairement au cas déplacement ci-dessous.
-            originArea.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
             manager.ClearPendingMoveArrow();
             manager.HasPendingBoard = false;
             manager.PendingBoardTarget = null;
             manager.SetPending(false);
+            // Réaffiche la créature masquée au moment du drag (voir Board()) — l'embarquement en
+            // attente est annulé, elle reste dans sa rangée d'origine. AVANT ClearPendingMoveRowEnd
+            // (qui déclenche le relayout) : tant que HasPendingBoard est vrai, PlaceRowOnSlots
+            // l'exclut du calcul de slots — l'y réintégrer après aurait laissé les autres créatures
+            // déjà recentrées sans elle, et elle-même figée à sa dernière position connue (chevauchement).
+            manager.gameObject.SetActive(true);
+            originArea.tableVisual.ClearPendingMoveRowEnd(manager.gameObject);
             _pendingBoardTransportID = null;
+            return;
+        }
+
+        // Même risque que ci-dessus pour un déplacement classique (voir le commentaire de checkCapacity
+        // sur la signature de la méthode).
+        CreatureLogic pendingMoveCreatureLogic = checkCapacity ? GetCreatureLogic() : null;
+        if (checkCapacity && pendingMoveCreatureLogic != null && originArea != null
+            && !originArea.tableVisual.RowHasSpace(pendingMoveCreatureLogic.IsMelee))
+        {
+            Debug.Log($"[Transport] CancelPendingMove — abort, no room back in origin row for ID:{idHolder.UniqueID} (another card filled that slot meanwhile) — move stays pending");
+            new ShowMessageCommand("No room to cancel that move — another unit took its place.", 1f).AddToQueue();
             return;
         }
 
@@ -678,6 +716,17 @@ public class DragCreatureActions : DraggingActions {
             return false;
         }
 
+        // Pas de transports imbriqués. Le drag simple ne propose jamais un transport comme cible pour
+        // une créature qui CanTransport elle-même (voir HighlightBoardableTransports, qui sort tôt
+        // dans ce cas) — mais MultiSelectionManager.ConfirmGroupMove appelle TryGroupBoardTo pour
+        // CHAQUE unité du multi-select sans ce filtre. Sans ce garde-fou, un transport inclus dans la
+        // sélection s'embarquerait lui-même (ou un autre transport) dès que le groupe cible un transport.
+        if (creatureLogic.CanTransport)
+        {
+            Debug.Log($"[Transport] Board — abort, {creatureLogic.DisplayName}(ID:{creatureLogic.UniqueCreatureID}) is itself a Transport (no nested transports)");
+            return false;
+        }
+
         IDHolder transportIdHolder = transportManager.GetComponent<IDHolder>();
         if (transportIdHolder == null)
         {
@@ -719,9 +768,18 @@ public class DragCreatureActions : DraggingActions {
             GameNetworkManager.Instance.BoardCreatureServerRpc(idHolder.UniqueID, transportIdHolder.UniqueID, playerOwner.playerIndex, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
-            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             manager.HasPendingBoard = true;
             manager.SetPending(true, isPendingMove: true);
+            // Disparait tout de suite de sa rangée d'origine, comme à la résolution réelle (voir
+            // CreatureMoveVisual.Board) — seul ce client la voit disparaître ; les autres ne la
+            // verront embarquer qu'à la résolution (BoardCreatureClientRpc), comme le reste du
+            // preview d'action en attente (flèche, portrait). Restauré par CancelPendingMove. AVANT
+            // MarkPendingMoveAtRowEnd (qui déclenche le relayout de la rangée) : TableVisual.PlaceRowOnSlots
+            // exclut une créature HasPendingBoard du calcul de slots — poser le flag/la cacher après
+            // laisserait ce relayout la compter et recentrerait le reste de la rangée sur une position
+            // qu'elle va aussitôt quitter (cause du chevauchement observé au débarquement/annulation).
+            manager.gameObject.SetActive(false);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             transportLogic.AddLocalPendingBoard(idHolder.UniqueID);
             transportManager.RefreshPassengerPortraits();
             _pendingBoardTransportID = transportIdHolder.UniqueID;
@@ -732,9 +790,11 @@ public class DragCreatureActions : DraggingActions {
             TurnManager.Instance.EnqueueSoloBoard(idHolder.UniqueID, transportIdHolder.UniqueID, boardOrderPos);
             manager.ShowPendingMoveArrow(transportManager.CenterPointPosition);
             manager.PendingBoardTarget = transportManager;
-            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             manager.HasPendingBoard = true;
             manager.SetPending(true, isPendingMove: true);
+            // Voir commentaire équivalent ci-dessus (branche réseau) : l'ordre importe.
+            manager.gameObject.SetActive(false);
+            originArea.tableVisual.MarkPendingMoveAtRowEnd(manager.gameObject);
             transportLogic.AddLocalPendingBoard(idHolder.UniqueID);
             transportManager.RefreshPassengerPortraits();
             _pendingBoardTransportID = transportIdHolder.UniqueID;

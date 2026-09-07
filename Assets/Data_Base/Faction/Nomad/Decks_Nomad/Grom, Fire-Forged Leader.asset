@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: Grom
+  m_Name: Grom, Fire-Forged Leader
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
-  deckName: Grom, Leader of the Free Folk
+  deckName: Grom, Fire-Forged Leader
   difficultyLevel: 4
   deckTooltip: Managing the life of your units carefully will be the key to victory.
   heroCard: {fileID: 11400000, guid: a7e9c5fbe49685f4d9622cd8fb560cfd, type: 2}

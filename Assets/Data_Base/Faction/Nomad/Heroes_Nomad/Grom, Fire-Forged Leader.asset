@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Grom, Leader of the Free Folk
+  m_Name: Grom, Fire-Forged Leader
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: Grom, Leader of the Free Folk
+  Name: Grom, Fire-Forged Leader
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 7
+  subType: 0
   tier: 1
-  Description: '<b>Commander, Arcing Attack,
+  Description: '<b>Commander, Cone Attack,
 
     On Attack:</b> Deal 1 to ALL other
     units (<i>in my zone </b>). Your units gain +2/+0.'
@@ -25,12 +25,12 @@ MonoBehaviour:
   MainCost: 0
   IsHero: 1
   UnlockCondition: {fileID: 11400000, guid: ec908964b82b8d64ca10ccc9b3f75e00, type: 2}
-  Attack: 3
-  MaxHealth: 8
+  Attack: 2
+  MaxHealth: 6
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers:
-  - {fileID: 11400000, guid: 0775b47263198dd41aab9a863352d04f, type: 2}
+  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
   Commandement: 1
   Renfort: 0
   MoveSpeed: 1
@@ -43,7 +43,7 @@ MonoBehaviour:
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
-  - {fileID: 11400000, guid: 4472b22a40de46d4faa67c5e64d62c6f, type: 2}
+  - {fileID: 11400000, guid: 909055c91f48c2d4593e541aebb536bb, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: For the greater good

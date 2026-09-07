@@ -69,6 +69,9 @@ public class CardAsset : ScriptableObject
     [Header("Attack and Health info")]
     public int Attack;
     public int MaxHealth;   // =0 => spell card
+    // Nombre de coups portés par bataille (auto-battle) — c'est le champ "Multi-Strike X" : mettre 2
+    // équivaut à "Multi-Strike 2" (l'unité frappe 2 fois par combat de zone où elle participe).
+    [Tooltip("Multi-Strike X : nombre de coups portés par bataille (1 = normal, 2+ = Multi-Strike X).")]
     public int AttacksForOneTurn = 1;
     public float AttackSpeedMultiplier = 2f;
     public List<AttackModifierSO> AttackModifiers = new List<AttackModifierSO>();

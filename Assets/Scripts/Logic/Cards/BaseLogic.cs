@@ -153,6 +153,15 @@ public class BaseLogic: ILivable
         OnUpgradeCostChanged?.Invoke(this);
     }
 
+    public void ReduceUpgradeCost(int amount)
+    {
+        if (!IsHomeBase) return;
+        BaseTierLevel next = NextTierData;
+        if (next == null) return; // déjà au tier max
+        CurrentUpgradeCost = Math.Max(next.upgradeCostFloor, CurrentUpgradeCost - amount);
+        OnUpgradeCostChanged?.Invoke(this);
+    }
+
     public bool TryUpgrade()
     {
         if (!IsHomeBase) return false;

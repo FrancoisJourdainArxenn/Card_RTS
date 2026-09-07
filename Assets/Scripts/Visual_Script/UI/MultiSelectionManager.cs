@@ -54,11 +54,17 @@ public class MultiSelectionManager : MonoBehaviour
     void Update()
     {
         if (Draggable.DraggingThis != null || OnPlayTargetingSession.IsActive
-            || (ChooseOneManager.Instance != null && ChooseOneManager.Instance.AnyPending))
+            || (ChooseOneManager.Instance != null && ChooseOneManager.Instance.AnyPending)
+            || PassengerPortraitDrag.IsDraggingAny)
         {
-            // Un drag (carte ou créature) est en cours, ou une session de ciblage de sort est active
+            // Un drag (carte ou créature) est en cours, une session de ciblage de sort est active
             // (le drag "souris" est coupé court dès OnStartDrag par DragSpellOnTarget.EndDragSilently,
-            // alors que le bouton reste enfoncé) : on annule/empêche le cadre de sélection.
+            // alors que le bouton reste enfoncé), ou un portrait de passager est en cours de drag (voir
+            // PassengerPortraitDrag.IsDraggingAny) : on annule/empêche le cadre de sélection, sinon ce
+            // drag lance en parallèle une sélection rectangle sur le plateau (Input.GetMouseButtonDown
+            // ci-dessous est lu en brut, sans notion d'UI). Volontairement pas un
+            // EventSystem.IsPointerOverGameObject() général : d'autres éléments UI du plateau ont un
+            // Raycast Target actif ailleurs sans que ça doive couper le multi-select pour autant.
             isMouseDown = false;
             if (isDragging)
             {

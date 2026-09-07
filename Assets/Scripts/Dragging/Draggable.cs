@@ -64,6 +64,25 @@ public class Draggable : MonoBehaviour {
         ResetDragState();
     }
 
+    // Empêche le TOUT PROCHAIN OnMouseDown de démarrer un drag, sans toucher à celui déjà en cours
+    // (le cas échéant). Sert quand un clic vient d'être consommé par un ciblage de joueur (voir
+    // OneCreatureManager.OnCreatureClicked) : sur le même GameObject, HoverPreview.OnMouseDown()
+    // s'exécute avant Draggable.OnMouseDown() (ordre des composants dans le prefab), donc résoudre
+    // le ciblage AVANT que CanDrag ne soit évalué peut faire retomber IsPlayerTargetingComplete à
+    // true dans la même frame (ex: dernière cible d'une file) — CanDrag ne suffit alors plus à
+    // bloquer le drag. Ce flag comble cette fenêtre.
+    // Verrouillé sur le numéro de frame où il est posé : Unity n'envoie OnMouseDown qu'à UN SEUL
+    // GameObject par frame (celui sous le raycast), donc si personne ne le consomme cette frame-là
+    // (ex: variant de prefab sans Draggable), il expire tout seul au lieu de fuiter vers le
+    // prochain vrai clic de drag, potentiellement ailleurs et bien plus tard.
+    private static bool _suppressNextMouseDown = false;
+    private static int _suppressFrame = -1;
+    public static void SuppressNextMouseDown()
+    {
+        _suppressNextMouseDown = true;
+        _suppressFrame = Time.frameCount;
+    }
+
     // MONOBEHAVIOUR METHODS
     void Awake()
     {
@@ -72,6 +91,11 @@ public class Draggable : MonoBehaviour {
 
     void OnMouseDown()
     {
+        bool suppressed = _suppressNextMouseDown && _suppressFrame == Time.frameCount;
+        _suppressNextMouseDown = false;
+        if (suppressed)
+            return;
+
         if (da!=null && da.CanDrag)
         {
             Debug.Log("mousedown");

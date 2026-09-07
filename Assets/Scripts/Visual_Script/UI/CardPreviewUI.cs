@@ -406,7 +406,7 @@ public class CardPreviewUI : MonoBehaviour
         manager.sourceBuilding = sourceBuilding;
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
-        ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset));
+        ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset, sourceCreature));
         CardTooltipManager.Instance?.BuildCardTooltips(asset.ReferencedCards);
 
         currentPreview.SetActive(true);
@@ -425,9 +425,14 @@ public class CardPreviewUI : MonoBehaviour
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
     }
 
-    // Injecte automatiquement le keyword Melee/Ranged selon cardAsset.melee, sans avoir
-    // à l'ajouter manuellement à la liste Keywords de chaque carte Unit/Hero.
-    private List<Keyword> BuildTooltipKeywords(CardAsset asset)
+    // Injecte automatiquement les keywords déduits directement des champs de CardAsset (Melee/Ranged,
+    // Commandement, Renfort, Transport, Célérité, Multi-Strike), sans avoir à les ajouter manuellement
+    // à la liste Keywords de chaque carte. sourceCreature (optionnel) permet de couvrir aussi le don en
+    // jeu (GrantCommandement/GrantRenfort/GrantTransport/GrantCelerity/GrantMultiStrike) en plus de
+    // l'inné — absent pour une carte encore en main, où seul l'inné (CardAsset) peut être connu. Ce
+    // tooltip à icône est la seule source pour le cas inné : OneCardManager.PrependGrantedKeywordsText
+    // ne réécrit ces deux mots-clés dans la description QUE pour le don en jeu, jamais pour l'inné.
+    private List<Keyword> BuildTooltipKeywords(CardAsset asset, CreatureLogic sourceCreature = null)
     {
         List<Keyword> keywords = new List<Keyword>(asset.Keywords);
 
@@ -436,6 +441,26 @@ public class CardPreviewUI : MonoBehaviour
             Keyword rowKeyword = asset.melee ? GlobalSettings.Instance.MeleeRowKeyword : GlobalSettings.Instance.RangedRowKeyword;
             if (rowKeyword != null)
                 keywords.Insert(0, rowKeyword);
+
+            bool hasCommandement = asset.Commandement || (sourceCreature?.HasRuntimeCommandement ?? false);
+            if (hasCommandement && VisualManager.Instance?.CommanderKeyword != null)
+                keywords.Add(VisualManager.Instance.CommanderKeyword);
+
+            bool hasRenfort = asset.Renfort || (sourceCreature?.HasRuntimeRenfort ?? false);
+            if (hasRenfort && VisualManager.Instance?.BackUpKeyword != null)
+                keywords.Add(VisualManager.Instance.BackUpKeyword);
+
+            int transportCapacity = sourceCreature?.TransportCapacity ?? asset.TransportCapacity;
+            if (transportCapacity > 0 && VisualManager.Instance?.TransportKeyword != null)
+                keywords.Add(VisualManager.Instance.TransportKeyword);
+
+            bool hasCelerity = asset.Celerity || (sourceCreature?.HasRuntimeCelerity ?? false);
+            if (hasCelerity && VisualManager.Instance?.CelerityKeyword != null)
+                keywords.Add(VisualManager.Instance.CelerityKeyword);
+
+            int attacksForOneTurn = sourceCreature?.AttacksForOneTurn ?? asset.AttacksForOneTurn;
+            if (attacksForOneTurn > 1 && VisualManager.Instance?.MultiStrikeKeyword != null)
+                keywords.Add(VisualManager.Instance.MultiStrikeKeyword);
         }
 
         return keywords;

@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 7
+  subType: 0
   tier: 3
   Description: When I take Damage, a unit gains <b>Shield 1</b>.
   CardImage: {fileID: 21300000, guid: 4a82f6e8ff7d15944a938d4f742fc83d, type: 3}
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 1e0ac1d62bb2901468a4d146f9fc57a7, type: 2}
   ReferencedCards: []

@@ -185,6 +185,35 @@ public class CreatureLogic: ILivable
     // main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
     public bool HasRuntimeCelerity { get; private set; }
 
+    // Vrai dès que GrantMultiStrike() a été appelé — distinct de ca.AttacksForOneTurn (l'inné, déjà
+    // écrit à la main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
+    public bool HasRuntimeMultiStrike { get; private set; }
+
+    // Octroie des coups supplémentaires par bataille (Multi-Strike), en plus de attacksForOneTurn —
+    // contrairement à Célérité (on/off), c'est un nombre qui peut s'additionner. Débloque aussi
+    // immédiatement les coups gagnés pour la bataille en cours (voir AttacksLeftThisTurn).
+    public void GrantMultiStrike(int additionalAttacks = 1)
+    {
+        if (additionalAttacks <= 0) return;
+        attacksForOneTurn += additionalAttacks;
+        AttacksLeftThisTurn += additionalAttacks;
+        HasRuntimeMultiStrike = true;
+    }
+
+    // Vrai dès que GrantCommandement() a été appelé — distinct de ca.Commandement (l'inné). Contrairement
+    // à Célérité/Multi-Strike, a aussi un effet de jeu réel : voir Player.HasCommandCreatureInArea, qui
+    // vérifie ce flag en plus de ca.Commandement.
+    public bool HasRuntimeCommandement { get; private set; }
+    public void GrantCommandement() => HasRuntimeCommandement = true;
+
+    // Vrai dès que GrantRenfort() a été appelé — distinct de ca.Renfort (l'inné). Purement structurel
+    // pour l'instant : contrairement à Commandement/Transport, Renfort est aujourd'hui vérifié sur la
+    // CARTE en main au moment de la poser (Player.CanPlayCreatureInArea lit cardToPlay.Renfort), pas sur
+    // une créature déjà en jeu — ce flag n'a donc pas encore d'effet de jeu réel, seulement l'affichage
+    // du reminder, en attendant un éventuel mécanisme d'octroi côté carte en main.
+    public bool HasRuntimeRenfort { get; private set; }
+    public void GrantRenfort() => HasRuntimeRenfort = true;
+
 
     public int TakeDamage(int dmg)
     {
@@ -227,25 +256,29 @@ public class CreatureLogic: ILivable
     //    avec la même seed pour reproduire les mêmes cibles, donc rappelle TakeDamage() lui-même).
     private void ResolveOnTakeDamageFromEffect(int dmg)
     {
-        if (ca.Effects == null) return;
-
         int? activeDeferKey = Command.CurrentDeferSourceID;
 
         if (!activeDeferKey.HasValue)
         {
-            for (int i = 0; i < ca.Effects.Count; i++)
+            if (ca.Effects != null)
             {
-                CardEffectData data = ca.Effects[i];
-                if (data.Trigger != TriggerType.OnTakeDamage) continue;
-                try
+                for (int i = 0; i < ca.Effects.Count; i++)
                 {
-                    EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this });
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                    CardEffectData data = ca.Effects[i];
+                    if (data.Trigger != TriggerType.OnTakeDamage) continue;
+                    try
+                    {
+                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this });
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                    }
                 }
             }
+            // Inconditionnel (pas dans le bloc ca.Effects != null) : une créature SANS aucun effet
+            // propre peut quand même faire réagir un allié (OnAllyTakeDamage).
+            EffectRegistry.NotifyCreatureTookDamage(this, owner);
             return;
         }
 
@@ -253,56 +286,65 @@ public class CreatureLogic: ILivable
         if (NetworkSessionData.IsNetworkSession && !NetworkManager.Singleton.IsServer)
             return;
 
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnTakeDamage) continue;
-
-            try
+            bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!isNetworkServer)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+                try
                 {
-                    Command.RunDeferred(activeDeferKey.Value, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    // Sauvegarde/restauration explicite (pas ClearNetworkRng) : on peut être imbriqué
-                    // dans le SetNetworkRng d'un trigger englobant encore actif (ex: Acid Explosion
-                    // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
-                    // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
-                    System.Random previousRng = EffectSO.CurrentNetworkRng;
-                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
-                    bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
-                    List<(int id, int amount)> allocation;
-                    try
+                    if (!isNetworkServer)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        EffectSO.ClearForcedAllocation();
-                        EffectSO.ResetLastAllocation();
-                        if (!alreadyResolving)
-                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(activeDeferKey.Value, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                        allocation = EffectSO.LastAllocation;
                     }
-                    finally
+                    else
                     {
-                        if (!alreadyResolving)
-                            ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.SetNetworkRng(previousRng);
-                        EffectSO.SetLastAllocation(previousAllocation);
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        // Sauvegarde/restauration explicite (pas ClearNetworkRng) : on peut être imbriqué
+                        // dans le SetNetworkRng d'un trigger englobant encore actif (ex: Acid Explosion
+                        // pendant un OnDeath) — le vider clobbererait sa seed avant qu'il ait fini. Idem pour
+                        // IsResolvingPredictedTrigger : on ne le referme que si c'est nous qui l'avons ouvert.
+                        System.Random previousRng = EffectSO.CurrentNetworkRng;
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        bool alreadyResolving = ZoneCombatResolver.IsResolvingPredictedTrigger;
+                        List<(int id, int amount)> allocation;
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
+                            if (!alreadyResolving)
+                                ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(activeDeferKey.Value, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            allocation = EffectSO.LastAllocation;
+                        }
+                        finally
+                        {
+                            if (!alreadyResolving)
+                                ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.SetNetworkRng(previousRng);
+                            EffectSO.SetLastAllocation(previousAllocation);
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value, allocation: allocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, activeDeferKey.Value, allocation: allocation);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
                 }
             }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
-            }
         }
+
+        // Contexte différé déjà actif (nested, ex: dégâts causés par un effet en cours de résolution
+        // prédictive) : on reste déterministe côté réseau en passant par la variante Predicted, sous la
+        // MÊME clé de report que l'effet englobant — même raisonnement que la boucle OnTakeDamage
+        // ci-dessus dans cette branche.
+        EffectRegistry.NotifyCreatureTookDamagePredicted(this, owner, activeDeferKey.Value);
     }
 
     // returns true if we can attack with this creature now
@@ -350,8 +392,10 @@ public class CreatureLogic: ILivable
         }
     }
      
-    // number of attacks for one turn if (attacksForOneTurn==2) => Windfury
+    // Nombre de coups portés par bataille (auto-battle) si (attacksForOneTurn==2) => Multi-Strike 2 —
+    // voir CardAsset.AttacksForOneTurn et ZoneCombatResolver.BuildAttackQueue (une entrée par coup).
     private int attacksForOneTurn = 1;
+    public int AttacksForOneTurn => attacksForOneTurn;
     public int AttacksLeftThisTurn { get; set; }
 
     // number of movements for one turn if (movementsForOneTurn==2) => Celerity
@@ -379,9 +423,18 @@ public class CreatureLogic: ILivable
     public bool IsShielded => ShieldValue > 0;
 
     // --- Transport ---
-    public int TransportCapacity => ca.TransportCapacity;
+    // Capacité supplémentaire octroyée en jeu, en plus de ca.TransportCapacity (l'inné) — un simple
+    // nombre qui s'additionne, comme Multi-Strike, plutôt qu'un flag on/off comme Célérité.
+    private int runtimeBonusTransportCapacity = 0;
+    public int TransportCapacity => ca.TransportCapacity + runtimeBonusTransportCapacity;
     // Un Transport ne peut pas lui-même être embarqué (pas de transports imbriqués).
     public bool CanTransport => TransportCapacity > 0;
+
+    public void GrantTransport(int additionalCapacity = 1)
+    {
+        if (additionalCapacity <= 0) return;
+        runtimeBonusTransportCapacity += additionalCapacity;
+    }
 
     // Vrai tant que cette créature est vivante et sur le plateau — voir TeleporterNetwork, qui
     // relie entre elles toutes les zones où le même joueur a un téléporteur.
@@ -392,6 +445,40 @@ public class CreatureLogic: ILivable
     // CreatureMoveVisual.DisembarkCargo).
     private readonly List<int> _boardedCreatureIDs = new List<int>();
     public IReadOnlyList<int> BoardedCreatureIDs => _boardedCreatureIDs;
+
+    // Ordre d'affichage/atterrissage du "manifeste" d'embarquement : les IDs des passagers PLUS
+    // l'ID du transport lui-même (UniqueCreatureID, jamais confondu avec un ID de passager), utilisé
+    // comme repère de position — voir OneCreatureManager.RefreshPassengerPortraits (bande de
+    // portraits réordonnable) et CreatureMoveVisual.DisembarkCargo (les passagers placés avant le
+    // transport dans cette liste atterrissent à sa gauche dans la rangée d'arrivée, ceux après à sa
+    // droite). Piloté par le joueur via un glisser-déposer UI — voir PassengerPortraitDrag.
+    private readonly List<int> _manifestOrder = new List<int>();
+    public IReadOnlyList<int> ManifestOrder => _manifestOrder;
+
+    // Ajoute id au manifeste s'il n'y est pas déjà (idempotent : un passager en attente local, déjà
+    // ajouté par AddLocalPendingBoard, ne doit pas être déplacé en fin de liste quand Board() résout
+    // ensuite). Amorce la liste avec le transport lui-même au tout premier ajout.
+    private void AddToManifest(int id)
+    {
+        if (_manifestOrder.Count == 0)
+            _manifestOrder.Add(UniqueCreatureID);
+        if (!_manifestOrder.Contains(id))
+            _manifestOrder.Add(id);
+    }
+
+    // Public : uniquement pour l'annulation d'un embarquement en attente (voir
+    // DragCreatureActions.CancelPendingMove) — un embarquement RÉSOLU (Board()) ne doit jamais retirer
+    // du manifeste, seulement en sortir via un vrai débarquement (voir DisembarkAt()).
+    public void RemoveFromManifest(int id) => _manifestOrder.Remove(id);
+
+    // Remplace l'ordre complet du manifeste — appelé après un glisser-déposer local (voir
+    // OneCreatureManager.CommitManifestOrderFromUI) ou la réception du même ordre via réseau (voir
+    // GameNetworkManager.ReorderManifestClientRpc).
+    public void SetManifestOrder(IReadOnlyList<int> order)
+    {
+        _manifestOrder.Clear();
+        _manifestOrder.AddRange(order);
+    }
 
     // Non-null tant que cette créature est embarquée (en attente OU réellement à bord) — sa "position"
     // logique est alors le transporteur, pas une rangée. Voir Board()/DisembarkAt().
@@ -407,7 +494,14 @@ public class CreatureLogic: ILivable
     private readonly List<int> _localPendingBoardIDs = new List<int>();
     public IReadOnlyList<int> LocalPendingBoardIDs => _localPendingBoardIDs;
     public int LocalPendingBoardCount => _localPendingBoardIDs.Count;
-    public void AddLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Add(passengerID);
+    public void AddLocalPendingBoard(int passengerID)
+    {
+        _localPendingBoardIDs.Add(passengerID);
+        AddToManifest(passengerID);
+    }
+    // Ne touche PAS au manifeste : appelée aussi bien à la résolution (Board(), où le passager doit
+    // rester au manifeste — juste sortir de la liste "en attente") qu'à l'annulation (où
+    // DragCreatureActions.CancelPendingMove retire explicitement du manifeste via RemoveFromManifest).
     public void RemoveLocalPendingBoard(int passengerID) => _localPendingBoardIDs.Remove(passengerID);
 
     // Modificateurs octroyés à l'exécution (ex: GrantAttackModifierSO), distincts de ca.AttackModifiers :
@@ -525,6 +619,7 @@ public class CreatureLogic: ILivable
         AttacksLeftThisTurn = attacksForOneTurn;
         MovementsLeftThisTurn = movementsForOneTurn;
         HasSummoningSickness = false;
+        IDHolder.GetGameObjectWithID(UniqueCreatureID)?.GetComponent<CreatureAttackVisual>()?.ResetExhaustedRotation();
     }
 
     public void ApplyBuff(int attackDelta, int healthDelta)
@@ -831,54 +926,61 @@ public class CreatureLogic: ILivable
     // ZoneCombatResolver.OnTakeDamageDeferKey.
     public void ResolvePredictedOnTakeDamage(int hitDeferKey)
     {
-        if (ca.Effects == null) return;
-
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnTakeDamage) continue;
-
-            Debug.Log($"[OnTakeDamage] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
-
-            try
+            bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!NetworkSessionData.IsNetworkSession)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnTakeDamage) continue;
+
+                Debug.Log($"[OnTakeDamage] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
+
+                try
                 {
-                    Command.RunDeferred(hitDeferKey, () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                }
-                else if (isNetworkServer)
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
-                    List<(int id, int amount)> allocation;
-                    try
+                    if (!NetworkSessionData.IsNetworkSession)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        EffectSO.ClearForcedAllocation();
-                        EffectSO.ResetLastAllocation();
-                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(hitDeferKey, () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
-                        allocation = EffectSO.LastAllocation;
                     }
-                    finally
+                    else if (isNetworkServer)
                     {
-                        ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.ClearNetworkRng();
-                        EffectSO.SetLastAllocation(previousAllocation);
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        List<(int id, int amount)> allocation;
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(hitDeferKey, () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this }));
+                            allocation = EffectSO.LastAllocation;
+                        }
+                        finally
+                        {
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.ClearNetworkRng();
+                            EffectSO.SetLastAllocation(previousAllocation);
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey, allocation: allocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, hitDeferKey, allocation: allocation);
+                    // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                    // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
-                // à partir du quadruplet (sourceID, effectIndex, seed, deferKey) diffusé par le serveur.
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnTakeDamage] Exception pendant l'effet OnTakeDamage #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
             }
         }
+
+        // Notifie immédiatement les AUTRES créatures alliées qui réagissent à ce coup (trigger
+        // OnAllyTakeDamage) — même logique "immédiate sous le defer key du coup" que ci-dessus pour le
+        // OnTakeDamage propre à cette créature. Inconditionnel (pas dans le bloc ca.Effects != null) :
+        // une créature SANS aucun effet propre peut quand même faire réagir un allié.
+        EffectRegistry.NotifyCreatureTookDamagePredicted(this, owner, hitDeferKey);
     }
 
     // Rejeu côté client (jamais côté serveur, qui a déjà résolu l'effet réellement dans
@@ -1100,6 +1202,7 @@ public class CreatureLogic: ILivable
         BaseID = transport.BaseID;
         IsPendingMove = false;
         transport._boardedCreatureIDs.Add(UniqueCreatureID);
+        transport.AddToManifest(UniqueCreatureID); // no-op si déjà ajouté via AddLocalPendingBoard
         // Sans ce retrait, l'ID resterait dans la liste "en attente" après résolution et le transport
         // paraîtrait plein pour toujours, même une fois ses passagers redescendus (BoardedCreatureIDs
         // vidé par DisembarkAt) — voir DragCreatureActions.Board pour l'ajout correspondant.
@@ -1109,14 +1212,20 @@ public class CreatureLogic: ILivable
     }
 
     // Débarque cette créature (embarquée) dans la rangée de baseID, à la position réseau (ghost-free)
-    // tablePos — que ce soit la zone d'arrivée du transporteur (débarquement normal) ou sa zone de
-    // départ (laissée derrière faute de place, voir CreatureMoveVisual.DisembarkCargo). Ne consomme
-    // aucun mouvement : déjà payé lors de l'embarquement (Board), ce n'est pas une action du joueur.
+    // tablePos — zone d'arrivée du transporteur (débarquement automatique, voir
+    // CreatureMoveVisual.DisembarkCargo), sa zone de départ (laissée derrière faute de place, même
+    // méthode), ou zone actuelle du transporteur (débarquement manuel au clic, voir
+    // OneCreatureManager.RequestDisembarkPassenger). Ne consomme jamais de mouvement : déjà payé lors
+    // de l'embarquement (Board) pour le cas automatique, gratuit par conception pour le cas manuel.
     public void DisembarkAt(int baseID, int tablePos)
     {
         int? fromCarrier = TransportCarrierID;
         if (TransportCarrierID.HasValue && CreaturesCreatedThisGame.TryGetValue(TransportCarrierID.Value, out CreatureLogic carrier))
+        {
             carrier._boardedCreatureIDs.Remove(UniqueCreatureID);
+            carrier.RemoveFromManifest(UniqueCreatureID);
+            IDHolder.GetGameObjectWithID(carrier.UniqueCreatureID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+        }
         TransportCarrierID = null;
         BaseID = baseID;
         FogOfWarManager.Refresh();

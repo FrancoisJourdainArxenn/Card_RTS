@@ -26,8 +26,7 @@ MonoBehaviour:
   MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
-  AttackModifiers:
-  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
@@ -37,6 +36,30 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: efc6611bb8cf2344d8ac01d02cff1bca, type: 2}
+    Trigger: 14
+    Condition: {fileID: 11400000, guid: 66c20f14eb2c168488a5289f65a41b88, type: 2}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

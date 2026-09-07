@@ -233,12 +233,12 @@ public class GameNetworkManager : NetworkBehaviour
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
             out int[] stepOwnerPlayerIDs,
             out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
-            out int[] stepCounterDamages);
+            out int[] stepCounterDamages, out int[] stepAttackerExhausted);
         BroadcastBattleStepsClientRpc(
             stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
-            stepCounterDamages,
+            stepCounterDamages, stepAttackerExhausted,
             roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
             roundOutcome.FirstMainBaseResolverIdx, roundOutcome.SecondMainBaseResolverIdx);
 
@@ -257,7 +257,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
-        int[] counterDamages,
+        int[] counterDamages, int[] attackerExhausted,
         bool decisive, bool isDraw, int winnerPlayerID,
         int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
     {
@@ -270,7 +270,7 @@ public class GameNetworkManager : NetworkBehaviour
         // Debug.Log($"[BroadcastSteps] {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueAllReconstructedBattleCommands(
             resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
-            secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages,
+            secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
             decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
         // Debug.Log($"[BroadcastSteps] EnqueueAllReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
@@ -1515,6 +1515,9 @@ public class GameNetworkManager : NetworkBehaviour
         yield return new WaitWhile(() => Command.playingQueue);
         // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
 
+        if (nextPhase == TurnManager.TurnPhases.Battle)
+            TurnManager.Instance.ResolveStationaryTransportDisembarks();
+
         TurnManager.Instance.EnterPhase(nextPhase);
 
         if (IsServer)
@@ -1598,6 +1601,18 @@ public class GameNetworkManager : NetworkBehaviour
         }
         else
             player.GetBonusRessources(amount);
+    }
+
+    public void BroadCastReduceUpgradeCost(int playerIndex, int amount)
+    {
+        if (!IsServer) return;
+        ReduceUpgradeCostClientRpc(playerIndex, amount);
+    }
+
+    [ClientRpc]
+    public void ReduceUpgradeCostClientRpc(int playerIndex, int amount)
+    {
+        Player.Players[playerIndex].homeBaseLogic?.ReduceUpgradeCost(amount);
     }
 
     public void BroadCastShieldBonus(int playerIndex, int amount, int sourceID)
@@ -1881,6 +1896,43 @@ public class GameNetworkManager : NetworkBehaviour
     //     }
     //     attacker.AttackBaseWithID(targetBaseID);
     // }
+
+    //Transport — reorder du manifeste (voir OneCreatureManager.CommitManifestOrderFromUI)
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ReorderManifestServerRpc(int transportUniqueID, int[] order)
+    {
+        ReorderManifestClientRpc(transportUniqueID, order);
+    }
+
+    [ClientRpc]
+    void ReorderManifestClientRpc(int transportUniqueID, int[] order)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(transportUniqueID, out CreatureLogic transportLogic))
+        {
+            Debug.LogError($"[GameNetworkManager] ReorderManifest: transport introuvable id={transportUniqueID}");
+            return;
+        }
+        transportLogic.SetManifestOrder(order);
+        IDHolder.GetGameObjectWithID(transportUniqueID)?.GetComponent<OneCreatureManager>()?.RefreshPassengerPortraits();
+    }
+
+    //Transport — débarquement manuel, gratuit et instantané (voir OneCreatureManager.RequestDisembarkPassenger)
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void DisembarkPassengerServerRpc(int passengerUniqueID, int targetBaseID, int tablePos)
+    {
+        DisembarkPassengerClientRpc(passengerUniqueID, targetBaseID, tablePos);
+    }
+
+    [ClientRpc]
+    void DisembarkPassengerClientRpc(int passengerUniqueID, int targetBaseID, int tablePos)
+    {
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic passenger))
+        {
+            Debug.LogError($"[GameNetworkManager] DisembarkPassenger: passager introuvable id={passengerUniqueID}");
+            return;
+        }
+        passenger.DisembarkAt(targetBaseID, tablePos);
+    }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void GoFaceServerRpc(int attackerID)

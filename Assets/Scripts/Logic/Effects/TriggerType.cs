@@ -10,6 +10,8 @@ public enum TriggerType
                         // même si ce coup la tue — une fois par coup, au moment où CE coup précis est
                         // révélé visuellement (voir ZoneCombatResolver.OnTakeDamageDeferKey et
                         // CreatureLogic.ResolveOnTakeDamageFromEffect)
+    OnAllyTakeDamage = 18, // déclenché chez les AUTRES créatures alliées quand l'une d'elles subit des
+                            // dégâts (voir EffectRegistry.NotifyCreatureTookDamage/-Predicted)
     OnDeath = 1,
     OnAttack = 15, // déclenché au milieu de l'animation d'attaque, entre le wind-up et la charge/le projectile
     // Phases

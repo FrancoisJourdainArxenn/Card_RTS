@@ -67,14 +67,14 @@ public class CreatureAttackCommand : Command
     // Flusher cette clé brute ici viderait son buff/token OnDeath en plein wind-up au lieu de juste avant
     // sa CreatureDieCommand (bug observé : token apparu alors que la créature n'était ni morte ni n'avait
     // fini d'attaquer). La clé dédiée élimine cette collision par construction.
-    public static void EnqueueAttack(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
+    public static void EnqueueAttack(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null, bool attackerExhausted = false)
     {
         new CreatureAttackWindupCommand(attackerID, targetID).AddToQueue();
         int onAttackKey = CreatureLogic.OnAttackDeferKey(attackerID);
         if (Command.HasDeferredCommands(onAttackKey))
             Debug.Log($"[OnAttack] attackerID={attackerID} — flush du bucket OnAttack entre wind-up et résolution");
         Command.FlushDeferredCommands(onAttackKey);
-        new CreatureAttackResolveCommand(targetID, attackerID, damageTakenByAttacker, damageTakenByTarget, attackerHealthAfter, targetHealthAfter, speedMultiplier, secondaryHits).AddToQueue();
+        new CreatureAttackResolveCommand(targetID, attackerID, damageTakenByAttacker, damageTakenByTarget, attackerHealthAfter, targetHealthAfter, speedMultiplier, secondaryHits, attackerExhausted).AddToQueue();
     }
 }
 
@@ -118,8 +118,9 @@ public class CreatureAttackResolveCommand : Command
     private readonly int DamageTakenByTarget;
     private readonly float SpeedMultiplier;
     private readonly List<AttackHitResult> SecondaryHits;
+    private readonly bool AttackerExhausted;
 
-    public CreatureAttackResolveCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null)
+    public CreatureAttackResolveCommand(int targetID, int attackerID, int damageTakenByAttacker, int damageTakenByTarget, int attackerHealthAfter, int targetHealthAfter, float speedMultiplier = 1f, List<AttackHitResult> secondaryHits = null, bool attackerExhausted = false)
     {
         TargetUniqueID = targetID;
         AttackerUniqueID = attackerID;
@@ -129,6 +130,7 @@ public class CreatureAttackResolveCommand : Command
         DamageTakenByAttacker = damageTakenByAttacker;
         SpeedMultiplier = speedMultiplier;
         SecondaryHits = secondaryHits ?? new List<AttackHitResult>();
+        AttackerExhausted = attackerExhausted;
     }
 
     public override void StartCommandExecution()
@@ -138,6 +140,6 @@ public class CreatureAttackResolveCommand : Command
         CreatureAttackVisual visual = attacker.GetComponent<CreatureAttackVisual>();
         if (visual == null) { CommandExecutionComplete(); return; }
 
-        visual.PlayResolve(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier, SecondaryHits);
+        visual.PlayResolve(TargetUniqueID, DamageTakenByTarget, DamageTakenByAttacker, AttackerHealthAfter, TargetHealthAfter, SpeedMultiplier, SecondaryHits, AttackerExhausted);
     }
 }

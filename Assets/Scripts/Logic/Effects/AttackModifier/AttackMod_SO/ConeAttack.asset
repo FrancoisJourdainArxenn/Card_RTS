@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d16e54f93b8e5664dadd44a5bd51da5d, type: 3}
   m_Name: ConeAttack
   m_EditorClassIdentifier: Assembly-CSharp::ConeAttackModifierSO
+  AssociatedKeyword: {fileID: 11400000, guid: 909055c91f48c2d4593e541aebb536bb, type: 2}

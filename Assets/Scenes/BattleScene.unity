@@ -1299,11 +1299,13 @@ MonoBehaviour:
   AttackWindupDuration: 0.5
   AttackWindupBack: 0.01
   AttackWindupHeight: 4
-  ProjectileSpeed: 7
+  ProjectileSpeed: 8.5
   ProjectileMinDuration: 0.5
   MeleeMultiTargetVfxLifetime: 1.5
   RaiseEffectVisualDelay: 1
   RowReorderDuration: 0.05
+  ExhaustedRotationAngle: 25
+  ExhaustedRotationDuration: 0.3
   popStrength: 2
   popDuration: 0.5
   CameraShakeAnticipation: 0.05
@@ -1320,6 +1322,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: d066a7eb8438c7e46890cccddca8d6f6, type: 3}
   - {fileID: 21300000, guid: a4d7265b29df78a49bc13bed9c414d74, type: 3}
   CelerityKeyword: {fileID: 11400000, guid: 222e24fc0fe8b8643896b4045f920b72, type: 2}
+  MultiStrikeKeyword: {fileID: 11400000, guid: a6eefab33e5afbe4c8cd9eacc82476c8, type: 2}
+  CommanderKeyword: {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
+  BackUpKeyword: {fileID: 11400000, guid: ee1acf136589c1841890a52cb5057ce1, type: 2}
+  TransportKeyword: {fileID: 11400000, guid: 327a69365b56a6d4cb4ef446fa157ace, type: 2}
 --- !u!114 &289653490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3006,7 +3012,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfc4e325c203faa45a8983bbb2dab8e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  defaultMapPrefab: {fileID: 8472823780511676816, guid: 32ad758536f4c3f46bd59b7bcb7d10c5, type: 3}
+  defaultMapPrefab: {fileID: 8472823780511676816, guid: 9f4a65383cdbd0e4292acdffbc723eea, type: 3}
   registry: {fileID: 11400000, guid: 21f3b0131c441fc44a8ede70531fcee7, type: 2}
 --- !u!1 &625286358
 GameObject:
@@ -3137,7 +3143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: cc31aa0a2a497cf478c364d1ac2fa766, type: 2}
+  playerDeck: {fileID: 11400000, guid: ce58267493771cd46802293f392aa62a, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &662666355
 GameObject:
@@ -6845,7 +6851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.0999999
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -6882,6 +6888,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive
@@ -7062,7 +7072,7 @@ Transform:
   m_GameObject: {fileID: 1451497704}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2.6, z: 0}
+  m_LocalPosition: {x: 0, y: -0.2, z: 0}
   m_LocalScale: {x: 21.667, y: 21.667, z: 21.667}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9912,7 +9922,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.0999999
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -9949,6 +9959,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive
@@ -10585,7 +10599,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3499865976678205738, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -10622,6 +10636,10 @@ PrefabInstance:
     - target: {fileID: 3782735227854864916, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_Name
       value: Zone_Crossing1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6620596188412820809, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
+      propertyPath: isEncounterZone
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6961720891634294618, guid: a359b07fd0175c740983c3499d38fc8f, type: 3}
       propertyPath: m_IsActive
