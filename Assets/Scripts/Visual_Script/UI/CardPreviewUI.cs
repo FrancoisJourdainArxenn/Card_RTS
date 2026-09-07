@@ -16,6 +16,7 @@ public class CardPreviewUI : MonoBehaviour
     [SerializeField] private GameObject cardPreviewPrefab;
     [SerializeField] private GameObject heroCardPreviewPrefab;
     [SerializeField] private GameObject actionCardPreviewPrefab; // Card_Action_Preview — sorts (CardType.Action)
+    [SerializeField] private GameObject baseCardPreviewPrefab; // Card_Base_Preview
     [SerializeField] private GameObject effectTriggeredPrefab; // prefab Effect_Triggered ; seule source d'Instantiate pour tous les popups d'effet (parties 1, 2 et 3)
     private RectTransform _anchorRect;
     private Canvas _canvas;
@@ -420,6 +421,65 @@ public class CardPreviewUI : MonoBehaviour
         CardTooltipManager.Instance?.AnchorToCard(_anchorRect.anchoredPosition);
         ReminderTextManager.Instance?.FadeIn();
         CardTooltipManager.Instance?.FadeIn();
+
+        currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
+        currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);
+    }
+
+    public void ShowBase(BaseAsset asset, Vector2 mouseOffset, int? healthOverride = null, Player owner = null)
+    {
+        if (previewingEffects)
+            return;
+        Camera uiCamera = _canvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : _canvas.worldCamera;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _canvas.GetComponent<RectTransform>(),
+            Input.mousePosition,
+            uiCamera,
+            out Vector2 localPoint
+        );
+        Vector2 previewPosition = localPoint + mouseOffset;
+        _anchorRect.anchoredPosition = previewPosition;
+
+        ShowBasePreview(asset, healthOverride, owner);
+    }
+
+    private void ShowBasePreview(BaseAsset asset, int? healthOverride, Player owner = null)
+    {
+        if (baseCardPreviewPrefab == null) return;
+
+        if (currentPreview != null && currentPrefab != baseCardPreviewPrefab)
+        {
+            Destroy(currentPreview);
+            currentPreview = null;
+        }
+
+        if (currentPreview == null)
+        {
+            currentPreview = Instantiate(baseCardPreviewPrefab, previewAnchor);
+            currentPreview.transform.localPosition = Vector3.zero;
+            currentPreview.transform.localRotation = Quaternion.identity;
+            currentPrefab = baseCardPreviewPrefab;
+        }
+
+        OneBaseManager manager = currentPreview.GetComponent<OneBaseManager>();
+        manager.baseAsset = asset;
+        manager.owner = owner;
+        manager.ReadBaseFromAsset();
+        if (healthOverride.HasValue && manager.HealthText != null)
+            manager.HealthText.text = healthOverride.Value.ToString();
+
+        ReminderTextManager.Instance?.BuildTooltips(asset.Keywords);
+        CardTooltipManager.Instance?.BuildCardTooltips(null);
+
+        currentPreview.SetActive(true);
+
+        currentPreview.transform.localScale = Vector3.one * previewScale;
+        ClampPreviewToScreen((RectTransform)currentPreview.transform);
+
+        ReminderTextManager.Instance?.AnchorToCard(_anchorRect.anchoredPosition);
+        ReminderTextManager.Instance?.FadeIn();
 
         currentPreview.transform.localScale = Vector3.one * previewScale * 0.5f;
         currentPreview.transform.DOScale(Vector3.one * previewScale, 0.3f).SetEase(Ease.OutBack);

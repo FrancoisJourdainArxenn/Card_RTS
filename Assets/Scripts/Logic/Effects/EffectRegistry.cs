@@ -66,6 +66,21 @@ public static class EffectRegistry
         }
     }
 
+    public static void RegisterBaseEffects(BaseLogic playerBase, BaseAsset ba)
+    {
+        if (ba.Effects == null)
+            return;
+
+        foreach (CardEffectData data in ba.Effects)
+        {
+            if (data.Trigger == TriggerType.OnPlay)
+                continue;
+
+            AddListener(data, playerBase.ID, () => new EffectContext
+                { Caster = playerBase.owner, Source = playerBase });
+        }
+    }
+
     public static void UnregisterEntity(int ownerID)
     {
         foreach (List<RegisteredEffect> list in _listeners.Values)
@@ -332,6 +347,22 @@ public static class EffectRegistry
         dyingOwner.RemoveEffectAmplifier(died.UniqueBuildingID);
     }
 
+    // ── Triggers de base ──────────────────────────────────────────────────────
+
+    public static void NotifyBaseTierUpgraded(BaseLogic playerBase)
+    {
+        if (playerBase.ba.Effects == null)
+            return;
+
+        foreach (CardEffectData data in playerBase.ba.Effects)
+        {
+            if (data.Trigger != TriggerType.OnTierUpgrade)
+                continue;
+
+            Execute(data, new EffectContext { Caster = playerBase.owner, Source = playerBase });
+        }
+    }
+
     // ── Triggers de token ─────────────────────────────────────────────────────
     public static void NotifyTokenCreated(Player creatingPlayer, CreatureLogic tokenOnBoard)
     {
@@ -479,6 +510,13 @@ public static class EffectRegistry
                 return tokenSO != null ? tokenSO.TokenToSummon : null;
             }
 
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
+            if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
+            {
+                TokenGenerationSO tokenSO = playerBase.ba.Effects[effectIndex].Effect as TokenGenerationSO;
+                return tokenSO != null ? tokenSO.TokenToSummon : null;
+            }
+
         return null;
     }
 
@@ -491,6 +529,10 @@ public static class EffectRegistry
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
                 return building.ca.Effects[effectIndex].Effect.EffectVisual;
+
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
+            if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
+                return playerBase.ba.Effects[effectIndex].Effect.EffectVisual;
 
         return null;
     }
@@ -505,6 +547,10 @@ public static class EffectRegistry
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
                 return building.ca.Effects[effectIndex].Effect as ChooseOneSO;
 
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
+            if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
+                return playerBase.ba.Effects[effectIndex].Effect as ChooseOneSO;
+
         return null;
     }
 
@@ -517,6 +563,10 @@ public static class EffectRegistry
         if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
             if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
                 return building.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
+
+        if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
+            if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
+                return playerBase.ba.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
 
         return null;
     }

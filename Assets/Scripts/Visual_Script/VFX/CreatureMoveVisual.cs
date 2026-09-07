@@ -136,7 +136,7 @@ public class CreatureMoveVisual : MonoBehaviour
     private void DisembarkCargo(CreatureLogic carrier, PlayerArea originArea, PlayerArea destArea, bool inPlace = false)
     {
         List<int> manifest = new List<int>(carrier.ManifestOrder);
-        int maxPerRow = GlobalSettings.Instance.MaxCreaturePerRow;
+        int maxPerRow = carrier.owner.GetMaxCreaturePerRow(destArea.baseID);
         //Debug.Log($"[Transport] DisembarkCargo — {carrier.DisplayName}(ID:{carrier.UniqueCreatureID}) processing manifest=[{string.Join(", ", manifest)}], origin baseID={originArea.baseID}, dest baseID={destArea.baseID}, maxPerRow={maxPerRow}, inPlace={inPlace}");
 
         int landed = DisembarkRow(carrier, manifest, true, originArea, destArea, maxPerRow, inPlace)

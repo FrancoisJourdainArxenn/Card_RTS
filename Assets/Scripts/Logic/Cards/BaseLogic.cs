@@ -110,6 +110,7 @@ public class BaseLogic: ILivable
     {
         if (IsHomeBase) return; // mort de la home base gérée par Player
         owner.controlledBaseAssets.Remove(ba);
+        EffectRegistry.UnregisterEntity(uniqueBaseID);
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
         FogOfWarManager.Refresh();
@@ -127,6 +128,8 @@ public class BaseLogic: ILivable
         this.owner = owner;
         uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BasesCreatedThisGame.Add(uniqueBaseID, this);
+        if (ba.Effects != null && ba.Effects.Count > 0)
+            EffectRegistry.RegisterBaseEffects(this, ba);
         FogOfWarManager.Refresh();
     }
 
@@ -142,6 +145,8 @@ public class BaseLogic: ILivable
         this.owner = owner;
         uniqueBaseID = owner.PlayerID;
         BasesCreatedThisGame[uniqueBaseID] = this;
+        if (ba.Effects != null && ba.Effects.Count > 0)
+            EffectRegistry.RegisterBaseEffects(this, ba);
     }
 
     public void TickUpgradeCostDown()
@@ -177,6 +182,8 @@ public class BaseLogic: ILivable
         CurrentTier = next.tier;
         CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         OnUpgradeCostChanged?.Invoke(this);
+        EffectRegistry.NotifyBaseTierUpgraded(this);
+        ZoneEnemyIndicator.RefreshAll();
         return true;
     }
 

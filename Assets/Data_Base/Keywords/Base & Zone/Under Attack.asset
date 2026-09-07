@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
+  m_Name: Under Attack
+  m_EditorClassIdentifier: Assembly-CSharp::Keyword
+  displayName: Under Attack
+  description: Under attack, the Income of a base is reduced by 1.
+  icon: {fileID: 21300000, guid: 715c2965f26331246b33fc1fa3cc779a, type: 3}

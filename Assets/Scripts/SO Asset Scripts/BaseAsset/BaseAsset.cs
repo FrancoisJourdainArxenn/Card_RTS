@@ -19,6 +19,24 @@ public class BaseAsset : ScriptableObject
 
     [Header("Upgrade tiers")]
     public List<BaseTierLevel> tierLevels = new List<BaseTierLevel>();
+
+    [Header("Keywords")]
+    public bool HasScout = false;
+    public CardTier scoutMinTier = CardTier.T1;
+    public bool IsTeleporter = false;
+    public CardTier teleporterMinTier = CardTier.T1;
+
+    [Header("Row Capacity")]
+    public bool ModifiesRowCapacity = false;
+    public int RowCapacityBonus = 0;
+    public bool RowCapacityBonusIsGlobal = false;
+    public CardTier rowCapacityMinTier = CardTier.T1;
+
+    [Header("Global Properties")]
+    public List<Keyword> Keywords = new List<Keyword>();
+
+    [Header("Effects")]
+    public List<CardEffectData> Effects = new List<CardEffectData>();
 }
 
 [System.Serializable]

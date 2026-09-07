@@ -20,7 +20,9 @@ public static class TeleporterNetwork
 
         sourceTeleporter = FindFriendlyTeleporterIn(player, from.Logic);
         destTeleporter = FindFriendlyTeleporterIn(player, to.Logic);
-        if (sourceTeleporter == null || destTeleporter == null)
+        bool sourceLinked = sourceTeleporter != null || HasFriendlyBaseTeleporterIn(player, from.Logic);
+        bool destLinked = destTeleporter != null || HasFriendlyBaseTeleporterIn(player, to.Logic);
+        if (!sourceLinked || !destLinked)
         {
             sourceTeleporter = null;
             destTeleporter = null;
@@ -49,5 +51,25 @@ public static class TeleporterNetwork
             if (c.IsTeleporter && c.Zone == zone)
                 return c;
         return null;
+    }
+
+    // Une base-téléporteur compte pour la légalité du lien mais ne fournit pas de point d'ancrage
+    // visuel (OneBaseManager n'a pas d'équivalent à OneCreatureManager.CenterPointPosition) —
+    // ShowPendingMoveArrowViaTeleporter reste purement créature-à-créature pour ce tronçon.
+    // Le Téléporteur d'une base est une capacité de faction (voir Terrans Base.asset) : elle vaut pour
+    // TOUTE base contrôlée par le joueur, capturée ou non — le palier de tier se lit sur la home base,
+    // une base secondaire ne montant jamais elle-même de tier (CurrentTier y reste figé à T1).
+    private static bool HasFriendlyBaseTeleporterIn(Player player, ZoneLogic zone)
+    {
+        foreach (BaseLogic b in player.controlledBases)
+        {
+            if (b.Zone != zone) continue;
+            bool isTeleporter = b.ba.IsTeleporter || player.baseAsset.IsTeleporter;
+            if (!isTeleporter) continue;
+            CardTier minTier = b.ba.IsTeleporter ? b.ba.teleporterMinTier : player.baseAsset.teleporterMinTier;
+            if (player.homeBaseLogic != null && player.homeBaseLogic.CurrentTier >= minTier)
+                return true;
+        }
+        return false;
     }
 }

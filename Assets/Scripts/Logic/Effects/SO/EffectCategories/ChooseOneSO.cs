@@ -30,12 +30,15 @@ public class ChooseOneSO : EffectSO
 
             int playerIndex = context.Caster.playerIndex;
             int sourceEntityID = context.Source is CreatureLogic c ? c.UniqueCreatureID
-                : context.Source is BuildingLogic b ? b.UniqueBuildingID : -1;
+                : context.Source is BuildingLogic b ? b.UniqueBuildingID
+                : context.Source is BaseLogic pb ? pb.ID : -1;
             int effectIndex = -1;
             if (context.Source is CreatureLogic sc && sc.ca?.Effects != null)
                 effectIndex = sc.ca.Effects.FindIndex(e => e.Effect == this);
             else if (context.Source is BuildingLogic sb && sb.ca?.Effects != null)
                 effectIndex = sb.ca.Effects.FindIndex(e => e.Effect == this);
+            else if (context.Source is BaseLogic spb && spb.ba?.Effects != null)
+                effectIndex = spb.ba.Effects.FindIndex(e => e.Effect == this);
 
             if (sourceEntityID == -1 || effectIndex == -1)
             {

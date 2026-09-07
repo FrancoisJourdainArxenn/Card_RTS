@@ -101,6 +101,25 @@ public class HoverPreview : MonoBehaviour
                     ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
                     ?? GetComponentInParent<OneCardManager>()?.cardAsset;
 
+        if (asset == null)
+        {
+            BaseAsset baseAsset = GetComponentInParent<OneBaseManager>()?.baseAsset;
+            if (baseAsset != null)
+            {
+                int? baseHealthOverride = null;
+                Player baseOwner = null;
+                IDHolder baseIdHolder = GetComponentInParent<IDHolder>();
+                if (baseIdHolder != null && BaseLogic.BasesCreatedThisGame.TryGetValue(baseIdHolder.UniqueID, out BaseLogic baseLogic))
+                {
+                    baseHealthOverride = baseLogic.Health;
+                    baseOwner = baseLogic.owner;
+                }
+
+                CardPreviewUI.Instance?.ShowBase(baseAsset, previewOffset, baseHealthOverride, baseOwner);
+                return;
+            }
+        }
+
         Player owner = GetComponentInParent<OneCardManager>()?.owner;
 
         int? attackOverride    = null;

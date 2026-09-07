@@ -16,11 +16,20 @@ MonoBehaviour:
   BaseImage: {fileID: 21300000, guid: 0c4d997606835c8448a29851f187ae43, type: 3}
   BaseIcon: {fileID: 21300000, guid: 3f02dedd261407d4aa0496b32bee4dcc, type: 3}
   baseIconColor: {r: 0.5348434, g: 0.68636733, b: 0.9528302, a: 1}
-  baseDescription: '<b>Outpost</b>
-
-    Outposts allow you to play unit in that zone.'
-  BaseName: Standard Neutral Base
+  baseDescription: 
+  BaseName: Outpost
   MaxHealth: 3
   mainRessourceIncome: 0
   mainRessourceBaseCost: 2
   tierLevels: []
+  HasScout: 0
+  scoutMinTier: 1
+  IsTeleporter: 0
+  teleporterMinTier: 1
+  ModifiesRowCapacity: 0
+  RowCapacityBonus: 0
+  RowCapacityBonusIsGlobal: 0
+  rowCapacityMinTier: 1
+  Keywords:
+  - {fileID: 11400000, guid: 0832e3ad892afc445b8771df05fd08fc, type: 2}
+  Effects: []

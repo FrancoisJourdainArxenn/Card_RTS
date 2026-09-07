@@ -1225,6 +1225,46 @@ public class Player : MonoBehaviour, ILivable
         _shieldBonusFromSources.Remove(sourceID);
     }
 
+    // Recalculé en direct à chaque appel (pas de dictionnaire de sources à nettoyer) : une base qui
+    // meurt sort automatiquement de controlledBases (BaseLogic.Die() → BasesCreatedThisGame.Remove).
+    // Le tier se lit sur homeBaseLogic, jamais sur le tier propre de la base porteuse — une base
+    // secondaire ne monte jamais elle-même de tier (CurrentTier y reste toujours figé à T1), même
+    // choix que pour Scout/Téléporteur.
+    // Une base capturée qui ne porte pas elle-même la capacité (son asset de localisation, ex:
+    // Outpost) hérite de celle de la faction du joueur (baseAsset, ex: Crawler Base.asset) — même
+    // principe que Scout/Téléporteur. Un bonus GLOBAL hérité de la faction n'est compté qu'UNE SEULE
+    // FOIS pour tout le joueur (pas une fois par base capturée), pour ne pas s'additionner simplement
+    // en capturant plus de bases ; un bonus LOCAL, lui, s'applique une fois par base porteuse, chacune
+    // boostant sa propre zone.
+    public int GetMaxCreaturePerRow(int baseID)
+    {
+        int max = GlobalSettings.Instance.MaxCreaturePerRow;
+        ZoneLogic zone = GetPlayerAreaByID(baseID)?.parentZone?.Logic;
+        bool factionGlobalCounted = false;
+
+        foreach (BaseLogic b in controlledBases)
+        {
+            bool ownsCapacity = b.ba.ModifiesRowCapacity;
+            if (!ownsCapacity && !baseAsset.ModifiesRowCapacity) continue;
+
+            BaseAsset source = ownsCapacity ? b.ba : baseAsset;
+            if (homeBaseLogic == null || homeBaseLogic.CurrentTier < source.rowCapacityMinTier) continue;
+
+            if (!ownsCapacity && source.RowCapacityBonusIsGlobal)
+            {
+                if (factionGlobalCounted) continue;
+                factionGlobalCounted = true;
+                max += source.RowCapacityBonus;
+                continue;
+            }
+
+            if (!source.RowCapacityBonusIsGlobal && b.Zone != zone) continue;
+            max += source.RowCapacityBonus;
+        }
+
+        return max;
+    }
+
     public void AddEffectAmplifier(int sourceID, EffectAmplifier amplifier)
     {
         _effectAmplifiersFromSources[sourceID] = amplifier;

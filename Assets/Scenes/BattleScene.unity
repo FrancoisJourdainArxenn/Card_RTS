@@ -1018,6 +1018,7 @@ MonoBehaviour:
   cardPreviewPrefab: {fileID: 8725022076114089944, guid: bb7363f760a55c241bcb078d0a6c398f, type: 3}
   heroCardPreviewPrefab: {fileID: 8725022076114089944, guid: a3b632f9caa85cb4db936e15f40aecf4, type: 3}
   actionCardPreviewPrefab: {fileID: 8725022076114089944, guid: 4845e692e3735f340a5507e40712313c, type: 3}
+  baseCardPreviewPrefab: {fileID: 8725022076114089944, guid: defda1a703ea1424c9996c66090b8f53, type: 3}
   effectTriggeredPrefab: {fileID: 8725022076114089944, guid: 509a825e83fee224dbdf833f69056d8d, type: 3}
   targetingAnchor: {fileID: 475356312}
   stackScaleFactor: 0.9
@@ -1674,6 +1675,7 @@ MonoBehaviour:
   panVelocitySampleWindow: 0.15
   battleCamSettleDelay: 1.5
   crossingZoomPullback: 6
+  crossingZoomStartDelay: 1.5
   crossingZoomDuration: 1
   crossingZoomFadeDelay: 0.3
   shakeVibrato: 20
@@ -3275,7 +3277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: 941e5d51490834548aa45b0b0603450c, type: 2}
+  playerDeck: {fileID: 11400000, guid: c69948e416fca8642b2544a611dbf802, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &630477348
 GameObject:
@@ -3360,7 +3362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b6a0bb49926f448b901fccadc7b1a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Deck
-  playerDeck: {fileID: 11400000, guid: ce58267493771cd46802293f392aa62a, type: 2}
+  playerDeck: {fileID: 11400000, guid: a409730b51e9eb1409d5393e78f3e713, type: 2}
   drawConfig: {fileID: 11400000, guid: 481fe787f6a8dab47aba18a9335aa02f, type: 2}
 --- !u!1 &662666355
 GameObject:
@@ -9813,9 +9815,9 @@ RectTransform:
   m_Father: {fileID: 1404572020}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 99.944, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2003628666
 MonoBehaviour:

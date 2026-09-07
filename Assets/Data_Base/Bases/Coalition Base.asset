@@ -14,15 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BaseAsset
   Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   BaseImage: {fileID: 21300000, guid: 372d1224729a0534d8055527fe8c7a30, type: 3}
-  BaseIcon: {fileID: 0}
-  baseIconColor: {r: 1, g: 1, b: 1, a: 1}
-  baseDescription: '<b>Main Base</b>
-
-    A main base grants you 2 Income. Under
-    attack, it grants only 1.
-
-    When destroyed, it''s controller loses the game.'
-  BaseName: Command Center
+  BaseIcon: {fileID: 21300000, guid: d96bbd18353d69b4785c83522b6e0e07, type: 3}
+  baseIconColor: {r: 0.19339621, g: 0.7534933, b: 1, a: 1}
+  baseDescription: Your Bases mark with a "!" adjacent zones with enemy units.
+  BaseName: Command Post
   MaxHealth: 10
   mainRessourceIncome: 2
   mainRessourceBaseCost: 0
@@ -67,3 +62,15 @@ MonoBehaviour:
     drawConfig: {fileID: 11400000, guid: ca8e11714efe9934eae83d91aa8a36f9, type: 2}
     drawCountBonus: 0
     tierIcon: {fileID: 21300000, guid: a4d7265b29df78a49bc13bed9c414d74, type: 3}
+  HasScout: 1
+  scoutMinTier: 1
+  IsTeleporter: 0
+  teleporterMinTier: 1
+  ModifiesRowCapacity: 0
+  RowCapacityBonus: 0
+  RowCapacityBonusIsGlobal: 0
+  rowCapacityMinTier: 1
+  Keywords:
+  - {fileID: 11400000, guid: 3512965e68fca264cac9a5c29ccae84d, type: 2}
+  - {fileID: 11400000, guid: 7e77396e84cc1aa43a12aa0a7694e8d8, type: 2}
+  Effects: []

@@ -71,8 +71,11 @@ public class NeutralZoneController : MonoBehaviour
         bases.Add(baseCard);
         OneBaseManager baseManager = baseCard.GetComponent<OneBaseManager>();
         baseManager.baseAsset = ba;
+        baseManager.owner = player;
         baseManager.ResetValues(ba);
         baseManager.Spawner = nBaseVisual.gameObject;
+        HoverPreview hover = baseManager.GetComponent<HoverPreview>();
+        if (hover != null) hover.ThisPreviewEnabled = true;
         baseCard.tag = player.tag;
         bool isLowPlayer = player == GlobalSettings.Instance.LowPlayer;
         string playerTag = isLowPlayer ? "LowPlayer" : "TopPlayer";

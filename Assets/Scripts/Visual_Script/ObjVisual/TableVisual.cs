@@ -67,8 +67,12 @@ public class TableVisual : MonoBehaviour
     // extraCommitted : créatures déjà comptées ailleurs (pas dans cette rangée visuelle) mais qui vont
     // s'y ajouter de façon certaine — voir Player.PendingRevealCount, pour les cartes commises mais
     // pas encore révélées visuellement (DragCreatureOnTable.DragSuccessful).
-    public bool RowHasSpace(bool isMelee, int extraCommitted = 0) =>
-        EffectiveRowCount(isMelee) + extraCommitted < GlobalSettings.Instance.MaxCreaturePerRow;
+    public bool RowHasSpace(bool isMelee, int extraCommitted = 0)
+    {
+        Player owner = ownerArea?.GetOwnerPlayer();
+        int max = owner != null ? owner.GetMaxCreaturePerRow(ownerArea.baseID) : GlobalSettings.Instance.MaxCreaturePerRow;
+        return EffectiveRowCount(isMelee) + extraCommitted < max;
+    }
 
 
     public static bool CursorOverSomeTable

@@ -16,6 +16,23 @@ public class ScoutEnterSO : EffectSO
             if (zone.IsAdjacentTo(scout.Zone, includeAerialPaths: false))
                 return true;
         }
+
+        // Le Scout d'une base est une capacité de faction (voir Coalition Base.asset) : elle vaut pour
+        // TOUTE base contrôlée par le joueur, capturée ou non — pas seulement celle dont ba.HasScout
+        // est coché directement. Le palier de tier se lit sur la home base : une base secondaire ne
+        // monte jamais de tier elle-même (CurrentTier y reste figé à T1).
+        foreach (BaseLogic playerBase in localPlayer.controlledBases)
+        {
+            bool hasScout = playerBase.ba.HasScout || localPlayer.baseAsset.HasScout;
+            if (!hasScout) continue;
+            CardTier minTier = playerBase.ba.HasScout ? playerBase.ba.scoutMinTier : localPlayer.baseAsset.scoutMinTier;
+            if (localPlayer.homeBaseLogic == null || localPlayer.homeBaseLogic.CurrentTier < minTier) continue;
+            if (playerBase.Zone == null) continue;
+            if (zone == playerBase.Zone) continue;
+            if (zone.IsAdjacentTo(playerBase.Zone, includeAerialPaths: false))
+                return true;
+        }
+
         return false;
     }
 
