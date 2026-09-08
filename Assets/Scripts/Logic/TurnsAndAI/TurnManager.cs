@@ -48,6 +48,9 @@ public class TurnManager : MonoBehaviour
 
     }
 
+    [SerializeField] private bool debugForceVsAI = false;
+    [SerializeField] private GameObject enemyHandForDebug;
+
     void Start()
     {
         initdraw = GlobalSettings.Instance.initdraw;
@@ -55,7 +58,35 @@ public class TurnManager : MonoBehaviour
         //GameStart local
         if (!NetworkSessionData.IsNetworkSession)
         {
+            // debugForceVsAI ne fait que forcer le mode ON pour tester directement depuis BattleScene
+            // (sans passer par le menu) — il ne doit jamais écraser un IsVsAI déjà positionné par
+            // SoloConnectionPanel.LaunchGame() avant le chargement de la scène.
+            NetworkSessionData.IsVsAI = debugForceVsAI || NetworkSessionData.IsVsAI;
             OnGameStart();
+        }
+    }
+
+    // Active le bon TurnMaker (PlayerTurnMaker ou AITurnMaker) sur chaque joueur selon le mode —
+    // ne touche à rien en session réseau (l'IA n'y est jamais utilisée, voir NetworkSessionData.IsVsAI).
+    void ApplyTurnMakerModeForSoloSession()
+    {
+        Player aiPlayer = NetworkSessionData.IsVsAI ? GlobalSettings.Instance.TopPlayer : null;
+        foreach (Player p in Player.Players)
+        {
+            bool wantsAI = p == aiPlayer;
+            AITurnMaker ai = p.GetComponent<AITurnMaker>();
+            PlayerTurnMaker human = p.GetComponent<PlayerTurnMaker>();
+            if (ai != null) ai.enabled = wantsAI;
+            if (human != null) human.enabled = !wantsAI;
+        }
+
+        // La main adverse en clair (debug hotseat) n'a plus lieu d'être visible face à l'IA,
+        // sauf si l'IA active elle-même son propre toggle de debug (AITurnMaker.ShowHandForDebug).
+        if (enemyHandForDebug != null)
+        {
+            AITurnMaker activeAi = aiPlayer != null ? aiPlayer.GetComponent<AITurnMaker>() : null;
+            bool showForAiDebug = activeAi != null && activeAi.ShowHandForDebug;
+            enemyHandForDebug.SetActive(!NetworkSessionData.IsVsAI || showForAiDebug);
         }
     }
 
@@ -72,6 +103,9 @@ public class TurnManager : MonoBehaviour
             // Debug.LogError("TurnManager: need at least 2 Player instances.");
             return;
         }
+
+        if (!NetworkSessionData.IsNetworkSession)
+            ApplyTurnMakerModeForSoloSession();
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -409,7 +443,7 @@ public class TurnManager : MonoBehaviour
                 if (roundEnded)
                 {
                     foreach (Player p in Player.Players)
-                        p.GetComponent<TurnMaker>().OnTurnEnd();
+                        p.ActiveTurnMaker.OnTurnEnd();
                     currentRound++;
                 }
                 EnterPhase(next);
@@ -469,15 +503,15 @@ public class TurnManager : MonoBehaviour
         {
             case TurnPhases.Regroup:
                 // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
-                OnRoundStart?.Invoke(); 
+                OnRoundStart?.Invoke();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnRegroupPhaseStart();
+                    p.ActiveTurnMaker.OnRegroupPhaseStart();
                 StartCoroutine(AutoAdvanceFromRegroup());
                 break;
             case TurnPhases.Command:
                 // new ShowMessageCommand("Command", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
+                    p.ActiveTurnMaker.OnCommandPhaseEntered();
                 break;
             // case TurnPhases.BeginCombat: // désactivé temporairement — Command saute directement à Battle
             //     foreach (Player p in Player.Players)
@@ -501,13 +535,13 @@ public class TurnManager : MonoBehaviour
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseEnd();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnEndBattlePhaseEntered();
+                    p.ActiveTurnMaker.OnEndBattlePhaseEntered();
                 StartCoroutine(AutoAdvanceFromEndBattle());
                 break;
             case TurnPhases.EndTurn:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnEndPhaseEntered();
+                    p.ActiveTurnMaker.OnEndPhaseEntered();
                 StartCoroutine(AutoAdvanceFromEnd());
                 break;
         }
@@ -911,7 +945,7 @@ public class TurnManager : MonoBehaviour
         if (roundEnded)
         {
             foreach (Player p in Player.Players)
-                p.GetComponent<TurnMaker>().OnTurnEnd();
+                p.ActiveTurnMaker.OnTurnEnd();
             currentRound++;
         }
         EnterPhase(next);

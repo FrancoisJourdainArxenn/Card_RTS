@@ -1566,7 +1566,7 @@ public class GameNetworkManager : NetworkBehaviour
         if (roundEnded)
         {
             foreach (Player p in Player.Players)
-                p.GetComponent<TurnMaker>().OnTurnEnd();
+                p.ActiveTurnMaker.OnTurnEnd();
         }
 
         TurnManager.Instance.SetCurrentRound(newRound);

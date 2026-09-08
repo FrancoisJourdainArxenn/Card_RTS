@@ -1073,13 +1073,27 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
+    private TurnMaker _activeTurnMaker;
+    // Plusieurs TurnMaker (PlayerTurnMaker + AITurnMaker) peuvent coexister sur le même GameObject —
+    // seul celui dont .enabled est vrai pilote effectivement ce joueur (voir
+    // TurnManager.ApplyTurnMakerModeForSoloSession).
+    public TurnMaker ActiveTurnMaker
+    {
+        get
+        {
+            if (_activeTurnMaker == null || !_activeTurnMaker.enabled)
+                _activeTurnMaker = System.Array.Find(GetComponents<TurnMaker>(), tm => tm.enabled);
+            return _activeTurnMaker;
+        }
+    }
+
     public void TransmitInfoAboutPlayerToVisual()
     {
-        if (NetworkSessionData.IsNetworkSession) 
+        if (NetworkSessionData.IsNetworkSession)
             return;
 
         //PArea.Portrait.gameObject.AddComponent<IDHolder>().UniqueID = PlayerID;
-        if (GetComponent<TurnMaker>() is AITurnMaker)
+        if (ActiveTurnMaker is AITurnMaker)
         {
             // turn off turn making for this character
             MainPArea.AllowedToControlThisPlayer = false;

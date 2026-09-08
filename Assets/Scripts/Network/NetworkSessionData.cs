@@ -26,4 +26,9 @@ public static class NetworkSessionData
     /// -1 = utilise le playerDeck assigné dans la scène (défaut).
     /// </summary>
     public static int SelectedDeckPresetIndex { get; set; } = -1;
+
+    /// <summary>
+    /// Vrai si le joueur Top de cette session locale (non-réseau) est piloté par l'IA.
+    /// </summary>
+    public static bool IsVsAI { get; set; } = false;
 }

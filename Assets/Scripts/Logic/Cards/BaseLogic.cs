@@ -74,8 +74,8 @@ public class BaseLogic: ILivable
         {
             bool result = Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
             string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
-            Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
-                string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
+            // Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
+            //     string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
             return result;
         }
     }
