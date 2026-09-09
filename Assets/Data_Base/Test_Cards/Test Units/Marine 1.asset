@@ -17,9 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 1
-  Description: 'Double Strike
-
-    When an Ally takes damage, it gains +1/+0.'
+  Description: Double Strike
   CardImage: {fileID: 21300000, guid: c79e860526283f94d9c972fff3604f41, type: 3}
   MainCost: 0
   IsHero: 0
@@ -41,31 +39,4 @@ MonoBehaviour:
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
-  Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 18
-    Condition: {fileID: 0}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 1
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 0
-        includesEventSubject: 1
-        queries: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
+  Effects: []

@@ -16,12 +16,19 @@ MonoBehaviour:
   BaseImage: {fileID: 21300000, guid: 75b5a2da8d5356e408fd6feec39440ae, type: 3}
   BaseIcon: {fileID: 21300000, guid: c0b6e05098ff085449341eee975007bd, type: 3}
   baseIconColor: {r: 0.9184507, g: 0.5613208, b: 1, a: 1}
-  baseDescription: '<b>Minor Base</b>
-
-    This Base will Increase your Income by
-    1 and allow you to play unit in that zone. Under attack, it does not grant Income.'
+  baseDescription: 
   BaseName: Standard Neutral Base
   MaxHealth: 3
   mainRessourceIncome: 1
   mainRessourceBaseCost: 5
   tierLevels: []
+  HasScout: 0
+  scoutMinTier: 1
+  IsTeleporter: 0
+  teleporterMinTier: 1
+  ModifiesRowCapacity: 0
+  RowCapacityBonus: 0
+  RowCapacityBonusIsGlobal: 0
+  rowCapacityMinTier: 1
+  Keywords: []
+  Effects: []

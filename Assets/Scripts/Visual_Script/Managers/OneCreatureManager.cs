@@ -96,7 +96,7 @@ public class OneCreatureManager : OneLivableManager
     {
         if (passengerPortraitsContainer == null)
         {
-            Debug.Log($"[Transport] RefreshPassengerPortraits — abort, passengerPortraitsContainer not assigned on {name}");
+            //Debug.Log($"[Transport] RefreshPassengerPortraits — abort, passengerPortraitsContainer not assigned on {name}");
             return;
         }
 
@@ -107,7 +107,7 @@ public class OneCreatureManager : OneLivableManager
         if (idHolder == null) return;
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic transportLogic)) return;
 
-        Debug.Log($"[Transport] RefreshPassengerPortraits — {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) rebuilding manifest=[{string.Join(", ", transportLogic.ManifestOrder)}]");
+        //Debug.Log($"[Transport] RefreshPassengerPortraits — {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) rebuilding manifest=[{string.Join(", ", transportLogic.ManifestOrder)}]");
 
         foreach (int id in transportLogic.ManifestOrder)
         {
@@ -122,7 +122,7 @@ public class OneCreatureManager : OneLivableManager
     {
         if (passengerPortraitPrefab == null)
         {
-            Debug.Log($"[Transport] CreatePortrait — abort, passengerPortraitPrefab not assigned on {name}");
+            //Debug.Log($"[Transport] CreatePortrait — abort, passengerPortraitPrefab not assigned on {name}");
             return;
         }
 
@@ -132,14 +132,14 @@ public class OneCreatureManager : OneLivableManager
         PassengerPortraitView view = portraitGO.GetComponent<PassengerPortraitView>();
         if (view != null)
             view.SetSprite(sprite);
-        else
-            Debug.LogWarning($"[Transport] CreatePortrait — {passengerPortraitPrefab.name} has no PassengerPortraitView component");
+        //else
+            //Debug.LogWarning($"[Transport] CreatePortrait — {passengerPortraitPrefab.name} has no PassengerPortraitView component");
 
         PassengerPortraitDrag drag = portraitGO.GetComponent<PassengerPortraitDrag>();
         if (drag != null)
             drag.Setup(this, representedCreatureID);
-        else
-            Debug.LogWarning($"[Transport] CreatePortrait — {passengerPortraitPrefab.name} has no PassengerPortraitDrag component");
+        //else
+            //Debug.LogWarning($"[Transport] CreatePortrait — {passengerPortraitPrefab.name} has no PassengerPortraitDrag component");
     }
 
     // Appelé par PassengerPortraitDrag.OnEndDrag après un réordonnancement local — lit l'ordre final
@@ -147,17 +147,17 @@ public class OneCreatureManager : OneLivableManager
     // rien d'autre n'a besoin d'être informé).
     public void CommitManifestOrderFromUI()
     {
-        Debug.Log($"[Transport] CommitManifestOrderFromUI — called on {name}");
+        //Debug.Log($"[Transport] CommitManifestOrderFromUI — called on {name}");
 
         IDHolder idHolder = GetComponent<IDHolder>();
         if (idHolder == null || passengerPortraitsContainer == null)
         {
-            Debug.Log($"[Transport] CommitManifestOrderFromUI — abort, idHolder={(idHolder != null ? "ok" : "NULL")}, passengerPortraitsContainer={(passengerPortraitsContainer != null ? "ok" : "NULL")}");
+            //Debug.Log($"[Transport] CommitManifestOrderFromUI — abort, idHolder={(idHolder != null ? "ok" : "NULL")}, passengerPortraitsContainer={(passengerPortraitsContainer != null ? "ok" : "NULL")}");
             return;
         }
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic transportLogic))
         {
-            Debug.Log($"[Transport] CommitManifestOrderFromUI — abort, transport ID:{idHolder.UniqueID} not found in CreaturesCreatedThisGame");
+            //Debug.Log($"[Transport] CommitManifestOrderFromUI — abort, transport ID:{idHolder.UniqueID} not found in CreaturesCreatedThisGame");
             return;
         }
 
@@ -168,7 +168,7 @@ public class OneCreatureManager : OneLivableManager
             newOrder[i] = drag != null ? drag.RepresentedCreatureID : -1;
         }
 
-        Debug.Log($"[Transport] CommitManifestOrderFromUI — {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) new order=[{string.Join(", ", newOrder)}], NetworkSession={NetworkSessionData.IsNetworkSession}");
+        //Debug.Log($"[Transport] CommitManifestOrderFromUI — {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) new order=[{string.Join(", ", newOrder)}], NetworkSession={NetworkSessionData.IsNetworkSession}");
 
         transportLogic.SetManifestOrder(newOrder);
 
@@ -181,27 +181,27 @@ public class OneCreatureManager : OneLivableManager
     // suite comme GoFace. Voir PassengerPortraitDrag.OnPointerClick.
     public void RequestDisembarkPassenger(int passengerID)
     {
-        Debug.Log($"[Transport] RequestDisembarkPassenger — called on {name} for passengerID={passengerID}, CanReorderNow={CanReorderNow}");
+        //Debug.Log($"[Transport] RequestDisembarkPassenger — called on {name} for passengerID={passengerID}, CanReorderNow={CanReorderNow}");
         if (!CanReorderNow)
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, CanReorderNow is false on {name}");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, CanReorderNow is false on {name}");
             return;
         }
 
         IDHolder idHolder = GetComponent<IDHolder>();
         if (idHolder == null)
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no IDHolder on {name}");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no IDHolder on {name}");
             return;
         }
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic transportLogic))
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, transport ID:{idHolder.UniqueID} not found in CreaturesCreatedThisGame");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, transport ID:{idHolder.UniqueID} not found in CreaturesCreatedThisGame");
             return;
         }
         if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerID, out CreatureLogic passengerLogic))
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, passenger ID:{passengerID} not found in CreaturesCreatedThisGame");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, passenger ID:{passengerID} not found in CreaturesCreatedThisGame");
             return;
         }
         if (passengerLogic.TransportCarrierID != idHolder.UniqueID)
@@ -211,33 +211,35 @@ public class OneCreatureManager : OneLivableManager
             // simplement l'embarquement en attente, comme un clic sur la créature elle-même l'aurait fait.
             if (transportLogic.LocalPendingBoardIDs.Contains(passengerID))
             {
-                Debug.Log($"[Transport] RequestDisembarkPassenger — {passengerLogic.DisplayName}(ID:{passengerID}) still pending aboard {transportLogic.DisplayName}(ID:{idHolder.UniqueID}), cancelling the pending board instead");
+                //Debug.Log($"[Transport] RequestDisembarkPassenger — {passengerLogic.DisplayName}(ID:{passengerID}) still pending aboard {transportLogic.DisplayName}(ID:{idHolder.UniqueID}), cancelling the pending board instead");
                 DragCreatureActions passengerDrag = IDHolder.GetGameObjectWithID(passengerID)?.GetComponentInChildren<DragCreatureActions>();
                 if (passengerDrag == null)
-                    Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no DragCreatureActions found for pending passenger ID:{passengerID}");
+                {
+                    //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no DragCreatureActions found for pending passenger ID:{passengerID}");
+                }
                 else
                     passengerDrag.CancelPendingMove(checkCapacity: true);
                 return;
             }
 
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, passenger {passengerLogic.DisplayName}(ID:{passengerID}) TransportCarrierID={passengerLogic.TransportCarrierID} does not match this transport ID:{idHolder.UniqueID}");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, passenger {passengerLogic.DisplayName}(ID:{passengerID}) TransportCarrierID={passengerLogic.TransportCarrierID} does not match this transport ID:{idHolder.UniqueID}");
             return;
         }
 
         PlayerArea targetArea = transportLogic.owner.GetPlayerAreaByID(transportLogic.BaseID);
         if (targetArea == null)
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no PlayerArea found for transport BaseID={transportLogic.BaseID}");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no PlayerArea found for transport BaseID={transportLogic.BaseID}");
             return;
         }
 
-        int rawCountDbg = passengerLogic.IsMelee ? targetArea.tableVisual.MeleeCreaturesOnTable.Count : targetArea.tableVisual.RangedCreaturesOnTable.Count;
-        int effCountDbg = targetArea.tableVisual.EffectiveRowCount(passengerLogic.IsMelee);
-        Debug.Log($"[Transport] RequestDisembarkPassenger — capacity check for {passengerLogic.DisplayName}(ID:{passengerID}): rawCount={rawCountDbg}, effectiveCount={effCountDbg}, max={GlobalSettings.Instance.MaxCreaturePerRow}, Command.playingQueue={Command.playingQueue}, Command.CommandQueue.Count={Command.CommandQueue.Count}");
+        //int rawCountDbg = passengerLogic.IsMelee ? targetArea.tableVisual.MeleeCreaturesOnTable.Count : targetArea.tableVisual.RangedCreaturesOnTable.Count;
+        //int effCountDbg = targetArea.tableVisual.EffectiveRowCount(passengerLogic.IsMelee);
+        //Debug.Log($"[Transport] RequestDisembarkPassenger — capacity check for {passengerLogic.DisplayName}(ID:{passengerID}): rawCount={rawCountDbg}, effectiveCount={effCountDbg}, max={GlobalSettings.Instance.MaxCreaturePerRow}, Command.playingQueue={Command.playingQueue}, Command.CommandQueue.Count={Command.CommandQueue.Count}");
 
         if (!targetArea.tableVisual.RowHasSpace(passengerLogic.IsMelee))
         {
-            Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no room in row (isMelee={passengerLogic.IsMelee}) at baseID={targetArea.baseID}");
+            //Debug.Log($"[Transport] RequestDisembarkPassenger — abort, no room in row (isMelee={passengerLogic.IsMelee}) at baseID={targetArea.baseID}");
             new ShowMessageCommand("No room in that zone.", 1f).AddToQueue();
             return;
         }
@@ -246,7 +248,7 @@ public class OneCreatureManager : OneLivableManager
         int rawIndex = isMelee ? targetArea.tableVisual.MeleeCreaturesOnTable.Count : targetArea.tableVisual.RangedCreaturesOnTable.Count;
         int networkPos = targetArea.tableVisual.ToNetworkTablePos(isMelee, rawIndex);
 
-        Debug.Log($"[Transport] RequestDisembarkPassenger — {passengerLogic.DisplayName}(ID:{passengerID}) leaving {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) into baseID={targetArea.baseID}, networkPos={networkPos}, rawCountAfterCheck={rawCountDbg}");
+        //Debug.Log($"[Transport] RequestDisembarkPassenger — {passengerLogic.DisplayName}(ID:{passengerID}) leaving {transportLogic.DisplayName}(ID:{idHolder.UniqueID}) into baseID={targetArea.baseID}, networkPos={networkPos}");
 
         if (NetworkSessionData.IsNetworkSession)
             GameNetworkManager.Instance.DisembarkPassengerServerRpc(passengerID, targetArea.baseID, networkPos);

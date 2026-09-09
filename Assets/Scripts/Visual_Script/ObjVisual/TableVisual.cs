@@ -61,14 +61,27 @@ public class TableVisual : MonoBehaviour
     {
         List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
         return row.Count(go => go != null
+            && !IsGhost(go)
             && !go.GetComponent<OneCreatureManager>().HasPendingMove);
     }
 
     // extraCommitted : créatures déjà comptées ailleurs (pas dans cette rangée visuelle) mais qui vont
     // s'y ajouter de façon certaine — voir Player.PendingRevealCount, pour les cartes commises mais
     // pas encore révélées visuellement (DragCreatureOnTable.DragSuccessful).
-    public bool RowHasSpace(bool isMelee, int extraCommitted = 0) =>
-        EffectiveRowCount(isMelee) + extraCommitted < GlobalSettings.Instance.MaxCreaturePerRow;
+    public bool RowHasSpace(bool isMelee, int extraCommitted = 0)
+    {
+        Player owner = ownerArea?.GetOwnerPlayer();
+        int max = owner != null ? owner.GetMaxCreaturePerRow(ownerArea.baseID) : GlobalSettings.Instance.MaxCreaturePerRow;
+        // Déplacements déjà enfilés (EnqueueSoloMove) vers cette rangée mais pas encore flush — voir
+        // TurnManager.PendingIncomingMoveCount : sans ça, plusieurs renforts convergeant sur la même
+        // rangée dans la même phase Command ne se voient pas entre eux.
+        int pendingIncomingMoves = ownerArea != null && TurnManager.Instance != null
+            ? TurnManager.Instance.PendingIncomingMoveCount(ownerArea.baseID, isMelee)
+            : 0;
+        bool hasSpace = EffectiveRowCount(isMelee) + extraCommitted + pendingIncomingMoves < max;
+        Debug.Log($"[RowCheck] owner={owner?.name} base={ownerArea?.baseID} melee={isMelee} count={EffectiveRowCount(isMelee)} pending={extraCommitted} incomingMoves={pendingIncomingMoves} max={max} hasSpace={hasSpace}");
+        return hasSpace;
+    }
 
 
     public static bool CursorOverSomeTable
@@ -574,7 +587,7 @@ public class TableVisual : MonoBehaviour
         int insertIndex = _previewIndex;
         targetList.Remove(creature);
         targetList.Insert(Mathf.Min(insertIndex, targetList.Count), creature);
-        Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
+        // Debug.Log($"[Reorder Local] {(isMelee ? "mêlée" : "distance")} | avant=[{before}] → après=[{FormatIDs(targetList)}]");
 
         _previewIndex = -1;
         _movingCreature = null;
@@ -593,12 +606,12 @@ public class TableVisual : MonoBehaviour
 
     public void ApplyCreatureOrder(int[] meleeIDs, int[] rangedIDs)
     {
-        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} avant-melee=[{RowNames(MeleeCreaturesOnTable)}] avant-ranged=[{RowNames(RangedCreaturesOnTable)}] meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
+        // Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} avant-melee=[{RowNames(MeleeCreaturesOnTable)}] avant-ranged=[{RowNames(RangedCreaturesOnTable)}] meleeIDs=[{string.Join(",", meleeIDs)}] rangedIDs=[{string.Join(",", rangedIDs)}]");
         _lastKnownMeleeOrder  = meleeIDs;
         _lastKnownRangedOrder = rangedIDs;
         SortListByIDs(MeleeCreaturesOnTable, meleeIDs);
         SortListByIDs(RangedCreaturesOnTable, rangedIDs);
-        Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} après-melee=[{RowNames(MeleeCreaturesOnTable)}] après-ranged=[{RowNames(RangedCreaturesOnTable)}]");
+        // Debug.Log($"[ApplyOrder] baseID={ownerArea?.baseID} après-melee=[{RowNames(MeleeCreaturesOnTable)}] après-ranged=[{RowNames(RangedCreaturesOnTable)}]");
         PlaceCreaturesOnNewSlots();
         ownerArea?.GetOwnerPlayer()?.ResyncCreatureOrderForArea(
             ownerArea.baseID, MeleeCreaturesOnTable, RangedCreaturesOnTable);

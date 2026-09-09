@@ -134,7 +134,7 @@ public class Player : MonoBehaviour, ILivable
             // Die() is no longer triggered reactively here — the game-over decision is now made
             // ahead of time by ZoneCombatResolver.ComputeRoundOutcome() and acted upon explicitly
             // by GameOverCommand once the decisive main-base combat(s) finish animating. See
-            // GameOverCommand.cs / ZoneCombatResolver.EnqueueOrderedBattleCommands.
+            // GameOverCommand.cs / ZoneCombatResolver.EnqueueMainBaseBattleCommands.
         }
     }
 
@@ -713,6 +713,38 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
+    // Variante "cachée" de PlayACreatureFromHand : résout tout de suite la logique (ressource, main,
+    // CreatureLogic, OnPlay) exactement comme la version normale, mais NE révèle PAS le visuel tout de
+    // suite — au lieu de créer la PlayACreatureCommand ici, on la met en file dans
+    // TurnManager.EnqueueSoloPlay, résolue seulement au flush de fin de phase Command (voir
+    // FlushSoloPlayBuffer / NetworkFlushPlayCreature, qui fait exactement ce que ferait cette commande
+    // si elle avait été créée tout de suite). Utilisée par l'IA (voir AITurnMaker.PlayCreature) pour
+    // que ses créatures n'apparaissent sur la table qu'à la fin de la phase, comme un vrai adversaire
+    // réseau — PendingRevealCount compte déjà correctement cette créature comme "en attente" pendant
+    // tout l'intervalle (elle est bien dans playedCards.Creatures mais n'a encore aucun GameObject).
+    public void PlayACreatureFromHandHidden(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
+        => PlayACreatureFromHandHidden(playedCard, rowLocalPos, selectedPArea, null);
+
+    public void PlayACreatureFromHandHidden(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
+    {
+        MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.CardsPlayed);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
+        int baseID       = selectedPArea.baseID;
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
+
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
+        FogOfWarManager.Refresh();
+
+        TurnManager.Instance.EnqueueSoloPlay(playedCard.UniqueCardID, newCreature.UniqueCreatureID, rowLocalPos, baseID, this);
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
+        hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
+        HighlightPlayableCards();
+    }
+
     // Index d'insertion dans playedCards.Creatures pour maintenir [melee G→D, ranged G→D]
     public int GetLogicalInsertIndex(bool isMelee, int baseID, int rowLocalPos)
     {
@@ -1073,13 +1105,27 @@ public class Player : MonoBehaviour, ILivable
 
     }
 
+    private TurnMaker _activeTurnMaker;
+    // Plusieurs TurnMaker (PlayerTurnMaker + AITurnMaker) peuvent coexister sur le même GameObject —
+    // seul celui dont .enabled est vrai pilote effectivement ce joueur (voir
+    // TurnManager.ApplyTurnMakerModeForSoloSession).
+    public TurnMaker ActiveTurnMaker
+    {
+        get
+        {
+            if (_activeTurnMaker == null || !_activeTurnMaker.enabled)
+                _activeTurnMaker = System.Array.Find(GetComponents<TurnMaker>(), tm => tm.enabled);
+            return _activeTurnMaker;
+        }
+    }
+
     public void TransmitInfoAboutPlayerToVisual()
     {
-        if (NetworkSessionData.IsNetworkSession) 
+        if (NetworkSessionData.IsNetworkSession)
             return;
 
         //PArea.Portrait.gameObject.AddComponent<IDHolder>().UniqueID = PlayerID;
-        if (GetComponent<TurnMaker>() is AITurnMaker)
+        if (ActiveTurnMaker is AITurnMaker)
         {
             // turn off turn making for this character
             MainPArea.AllowedToControlThisPlayer = false;
@@ -1223,6 +1269,46 @@ public class Player : MonoBehaviour, ILivable
     public void RemoveBonusShieldFromSource(int sourceID)
     {
         _shieldBonusFromSources.Remove(sourceID);
+    }
+
+    // Recalculé en direct à chaque appel (pas de dictionnaire de sources à nettoyer) : une base qui
+    // meurt sort automatiquement de controlledBases (BaseLogic.Die() → BasesCreatedThisGame.Remove).
+    // Le tier se lit sur homeBaseLogic, jamais sur le tier propre de la base porteuse — une base
+    // secondaire ne monte jamais elle-même de tier (CurrentTier y reste toujours figé à T1), même
+    // choix que pour Scout/Téléporteur.
+    // Une base capturée qui ne porte pas elle-même la capacité (son asset de localisation, ex:
+    // Outpost) hérite de celle de la faction du joueur (baseAsset, ex: Crawler Base.asset) — même
+    // principe que Scout/Téléporteur. Un bonus GLOBAL hérité de la faction n'est compté qu'UNE SEULE
+    // FOIS pour tout le joueur (pas une fois par base capturée), pour ne pas s'additionner simplement
+    // en capturant plus de bases ; un bonus LOCAL, lui, s'applique une fois par base porteuse, chacune
+    // boostant sa propre zone.
+    public int GetMaxCreaturePerRow(int baseID)
+    {
+        int max = GlobalSettings.Instance.MaxCreaturePerRow;
+        ZoneLogic zone = GetPlayerAreaByID(baseID)?.parentZone?.Logic;
+        bool factionGlobalCounted = false;
+
+        foreach (BaseLogic b in controlledBases)
+        {
+            bool ownsCapacity = b.ba.ModifiesRowCapacity;
+            if (!ownsCapacity && !baseAsset.ModifiesRowCapacity) continue;
+
+            BaseAsset source = ownsCapacity ? b.ba : baseAsset;
+            if (homeBaseLogic == null || homeBaseLogic.CurrentTier < source.rowCapacityMinTier) continue;
+
+            if (!ownsCapacity && source.RowCapacityBonusIsGlobal)
+            {
+                if (factionGlobalCounted) continue;
+                factionGlobalCounted = true;
+                max += source.RowCapacityBonus;
+                continue;
+            }
+
+            if (!source.RowCapacityBonusIsGlobal && b.Zone != zone) continue;
+            max += source.RowCapacityBonus;
+        }
+
+        return max;
     }
 
     public void AddEffectAmplifier(int sourceID, EffectAmplifier amplifier)

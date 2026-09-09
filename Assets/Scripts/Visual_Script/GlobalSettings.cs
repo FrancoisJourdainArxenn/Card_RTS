@@ -156,7 +156,12 @@ public class GlobalSettings : MonoBehaviour
         player.baseVisual = visual;
 
         if (visual.baseManager != null)
+        {
+            visual.baseManager.owner = player;
             visual.baseManager.ResetValues(player.baseAsset);
+            HoverPreview hover = visual.baseManager.GetComponent<HoverPreview>();
+            if (hover != null) hover.ThisPreviewEnabled = true;
+        }
 
         IDHolder id = go.GetComponent<IDHolder>() ?? go.AddComponent<IDHolder>();
         id.UniqueID = player.PlayerID;

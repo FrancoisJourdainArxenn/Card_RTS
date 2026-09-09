@@ -74,8 +74,8 @@ public class BaseLogic: ILivable
         {
             bool result = Zone != null && owner.otherPlayer.Creatures.Exists(c => c.Zone == Zone);
             string role = !NetworkSessionData.IsNetworkSession ? "" : Unity.Netcode.NetworkManager.Singleton.IsServer ? "[Server]" : "[Client]";
-            Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
-                string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
+            // Debug.Log($"[UnderAttack]{role} {owner.name} home zone={(Zone != null ? Zone.ID.ToString() : "null")} -> {result} | enemy creatures: " +
+            //     string.Join(", ", owner.otherPlayer.Creatures.Select(c => $"{c.DisplayName}(base={c.BaseID}, zone={(c.Zone != null ? c.Zone.ID.ToString() : "null")})")));
             return result;
         }
     }
@@ -110,6 +110,7 @@ public class BaseLogic: ILivable
     {
         if (IsHomeBase) return; // mort de la home base gérée par Player
         owner.controlledBaseAssets.Remove(ba);
+        EffectRegistry.UnregisterEntity(uniqueBaseID);
         owner.CalculatePlayerIncome();
         BasesCreatedThisGame.Remove(uniqueBaseID);
         FogOfWarManager.Refresh();
@@ -127,6 +128,8 @@ public class BaseLogic: ILivable
         this.owner = owner;
         uniqueBaseID = networkID >= 0 ? networkID : IDFactory.GetUniqueID();
         BasesCreatedThisGame.Add(uniqueBaseID, this);
+        if (ba.Effects != null && ba.Effects.Count > 0)
+            EffectRegistry.RegisterBaseEffects(this, ba);
         FogOfWarManager.Refresh();
     }
 
@@ -142,6 +145,8 @@ public class BaseLogic: ILivable
         this.owner = owner;
         uniqueBaseID = owner.PlayerID;
         BasesCreatedThisGame[uniqueBaseID] = this;
+        if (ba.Effects != null && ba.Effects.Count > 0)
+            EffectRegistry.RegisterBaseEffects(this, ba);
     }
 
     public void TickUpgradeCostDown()
@@ -177,6 +182,8 @@ public class BaseLogic: ILivable
         CurrentTier = next.tier;
         CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         OnUpgradeCostChanged?.Invoke(this);
+        EffectRegistry.NotifyBaseTierUpgraded(this);
+        ZoneEnemyIndicator.RefreshAll();
         return true;
     }
 

@@ -5,6 +5,13 @@ using UnityEngine.UI;
 public class OneBaseManager : MonoBehaviour, ITargetableVisual
 {
     public BaseAsset baseAsset;
+    // Joueur propriétaire de cette base — sert uniquement à résoudre la description affichée (voir
+    // ReadBaseFromAsset) : une base secondaire capturée affiche la description de la home base du
+    // joueur (ses capacités de faction), pas celle — générique/vide — de son propre asset de
+    // localisation (Outpost/Minor Base/StandardBase). Laissé à null pour la home base elle-même
+    // (baseAsset == owner.baseAsset de toute façon, donc sans effet) ou tant qu'aucun propriétaire
+    // n'est encore assigné (case neutre pas encore capturée).
+    public Player owner;
     public int CurrentHealth { get; private set; }
     public bool HasBeenSeen { get; private set; } = false;
     public void MarkSeen() => HasBeenSeen = true;
@@ -19,6 +26,9 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
 
     public TMP_Text MainRessourceIncome;
     public TMP_Text HealthText;
+    public TMP_Text NameText;
+    public TMP_Text DescriptionText;
+    public TMP_Text MainCostText;
 
     [Header("Image References")]
     //public Image CardGraphicImage;
@@ -103,6 +113,14 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         HealthText.text = CurrentHealth.ToString();
         RefreshIncomeDisplay(baseAsset.mainRessourceIncome, false);
         ArtImage.sprite = baseAsset.BaseImage;
+
+        if (NameText != null) NameText.text = baseAsset.BaseName;
+        if (DescriptionText != null)
+        {
+            BaseAsset descriptionSource = (owner != null && owner.baseAsset != baseAsset) ? owner.baseAsset : baseAsset;
+            DescriptionText.text = descriptionSource.baseDescription;
+        }
+        if (MainCostText != null) MainCostText.text = baseAsset.mainRessourceBaseCost.ToString();
     }
 
     public void ResetValues(BaseAsset baseAsset)
@@ -186,16 +204,6 @@ public class OneBaseManager : MonoBehaviour, ITargetableVisual
         NeutralBaseVisual baseVisual = Spawner.GetComponent<NeutralBaseVisual>();
         baseVisual.ResetBuildingZone();
         Destroy(gameObject);
-    }
-
-    void OnMouseEnter()
-    {
-        UITooltip.ShowTooltip_Static(baseAsset.baseDescription);
-    }
-
-    void OnMouseExit()
-    {
-        UITooltip.HideTooltip_Static();
     }
 
 }

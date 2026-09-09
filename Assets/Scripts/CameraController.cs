@@ -58,8 +58,10 @@ public class CameraController : MonoBehaviour
     [Header("Battle Cam")]
     [Tooltip("Délai après une transition vers une nouvelle zone avant que le combat ne démarre, pour laisser le temps de repérer la situation.")]
     public float battleCamSettleDelay = 1.5f;
-    [Tooltip("Recul horizontal du point d'approche par rapport au point milieu du chemin (le long de celui-ci), au premier Crossing Combat d'un enchaînement.")]
+    [Tooltip("Recul du point d'approche par rapport au point milieu du chemin (le long de l'axe de vue de la caméra), au premier Crossing Combat d'un enchaînement.")]
     public float crossingZoomPullback = 6f;
+    [Tooltip("Délai avant que le zoom visible vers le chemin d'un Encounter ne démarre, pour laisser le temps de repérer les icônes affichées sur la map.")]
+    public float crossingZoomStartDelay = 1.5f;
     [Tooltip("Durée du zoom visible vers le chemin du croisement, avant que le fondu au noir ne prenne le relais.")]
     public float crossingZoomDuration = 1f;
     [Tooltip("Délai après le début du zoom avant que le fondu au noir ne démarre (doit rester <= crossingZoomDuration).")]
@@ -364,6 +366,12 @@ public class CameraController : MonoBehaviour
         SetHoveredAnchor(null);
         _battleCamAnchor = null;
         _state = State.BattleCam;
+
+        // Tous les Encounters de ce tour s'affichent d'un coup en début de phase Battle ;
+        // chacun disparaît individuellement à son tour, dans EnterCrossingCombat.
+        foreach (CrossingZoneSlot slot in CrossingZoneSlot.AllSlots)
+            if (slot.InUse)
+                slot.ShowPathIcon();
     }
 
     // Called whenever a combat step is about to start executing; moves the camera to the
@@ -404,12 +412,18 @@ public class CameraController : MonoBehaviour
             Vector3 approachPos = targetPos;
 
             CrossingZoneSlot slot = anchor.GetComponentInParent<CrossingZoneSlot>();
-            if (slot != null && slot.TryGetCrossingPath(out Vector3 midpoint, out Vector3 pathDir))
-                approachPos = midpoint - pathDir * crossingZoomPullback;
+            if (slot != null && slot.TryGetCrossingPath(out Vector3 midpoint, out Vector3 _))
+            {
+                // Recul le long de l'axe de vue de la caméra (pas le long du chemin) : le point
+                // milieu — là où se trouve l'icône — reste centré à l'écran pendant tout le zoom,
+                // au lieu de dériver vers l'une des deux zones.
+                Vector3 viewForward = targetRot * Vector3.forward;
+                approachPos = midpoint - viewForward * crossingZoomPullback;
+            }
 
             // Rotation inchangée du début à la fin (vue top constante) : seule la position
             // bouge, ce qui donne un zoom pur plutôt qu'un mouvement de caméra 3D.
-            StartCoroutine(EnterCrossingCombat(approachPos, targetPos, targetRot, onArrived));
+            StartCoroutine(EnterCrossingCombat(approachPos, targetPos, targetRot, slot, onArrived));
         }
         else if (exitingCrossing)
         {
@@ -437,8 +451,10 @@ public class CameraController : MonoBehaviour
     // Premier Crossing Combat d'un enchaînement : lance un zoom visible vers le chemin du
     // croisement, laisse le fondu au noir démarrer en cours de route, puis une fois l'écran
     // noir, coupe le zoom et place la caméra exactement sur l'ancre avant de révéler la scène.
-    IEnumerator EnterCrossingCombat(Vector3 approachPos, Vector3 finalPos, Quaternion finalRot, System.Action onArrived)
+    IEnumerator EnterCrossingCombat(Vector3 approachPos, Vector3 finalPos, Quaternion finalRot, CrossingZoneSlot slot, System.Action onArrived)
     {
+        yield return new WaitForSeconds(crossingZoomStartDelay);
+
         transform.DOMove(approachPos, crossingZoomDuration).SetEase(transitionEase);
         transform.DORotateQuaternion(finalRot, crossingZoomDuration).SetEase(transitionEase);
 
@@ -446,6 +462,8 @@ public class CameraController : MonoBehaviour
 
         ScreenFade.Instance.FadeOut(() =>
         {
+            if (slot != null)
+                slot.HidePathIcon();
             transform.DOKill();
             transform.position = finalPos;
             transform.rotation = finalRot;
@@ -473,6 +491,12 @@ public class CameraController : MonoBehaviour
     {
         if (_state != State.BattleCam && _state != State.Transitioning)
             return;
+
+        // Filet de sécurité : si la phase Battle se termine sans que tous les Encounters
+        // soient passés par le zoom (ex: aucun combat possible ce tour-ci), rien ne traîne.
+        foreach (CrossingZoneSlot slot in CrossingZoneSlot.AllSlots)
+            slot.HidePathIcon();
+
         bool wasCrossing = IsCrossingAnchor(_battleCamAnchor);
         _battleCamAnchor = null;
         _panPosition = _sceneStartPosition;

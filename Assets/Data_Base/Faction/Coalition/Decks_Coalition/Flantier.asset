@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdd49872622236b4391b0c94e7f448d8, type: 3}
-  m_Name: Raynor
+  m_Name: Flantier
   m_EditorClassIdentifier: Assembly-CSharp::DeckSO
   deckName: Flantier, Rebel Leader
   difficultyLevel: 1

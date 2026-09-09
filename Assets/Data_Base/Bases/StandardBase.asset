@@ -20,8 +20,20 @@ MonoBehaviour:
 
     This Base will Increase your Income by 1 and
     allow you to play unit in that zone. Under attack, it does not grant Income.'
-  BaseName: Standard Neutral Base
+  BaseName: Base
   MaxHealth: 3
   mainRessourceIncome: 1
   mainRessourceBaseCost: 3
   tierLevels: []
+  HasScout: 0
+  scoutMinTier: 1
+  IsTeleporter: 0
+  teleporterMinTier: 1
+  ModifiesRowCapacity: 0
+  RowCapacityBonus: 0
+  RowCapacityBonusIsGlobal: 0
+  rowCapacityMinTier: 1
+  Keywords:
+  - {fileID: 11400000, guid: 4c2d64f28c47ffa48ba3714295c56b60, type: 2}
+  - {fileID: 11400000, guid: 7e77396e84cc1aa43a12aa0a7694e8d8, type: 2}
+  Effects: []

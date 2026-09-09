@@ -36,4 +36,6 @@ public enum TriggerType
     OnRessourceSpent = 13,
     OnActionPlayed = 17, // déclenché quand une carte Action (sort/order) est jouée/lancée, via ETB
                          // (main du joueur ou CastSpellSO) — voir EffectRegistry.NotifyActionPlayed
+    OnTierUpgrade = 19, // déclenché une seule fois, quand BaseLogic.TryUpgrade() fait passer
+                        // CurrentTier à une nouvelle valeur — voir EffectRegistry.NotifyBaseTierUpgraded
 }

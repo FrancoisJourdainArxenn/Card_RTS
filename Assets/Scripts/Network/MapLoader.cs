@@ -14,7 +14,7 @@ public class MapLoader : MonoBehaviour
         Instance = this;
         EnvironnementTransform = transform;
         if (!NetworkSessionData.IsNetworkSession)
-            Instantiate(defaultMapPrefab, transform.position, transform.rotation, transform);
+            Instantiate(GetMapPrefab(NetworkSessionData.SelectedMapIndex), transform.position, transform.rotation, transform);
     }
 
     public GameObject GetMapPrefab(int index) => registry.maps[index];

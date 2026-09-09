@@ -108,19 +108,56 @@ public class VfxManager : MonoBehaviour
     }
 
     private GameObject shieldVfxInstance;
+    // Valeur actuellement affichée sur la bulle de bouclier — maintenue par AddShieldVfx/ConsumeShieldVfx
+    // (voir ces méthodes) pour rejouer les gains/consommations un par un, DANS L'ORDRE OÙ LES COMMANDES
+    // VISUELLES S'EXÉCUTENT RÉELLEMENT, plutôt que de rejouer un total absolu capturé côté logique (qui
+    // peut être bien plus avancé — toute la planification d'un round de combat tourne avant que la
+    // moindre commande visuelle ne joue) — voir ApplyShieldCommand/ConsumeShieldCommand.
+    private int _shieldAmount;
 
     public void ShowShieldVfx(GameObject prefab, int amount)
     {
         if (prefab == null) return;
         HideShieldVfx();
         shieldVfxInstance = Instantiate(prefab, transform);
-        SetShieldText(amount);
+        _shieldAmount = amount;
+        SetShieldText(_shieldAmount);
+    }
+
+    // Ajoute `delta` à la valeur actuellement AFFICHÉE (pas à ShieldValue, déjà à jour côté logique) —
+    // crée la bulle si elle n'existe pas encore (premier gain de la créature). Utilisé par
+    // ApplyShieldCommand pour rejouer un gain de bouclier "coup par coup", cohérent avec ce qu'un
+    // ConsumeShieldVfx précédent a déjà affiché, plutôt que d'écraser avec un total capturé côté
+    // logique bien plus tôt (voir commentaire sur _shieldAmount).
+    public void AddShieldVfx(GameObject prefab, int delta)
+    {
+        if (shieldVfxInstance == null)
+        {
+            ShowShieldVfx(prefab, delta);
+            return;
+        }
+        _shieldAmount += delta;
+        SetShieldText(_shieldAmount);
+    }
+
+    // Soustrait `delta` (montant réellement absorbé par CE coup) à la valeur affichée — masque la
+    // bulle si elle tombe à 0 ou moins. Utilisé par ConsumeShieldCommand ; voir AddShieldVfx pour le
+    // raisonnement symétrique côté gain.
+    public void ConsumeShieldVfx(int delta)
+    {
+        if (shieldVfxInstance == null) return;
+        _shieldAmount -= delta;
+        if (_shieldAmount <= 0)
+            HideShieldVfx();
+        else
+            SetShieldText(_shieldAmount);
     }
 
     public void UpdateShieldVfx(int remainingAmount)
     {
         if (shieldVfxInstance == null) return;
-        SetShieldText(remainingAmount);
+        _shieldAmount = remainingAmount;
+        SetShieldText(_shieldAmount);
     }
 
     private void SetShieldText(int amount)
@@ -142,6 +179,7 @@ public class VfxManager : MonoBehaviour
             Destroy(shieldVfxInstance);
             shieldVfxInstance = null;
         }
+        _shieldAmount = 0;
     }
 
     public void ShowDeathPending()

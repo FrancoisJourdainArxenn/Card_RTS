@@ -14,6 +14,10 @@ public class CrossingZoneSlot : MonoBehaviour
     public ZoneCombatResolver Resolver { get; private set; }
     public bool InUse { get; private set; }
 
+    // Référence libre (pas un enfant) : cette slot est isolée dans un coin de la scène,
+    // l'icône doit rester un objet indépendant repositionné sur la map au moment d'être montrée.
+    [SerializeField] SpriteRenderer pathIcon;
+
     // Par joueur impliqué dans le croisement en cours : d'où il venait et où il allait
     // à l'origine, pour pouvoir dispatcher les survivants une fois le combat résolu.
     private readonly Dictionary<Player, (int originBaseID, int intendedTargetBaseID)> memory = new();
@@ -28,6 +32,10 @@ public class CrossingZoneSlot : MonoBehaviour
             Debug.LogError($"[CrossingZoneSlot] {name} n'a pas de ZoneManager/ZoneVisual sur le même GameObject.", this);
         if (Resolver == null)
             Debug.LogError($"[CrossingZoneSlot] {name} n'a pas de ZoneCombatResolver sur le même GameObject.", this);
+
+        // L'icône ne doit être visible que pendant un Encounter en cours ; état de départ
+        // masqué quel que soit ce qui a été laissé activé dans l'Inspector.
+        HidePathIcon();
     }
 
     void OnDestroy()
@@ -92,5 +100,22 @@ public class CrossingZoneSlot : MonoBehaviour
         midpoint = Vector3.zero;
         direction = Vector3.zero;
         return false;
+    }
+
+    public void ShowPathIcon()
+    {
+        if (pathIcon == null)
+            return;
+        if (TryGetCrossingPath(out Vector3 midpoint, out _))
+        {
+            pathIcon.transform.position = midpoint;
+            pathIcon.enabled = true;
+        }
+    }
+
+    public void HidePathIcon()
+    {
+        if (pathIcon != null)
+            pathIcon.enabled = false;
     }
 }

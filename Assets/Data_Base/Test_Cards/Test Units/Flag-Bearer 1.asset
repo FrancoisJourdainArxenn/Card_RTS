@@ -45,18 +45,8 @@ MonoBehaviour:
     Trigger: 14
     Condition: {fileID: 11400000, guid: 66c20f14eb2c168488a5289f65a41b88, type: 2}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 1
-        queries: []
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
-        includesEventSubject: 0
-        queries: []
+      effectTargets: []
+      affectedElements: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

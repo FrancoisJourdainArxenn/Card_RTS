@@ -9,6 +9,12 @@ public class HandVisual : MonoBehaviour
     // PUBLIC FIELDS
     public AreaPosition owner;
     public bool TakeCardsOpenly = true;
+    // Rend chaque carte de cette main invisible (CanvasGroup.alpha = 0) sans jamais désactiver son
+    // GameObject — contrairement à un SetActive sur la main entière, ça ne casse pas les tweens/
+    // coroutines de tirage (voir TurnManager.ApplyTurnMakerModeForSoloSession, qui a cassé le tirage
+    // de l'IA en désactivant tout le HandVisual : Command.CardDrawPending() restait bloqué pour
+    // toujours et la partie gelait en Regroup).
+    public bool HideFromView = false;
     public SameDistanceChildren slots;
 
     [Header("Transform References")]
@@ -169,6 +175,20 @@ public class HandVisual : MonoBehaviour
         // Set a tag to reflect where this card is
         foreach (Transform t in card.GetComponentsInChildren<Transform>())
             t.tag = p.MainPArea.owner.ToString()+"Card";
+
+        // Main cachée (ex: main de l'IA hors debug) : invisible sans désactiver le GameObject, pour
+        // ne pas casser l'animation de tirage ci-dessous (voir commentaire sur HideFromView).
+        if (HideFromView)
+        {
+            CanvasGroup group = card.GetComponentInChildren<CanvasGroup>();
+            if (group != null)
+            {
+                group.alpha = 0f;
+                group.interactable = false;
+                group.blocksRaycasts = false;
+            }
+        }
+
         // pass this card to HandVisual class
         AddCard(card);
 

@@ -9,6 +9,10 @@ public enum CounterSource
     // bâtiment (cf. CreatureLogic/BuildingLogic.IncrementConditionCounter) — utile pour des
     // compteurs que le moteur ne tient pas nativement (ex: "morts alliées dans MA zone").
     WrappedCondition,
+    // Tier actuel de la home base du joueur (Self/Opponent selon `owner`) — reste valable même si
+    // context.Source est une créature/bâtiment ou une base secondaire, dont le CurrentTier propre
+    // reste toujours figé à T1. `threshold` s'exprime alors en valeur de CardTier (T1=1..T5=5).
+    BaseTier,
 }
 
 public enum StatOwner
@@ -29,7 +33,7 @@ public class CondCounter : ConditionSO
     [Header("Counter Source")]
     public CounterSource source = CounterSource.MatchStat;
 
-    [Header("— si source = MatchStat")]
+    [Header("— si source = MatchStat ou BaseTier")]
     public StatOwner owner = StatOwner.Self;
     public MatchStatType stat;
 
@@ -60,6 +64,12 @@ public class CondCounter : ConditionSO
                 BuildingLogic b => b.IncrementConditionCounter(this),
                 _ => 0
             };
+        }
+        else if (source == CounterSource.BaseTier)
+        {
+            Player player = owner == StatOwner.Self ? context.Owner : context.Opponent;
+            if (player?.homeBaseLogic == null) return false;
+            count = (int)player.homeBaseLogic.CurrentTier;
         }
         else
         {
@@ -93,6 +103,12 @@ public class CondCounter : ConditionSO
             if (sourceCreature != null) count = sourceCreature.PeekConditionCounter(this);
             else if (sourceBuilding != null) count = sourceBuilding.PeekConditionCounter(this);
             else return null;
+        }
+        else if (source == CounterSource.BaseTier)
+        {
+            Player statPlayer = owner == StatOwner.Self ? cardOwner : cardOwner?.otherPlayer;
+            if (statPlayer?.homeBaseLogic == null) return null;
+            count = (int)statPlayer.homeBaseLogic.CurrentTier;
         }
         else
         {

@@ -87,16 +87,23 @@ public class PathVisual : MonoBehaviour
     {
         bool isBlocked = _path.Logic.IsBlocked;
 
-        if (!isBlocked && !_path.Logic.IsLateral)
+        // Player.Players (lu par otherPlayer, utilisé dans CanTraverse) n'est pas encore rempli
+        // quand ZonePath.Start() dessine les chemins au tout premier chargement de la scène — un
+        // PathVisual.RefreshAll() ultérieur (Command.cs, GlobalSettings.cs) recalculera la couleur
+        // une fois la partie réellement démarrée.
+        if (!isBlocked && !_path.Logic.IsLateral && Player.Players != null && Player.Players.Length >= 2)
         {
             Player local = GlobalSettings.Instance.localPlayer;
-            bool isLowPlayer = local == GlobalSettings.Instance.LowPlayer;
+            if (local != null)
+            {
+                bool isLowPlayer = local == GlobalSettings.Instance.LowPlayer;
 
-            ZoneLogic fromLogic   = isLowPlayer ? _path.Logic.ZoneA  : _path.Logic.ZoneB;
-            ZoneManager fromZone  = isLowPlayer ? _path.ZoneA        : _path.ZoneB;
+                ZoneLogic fromLogic   = isLowPlayer ? _path.Logic.ZoneA  : _path.Logic.ZoneB;
+                ZoneManager fromZone  = isLowPlayer ? _path.ZoneA        : _path.ZoneB;
 
-            bool hasvision = !FogOfWarManager.Instance.IsZoneFogged(fromZone);
-            isBlocked = hasvision && !_path.Logic.CanTraverse(local, fromLogic, _path.Logic.RequiresFlying);
+                bool hasvision = !FogOfWarManager.Instance.IsZoneFogged(fromZone);
+                isBlocked = hasvision && !_path.Logic.CanTraverse(local, fromLogic, _path.Logic.RequiresFlying);
+            }
         }
 
         Color c = isBlocked ? _blockedColor : _openColor;

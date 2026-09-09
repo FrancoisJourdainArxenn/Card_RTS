@@ -9,8 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1803b7996b93605489e54de52222cd0f, type: 3}
-  m_Name: DamagedAbsorbed12
-  m_EditorClassIdentifier: Assembly-CSharp::StatThresholdUnlockConditionSO
-  Stat: 8
-  Threshold: 12
+  m_Script: {fileID: 11500000, guid: 47278d714b275d8439f23afcd9ab5bc5, type: 3}
+  m_Name: Tier5
+  m_EditorClassIdentifier: Assembly-CSharp::CondCounter
+  source: 2
+  owner: 0
+  stat: 0
+  condition: {fileID: 0}
+  resetCount: 0
+  comparison: 0
+  threshold: 5

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -34,11 +34,11 @@ public class TurnManager : MonoBehaviour
     // Embarquements en attente, résolus AVANT _soloMoveBuffer (voir FlushSoloBoardBuffer) pour qu'un
     // embarquement et le départ de son transporteur ordonnés le même tour se résolvent ensemble.
     private readonly List<(int passengerUniqueID, int transportUniqueID, int boardOrderPos)> _soloBoardBuffer = new();
-    // Issue du round de combat solo en cours, calculée dans DelayedBattleStart juste avant l'enqueue
-    // ordonné, consommée par AutoAdvanceFromBattleAfterCombat pour savoir si la transition normale
-    // vers EndBattle doit être sautée (partie déjà terminée via GameOverCommand). Miroir solo de
-    // GameNetworkManager._pendingRoundOutcome.
-    private ZoneCombatResolver.RoundOutcome? _lastRoundOutcome;
+    // Poses en attente (voir Player.PlayACreatureFromHandHidden), résolues AVANT _soloBoardBuffer/
+    // _soloMoveBuffer (une créature tout juste posée ce tour doit exister visuellement avant qu'on
+    // tente de la déplacer/l'embarquer au flush suivant, même si en pratique la logique — d'où
+    // viennent déjà les décisions d'embarquement/déplacement — ne dépend jamais du visuel).
+    private readonly List<(int cardUniqueID, int creatureUniqueID, int rowLocalPos, int baseID, Player owner)> _soloPlayBuffer = new();
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -53,6 +53,9 @@ public class TurnManager : MonoBehaviour
 
     }
 
+    [SerializeField] private bool debugForceVsAI = false;
+    [SerializeField] private GameObject enemyHandForDebug;
+
     void Start()
     {
         initdraw = GlobalSettings.Instance.initdraw;
@@ -60,7 +63,46 @@ public class TurnManager : MonoBehaviour
         //GameStart local
         if (!NetworkSessionData.IsNetworkSession)
         {
+            // debugForceVsAI ne fait que forcer le mode ON pour tester directement depuis BattleScene
+            // (sans passer par le menu) — il ne doit jamais écraser un IsVsAI déjà positionné par
+            // SoloConnectionPanel.LaunchGame() avant le chargement de la scène.
+            NetworkSessionData.IsVsAI = debugForceVsAI || NetworkSessionData.IsVsAI;
             OnGameStart();
+        }
+    }
+
+    // Active le bon TurnMaker (PlayerTurnMaker ou AITurnMaker) sur chaque joueur selon le mode —
+    // ne touche à rien en session réseau (l'IA n'y est jamais utilisée, voir NetworkSessionData.IsVsAI).
+    void ApplyTurnMakerModeForSoloSession()
+    {
+        Player aiPlayer = NetworkSessionData.IsVsAI ? GlobalSettings.Instance.TopPlayer : null;
+        foreach (Player p in Player.Players)
+        {
+            bool wantsAI = p == aiPlayer;
+            AITurnMaker ai = p.GetComponent<AITurnMaker>();
+            PlayerTurnMaker human = p.GetComponent<PlayerTurnMaker>();
+            if (ai != null) ai.enabled = wantsAI;
+            if (human != null) human.enabled = !wantsAI;
+        }
+
+        // La main adverse en clair (debug hotseat) n'a plus lieu d'être visible face à l'IA,
+        // sauf si l'IA active elle-même son propre toggle de debug (AITurnMaker.ShowHandForDebug).
+        // IMPORTANT : enemyHandForDebug porte le HandVisual FONCTIONNEL de l'IA (Player.handVisual du
+        // TopPlayer pointe dessus, voir la scène) — le désactiver (SetActive) casse le tirage de cartes
+        // de l'IA : les coroutines/tweens de GivePlayerACard tournent sur une hiérarchie inactive et
+        // n'appellent jamais Command.CommandExecutionComplete(), donc Command.CardDrawPending() reste
+        // bloqué pour toujours et la partie gèle en Regroup (silencieusement, aucune erreur). On ne
+        // touche donc plus qu'à HandVisual.HideFromView (alpha 0 par carte, GameObject toujours actif),
+        // jamais à l'état actif du GameObject. TakeCardsOpenly ne fait que tourner la carte à plat, ça
+        // ne cache pas son contenu — insuffisant seul pour masquer la main.
+        if (enemyHandForDebug != null)
+        {
+            AITurnMaker activeAi = aiPlayer != null ? aiPlayer.GetComponent<AITurnMaker>() : null;
+            bool showForAiDebug = activeAi != null && activeAi.ShowHandForDebug;
+            bool hide = NetworkSessionData.IsVsAI && !showForAiDebug;
+            HandVisual enemyHandVisual = enemyHandForDebug.GetComponent<HandVisual>();
+            if (enemyHandVisual != null)
+                enemyHandVisual.HideFromView = hide;
         }
     }
 
@@ -78,6 +120,9 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        if (!NetworkSessionData.IsNetworkSession)
+            ApplyTurnMakerModeForSoloSession();
+
         if (NetworkSessionData.IsNetworkSession)
         {
             foreach (Player p in Player.Players)
@@ -94,11 +139,20 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // Solo/hotseat : deck.playerDeck est déjà câblé directement dans l'Inspector (pas de
-            // sélection réseau à charger via GetDeckPresetForPlayer) — mais son CardPoolSO.baseAsset
-            // n'était jamais appliqué, contrairement au chemin réseau ci-dessus : le joueur gardait le
-            // BaseAsset par défaut de l'Inspector plutôt que celui du pool réellement utilisé
-            // (symptôme : mauvaise base/économie affichée en solo pour un deck avec un pool dédié).
+            // Solo/hotseat : le deck du joueur humain (LowPlayer) suit la sélection faite dans le
+            // menu (NetworkSessionData.SelectedDeckPresetIndex) au lieu de rester sur celui câblé
+            // dans l'Inspector ; celui de l'IA (TopPlayer) reste tel quel. Le BaseAsset du pool
+            // n'était jamais appliqué non plus, contrairement au chemin réseau ci-dessus : le joueur
+            // gardait le BaseAsset par défaut de l'Inspector plutôt que celui du pool réellement
+            // utilisé (symptôme : mauvaise base/économie affichée en solo pour un deck avec un pool
+            // dédié).
+            if (NetworkSessionData.SelectedDeckPresetIndex != -1)
+            {
+                DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(NetworkSessionData.SelectedDeckPresetIndex);
+                if (preset != null)
+                    GlobalSettings.Instance.LowPlayer.deck.LoadDeck(preset);
+            }
+
             foreach (Player p in Player.Players)
             {
                 BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.sharedPool?.baseAsset : null;
@@ -398,6 +452,7 @@ public class TurnManager : MonoBehaviour
         {
             if (currentPhase == TurnPhases.Command)
             {
+                FlushSoloPlayBuffer();
                 FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
                 ResolveStationaryTransportDisembarks();
@@ -414,7 +469,7 @@ public class TurnManager : MonoBehaviour
                 if (roundEnded)
                 {
                     foreach (Player p in Player.Players)
-                        p.GetComponent<TurnMaker>().OnTurnEnd();
+                        p.ActiveTurnMaker.OnTurnEnd();
                     currentRound++;
                 }
                 EnterPhase(next);
@@ -474,15 +529,15 @@ public class TurnManager : MonoBehaviour
         {
             case TurnPhases.Regroup:
                 // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
-                OnRoundStart?.Invoke(); 
+                OnRoundStart?.Invoke();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnRegroupPhaseStart();
+                    p.ActiveTurnMaker.OnRegroupPhaseStart();
                 StartCoroutine(AutoAdvanceFromRegroup());
                 break;
             case TurnPhases.Command:
                 // new ShowMessageCommand("Command", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnCommandPhaseEntered();
+                    p.ActiveTurnMaker.OnCommandPhaseEntered();
                 break;
             // case TurnPhases.BeginCombat: // désactivé temporairement — Command saute directement à Battle
             //     foreach (Player p in Player.Players)
@@ -506,13 +561,13 @@ public class TurnManager : MonoBehaviour
                 foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
                     r.OnBattlePhaseEnd();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnEndBattlePhaseEntered();
+                    p.ActiveTurnMaker.OnEndBattlePhaseEntered();
                 StartCoroutine(AutoAdvanceFromEndBattle());
                 break;
             case TurnPhases.EndTurn:
                 // new ShowMessageCommand("End", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
-                    p.GetComponent<TurnMaker>().OnEndPhaseEntered();
+                    p.ActiveTurnMaker.OnEndPhaseEntered();
                 StartCoroutine(AutoAdvanceFromEnd());
                 break;
         }
@@ -539,40 +594,74 @@ public class TurnManager : MonoBehaviour
         };
         phaseText.text = label;
     }
+    // Battle Phase en 3 étapes séquentielles — Rencontres, puis Base principale, puis Bases
+    // neutres (voir ZoneCombatResolver.BattleStage). Chaque étape est planifiée avec le plateau tel
+    // qu'il est APRÈS les morts et déplacements de l'étape précédente, contrairement à l'ancien
+    // comportement où tout était planifié d'un coup avant la moindre animation — c'est ce qui permet
+    // à une créature survivante d'un combat de rencontre, relocalisée immédiatement après (voir
+    // CommandMoveTracker.ApplyCrossingDispatch ci-dessous), de réellement participer au combat de
+    // sa zone d'arrivée plutôt que d'y apparaître après coup, une fois l'issue déjà figée.
     IEnumerator DelayedBattleStart()
     {
         yield return new WaitForSeconds(combatSequenceDelay);
-        Debug.Log($"[Battle] DelayedBattleStart — {ZoneCombatResolver.AllResolvers.Count} resolver(s) à traiter");
-        int idx = 0;
-        foreach (ZoneCombatResolver r in ZoneCombatResolver.AllResolvers)
+
+        // Une fois par round, avant la planification de la toute première étape (Rencontres) — sur
+        // chaque machine (sans effet côté client : seul le "planner", solo ou serveur, appelle
+        // jamais BuildAttackQueue). Voir ZoneCombatResolver.MarkAttackedThisRound.
+        ZoneCombatResolver.ResetAttackedThisRound();
+
+        if (NetworkSessionData.IsNetworkSession)
         {
-            Debug.Log($"[Battle] OnBattlePhaseStart resolver #{idx} ({r.name})");
-            try
-            {
-                r.OnBattlePhaseStart();
-            }
-            catch (System.Exception e)
-            {
-                // Sans ce try/catch, une exception ici arrête la coroutine : tous les resolvers suivants
-                // dans cette liste (donc tous leurs combats) ne sont jamais traités, et AutoSubmitBattleAssignment
-                // (réseau) n'est jamais appelé non plus — ce qui bloque la partie pour les deux joueurs.
-                Debug.LogError($"[Battle] EXCEPTION dans OnBattlePhaseStart du resolver #{idx} ({r.name}) — les resolvers suivants auraient été SAUTÉS sans ce filet: {e}");
-            }
-            idx++;
-        }
-        Debug.Log($"[Battle] Tous les resolvers traités (planification) — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
-        if (!NetworkSessionData.IsNetworkSession)
-        {
-            // Planification de TOUS les resolvers terminée avant tout enqueue (voir
-            // ZoneCombatResolver.OnBattlePhaseStart) — le round est donc déjà connu ici, avant la
-            // moindre animation, exactement comme côté réseau (SubmitBattleAssignmentServerRpc).
-            ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
-            _lastRoundOutcome = outcome;
-            ZoneCombatResolver.EnqueueAllPlannedBattleCommandsSolo(outcome);
-            StartCoroutine(AutoAdvanceFromBattleAfterCombat());
-        }
-        else
+            // Le séquençage par étapes est géré côté serveur (voir GameNetworkManager.
+            // ServerPlanAndBroadcastStage) — ce client ne fait que signaler qu'il est prêt.
             AutoSubmitBattleAssignment();
+            yield break;
+        }
+
+        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
+        Debug.Log($"[Battle] DelayedBattleStart (solo, par étapes) — rencontres={plan.EncounterResolverIdxs.Count} baseprincipale={plan.MainBaseResolverIdxs.Count} basesneutres={plan.NeutralBaseResolverIdxs.Count}");
+
+        // Étape 1 — Rencontres.
+        ZoneCombatResolver.PlanStage(plan.EncounterResolverIdxs);
+        Debug.Log("[DiagStage] Étape 1 planifiée");
+        ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.EncounterResolverIdxs);
+        Debug.Log("[DiagStage] Étape 1 enfilée");
+        yield return null; // laisser la file démarrer avant d'attendre qu'elle se vide (voir DrainPendingDeaths)
+        yield return StartCoroutine(DrainPendingDeaths());
+        Debug.Log("[DiagStage] Étape 1 — DrainPendingDeaths terminé");
+        // Déplacement immédiat des survivantes de croisement — déplacé ici (au lieu de la fin de
+        // toute la Battle Phase, voir AutoAdvanceFromEndBattle) précisément pour qu'elles arrivent
+        // avant la planification de l'étape suivante.
+        CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
+        Debug.Log($"[DiagStage] ComputeCrossingDispatch — relocations={crossingDispatch.Relocations.Count}");
+        CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
+        Debug.Log("[DiagStage] ApplyCrossingDispatch terminé — planification étape 2");
+
+        // Étape 2 — Base principale : planifiée avec le plateau à jour. C'est ici, et seulement ici,
+        // que l'issue du round est connue (voir ComputeRoundOutcome).
+        ZoneCombatResolver.PlanStage(plan.MainBaseResolverIdxs);
+        Debug.Log("[DiagStage] Étape 2 planifiée");
+        ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
+        Debug.Log($"[DiagStage] ComputeRoundOutcome — Decisive={outcome.Decisive} First={outcome.FirstMainBaseResolverIdx} Second={outcome.SecondMainBaseResolverIdx}");
+        ZoneCombatResolver.EnqueueMainBaseBattleCommandsSolo(outcome);
+        Debug.Log("[DiagStage] Étape 2 enfilée");
+        if (outcome.Decisive)
+        {
+            // GameOverCommand déjà enfilé inline (voir EnqueueMainBaseBattleCommands) — la partie est
+            // terminée, l'étape Bases neutres n'a plus lieu d'être.
+            Debug.Log("[Battle] Round décisif en étape Base principale — étape Bases neutres sautée (partie terminée)");
+            yield break;
+        }
+        yield return null;
+        yield return StartCoroutine(DrainPendingDeaths());
+        Debug.Log("[DiagStage] Étape 2 — DrainPendingDeaths terminé — planification étape 3");
+
+        // Étape 3 — Bases neutres.
+        ZoneCombatResolver.PlanStage(plan.NeutralBaseResolverIdxs);
+        ZoneCombatResolver.EnqueuePlannedBattleCommandsSolo(plan.NeutralBaseResolverIdxs);
+        Debug.Log("[DiagStage] Étape 3 enfilée — fin de DelayedBattleStart");
+
+        StartCoroutine(AutoAdvanceFromBattleAfterCombat());
     }
 
     public static void RefreshAllPlayableHighlights()
@@ -684,6 +773,8 @@ public class TurnManager : MonoBehaviour
             AdvancePhaseWhenAllReady();
     }
 
+    // Appelée uniquement quand le round n'est PAS décisif (voir DelayedBattleStart, étape Base
+    // principale) — le cas décisif court-circuite déjà cette coroutine plus haut.
     IEnumerator AutoAdvanceFromBattleAfterCombat()
     {
         yield return null; // one frame so the queue can start
@@ -696,16 +787,6 @@ public class TurnManager : MonoBehaviour
                 Debug.LogWarning($"[Battle] TOUJOURS bloqué après {Time.realtimeSinceStartup - t0:F1}s — playingQueue={Command.playingQueue} restants={Command.CommandQueue.Count} — la file de commandes de combat est probablement gelée");
             return stuck;
         });
-        bool wasDecisive = _lastRoundOutcome?.Decisive ?? false;
-        _lastRoundOutcome = null;
-        if (wasDecisive)
-        {
-            // Round décisif — GameOverCommand a déjà tourné (voir ZoneCombatResolver.
-            // EnqueueOrderedBattleCommands). Pas de transition vers EndBattle : currentPhase reste
-            // figé sur Battle, les contrôles sont déjà désactivés.
-            Debug.Log("[Battle] Round décisif — transition vers EndBattle sautée (partie terminée)");
-            yield break;
-        }
 
         Debug.Log($"[Battle] File vidée après {Time.realtimeSinceStartup - t0:F1}s → passage à EndBattle");
         if (currentPhase == TurnPhases.Battle)
@@ -752,21 +833,17 @@ public class TurnManager : MonoBehaviour
             List<DeathDrainRecorder.DrainEvent> events = DeathDrainRecorder.End();
             Debug.Log($"[AutoAdvanceFromEnd][Server] Drain terminé — {events.Count} événement(s), broadcast vers clients");
 
-            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
-            if (crossingDispatch.Relocations.Count > 0)
-            {
-                CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
-                GameNetworkManager.Instance.BroadcastCrossingDispatch(crossingDispatch);
-            }
-
+            // Le déplacement des survivantes de croisement se fait désormais juste après l'étape
+            // Rencontres (voir GameNetworkManager.ServerDrainStageAndBroadcast) — plus rien à
+            // relocaliser ici, tous les CrossingZoneSlot de ce round ont déjà été libérés.
             GameNetworkManager.Instance.BroadcastDeathDrain(events, TurnPhases.EndTurn);
             // La transition vers EndTurn est déclenchée par BroadcastDeathDrainClientRpc sur tous les clients.
         }
         else
         {
+            // Même remarque : le déplacement des survivantes de croisement se fait désormais juste
+            // après l'étape Rencontres (voir DelayedBattleStart) — rien à relocaliser ici.
             yield return StartCoroutine(DrainPendingDeaths());
-            CommandMoveTracker.CrossingDispatchResult crossingDispatch = CommandMoveTracker.ComputeCrossingDispatch();
-            CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
             EnterPhase(TurnPhases.EndTurn);
         }
     }
@@ -776,6 +853,24 @@ public class TurnManager : MonoBehaviour
         yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete || Command.playingQueue);
         if (!NetworkSessionData.IsNetworkSession || Unity.Netcode.NetworkManager.Singleton.IsServer)
             AdvancePhaseWhenAllReady();
+    }
+
+    // Voir Player.PlayACreatureFromHandHidden : la logique (ressource, main, CreatureLogic, OnPlay)
+    // est déjà résolue à l'appel, seule la révélation visuelle (PlayACreatureCommand) attend ce flush.
+    public void EnqueueSoloPlay(int cardUniqueID, int creatureUniqueID, int rowLocalPos, int baseID, Player owner)
+    {
+        _soloPlayBuffer.Add((cardUniqueID, creatureUniqueID, rowLocalPos, baseID, owner));
+    }
+
+    // Révèle, dans l'ordre où elles ont été jouées, chaque créature mise en attente ce tour —
+    // NetworkFlushPlayCreature fait exactement ce que PlayACreatureFromHand aurait fait tout de suite
+    // (new PlayACreatureCommand(...).AddToQueue() + HighlightPlayableCards), déjà éprouvé côté réseau
+    // pour ce même rôle (révéler chez les clients qui n'ont pas vu la pose en direct).
+    private void FlushSoloPlayBuffer()
+    {
+        foreach (var (cardUniqueID, creatureUniqueID, rowLocalPos, baseID, owner) in _soloPlayBuffer)
+            owner.NetworkFlushPlayCreature(cardUniqueID, creatureUniqueID, rowLocalPos, baseID);
+        _soloPlayBuffer.Clear();
     }
 
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
@@ -792,9 +887,45 @@ public class TurnManager : MonoBehaviour
             creature.IsPendingMove = false;
     }
 
+    // Créatures dont le déplacement est en file (EnqueueSoloMove) mais pas encore flush : leur BaseID
+    // logique ne change qu'au flush (voir FlushSoloMoveBuffer -> CreatureLogic.Move), donc rien
+    // d'autre (ni PendingRevealCount côté pose, ni l'état visuel de la table) ne les compte encore
+    // comme occupant la rangée de destination. Sans ce compteur, plusieurs renforts envoyés vers la
+    // même rangée dans la même phase Command (ex: AITurnMaker.DefendBase) ne se voient pas les uns les
+    // autres et peuvent tous passer le check RowHasSpace avant d'arriver ensemble au flush, dépassant
+    // le max de la rangée.
+    public int PendingIncomingMoveCount(int targetBaseID, bool isMelee)
+    {
+        int count = 0;
+        foreach (var (creatureUniqueID, moveTargetBaseID, _) in _soloMoveBuffer)
+        {
+            if (moveTargetBaseID != targetBaseID) continue;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature)) continue;
+            if (creature.IsMelee == isMelee && !creature.IsPendingDeath && creature.Health > 0)
+                count++;
+        }
+        return count;
+    }
+
+    // Même idée que PendingIncomingMoveCount, mais par zone plutôt que par rangée melee/ranged
+    // séparément — utilisé par AITurnMaker.DefenseThresholdMet, qui compte toutes les unités (mêlée +
+    // distance confondues) déjà présentes ou en route vers une zone défendue.
+    public int PendingIncomingMoveCountForZone(ZoneLogic targetZone)
+    {
+        int count = 0;
+        foreach (var (creatureUniqueID, moveTargetBaseID, _) in _soloMoveBuffer)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature)) continue;
+            if (creature.IsPendingDeath || creature.Health <= 0) continue;
+            ZoneLogic moveTargetZone = creature.owner.GetPlayerAreaByID(moveTargetBaseID)?.parentZone?.Logic;
+            if (moveTargetZone == targetZone) count++;
+        }
+        return count;
+    }
+
     public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID, int boardOrderPos)
     {
-        Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID}, boardOrderPos={boardOrderPos} (buffer now {_soloBoardBuffer.Count + 1})");
+        //Debug.Log($"[Transport] EnqueueSoloBoard — passenger={passengerUniqueID}, transport={transportUniqueID}, boardOrderPos={boardOrderPos} (buffer now {_soloBoardBuffer.Count + 1})");
         _soloBoardBuffer.Add((passengerUniqueID, transportUniqueID, boardOrderPos));
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = true;
@@ -803,14 +934,14 @@ public class TurnManager : MonoBehaviour
     public void CancelSoloBoard(int passengerUniqueID)
     {
         int removed = _soloBoardBuffer.RemoveAll(b => b.passengerUniqueID == passengerUniqueID);
-        Debug.Log($"[Transport] CancelSoloBoard — passenger={passengerUniqueID}, removed={removed}");
+        //Debug.Log($"[Transport] CancelSoloBoard — passenger={passengerUniqueID}, removed={removed}");
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(passengerUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = false;
     }
 
     private void FlushSoloBoardBuffer()
     {
-        Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
+        //Debug.Log($"[Transport] FlushSoloBoardBuffer — resolving {_soloBoardBuffer.Count} board(s)");
 
         // Mêlée avant distance, puis gauche avant droite dans la rangée d'origine (boardOrderPos, voir
         // DragCreatureActions.Board) — pas l'ordre chronologique des drags. Un tri global (toutes
@@ -894,7 +1025,7 @@ public class TurnManager : MonoBehaviour
         if (roundEnded)
         {
             foreach (Player p in Player.Players)
-                p.GetComponent<TurnMaker>().OnTurnEnd();
+                p.ActiveTurnMaker.OnTurnEnd();
             currentRound++;
         }
         EnterPhase(next);
