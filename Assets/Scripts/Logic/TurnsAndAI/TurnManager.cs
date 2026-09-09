@@ -34,6 +34,11 @@ public class TurnManager : MonoBehaviour
     // Embarquements en attente, résolus AVANT _soloMoveBuffer (voir FlushSoloBoardBuffer) pour qu'un
     // embarquement et le départ de son transporteur ordonnés le même tour se résolvent ensemble.
     private readonly List<(int passengerUniqueID, int transportUniqueID, int boardOrderPos)> _soloBoardBuffer = new();
+    // Poses en attente (voir Player.PlayACreatureFromHandHidden), résolues AVANT _soloBoardBuffer/
+    // _soloMoveBuffer (une créature tout juste posée ce tour doit exister visuellement avant qu'on
+    // tente de la déplacer/l'embarquer au flush suivant, même si en pratique la logique — d'où
+    // viennent déjà les décisions d'embarquement/déplacement — ne dépend jamais du visuel).
+    private readonly List<(int cardUniqueID, int creatureUniqueID, int rowLocalPos, int baseID, Player owner)> _soloPlayBuffer = new();
 
     public TurnPhases CurrentPhase => currentPhase;
     public int CurrentRound => currentRound;
@@ -82,11 +87,22 @@ public class TurnManager : MonoBehaviour
 
         // La main adverse en clair (debug hotseat) n'a plus lieu d'être visible face à l'IA,
         // sauf si l'IA active elle-même son propre toggle de debug (AITurnMaker.ShowHandForDebug).
+        // IMPORTANT : enemyHandForDebug porte le HandVisual FONCTIONNEL de l'IA (Player.handVisual du
+        // TopPlayer pointe dessus, voir la scène) — le désactiver (SetActive) casse le tirage de cartes
+        // de l'IA : les coroutines/tweens de GivePlayerACard tournent sur une hiérarchie inactive et
+        // n'appellent jamais Command.CommandExecutionComplete(), donc Command.CardDrawPending() reste
+        // bloqué pour toujours et la partie gèle en Regroup (silencieusement, aucune erreur). On ne
+        // touche donc plus qu'à HandVisual.HideFromView (alpha 0 par carte, GameObject toujours actif),
+        // jamais à l'état actif du GameObject. TakeCardsOpenly ne fait que tourner la carte à plat, ça
+        // ne cache pas son contenu — insuffisant seul pour masquer la main.
         if (enemyHandForDebug != null)
         {
             AITurnMaker activeAi = aiPlayer != null ? aiPlayer.GetComponent<AITurnMaker>() : null;
             bool showForAiDebug = activeAi != null && activeAi.ShowHandForDebug;
-            enemyHandForDebug.SetActive(!NetworkSessionData.IsVsAI || showForAiDebug);
+            bool hide = NetworkSessionData.IsVsAI && !showForAiDebug;
+            HandVisual enemyHandVisual = enemyHandForDebug.GetComponent<HandVisual>();
+            if (enemyHandVisual != null)
+                enemyHandVisual.HideFromView = hide;
         }
     }
 
@@ -123,11 +139,20 @@ public class TurnManager : MonoBehaviour
         }
         else
         {
-            // Solo/hotseat : deck.playerDeck est déjà câblé directement dans l'Inspector (pas de
-            // sélection réseau à charger via GetDeckPresetForPlayer) — mais son CardPoolSO.baseAsset
-            // n'était jamais appliqué, contrairement au chemin réseau ci-dessus : le joueur gardait le
-            // BaseAsset par défaut de l'Inspector plutôt que celui du pool réellement utilisé
-            // (symptôme : mauvaise base/économie affichée en solo pour un deck avec un pool dédié).
+            // Solo/hotseat : le deck du joueur humain (LowPlayer) suit la sélection faite dans le
+            // menu (NetworkSessionData.SelectedDeckPresetIndex) au lieu de rester sur celui câblé
+            // dans l'Inspector ; celui de l'IA (TopPlayer) reste tel quel. Le BaseAsset du pool
+            // n'était jamais appliqué non plus, contrairement au chemin réseau ci-dessus : le joueur
+            // gardait le BaseAsset par défaut de l'Inspector plutôt que celui du pool réellement
+            // utilisé (symptôme : mauvaise base/économie affichée en solo pour un deck avec un pool
+            // dédié).
+            if (NetworkSessionData.SelectedDeckPresetIndex != -1)
+            {
+                DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(NetworkSessionData.SelectedDeckPresetIndex);
+                if (preset != null)
+                    GlobalSettings.Instance.LowPlayer.deck.LoadDeck(preset);
+            }
+
             foreach (Player p in Player.Players)
             {
                 BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.sharedPool?.baseAsset : null;
@@ -427,6 +452,7 @@ public class TurnManager : MonoBehaviour
         {
             if (currentPhase == TurnPhases.Command)
             {
+                FlushSoloPlayBuffer();
                 FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
                 ResolveStationaryTransportDisembarks();
@@ -829,6 +855,24 @@ public class TurnManager : MonoBehaviour
             AdvancePhaseWhenAllReady();
     }
 
+    // Voir Player.PlayACreatureFromHandHidden : la logique (ressource, main, CreatureLogic, OnPlay)
+    // est déjà résolue à l'appel, seule la révélation visuelle (PlayACreatureCommand) attend ce flush.
+    public void EnqueueSoloPlay(int cardUniqueID, int creatureUniqueID, int rowLocalPos, int baseID, Player owner)
+    {
+        _soloPlayBuffer.Add((cardUniqueID, creatureUniqueID, rowLocalPos, baseID, owner));
+    }
+
+    // Révèle, dans l'ordre où elles ont été jouées, chaque créature mise en attente ce tour —
+    // NetworkFlushPlayCreature fait exactement ce que PlayACreatureFromHand aurait fait tout de suite
+    // (new PlayACreatureCommand(...).AddToQueue() + HighlightPlayableCards), déjà éprouvé côté réseau
+    // pour ce même rôle (révéler chez les clients qui n'ont pas vu la pose en direct).
+    private void FlushSoloPlayBuffer()
+    {
+        foreach (var (cardUniqueID, creatureUniqueID, rowLocalPos, baseID, owner) in _soloPlayBuffer)
+            owner.NetworkFlushPlayCreature(cardUniqueID, creatureUniqueID, rowLocalPos, baseID);
+        _soloPlayBuffer.Clear();
+    }
+
     public void EnqueueSoloMove(int creatureUniqueID, int targetBaseID, int tablePos)
     {
         _soloMoveBuffer.Add((creatureUniqueID, targetBaseID, tablePos));
@@ -841,6 +885,42 @@ public class TurnManager : MonoBehaviour
         _soloMoveBuffer.RemoveAll(m => m.creatureUniqueID == creatureUniqueID);
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature))
             creature.IsPendingMove = false;
+    }
+
+    // Créatures dont le déplacement est en file (EnqueueSoloMove) mais pas encore flush : leur BaseID
+    // logique ne change qu'au flush (voir FlushSoloMoveBuffer -> CreatureLogic.Move), donc rien
+    // d'autre (ni PendingRevealCount côté pose, ni l'état visuel de la table) ne les compte encore
+    // comme occupant la rangée de destination. Sans ce compteur, plusieurs renforts envoyés vers la
+    // même rangée dans la même phase Command (ex: AITurnMaker.DefendBase) ne se voient pas les uns les
+    // autres et peuvent tous passer le check RowHasSpace avant d'arriver ensemble au flush, dépassant
+    // le max de la rangée.
+    public int PendingIncomingMoveCount(int targetBaseID, bool isMelee)
+    {
+        int count = 0;
+        foreach (var (creatureUniqueID, moveTargetBaseID, _) in _soloMoveBuffer)
+        {
+            if (moveTargetBaseID != targetBaseID) continue;
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature)) continue;
+            if (creature.IsMelee == isMelee && !creature.IsPendingDeath && creature.Health > 0)
+                count++;
+        }
+        return count;
+    }
+
+    // Même idée que PendingIncomingMoveCount, mais par zone plutôt que par rangée melee/ranged
+    // séparément — utilisé par AITurnMaker.DefenseThresholdMet, qui compte toutes les unités (mêlée +
+    // distance confondues) déjà présentes ou en route vers une zone défendue.
+    public int PendingIncomingMoveCountForZone(ZoneLogic targetZone)
+    {
+        int count = 0;
+        foreach (var (creatureUniqueID, moveTargetBaseID, _) in _soloMoveBuffer)
+        {
+            if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureUniqueID, out CreatureLogic creature)) continue;
+            if (creature.IsPendingDeath || creature.Health <= 0) continue;
+            ZoneLogic moveTargetZone = creature.owner.GetPlayerAreaByID(moveTargetBaseID)?.parentZone?.Logic;
+            if (moveTargetZone == targetZone) count++;
+        }
+        return count;
     }
 
     public void EnqueueSoloBoard(int passengerUniqueID, int transportUniqueID, int boardOrderPos)

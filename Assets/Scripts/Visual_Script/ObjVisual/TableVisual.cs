@@ -61,6 +61,7 @@ public class TableVisual : MonoBehaviour
     {
         List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
         return row.Count(go => go != null
+            && !IsGhost(go)
             && !go.GetComponent<OneCreatureManager>().HasPendingMove);
     }
 
@@ -71,7 +72,15 @@ public class TableVisual : MonoBehaviour
     {
         Player owner = ownerArea?.GetOwnerPlayer();
         int max = owner != null ? owner.GetMaxCreaturePerRow(ownerArea.baseID) : GlobalSettings.Instance.MaxCreaturePerRow;
-        return EffectiveRowCount(isMelee) + extraCommitted < max;
+        // Déplacements déjà enfilés (EnqueueSoloMove) vers cette rangée mais pas encore flush — voir
+        // TurnManager.PendingIncomingMoveCount : sans ça, plusieurs renforts convergeant sur la même
+        // rangée dans la même phase Command ne se voient pas entre eux.
+        int pendingIncomingMoves = ownerArea != null && TurnManager.Instance != null
+            ? TurnManager.Instance.PendingIncomingMoveCount(ownerArea.baseID, isMelee)
+            : 0;
+        bool hasSpace = EffectiveRowCount(isMelee) + extraCommitted + pendingIncomingMoves < max;
+        Debug.Log($"[RowCheck] owner={owner?.name} base={ownerArea?.baseID} melee={isMelee} count={EffectiveRowCount(isMelee)} pending={extraCommitted} incomingMoves={pendingIncomingMoves} max={max} hasSpace={hasSpace}");
+        return hasSpace;
     }
 
 

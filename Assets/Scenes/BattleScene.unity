@@ -1464,7 +1464,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91c6c42a2065e3f45b750afa3360f33b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FogOfWarManager
-  debugDisableFog: 1
+  debugDisableFog: 0
 --- !u!4 &318066849
 Transform:
   m_ObjectHideFlags: 0
@@ -3534,6 +3534,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandVisual
   owner: 0
   TakeCardsOpenly: 1
+  HideFromView: 0
   slots: {fileID: 662666358}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
@@ -7461,6 +7462,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HandVisual
   owner: 1
   TakeCardsOpenly: 1
+  HideFromView: 0
   slots: {fileID: 1438455305}
   DrawPreviewSpot: {fileID: 837471976}
   DeckTransform: {fileID: 1110240074}
@@ -8954,7 +8956,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1741809982
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9313,7 +9315,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d055d7a0b148b46418a9b190fd711556, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AITurnMaker
-  ShowHandForDebug: 1
+  ShowHandForDebug: 0
 --- !u!1 &1791882149
 GameObject:
   m_ObjectHideFlags: 0

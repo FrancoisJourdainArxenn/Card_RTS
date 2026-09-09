@@ -5839,6 +5839,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoloConnectionPanel
   battleSceneName: BattleScene
+  mapDropdown: {fileID: 736175126}
+  menuRegistry: {fileID: 11400000, guid: 21f3b0131c441fc44a8ede70531fcee7, type: 2}
 --- !u!224 &1093927072
 RectTransform:
   m_ObjectHideFlags: 0

@@ -713,6 +713,38 @@ public class Player : MonoBehaviour, ILivable
         HighlightPlayableCards();
     }
 
+    // Variante "cachée" de PlayACreatureFromHand : résout tout de suite la logique (ressource, main,
+    // CreatureLogic, OnPlay) exactement comme la version normale, mais NE révèle PAS le visuel tout de
+    // suite — au lieu de créer la PlayACreatureCommand ici, on la met en file dans
+    // TurnManager.EnqueueSoloPlay, résolue seulement au flush de fin de phase Command (voir
+    // FlushSoloPlayBuffer / NetworkFlushPlayCreature, qui fait exactement ce que ferait cette commande
+    // si elle avait été créée tout de suite). Utilisée par l'IA (voir AITurnMaker.PlayCreature) pour
+    // que ses créatures n'apparaissent sur la table qu'à la fin de la phase, comme un vrai adversaire
+    // réseau — PendingRevealCount compte déjà correctement cette créature comme "en attente" pendant
+    // tout l'intervalle (elle est bien dans playedCards.Creatures mais n'a encore aucun GameObject).
+    public void PlayACreatureFromHandHidden(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea)
+        => PlayACreatureFromHandHidden(playedCard, rowLocalPos, selectedPArea, null);
+
+    public void PlayACreatureFromHandHidden(CardLogic playedCard, int rowLocalPos, PlayerArea selectedPArea, List<PendingEffectSelection> preResolvedSelections)
+    {
+        MainRessourceAvailable -= playedCard.MainCost;
+        matchStats.Add(MatchStatType.CardsPlayed);
+        matchStats.AddSubTypePlayed(playedCard.ca.subType);
+        int baseID       = selectedPArea.baseID;
+        int logicalIndex = GetLogicalInsertIndex(playedCard.ca.melee, baseID, rowLocalPos);
+
+        CreatureLogic newCreature = new CreatureLogic(this, playedCard.ca, baseID);
+        playedCards.Creatures.Insert(logicalIndex, newCreature);
+        FogOfWarManager.Refresh();
+
+        TurnManager.Instance.EnqueueSoloPlay(playedCard.UniqueCardID, newCreature.UniqueCreatureID, rowLocalPos, baseID, this);
+        EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, Target = null, Source = newCreature }, preResolvedSelections);
+        EffectRegistry.NotifyCardPlayed(this, newCreature);
+        hand.CardsInHand.Remove(playedCard);
+        ClearReservedCardIfPlayed(playedCard);
+        HighlightPlayableCards();
+    }
+
     // Index d'insertion dans playedCards.Creatures pour maintenir [melee G→D, ranged G→D]
     public int GetLogicalInsertIndex(bool isMelee, int baseID, int rowLocalPos)
     {

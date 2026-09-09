@@ -64,6 +64,12 @@ public class HoverPreview : MonoBehaviour
     {
 
         if (BuildingShopVisual.IsOpen) return;
+        // Carte d'une main cachée (voir HandVisual.HideFromView, ex: main de l'IA face à un joueur
+        // humain) : OnMouseEnter réagit au collider physique de la carte, indépendant du CanvasGroup.
+        // alpha=0/blocksRaycasts=false posé sur cette même carte (qui ne bloque que le raycast UI) —
+        // sans ce garde, survoler l'emplacement (pourtant invisible) déclenchait quand même le popup
+        // CardPreviewUI ci-dessous, révélant son contenu réel.
+        if (IsHiddenHandCard()) return;
         OverCollider = true;
         TryActivateEnemyGlow();
         GetComponentInParent<OneCreatureManager>()?.SetHovered(true);
@@ -144,6 +150,13 @@ public class HoverPreview : MonoBehaviour
         CardPreviewUI.Instance?.Show(asset, previewOffset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature, sourceBuilding);
     }
 
+
+    private bool IsHiddenHandCard()
+    {
+        OneCardManager cardManager = GetComponentInParent<OneCardManager>();
+        return cardManager != null && cardManager.owner != null && cardManager.owner.handVisual != null
+            && cardManager.owner.handVisual.HideFromView;
+    }
 
     private static void StopAllPreviews()
     {
