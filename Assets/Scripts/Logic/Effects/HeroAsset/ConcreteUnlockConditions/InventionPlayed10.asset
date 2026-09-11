@@ -10,7 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96cef1d7f20c0ea478d2015d61be3154, type: 3}
-  m_Name: InventionPlayed8
+  m_Name: InventionPlayed10
   m_EditorClassIdentifier: Assembly-CSharp::SubTypePlayedUnlockCondition
   RequiredSubType: 10
-  Threshold: 8
+  Mode: 0
+  Threshold: 10

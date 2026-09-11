@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749568aa95f8c4c4d9bb6ae32d7cc06f, type: 3}
+  m_Name: GreaterInventionAdded
+  m_EditorClassIdentifier: Assembly-CSharp::ReplaceCardEffectSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 0}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
+  TargetCard: {fileID: 11400000, guid: e71d0fc941d06504db1a1c3865cb2f2d, type: 2}
+  OldEffect: {fileID: 11400000, guid: dac039294bee7fb4692eca44aaea358d, type: 2}
+  NewEffect: {fileID: 11400000, guid: 2daca99ececad31489d2d8fbb64c9d40, type: 2}

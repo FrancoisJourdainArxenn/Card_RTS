@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
-  m_Name: GenerateGreatInventions
+  m_Name: GenerateGreatInventions_0Cost
   m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
   Description: 
   EffectVisual:
@@ -22,9 +22,9 @@ MonoBehaviour:
     onSource: 1
     vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
   CardPool:
-  - {fileID: 11400000, guid: 32ff7d0df00fd3143bedf28c89c12412, type: 2}
-  - {fileID: 11400000, guid: a8332d5b786769543a00fddb0e9156a3, type: 2}
-  - {fileID: 11400000, guid: ad434d014d189264db86ef8b5dc676e8, type: 2}
-  - {fileID: 11400000, guid: 2a17ef53a0c8bc340911894e305d37ec, type: 2}
-  - {fileID: 11400000, guid: 168ed24ee53561d4da0b93aef684f787, type: 2}
+  - {fileID: 11400000, guid: 4286de770a4b1524ba89637540efec45, type: 2}
+  - {fileID: 11400000, guid: a52e01c3b40057945bef820ebb74f57d, type: 2}
+  - {fileID: 11400000, guid: a9dc0a53afb553342b26a6946e64a5ec, type: 2}
+  - {fileID: 11400000, guid: 90c0429e079b73b428a830c73c83f24e, type: 2}
+  - {fileID: 11400000, guid: ba9b42c28b651054ca64a22df5196dab, type: 2}
   CardCount: 1

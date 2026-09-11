@@ -10,21 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Engineer
+  m_Name: Mad Engineer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
-  tier: 3
-  Description: Reduce by 1 turn the time it takes for your <i>Research Labs</i> to
-    produce an Invention.
-  CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
+  tier: 4
+  Description: When you play an Invention, I gain +1/+1.
+  CardImage: {fileID: 21300000, guid: ec9706a28d59ec04ab1de74a3baec7d9, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 1
+  Attack: 1
+  MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -32,32 +31,32 @@ MonoBehaviour:
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
-  ReferencedCards:
-  - {fileID: 11400000, guid: e71d0fc941d06504db1a1c3865cb2f2d, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Smarter, Faster, Better
-    Effect: {fileID: 11400000, guid: 8382976f7b4f28847bb671cbac45bb83, type: 2}
-    Trigger: 2
-    Condition: {fileID: 0}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 17
+    Condition: {fileID: 11400000, guid: ec7e6e658c7ba104884d3557261ed6ef, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: 00250e7d57c4ebf499822a48d74fb0c9, type: 2}
+        onlySource: 1
+        queries: []
         requiresPlayerSelection: 0
-      affectedElements: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 1
+        includesEventSubject: 0
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:

@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
-  m_Name: GenerateGreatInventions
-  m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
+  m_Script: {fileID: 11500000, guid: ce0a9c79f2052124aad14b514c62f792, type: 3}
+  m_Name: ChoseGreaterInvention
+  m_EditorClassIdentifier: Assembly-CSharp::ChooseOneSO
   Description: 
   EffectVisual:
     vfxPrefab: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
@@ -19,7 +19,7 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
-    onSource: 1
+    onSource: 0
     vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
   CardPool:
   - {fileID: 11400000, guid: 32ff7d0df00fd3143bedf28c89c12412, type: 2}
@@ -27,4 +27,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ad434d014d189264db86ef8b5dc676e8, type: 2}
   - {fileID: 11400000, guid: 2a17ef53a0c8bc340911894e305d37ec, type: 2}
   - {fileID: 11400000, guid: 168ed24ee53561d4da0b93aef684f787, type: 2}
-  CardCount: 1
+  ChooseBetweenCount: 3

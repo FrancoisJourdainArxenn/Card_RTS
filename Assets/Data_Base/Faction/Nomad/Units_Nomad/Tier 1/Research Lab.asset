@@ -10,55 +10,45 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Engineer
+  m_Name: Research Lab
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 6
-  tier: 3
-  Description: Reduce by 1 turn the time it takes for your <i>Research Labs</i> to
-    produce an Invention.
-  CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
+  subType: 11
+  tier: 1
+  Description: Every three turns, chose an Invention.
+  CardImage: {fileID: 21300000, guid: 4df5f885d436ac74cbfae8f89616a9f1, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 1
+  Attack: 0
+  MaxHealth: 3
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 1
+  MoveSpeed: 0
   Celerity: 0
   melee: 0
   Flying: 0
   TransportCapacity: 0
-  IsStructureUnit: 0
+  IsStructureUnit: 1
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
-  Keywords: []
-  ReferencedCards:
-  - {fileID: 11400000, guid: e71d0fc941d06504db1a1c3865cb2f2d, type: 2}
+  Keywords:
+  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Smarter, Faster, Better
-    Effect: {fileID: 11400000, guid: 8382976f7b4f28847bb671cbac45bb83, type: 2}
+  - EffectName: Eureka !
+    Effect: {fileID: 11400000, guid: dac039294bee7fb4692eca44aaea358d, type: 2}
     Trigger: 2
-    Condition: {fileID: 0}
+    Condition: {fileID: 11400000, guid: 232bed68ba72c1a4d9bb44e153f7392d, type: 2}
     Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 11400000, guid: 00250e7d57c4ebf499822a48d74fb0c9, type: 2}
-        requiresPlayerSelection: 0
+      effectTargets: []
       affectedElements: []
-      repartition: 0
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0
