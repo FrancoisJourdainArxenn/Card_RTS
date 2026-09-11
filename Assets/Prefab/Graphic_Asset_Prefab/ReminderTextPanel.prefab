@@ -35,7 +35,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 0}
+  m_SizeDelta: {x: 158.94, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &22542054402795063
 CanvasRenderer:
@@ -177,7 +177,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -5.7422, y: 21.6656}
-  m_SizeDelta: {x: 225, y: 0}
+  m_SizeDelta: {x: 180, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2457951342098367786
 CanvasRenderer:
@@ -230,8 +230,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 15
-    m_Right: 15
+    m_Left: 10
+    m_Right: 10
     m_Top: 8
     m_Bottom: 20
   m_ChildAlignment: 0
@@ -444,7 +444,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 57, y: -35}
+  m_AnchoredPosition: {x: 57, y: -28}
   m_SizeDelta: {x: 200, y: 7.9932}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &8097592977386140673
@@ -503,7 +503,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8264701775789037609
 RectTransform:
   m_ObjectHideFlags: 0
@@ -518,11 +518,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1783428492898925201}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 190, y: -20}
-  m_SizeDelta: {x: 40, y: 40}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &2020125318578711068
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -576,8 +576,8 @@ MonoBehaviour:
   m_IgnoreLayout: 0
   m_MinWidth: -1
   m_MinHeight: -1
-  m_PreferredWidth: 60
-  m_PreferredHeight: 60
+  m_PreferredWidth: 30
+  m_PreferredHeight: 30
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -617,7 +617,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 0}
+  m_SizeDelta: {x: 158.9437, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8371511687193543231
 MonoBehaviour:

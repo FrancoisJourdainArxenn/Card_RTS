@@ -300,7 +300,7 @@ public class Player : MonoBehaviour, ILivable
         // (WeightedDraw.Draw retombait sur ce garde et retournait null, voir Deck.DrawWeightedCard).
     }
 
-    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.sharedPool)
+    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.mainPool)
     // l'unité qui remplace la base principale comme condition de victoire (voir HomeUnit) : une
     // CreatureLogic tout à fait normale, spawnée directement dans MainPArea sans passer par la main
     // — même idiome que NetworkSpawnTokenToZone. networkID doit être identique sur toutes les
@@ -313,7 +313,7 @@ public class Player : MonoBehaviour, ILivable
     public void SpawnHomeUnitIfConfigured(int networkID = -1)
     {
         if (HomeUnit != null) return;
-        CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.sharedPool?.homeUnit : null;
+        CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.mainPool?.homeUnit : null;
         if (homeUnitAsset == null || MainPArea == null) return;
 
         int baseID = MainPArea.baseID;

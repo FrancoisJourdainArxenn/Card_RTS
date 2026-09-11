@@ -17,4 +17,5 @@ MonoBehaviour:
   deckTooltip: Count on your Ranged Unit. Make sure they get a chance to attack.
     They will lead you to victory.
   heroCard: {fileID: 11400000, guid: da587619a2433fc499dcefcee7461d20, type: 2}
-  sharedPool: {fileID: 11400000, guid: 66182dd66bcfa4742aa607a78e67d151, type: 2}
+  mainPool: {fileID: 11400000, guid: 4440a2483af2a10428298f298a777186, type: 2}
+  secondPool: {fileID: 11400000, guid: b6cde35848a60c1469bc85edee1a5b41, type: 2}

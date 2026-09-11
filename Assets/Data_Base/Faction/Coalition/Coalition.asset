@@ -14,3 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FactionAsset
   Faction: 0
   FactionName: Coalition
+  mainCardPools:
+  - {fileID: 11400000, guid: 623bb9f1f7dba204ea89cb8370f047a1, type: 2}
+  - {fileID: 11400000, guid: 4440a2483af2a10428298f298a777186, type: 2}
+  - {fileID: 11400000, guid: b06cc3bd481e75f41badc1ad64066efa, type: 2}
+  secondCardPools:
+  - {fileID: 11400000, guid: 1df3592972e94e84f8364bd1ef20cc51, type: 2}
+  - {fileID: 11400000, guid: d721e0a31363d7141b0a68d5fb8f15b7, type: 2}
+  - {fileID: 11400000, guid: 66272f56a5126ed4ab261d584f9e2aba, type: 2}
+  - {fileID: 11400000, guid: 3f823a209939abf42832b905cf201da0, type: 2}
+  - {fileID: 11400000, guid: 0ac02ee639d321340945419a71e1f7f2, type: 2}

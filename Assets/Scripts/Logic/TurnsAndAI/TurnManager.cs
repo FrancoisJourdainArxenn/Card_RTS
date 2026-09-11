@@ -106,7 +106,24 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
+    // DeckSO.mainPool/secondPool sont mutes en memoire locale par ApplyPoolChoice (menu) et ne se
+    // propagent pas d'une machine a l'autre en reseau : chaque machine reapplique donc le choix a
+    // partir des memes index (voir NetworkSessionData/GameNetworkManager), resolus depuis les listes
+    // statiques FactionAsset.mainCardPools/secondCardPools qui sont identiques sur toutes les machines.
+    private static void ApplySyncedPools(DeckSO preset, int mainPoolIdx, int secondPoolIdx)
+    {
+        FactionAsset faction = preset.heroCard != null ? preset.heroCard.Faction : null;
+        if (faction == null)
+            return;
+
+        if (mainPoolIdx >= 0 && faction.mainCardPools != null && mainPoolIdx < faction.mainCardPools.Count)
+            preset.mainPool = faction.mainCardPools[mainPoolIdx];
+        if (secondPoolIdx >= 0 && faction.secondCardPools != null && secondPoolIdx < faction.secondCardPools.Count)
+            preset.secondPool = faction.secondCardPools[secondPoolIdx];
+    }
+
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null,
+        int mainPoolIdxLow = -1, int secondPoolIdxLow = -1, int mainPoolIdxTop = -1, int secondPoolIdxTop = -1)
     {
         EffectRegistry.Reset();
         // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
@@ -131,9 +148,10 @@ public class TurnManager : MonoBehaviour
                 DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
                 if (preset != null)
                 {
+                    ApplySyncedPools(preset, isLow ? mainPoolIdxLow : mainPoolIdxTop, isLow ? secondPoolIdxLow : secondPoolIdxTop);
                     p.deck.LoadDeck(preset);
-                    if (preset.sharedPool != null && preset.sharedPool.baseAsset != null)
-                        p.ApplyBaseAssetOverride(preset.sharedPool.baseAsset);
+                    if (preset.mainPool != null && preset.mainPool.baseAsset != null)
+                        p.ApplyBaseAssetOverride(preset.mainPool.baseAsset);
                 }
             }
         }
@@ -155,7 +173,7 @@ public class TurnManager : MonoBehaviour
 
             foreach (Player p in Player.Players)
             {
-                BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.sharedPool?.baseAsset : null;
+                BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.mainPool?.baseAsset : null;
                 if (poolBaseAsset != null)
                     p.ApplyBaseAssetOverride(poolBaseAsset);
             }

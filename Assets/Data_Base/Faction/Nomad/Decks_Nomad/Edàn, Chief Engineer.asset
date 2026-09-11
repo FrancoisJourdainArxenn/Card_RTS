@@ -16,4 +16,5 @@ MonoBehaviour:
   difficultyLevel: 3
   deckTooltip: If your play with your shield, your defense will march you onto victory.
   heroCard: {fileID: 11400000, guid: f686a44c2e4826146855ba6f28333cad, type: 2}
-  sharedPool: {fileID: 11400000, guid: 64e5dbc0ab75cbc40ae299c024f62af3, type: 2}
+  mainPool: {fileID: 11400000, guid: 41370af7c6c4da24280ec3b0f1b8d10a, type: 2}
+  secondPool: {fileID: 11400000, guid: cbbd13476b18a4a4a8f809659715c89f, type: 2}

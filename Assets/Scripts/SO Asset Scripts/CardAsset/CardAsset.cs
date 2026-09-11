@@ -26,6 +26,9 @@ public enum SubType
     Spell = 4,
     Order = 8,
     Invention = 10,
+
+    //Structures
+    Structure = 11,
 }
 
 public enum TargetingOptions

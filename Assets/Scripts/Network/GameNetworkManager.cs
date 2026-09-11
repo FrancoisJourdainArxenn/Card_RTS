@@ -16,7 +16,17 @@ public class GameNetworkManager : NetworkBehaviour
     NetworkVariable<int> mapIndex = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     [SerializeField] MenuRegistry registry;
 
-    private readonly Dictionary<ulong, int> _deckChoices = new();
+    // deckIndex/mainPoolIndex/secondPoolIndex : voir NetworkSessionData.SelectedDeckPresetIndex et
+    // SelectedMainPoolIndex/SelectedSecondPoolIndex (mainPool/secondPool sont mutes localement par
+    // ApplyPoolChoice et ne se propagent pas d'une machine a l'autre sans etre transmis en index).
+    private struct DeckChoice
+    {
+        public int deckIndex;
+        public int mainPoolIndex;
+        public int secondPoolIndex;
+    }
+
+    private readonly Dictionary<ulong, DeckChoice> _deckChoices = new();
 
 
     // Compteur côté serveur : combien de clients ont signalé qu'ils sont prêts
@@ -1068,7 +1078,8 @@ public class GameNetworkManager : NetworkBehaviour
         LoadMap(mapIndex.Value);
 
         NetworkSessionData.LocalClientId = NetworkManager.Singleton.LocalClientId;
-        PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId, NetworkSessionData.SelectedDeckPresetIndex);
+        PlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId, NetworkSessionData.SelectedDeckPresetIndex,
+            NetworkSessionData.SelectedMainPoolIndex, NetworkSessionData.SelectedSecondPoolIndex);
     }
 
     public DeckSO GetDeckPresetForPlayer(int idx)
@@ -1100,21 +1111,29 @@ public class GameNetworkManager : NetworkBehaviour
     /// RequireOwnership = false : n'importe quel client peut appeler ce ServerRpc.
     /// </summary>
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    void PlayerReadyServerRpc(ulong clientId, int deckIndex)
+    void PlayerReadyServerRpc(ulong clientId, int deckIndex, int mainPoolIndex, int secondPoolIndex)
     {
-        _deckChoices[clientId] = deckIndex;
+        _deckChoices[clientId] = new DeckChoice { deckIndex = deckIndex, mainPoolIndex = mainPoolIndex, secondPoolIndex = secondPoolIndex };
         readyCount++;
         Debug.Log($"[GameNetworkManager] Joueur prêt : {readyCount}/2");
 
         if (readyCount >= 2)
         {
-            int deckLow = _deckChoices.TryGetValue(0, out int dLow) ? dLow : -1;
+            bool hasLow = _deckChoices.TryGetValue(0, out DeckChoice choiceLow);
+            int deckLow = hasLow ? choiceLow.deckIndex : -1;
+            int mainPoolIdxLow = hasLow ? choiceLow.mainPoolIndex : -1;
+            int secondPoolIdxLow = hasLow ? choiceLow.secondPoolIndex : -1;
+
             int deckTop = -1;
-            foreach (KeyValuePair<ulong, int> kvp in _deckChoices)
+            int mainPoolIdxTop = -1;
+            int secondPoolIdxTop = -1;
+            foreach (KeyValuePair<ulong, DeckChoice> kvp in _deckChoices)
             {
                 if (kvp.Key != 0)
                 {
-                    deckTop = kvp.Value;
+                    deckTop = kvp.Value.deckIndex;
+                    mainPoolIdxTop = kvp.Value.mainPoolIndex;
+                    secondPoolIdxTop = kvp.Value.secondPoolIndex;
                     break;
                 }
             }
@@ -1138,7 +1157,8 @@ public class GameNetworkManager : NetworkBehaviour
                 homeUnitCreatureIDs[i] = IDFactory.GetUniqueID();
             }
             Debug.Log("[GameNetworkManager] Les deux joueurs sont prêts. Démarrage de la partie.");
-            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs, homeUnitCreatureIDs);
+            StartGameClientRpc(deckSeed.Value, cardInHandIDs, deckLow, deckTop, heroCardIDs, homeUnitCreatureIDs,
+                mainPoolIdxLow, secondPoolIdxLow, mainPoolIdxTop, secondPoolIdxTop);
         }
     }
 
@@ -1146,13 +1166,15 @@ public class GameNetworkManager : NetworkBehaviour
     /// Envoyé par le serveur à TOUS les clients pour démarrer la partie.
     /// </summary>
     [ClientRpc]
-    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
+    void StartGameClientRpc(int deckSeed, int[] cardInHandIDs, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null,
+        int mainPoolIdxLow = -1, int secondPoolIdxLow = -1, int mainPoolIdxTop = -1, int secondPoolIdxTop = -1)
     {
         // 1. Assigner le local player
         AssignLocalPlayerControl();
 
         // 2. Lancer la logique de démarrage (distribution des cartes, ressources, etc.)
-        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs, homeUnitCreatureIDs);
+        TurnManager.Instance.OnGameStart(deckSeed, cardInHandIDs, deckIdxLow, deckIdxTop, heroCardIDs, homeUnitCreatureIDs,
+            mainPoolIdxLow, secondPoolIdxLow, mainPoolIdxTop, secondPoolIdxTop);
 
         // 3. Rafraîchir les boutons maintenant que AllowedToControlThisPlayer est correct
         GlobalSettings.Instance.RefreshEndPhaseButtons();

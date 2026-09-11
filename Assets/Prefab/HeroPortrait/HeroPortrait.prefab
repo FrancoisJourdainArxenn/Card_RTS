@@ -65,8 +65,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 1303c21eaf505a542a808ee910221ab0, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: -107697345, guid: 0f00bfddfb536684ca6fd99823d8bbbf, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -111,11 +111,11 @@ RectTransform:
   - {fileID: 4285579395896946208}
   m_Father: {fileID: 5155304966299108007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000015258789, y: -0.000005722046}
-  m_SizeDelta: {x: -6.1506, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0.3207, y: -3.2452}
+  m_SizeDelta: {x: 45.1814, y: 0}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &7977014721677350726
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -235,10 +235,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5155304966299108007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -0.0000053644, y: 2.0448}
+  m_SizeDelta: {x: 66.4219, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3554215247496497699
 CanvasRenderer:
@@ -261,7 +261,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.8588754, b: 0.5518868, a: 1}
+  m_Color: {r: 1, g: 0.97599363, b: 0.2028302, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -347,11 +347,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5155304966299108007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000005722046, y: -0.000005722046}
-  m_SizeDelta: {x: 8.0029, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: 2.5}
+  m_SizeDelta: {x: 58.0029, y: 0}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3489487798679760377
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -503,11 +503,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 5155304966299108007}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 50, y: 0}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &3581364487188734796
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -636,9 +636,8 @@ GameObject:
   - component: {fileID: 8023059804253530031}
   - component: {fileID: 3859483283873408075}
   - component: {fileID: 8449833039067125049}
-  - component: {fileID: 2886355536693336861}
   - component: {fileID: 8655553525909387908}
-  - component: {fileID: 1835825720406584666}
+  - component: {fileID: -4696094157541340333}
   m_Layer: 5
   m_Name: HeroPortrait
   m_TagString: Untagged
@@ -666,8 +665,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 50, y: 0}
+  m_AnchoredPosition: {x: 0, y: -3.5464}
+  m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8023059804253530031
 CanvasRenderer:
@@ -724,20 +723,7 @@ MonoBehaviour:
   selectedFrame: {fileID: 8959263020609480091}
   selectedFrameSprite: {fileID: 21300000, guid: 856313f7c439c234dae75cdfb4fdc125, type: 3}
   deck: {fileID: 0}
-  tooltipTrigger: {fileID: 2886355536693336861}
---- !u!114 &2886355536693336861
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7393036381571932444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 43bb502a99fd9cd4fa6cb13ac8123974, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UITooltipTrigger
-  tooltipText: 
+  tooltipTrigger: {fileID: -4696094157541340333}
 --- !u!114 &8655553525909387908
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -758,7 +744,7 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
---- !u!114 &1835825720406584666
+--- !u!114 &-4696094157541340333
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -767,8 +753,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7393036381571932444}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86710e43de46f6f4bac7c8e50813a599, type: 3}
+  m_Script: {fileID: 11500000, guid: 43bb502a99fd9cd4fa6cb13ac8123974, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
-  m_AspectMode: 1
-  m_AspectRatio: 1
+  m_EditorClassIdentifier: Assembly-CSharp::UITooltipTrigger
+  tooltipText: 

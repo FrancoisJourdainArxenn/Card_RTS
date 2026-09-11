@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using System.Collections.Generic;
 
 
@@ -9,13 +10,35 @@ public class DeckSO : ScriptableObject
     public int difficultyLevel;
     [TextArea(2,3)]
     public string deckTooltip;
-    
+
     [Header("Hero")]
     public CardAsset heroCard;
 
-    [Header("Shared Pool")]
-    public CardPoolSO sharedPool;
+    [Header("Card Pools")]
+    [FormerlySerializedAs("sharedPool")]
+    public CardPoolSO mainPool;
+    public CardPoolSO secondPool;
 
-    public List<CardAsset> cards => sharedPool != null ? sharedPool.cards : new List<CardAsset>();
-    public List<CardAsset> buildings => sharedPool != null ? sharedPool.buildings : new List<CardAsset>();
+    // Deck effectif du heros : fusion des cartes/batiments de mainPool et secondPool.
+    public List<CardAsset> cards
+    {
+        get
+        {
+            List<CardAsset> merged = new List<CardAsset>();
+            if (mainPool != null) merged.AddRange(mainPool.cards);
+            if (secondPool != null) merged.AddRange(secondPool.cards);
+            return merged;
+        }
+    }
+
+    public List<CardAsset> buildings
+    {
+        get
+        {
+            List<CardAsset> merged = new List<CardAsset>();
+            if (mainPool != null) merged.AddRange(mainPool.buildings);
+            if (secondPool != null) merged.AddRange(secondPool.buildings);
+            return merged;
+        }
+    }
 }

@@ -17,4 +17,5 @@ MonoBehaviour:
   deckTooltip: Generate Inventions to take the upperhand over the course of the game.
     Be patient, knowledge is power.
   heroCard: {fileID: 11400000, guid: e91ae3e91ff23344f9493bf677617db3, type: 2}
-  sharedPool: {fileID: 11400000, guid: 64e5dbc0ab75cbc40ae299c024f62af3, type: 2}
+  mainPool: {fileID: 11400000, guid: 41370af7c6c4da24280ec3b0f1b8d10a, type: 2}
+  secondPool: {fileID: 11400000, guid: 8afc63953ec03eb4aaa2290779d6a5c6, type: 2}

@@ -564,11 +564,8 @@ public class CardPreviewUI : MonoBehaviour
 
     private Vector2 ComputeScreenShift(RectTransform rect, Camera cam)
     {
-        Vector3[] corners = new Vector3[4];
-        rect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
-
-        Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
-        Vector2 max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+        Vector2 min, max;
+        GetScreenBounds(rect, cam, out min, out max);
 
         float shiftX = 0f;
         if (min.x < 0f) shiftX = -min.x;
@@ -579,6 +576,29 @@ public class CardPreviewUI : MonoBehaviour
         else if (max.y > Screen.height) shiftY = Screen.height - max.y;
 
         return new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
+    }
+
+    // ReminderTextManager/CardTooltipManager gardent une largeur de conteneur figée (ContentSizeFitter
+    // horizontal = Unconstrained) pendant que leur HorizontalLayoutGroup/VerticalLayoutGroup positionne
+    // des enfants (panneaux de mots-clés, mini-cartes) qui débordent largement de cette largeur — donc
+    // on mesure l'étendue réelle en incluant les enfants, pas seulement le rect (figé) du conteneur.
+    private void GetScreenBounds(RectTransform rect, Camera cam, out Vector2 min, out Vector2 max)
+    {
+        Vector3[] corners = new Vector3[4];
+        rect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
+        min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+        max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+
+        for (int i = 0; i < rect.childCount; i++)
+        {
+            if (rect.GetChild(i) is not RectTransform child) continue;
+
+            child.GetWorldCorners(corners);
+            Vector2 childMin = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+            Vector2 childMax = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+            min = Vector2.Min(min, childMin);
+            max = Vector2.Max(max, childMax);
+        }
     }
 
     // Partie 1 désactivée : plus aucun appelant (HandleAutoEffect commenté ci-dessus).

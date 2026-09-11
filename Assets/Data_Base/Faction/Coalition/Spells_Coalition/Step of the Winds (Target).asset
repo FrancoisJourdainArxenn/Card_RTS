@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
   m_Name: Step of the Winds (Target)
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: 
+  Name: Step of the Wind
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 2
-  subType: 10
-  tier: 1
+  subType: 4
+  tier: 2
   Description: Gives <b>Celerity</b> to target ally unit.
   CardImage: {fileID: 21300000, guid: 67a127f719747144a820b6dfc5c97ef3, type: 3}
-  MainCost: 0
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
@@ -32,7 +32,11 @@ MonoBehaviour:
   MoveSpeed: 0
   Celerity: 0
   melee: 0
+  Flying: 0
+  TransportCapacity: 0
   IsStructureUnit: 0
+  IsTeleporter: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:

@@ -10,6 +10,11 @@ public class CardPoolSO : ScriptableObject
     // (déplacement, attaque, capacités) et le seul moyen de vaincre ce joueur est de la tuer, où
     // qu'elle soit sur la carte. Laisser vide pour garder une base classique immobile.
     public CardAsset homeUnit;
+
+    [Header("Card Pool Info")]
+    public string poolName;
+    public Sprite cardPoolIcon;
+
     public List<CardAsset> cards = new List<CardAsset>();
     public List<CardAsset> buildings = new List<CardAsset>();
 }

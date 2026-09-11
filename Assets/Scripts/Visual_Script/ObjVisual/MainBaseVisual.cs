@@ -168,6 +168,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
 
     public void RefreshTierIcon()
     {
+        // Ne pas mettre à jour l'icône tant qu'on n'a pas la vision actuelle : sinon un changement
+        // de tier ennemi (OnUpgradeCostChanged) ou de ressources (Player.mainRessourceAvailable)
+        // traverserait le fog of war instantanément. RefreshTierIcon() sera rappelée avec
+        // currentlyVisible == true dès que la vision revient (voir ApplyLookFromAsset).
+        if (!currentlyVisible) return;
         if (player?.homeBaseLogic == null || CurrentTierImage == null) return;
 
         BaseLogic bl = player.homeBaseLogic;
