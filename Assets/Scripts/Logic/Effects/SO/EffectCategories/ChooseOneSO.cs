@@ -22,6 +22,12 @@ public class ChooseOneSO : EffectSO
             return;
         }
 
+        // Nécessaire pour QueueSourceVfx (voir EffectSO.QueueSourceVfx) — sans _sourceID renseigné,
+        // le VFX "onSource"/vfxPrefabOnSource configuré sur cet effet (ex: ChoseInvention) ne se
+        // déclenche jamais, silencieusement.
+        _sourceID = context.Source?.ID ?? -1;
+        QueueSourceVfx(visualData);
+
         int offerCount = Mathf.Clamp(ChooseBetweenCount, 1, CardPool.Count);
 
         if (NetworkSessionData.IsNetworkSession)

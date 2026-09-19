@@ -44,6 +44,8 @@ public class ChooseOneManager : MonoBehaviour
         if (GlobalSettings.Instance == null || caster != GlobalSettings.Instance.localPlayer)
             return; // seul le client du joueur concerné affiche ce choix
 
+        bool wasIdle = _current == null;
+
         _queue.Enqueue(new PendingChoice
         {
             Caster = caster,
@@ -52,8 +54,19 @@ public class ChooseOneManager : MonoBehaviour
             EffectIndex = effectIndex
         });
 
-        if (_current == null)
-            ShowNext();
+        if (wasIdle)
+        {
+            // Laisse le temps de voir le VFX déclenché sur la source (ChooseOneSO.QueueSourceVfx)
+            // avant que le panneau ne s'ouvre et n'attire l'attention du joueur ailleurs.
+            float delay = TurnManager.Instance != null ? TurnManager.Instance.EffectSequenceDelay : 1.5f;
+            StartCoroutine(ShowNextDelayed(delay));
+        }
+    }
+
+    private System.Collections.IEnumerator ShowNextDelayed(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ShowNext();
     }
 
     void ShowNext()

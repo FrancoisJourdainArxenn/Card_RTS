@@ -16,7 +16,9 @@ public class AITurnMaker : TurnMaker
 
     private IEnumerator CoPlayCommandPhase()
     {
+        Debug.Log($"[AI][DEBUG] CoPlayCommandPhase — entrée. CardDrawPending={Command.CardDrawPending()} playingQueue={Command.playingQueue}");
         yield return new WaitWhile(() => Command.CardDrawPending() || Command.playingQueue);
+        Debug.Log("[AI][DEBUG] CoPlayCommandPhase — wait terminé, début de la logique.");
 
         TryPlayHero();
 
@@ -74,10 +76,22 @@ public class AITurnMaker : TurnMaker
             reserve -= spent;
         }
 
+        Debug.Log("[AI][DEBUG] CoPlayCommandPhase — avant TryUpgradeTier.");
         TryUpgradeTier(reserve);
 
         Debug.Log($"[AI] Command phase — {creaturesPlayed} créature(s) jouée(s), {basesBuilt} base(s) construite(s), {creaturesMoved} créature(s) déplacée(s), {p.MainRessourceAvailable} ressource(s) non dépensée(s).");
+
+        // Sans cette attente, un effet non-sélection encore en cours de résolution async côté adversaire
+        // (PhaseEffectPipeline.ExecuteAll/RunEffectsSequentially, avec délai visuel) peut faire arriver
+        // ce RegisterEndPhase une frame trop tôt : IsComplete encore false le fait router vers
+        // ConfirmAndSubmit, qui no-op silencieusement puisque l'IA est déjà dans _confirmedPlayers (pas
+        // de sélection à faire) — RegisterEndPhase n'est jamais rappelé après, l'IA ne finit alors jamais
+        // sa phase. Même garde que TurnManager.AutoAdvanceFromRegroup pour la même raison.
+        yield return new WaitWhile(() => !PhaseEffectPipeline.IsComplete);
+
+        Debug.Log("[AI][DEBUG] CoPlayCommandPhase — appel RegisterEndPhase.");
         TurnManager.Instance.RegisterEndPhase(p);
+        Debug.Log("[AI][DEBUG] CoPlayCommandPhase — RegisterEndPhase retourné, coroutine terminée.");
     }
 
     private bool TryPlayBestCreature(PlayerArea targetArea, int maxSpend, out int costPlayed)
@@ -248,10 +262,13 @@ public class AITurnMaker : TurnMaker
     // qu'au flush, pas à l'enqueue).
     private void MoveCreature(CreatureLogic creature, int targetBaseID, int tablePos)
     {
-        if (NetworkSessionData.IsNetworkSession || (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo))
+        bool deferred = NetworkSessionData.IsNetworkSession || (GlobalSettings.Instance != null && GlobalSettings.Instance.UseDeferredMovesInSolo);
+        Debug.Log($"[AI][DEBUG] MoveCreature — {creature.DisplayName} (ID:{creature.UniqueCreatureID}) -> base={targetBaseID} tablePos={tablePos}, deferred={deferred}.");
+        if (deferred)
             TurnManager.Instance.EnqueueSoloMove(creature.UniqueCreatureID, targetBaseID, tablePos);
         else
             creature.Move(targetBaseID, tablePos);
+        Debug.Log($"[AI][DEBUG] MoveCreature — retour pour {creature.DisplayName}.");
     }
 
     // Même idée que MoveCreature, pour la pose d'une créature depuis la main : la logique (ressource,
@@ -299,6 +316,7 @@ public class AITurnMaker : TurnMaker
 
     private int DefendBase(BaseLogic baseLogic)
     {
+        Debug.Log($"[AI][DEBUG] DefendBase — entrée pour {baseLogic.DisplayName}.");
         ZoneLogic zone = baseLogic.Zone;
         PlayerArea area = GetAreaForBase(baseLogic);
         if (zone == null || area == null)
@@ -328,6 +346,7 @@ public class AITurnMaker : TurnMaker
             foreach (CreatureLogic creature in p.Creatures)
             {
                 if (DefenseThresholdMet(zone)) break;
+                Debug.Log($"[AI][DEBUG] DefendBase Phase 2 — traite {creature.DisplayName} (ID:{creature.UniqueCreatureID}).");
                 if (!creature.CanMove || creature.IsPendingMove)
                 {
                     Debug.Log($"[AI][DEBUG] {creature.DisplayName} (ID:{creature.UniqueCreatureID}, BaseID:{creature.BaseID}) ignorée pour renfort : CanMove={creature.CanMove}, IsPendingMove={creature.IsPendingMove}.");
@@ -359,11 +378,13 @@ public class AITurnMaker : TurnMaker
 
                 Debug.Log($"[AI] Envoie {creature.DisplayName} défendre {baseLogic.DisplayName}.");
                 MoveCreature(creature, area.baseID, tablePos);
+                Debug.Log($"[AI][DEBUG] DefendBase Phase 2 — MoveCreature retourné pour {creature.DisplayName}.");
                 reservedThisPass[isMelee] = alreadyReserved + 1;
                 played++;
             }
         }
 
+        Debug.Log($"[AI][DEBUG] DefendBase — sortie pour {baseLogic.DisplayName}, played={played}.");
         return played;
     }
 
@@ -548,6 +569,7 @@ public class AITurnMaker : TurnMaker
     // la table, pas la position logique, qui elle est déjà à jour dès ce Move()).
     private int TrySendCreaturesToNeutralBases()
     {
+        Debug.Log("[AI][DEBUG] TrySendCreaturesToNeutralBases — entrée.");
         int sent = 0;
         HashSet<ZoneManager> targetedThisPhase = new HashSet<ZoneManager>();
 
@@ -584,6 +606,7 @@ public class AITurnMaker : TurnMaker
                 break;
             }
         }
+        Debug.Log($"[AI][DEBUG] TrySendCreaturesToNeutralBases — sortie, sent={sent}.");
         return sent;
     }
 
@@ -598,11 +621,16 @@ public class AITurnMaker : TurnMaker
     // d'un saut (BFS), jamais d'un chemin complet en un coup.
     private int TryAdvanceTowardEnemyBases()
     {
+        Debug.Log("[AI][DEBUG] TryAdvanceTowardEnemyBases — entrée.");
         // .ToList() : controlledBases reconstruit son cache interne à chaque accès (voir Player.cs) —
         // sans snapshot, cette référence resterait vulnérable si quoi que ce soit d'autre y touche
         // pendant la boucle ci-dessous (même raison que TryPlayBestCreatureAnywhere).
         List<BaseLogic> enemyBases = p.otherPlayer.controlledBases.ToList();
-        if (enemyBases.Count == 0) return 0;
+        if (enemyBases.Count == 0)
+        {
+            Debug.Log("[AI][DEBUG] TryAdvanceTowardEnemyBases — sortie précoce, aucune base ennemie.");
+            return 0;
+        }
 
         var candidates = p.Creatures
             .Where(c => c.CanMove && !c.IsPendingMove && !IsHoldingUncapturedNeutralBase(c) && c.Zone != null)
@@ -638,6 +666,7 @@ public class AITurnMaker : TurnMaker
             foreach (var entry in group)
             {
                 CreatureLogic creature = entry.creature;
+                Debug.Log($"[AI][DEBUG] TryAdvanceTowardEnemyBases — traite {creature.DisplayName} (ID:{creature.UniqueCreatureID}) vers {targetBase.DisplayName}.");
                 ZoneLogic nextHop = GetNextHopToward(creature.Zone, targetBase.Zone);
                 if (nextHop == null) continue; // déjà arrivé, ou injoignable
 
@@ -657,10 +686,12 @@ public class AITurnMaker : TurnMaker
 
                 Debug.Log($"[AI] Avance {creature.DisplayName} de la zone {fromArea.baseID} vers la zone {nextArea.baseID} (cible : {targetBase.DisplayName}).");
                 MoveCreature(creature, nextArea.baseID, tablePos);
+                Debug.Log($"[AI][DEBUG] TryAdvanceTowardEnemyBases — MoveCreature retourné pour {creature.DisplayName}.");
                 reservedThisPass[rowKey] = alreadyReserved + 1;
                 moved++;
             }
         }
+        Debug.Log($"[AI][DEBUG] TryAdvanceTowardEnemyBases — sortie, moved={moved}.");
         return moved;
     }
 

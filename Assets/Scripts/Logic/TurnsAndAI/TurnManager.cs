@@ -340,7 +340,7 @@ public class TurnManager : MonoBehaviour
             (player == null || PhaseEffectPipeline.IsPlayerTargetingComplete(player));
         bool routeToConfirm = currentPhase == TurnPhases.BeginCombat || (!PhaseEffectPipeline.IsComplete && !playerTargetingDone);
 
-        // Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
+        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
 
         if (routeToConfirm)
         {
@@ -395,6 +395,7 @@ public class TurnManager : MonoBehaviour
             return;
 
         phaseReady[participantIndex] = true;
+        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} marqué prêt. phaseReady=[{string.Join(",", phaseReady)}]");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -407,7 +408,9 @@ public class TurnManager : MonoBehaviour
                 GlobalSettings.Instance.RefreshEndPhaseButtons();
         }
 
-        if (AllParticipantsRegisteredEndPhase())
+        bool allReady = AllParticipantsRegisteredEndPhase();
+        Debug.Log($"[TurnMgr] RegisterEndPhase — AllParticipantsRegisteredEndPhase={allReady}");
+        if (allReady)
             AdvancePhaseWhenAllReady();
     }
 

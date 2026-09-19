@@ -19,7 +19,7 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
-    onSource: 0
+    onSource: 1
     vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
   CardPool:
   - {fileID: 11400000, guid: 5ce80caae3cc38a46833150b0b6fb218, type: 2}
