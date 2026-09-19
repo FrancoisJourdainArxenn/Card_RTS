@@ -166,6 +166,11 @@ public class TableVisual : MonoBehaviour
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
 
+        int postCountAdd = EffectiveRowCount(isMelee);
+        int capNowAdd = ownerArea?.GetOwnerPlayer()?.GetMaxCreaturePerRow(baseID) ?? -1;
+        if (postCountAdd > capNowAdd)
+            Debug.LogWarning($"[RowOverflow] AddCreatureAtIndex base={baseID} melee={isMelee} postCount={postCountAdd} cap={capNowAdd} creatureID={UniqueID}");
+
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = rowLocalPos;
         w.VisualState = owner == AreaPosition.Low ? VisualStates.LowTable : VisualStates.TopTable;
@@ -207,6 +212,11 @@ public class TableVisual : MonoBehaviour
         // idempotent, jamais un index recalculé de façon incrémentale (voir DragCreatureActions.BroadcastRowOrder).
         targetList.Insert(Mathf.Min(rowLocalPos, targetList.Count), creature);
         SortListByIDs(targetList, isMelee ? _lastKnownMeleeOrder : _lastKnownRangedOrder);
+
+        int postCountMove = EffectiveRowCount(isMelee);
+        int capNowMove = ownerArea?.GetOwnerPlayer()?.GetMaxCreaturePerRow(baseID) ?? -1;
+        if (postCountMove > capNowMove)
+            Debug.LogWarning($"[RowOverflow] MoveCreatureToIndex base={baseID} melee={isMelee} postCount={postCountMove} cap={capNowMove} creatureID={UniqueID}");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = targetList.IndexOf(creature);

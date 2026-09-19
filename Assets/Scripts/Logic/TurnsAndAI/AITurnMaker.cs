@@ -318,6 +318,13 @@ public class AITurnMaker : TurnMaker
         // prime sur cette réserve-là aussi.
         if (!DefenseThresholdMet(zone))
         {
+            // Même correction que TryAdvanceTowardEnemyBases : RowHasSpace lit l'état visuel de la
+            // table, qui ne bouge qu'à l'exécution différée de chaque CreatureMoveCommand — jamais au
+            // MoveCreature() ci-dessous. Cette boucle pouvant envoyer plusieurs renforts d'affilée vers
+            // la même rangée (aucune limite naturelle ici, contrairement au groupe de
+            // TryAdvanceTowardEnemyBases), sans ce compteur chacun se voit approuvé sur le même compte
+            // pas-encore-à-jour.
+            Dictionary<bool, int> reservedThisPass = new Dictionary<bool, int>();
             foreach (CreatureLogic creature in p.Creatures)
             {
                 if (DefenseThresholdMet(zone)) break;
@@ -339,18 +346,20 @@ public class AITurnMaker : TurnMaker
                 }
 
                 bool isMelee = creature.IsMelee;
+                reservedThisPass.TryGetValue(isMelee, out int alreadyReserved);
                 int pendingReveal = p.PendingRevealCount(area.baseID, isMelee);
-                if (!area.tableVisual.RowHasSpace(isMelee, pendingReveal))
+                if (!area.tableVisual.RowHasSpace(isMelee, pendingReveal + alreadyReserved))
                 {
                     Debug.Log($"[AI][DEBUG] {creature.DisplayName} ignorée : plus de place sur la table cible (mêlée={isMelee}).");
                     continue;
                 }
 
                 int tablePos = (isMelee ? area.tableVisual.MeleeCreaturesOnTable.Count : area.tableVisual.RangedCreaturesOnTable.Count)
-                    + pendingReveal;
+                    + pendingReveal + alreadyReserved;
 
                 Debug.Log($"[AI] Envoie {creature.DisplayName} défendre {baseLogic.DisplayName}.");
                 MoveCreature(creature, area.baseID, tablePos);
+                reservedThisPass[isMelee] = alreadyReserved + 1;
                 played++;
             }
         }
@@ -606,6 +615,14 @@ public class AITurnMaker : TurnMaker
             .ToList();
 
         int moved = 0;
+        // RowHasSpace lit MeleeCreaturesOnTable/RangedCreaturesOnTable, qui ne bougent qu'à l'exécution
+        // (différée, via la queue de commandes animée) de chaque CreatureMoveCommand — jamais au moment
+        // de ce MoveCreature() ci-dessous. Sans ce compteur, masser plusieurs créatures vers la même
+        // rangée dans CETTE passe (cas voulu juste au-dessus : le groupe avance en bloc) fait relire à
+        // chaque itération le même EffectiveRowCount pas-encore-à-jour, donc chacune se voit approuvée
+        // indépendamment même après que la rangée soit déjà pleine (voir TurnManager.PendingIncomingMoveCount,
+        // même idée côté déplacement solo/joueur).
+        Dictionary<(int baseID, bool isMelee), int> reservedThisPass = new Dictionary<(int, bool), int>();
         foreach (var group in candidates.GroupBy(x => x.target))
         {
             BaseLogic targetBase = group.Key;
@@ -630,14 +647,17 @@ public class AITurnMaker : TurnMaker
                 if (!fromArea.parentZone.CanReach(nextArea.parentZone, p, creature)) continue;
 
                 bool isMelee = creature.IsMelee;
+                var rowKey = (nextArea.baseID, isMelee);
+                reservedThisPass.TryGetValue(rowKey, out int alreadyReserved);
                 int pendingReveal = p.PendingRevealCount(nextArea.baseID, isMelee);
-                if (!nextArea.tableVisual.RowHasSpace(isMelee, pendingReveal)) continue;
+                if (!nextArea.tableVisual.RowHasSpace(isMelee, pendingReveal + alreadyReserved)) continue;
 
                 int tablePos = (isMelee ? nextArea.tableVisual.MeleeCreaturesOnTable.Count : nextArea.tableVisual.RangedCreaturesOnTable.Count)
-                    + pendingReveal;
+                    + pendingReveal + alreadyReserved;
 
                 Debug.Log($"[AI] Avance {creature.DisplayName} de la zone {fromArea.baseID} vers la zone {nextArea.baseID} (cible : {targetBase.DisplayName}).");
                 MoveCreature(creature, nextArea.baseID, tablePos);
+                reservedThisPass[rowKey] = alreadyReserved + 1;
                 moved++;
             }
         }

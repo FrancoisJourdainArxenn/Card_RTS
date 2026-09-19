@@ -22,3 +22,4 @@ MonoBehaviour:
     onSource: 0
     vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   turnsToSkip: 1
+  targetTrigger: 3

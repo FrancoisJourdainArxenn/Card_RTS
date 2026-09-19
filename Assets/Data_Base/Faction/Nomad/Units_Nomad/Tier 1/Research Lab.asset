@@ -43,7 +43,7 @@ MonoBehaviour:
   Effects:
   - EffectName: Eureka !
     Effect: {fileID: 11400000, guid: dac039294bee7fb4692eca44aaea358d, type: 2}
-    Trigger: 2
+    Trigger: 3
     Condition: {fileID: 11400000, guid: 232bed68ba72c1a4d9bb44e153f7392d, type: 2}
     Effectinfo:
       effectTargets: []

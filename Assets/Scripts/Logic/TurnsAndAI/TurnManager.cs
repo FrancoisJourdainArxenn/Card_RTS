@@ -131,6 +131,10 @@ public class TurnManager : MonoBehaviour
         // bloqué > 0 et gèle tout repositionnement de table pour la nouvelle partie (voir
         // CreatureAttackVisual.ResetFlightCounter).
         CreatureAttackVisual.ResetFlightCounter();
+        // Même raison : ReplaceCardEffectSO mute en place un CardAsset partagé (ex: Lab passe de
+        // ChoseInvention à ChoseGreaterInvention) — sans ce reset, le remplacement survivait à la
+        // partie précédente et s'appliquait dès le début de la suivante.
+        ReplaceCardEffectSO.ResetAll();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             // Debug.LogError("TurnManager: need at least 2 Player instances.");

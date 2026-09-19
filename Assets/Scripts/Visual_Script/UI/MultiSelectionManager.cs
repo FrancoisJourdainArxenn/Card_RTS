@@ -315,6 +315,14 @@ public class MultiSelectionManager : MonoBehaviour
                 if (dca == null) continue;
 
                 bool isMelee = so.cardAsset != null && so.cardAsset.melee;
+
+                // meleeOffset/rangedOffset compte déjà les unités de CE groupe déjà placées dans cette
+                // rangée — Move() ci-dessous vérifie bien RowHasSpace, mais chaque ghost qu'il pose est
+                // exclu du comptage (EffectiveRowCount), donc sans ce check ici, toutes les unités du
+                // groupe voient la même rangée pas-encore-à-jour et sont approuvées même au-delà du max.
+                if (!targetArea.tableVisual.RowHasSpace(isMelee, isMelee ? meleeOffset : rangedOffset))
+                    continue;
+
                 int slot;
                 if (isMelee)
                 {

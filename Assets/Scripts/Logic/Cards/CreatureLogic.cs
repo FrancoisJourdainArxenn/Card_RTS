@@ -1174,6 +1174,7 @@ public class CreatureLogic: ILivable
     public void Move(int baseID, int tablePos)
     {
         MovementsLeftThisTurn--;
+        Debug.Log($"[MoveTrace] Move creatureID={UniqueCreatureID} ({DisplayName}) BaseID {BaseID}->{baseID} tablePos={tablePos}");
         BaseID = baseID;
         IsPendingMove = false;
         FogOfWarManager.Refresh();
@@ -1187,6 +1188,7 @@ public class CreatureLogic: ILivable
     /// </summary>
     public void RelocateAfterCombat(int baseID, int tablePos)
     {
+        Debug.Log($"[MoveTrace] RelocateAfterCombat creatureID={UniqueCreatureID} ({DisplayName}) BaseID {BaseID}->{baseID} tablePos={tablePos}");
         BaseID = baseID;
         FogOfWarManager.Refresh();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();

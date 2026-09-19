@@ -17,8 +17,8 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 3
-  Description: Reduce by 1 turn the time it takes for your <i>Research Labs</i> to
-    produce an Invention.
+  Description: <b>Start of turn:</b> Reduce by 1 turn the time it takes for your
+    <i>Research Labs</i> to produce an Invention.
   CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
   MainCost: 1
   IsHero: 0
@@ -57,8 +57,13 @@ MonoBehaviour:
           zoneFilter: 1
           cardFilter: {fileID: 11400000, guid: 00250e7d57c4ebf499822a48d74fb0c9, type: 2}
         requiresPlayerSelection: 0
-      affectedElements: []
-      repartition: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

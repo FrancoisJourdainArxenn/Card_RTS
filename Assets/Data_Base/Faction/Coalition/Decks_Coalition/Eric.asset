@@ -18,4 +18,4 @@ MonoBehaviour:
     They will lead you to victory.
   heroCard: {fileID: 11400000, guid: da587619a2433fc499dcefcee7461d20, type: 2}
   mainPool: {fileID: 11400000, guid: 4440a2483af2a10428298f298a777186, type: 2}
-  secondPool: {fileID: 11400000, guid: b6cde35848a60c1469bc85edee1a5b41, type: 2}
+  secondPool: {fileID: 11400000, guid: 3f823a209939abf42832b905cf201da0, type: 2}

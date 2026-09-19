@@ -17,4 +17,4 @@ MonoBehaviour:
   deckTooltip: <b>Soldiers</b> together strong !
   heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
   mainPool: {fileID: 11400000, guid: b06cc3bd481e75f41badc1ad64066efa, type: 2}
-  secondPool: {fileID: 11400000, guid: 5fbfd26de93487748b863a35747a2674, type: 2}
+  secondPool: {fileID: 11400000, guid: 3f823a209939abf42832b905cf201da0, type: 2}
