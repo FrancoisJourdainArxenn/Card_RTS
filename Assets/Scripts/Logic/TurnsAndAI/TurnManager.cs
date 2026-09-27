@@ -480,7 +480,18 @@ public class TurnManager : MonoBehaviour
                 FlushSoloPlayBuffer();
                 FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
-                ResolveStationaryTransportDisembarks();
+                // ResolveStationaryTransportDisembarks doit attendre que la queue de Command ait fini
+                // de jouer les CreatureMoveCommand mis en file par FlushSoloMoveBuffer (creature.Move
+                // met à jour CreatureLogic.BaseID tout de suite, mais manager.BaseID et
+                // BoardedCreatureIDs — lus par CreatureMoveVisual.DisembarkCargoInPlace — ne sont mis à
+                // jour qu'à l'exécution différée de ce Command). Sans cette attente, un transport qui
+                // vient de bouger est encore vu ici avec son ANCIEN manager.BaseID et des passagers pas
+                // encore débarqués : il est donc traité à tort comme "resté sur place" et ses passagers
+                // débarquent dans la zone d'origine au lieu de la zone d'arrivée. Voir l'équivalent
+                // réseau (GameNetworkManager.ApplyDeathDrainAndTransition), qui attend déjà playingQueue
+                // avant d'appeler ResolveStationaryTransportDisembarks — ce chemin solo ne le faisait pas.
+                StartCoroutine(ResolveStationaryTransportDisembarksThenEnterPhase(next));
+                return;
             }
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle      ||
@@ -500,6 +511,16 @@ public class TurnManager : MonoBehaviour
                 EnterPhase(next);
             }
         }
+    }
+
+    // Voir l'appel dans AdvancePhaseWhenAllReady : laisse la queue de Command finir de jouer les
+    // déplacements différés (FlushSoloMoveBuffer) avant de statuer sur quels transports ont bougé.
+    // currentPhase == Command à l'appel ⇒ roundEnded est toujours faux, rien à répliquer de ce côté.
+    IEnumerator ResolveStationaryTransportDisembarksThenEnterPhase(TurnPhases next)
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        ResolveStationaryTransportDisembarks();
+        EnterPhase(next);
     }
 
     bool AnyZoneHasPossibleCombat()
@@ -1022,6 +1043,7 @@ public class TurnManager : MonoBehaviour
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
             {
                 int finalBaseID = redirects.TryGetValue(id, out int redirectedBaseID) ? redirectedBaseID : baseID;
+                Debug.Log($"[Transport][MoveTrace] FlushSoloMoveBuffer — {creature.DisplayName}(ID:{id}) requestedBaseID={baseID} finalBaseID={finalBaseID} redirected={finalBaseID != baseID}");
                 creature.Move(finalBaseID, pos);
             }
         }

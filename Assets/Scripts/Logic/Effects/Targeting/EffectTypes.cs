@@ -22,6 +22,7 @@ public enum ScalingSource
 {
     TargetCount,   // compte scalingQuery (comportement existant)
     SourceShield,  // ShieldValue de la source de l'effet
+    CasterTier,    // tier actuel du Caster (lu sur homeBaseLogic)
 }
 
 public enum EffectRepartition

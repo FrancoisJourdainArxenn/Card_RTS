@@ -1,7 +1,6 @@
 public enum TriggerType
 {
     // Passive - player dependant
-    // Passive,
     // OnActivation,
     // Card Lifecycle
     OnPlay = 0,
@@ -14,6 +13,9 @@ public enum TriggerType
                             // dégâts (voir EffectRegistry.NotifyCreatureTookDamage/-Predicted)
     OnDeath = 1,
     OnAttack = 15, // déclenché au milieu de l'animation d'attaque, entre le wind-up et la charge/le projectile
+    OnFriendlyUnitAttacks = 20, // déclenché chez les AUTRES créatures alliées quand l'une d'elles attaque —
+                                // une fois par attaque, au même moment que le OnAttack de l'attaquant (voir
+                                // EffectRegistry.NotifyFriendlyUnitAttackedPredicted / CreatureLogic.ResolvePredictedOnAttack)
     // Phases
     OnRegroup = 2,
     OnCommand = 3,
@@ -38,4 +40,7 @@ public enum TriggerType
                          // (main du joueur ou CastSpellSO) — voir EffectRegistry.NotifyActionPlayed
     OnTierUpgrade = 19, // déclenché une seule fois, quand BaseLogic.TryUpgrade() fait passer
                         // CurrentTier à une nouvelle valeur — voir EffectRegistry.NotifyBaseTierUpgraded
+
+    Passive = 21, // actif en continu tant que la source (créature/bâtiment/base) est en jeu, réévalué
+                  // (Condition + ciblage) à chaque changement de plateau — voir PassiveAuraManager.
 }

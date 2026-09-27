@@ -177,19 +177,33 @@ public class CreatureLogic: ILivable
 
     public void GrantCelerity()
     {
+        _celerityGrantCount++;
         MovementsLeftThisTurn = Mathf.Max(MovementsLeftThisTurn, movementsForOneTurn);
         HasSummoningSickness = false;
         extraSummoningSicknessTurns = 0;
-        HasRuntimeCelerity = true;
         Debug.Log($"[Celerity] {DisplayName} (ID:{UniqueCreatureID}) — movementsForOneTurn={movementsForOneTurn}, MovementsLeftThisTurn={MovementsLeftThisTurn}, GO exists={IDHolder.GetGameObjectWithID(UniqueCreatureID) != null}");
 
         TurnManager.RefreshAllPlayableHighlights();
 
     }
 
-    // Vrai dès que GrantCelerity() a été appelé — distinct de ca.Celerity (l'inné, déjà écrit à la
-    // main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
-    public bool HasRuntimeCelerity { get; private set; }
+    // Retire UN octroi de Célérité. Ne repasse HasRuntimeCelerity à false que quand plus AUCUNE source
+    // ne la tient — plusieurs auras Passive indépendantes peuvent l'accorder en même temps, la mort de
+    // l'une ne doit pas couper celle des autres (voir PassiveAuraManager).
+    public void RemoveCelerity()
+    {
+        _celerityGrantCount = Mathf.Max(0, _celerityGrantCount - 1);
+        if (_celerityGrantCount == 0)
+            TurnManager.RefreshAllPlayableHighlights();
+    }
+
+    // Nombre de sources actives accordant la Célérité (OnPlay one-shot + auras Passive). Remplace un
+    // ancien bool brut : deux octrois indépendants sur la même créature ne doivent pas pouvoir se
+    // retirer l'un l'autre.
+    private int _celerityGrantCount;
+    // Vrai dès qu'au moins une source accorde la Célérité — distinct de ca.Celerity (l'inné, déjà écrit
+    // à la main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
+    public bool HasRuntimeCelerity => _celerityGrantCount > 0;
 
     // Vrai dès que GrantMultiStrike() a été appelé — distinct de ca.AttacksForOneTurn (l'inné, déjà
     // écrit à la main dans Description). Sert uniquement à l'affichage du mot-clé octroyé.
@@ -203,6 +217,18 @@ public class CreatureLogic: ILivable
         if (additionalAttacks <= 0) return;
         attacksForOneTurn += additionalAttacks;
         AttacksLeftThisTurn += additionalAttacks;
+        HasRuntimeMultiStrike = true;
+    }
+
+    // Porte attacksForOneTurn à un total fixe (ex. Double Attaque = 2), au lieu de s'additionner —
+    // réappliquer le même effet plusieurs fois ne stack donc pas au-delà de totalAttacks. Si la
+    // créature a déjà un total supérieur (via une autre source), ne fait rien.
+    public void GrantFixedMultiStrike(int totalAttacks)
+    {
+        if (totalAttacks <= attacksForOneTurn) return;
+        int gained = totalAttacks - attacksForOneTurn;
+        attacksForOneTurn = totalAttacks;
+        AttacksLeftThisTurn += gained;
         HasRuntimeMultiStrike = true;
     }
 
@@ -872,56 +898,64 @@ public class CreatureLogic: ILivable
     // (BuildAttackQueue n'ajoute chaque créature qu'une fois à la file d'attaque).
     public void ResolvePredictedOnAttack(ILivable attackTarget = null)
     {
-        if (ca.Effects == null) return;
-
-        bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
-        for (int i = 0; i < ca.Effects.Count; i++)
+        if (ca.Effects != null)
         {
-            CardEffectData data = ca.Effects[i];
-            if (data.Trigger != TriggerType.OnAttack) continue;
-
-            Debug.Log($"[OnAttack] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
-
-            // try/catch : même raison que ResolvePredictedBattleDeath ci-dessus — une exception ici
-            // ne doit jamais laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués.
-            try
+            bool isNetworkServer = NetworkSessionData.IsNetworkSession && NetworkManager.Singleton.IsServer;
+            for (int i = 0; i < ca.Effects.Count; i++)
             {
-                if (!NetworkSessionData.IsNetworkSession)
+                CardEffectData data = ca.Effects[i];
+                if (data.Trigger != TriggerType.OnAttack) continue;
+
+                Debug.Log($"[OnAttack] Résolution — {DisplayName} (ID:{UniqueCreatureID}) effet #{i} ({data.EffectName})");
+
+                // try/catch : même raison que ResolvePredictedBattleDeath ci-dessus — une exception ici
+                // ne doit jamais laisser Command.DeferForBattleReplay/EffectSO._networkRng bloqués.
+                try
                 {
-                    Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
-                        EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
-                }
-                else if (isNetworkServer)
-                {
-                    int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-                    List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
-                    List<(int id, int amount)> allocation;
-                    try
+                    if (!NetworkSessionData.IsNetworkSession)
                     {
-                        EffectSO.SetNetworkRng(new System.Random(seed));
-                        EffectSO.ClearForcedAllocation();
-                        EffectSO.ResetLastAllocation();
-                        ZoneCombatResolver.BeginResolvingPredictedTrigger();
                         Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
                             EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
-                        allocation = EffectSO.LastAllocation;
                     }
-                    finally
+                    else if (isNetworkServer)
                     {
-                        ZoneCombatResolver.EndResolvingPredictedTrigger();
-                        EffectSO.ClearNetworkRng();
-                        EffectSO.SetLastAllocation(previousAllocation);
+                        int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+                        List<(int id, int amount)> previousAllocation = EffectSO.LastAllocation;
+                        List<(int id, int amount)> allocation;
+                        try
+                        {
+                            EffectSO.SetNetworkRng(new System.Random(seed));
+                            EffectSO.ClearForcedAllocation();
+                            EffectSO.ResetLastAllocation();
+                            ZoneCombatResolver.BeginResolvingPredictedTrigger();
+                            Command.RunDeferred(OnAttackDeferKey(UniqueCreatureID), () =>
+                                EffectRegistry.Execute(data, new EffectContext { Caster = owner, Source = this, Target = attackTarget }));
+                            allocation = EffectSO.LastAllocation;
+                        }
+                        finally
+                        {
+                            ZoneCombatResolver.EndResolvingPredictedTrigger();
+                            EffectSO.ClearNetworkRng();
+                            EffectSO.SetLastAllocation(previousAllocation);
+                        }
+                        ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1, allocation: allocation);
                     }
-                    ZoneCombatResolver.RecordPredictedTriggerReplay(UniqueCreatureID, i, seed, OnAttackDeferKey(UniqueCreatureID), targetID: attackTarget?.ID ?? -1, allocation: allocation);
+                    // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
+                    // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
                 }
-                // Client réseau : ne résout rien ici — rejoué via ReplayPredictedTriggerEffect
-                // à partir des triplets (sourceID, effectIndex, seed) diffusés par le serveur.
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"[OnAttack] Exception pendant l'effet OnAttack #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[OnAttack] Exception pendant l'effet OnAttack #{i} ({data.EffectName}) sur {DisplayName} (ID:{UniqueCreatureID}) : {e}");
+                }
             }
         }
+
+        // Notifie immédiatement les AUTRES créatures alliées qui réagissent à cette attaque (trigger
+        // OnFriendlyUnitAttacks) — inconditionnel (pas dans le bloc ca.Effects != null) : une créature
+        // SANS aucun effet OnAttack propre peut quand même faire réagir un allié. Même clé de report
+        // que le OnAttack ci-dessus, pour un flush visuel au même moment (entre le wind-up et la
+        // charge/le projectile de CETTE attaque précise).
+        EffectRegistry.NotifyFriendlyUnitAttackedPredicted(this, owner, OnAttackDeferKey(UniqueCreatureID));
     }
 
     // Résout OnTakeDamage immédiatement, à l'instant où ZoneCombatResolver ajoute des dégâts prédits sur
@@ -1178,6 +1212,7 @@ public class CreatureLogic: ILivable
         BaseID = baseID;
         IsPendingMove = false;
         FogOfWarManager.Refresh();
+        PassiveAuraManager.RecomputeAll();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 
@@ -1191,6 +1226,7 @@ public class CreatureLogic: ILivable
         Debug.Log($"[MoveTrace] RelocateAfterCombat creatureID={UniqueCreatureID} ({DisplayName}) BaseID {BaseID}->{baseID} tablePos={tablePos}");
         BaseID = baseID;
         FogOfWarManager.Refresh();
+        PassiveAuraManager.RecomputeAll();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }
 
@@ -1216,6 +1252,7 @@ public class CreatureLogic: ILivable
         // vidé par DisembarkAt) — voir DragCreatureActions.Board pour l'ajout correspondant.
         transport.RemoveLocalPendingBoard(UniqueCreatureID);
         //Debug.Log($"[Transport] Board — RESOLVED {DisplayName}(ID:{UniqueCreatureID}) aboard {transport.DisplayName}(ID:{transport.UniqueCreatureID}) | transport now carries {transport._boardedCreatureIDs.Count}/{transport.TransportCapacity} | MovementsLeftThisTurn={MovementsLeftThisTurn}");
+        PassiveAuraManager.RecomputeAll();
         new CreatureBoardCommand(UniqueCreatureID, transportCreatureID).AddToQueue();
     }
 
@@ -1237,6 +1274,7 @@ public class CreatureLogic: ILivable
         TransportCarrierID = null;
         BaseID = baseID;
         FogOfWarManager.Refresh();
+        PassiveAuraManager.RecomputeAll();
         //Debug.Log($"[Transport] DisembarkAt — {DisplayName}(ID:{UniqueCreatureID}) leaves carrier ID:{fromCarrier} -> baseID={baseID}, networkTablePos={tablePos}");
         new CreatureDisembarkCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
     }

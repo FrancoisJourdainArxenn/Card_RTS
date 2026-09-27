@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChooseOneManager : MonoBehaviour
 {
@@ -104,8 +105,14 @@ public class ChooseOneManager : MonoBehaviour
             manager.owner = _current.Caster;
             manager.ReadCardFromAsset();
 
+            // Les prefabs de preview n'ont le Raycast Target que sur les textes (voulu pour CardPreviewUI,
+            // qui ne doit pas bloquer le plateau) : ici toute la carte doit être cliquable. Le glow est
+            // exclu pour que la zone de survol ne s'agrandisse pas quand il s'allume.
+            foreach (Graphic graphic in cardGO.GetComponentsInChildren<Graphic>(true))
+                graphic.raycastTarget = graphic != manager.CardFaceGlowImage;
+
             ChooseOneCardClickHandler click = cardGO.AddComponent<ChooseOneCardClickHandler>();
-            click.Init(this, candidate);
+            click.Init(this, candidate, manager.CardFaceGlowImage);
 
             _spawnedCards.Add(cardGO);
         }

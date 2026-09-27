@@ -23,7 +23,7 @@ public class ReduceUpgradeCostSO : EffectSO
         }
 
         int count = effectInfo.useScalingCount
-            ? context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries)
+            ? context.GetScalingCount(effectInfo)
             : 1;
         int totalReduction = costReduction * count;
 

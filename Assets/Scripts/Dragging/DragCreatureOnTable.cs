@@ -117,7 +117,15 @@ public class DragCreatureOnTable : DraggingActions {
 
                 GameObject ghostGO = IDHolder.GetGameObjectWithID(ghostID);
                 if (ghostGO != null && ghostGO.TryGetComponent(out OneCreatureManager ghostOcm))
+                {
                     ghostOcm.SetPending(true);
+                    // Mêmes stats que la carte en main qu'il remplace (buffs permanents inclus).
+                    (int bonusAttack, int bonusHealth) = playerOwner.GetPermanentCreatureBuff(manager.cardAsset);
+                    ghostOcm.SetGhostStats(
+                        Mathf.Max(0, manager.cardAsset.Attack + bonusAttack),
+                        manager.cardAsset.MaxHealth + bonusHealth,
+                        manager.cardAsset.MaxHealth);
+                }
 
                 foreach (PendingEffectSelection sel in requiredSelections)
                     sel.SourceEntityID = ghostID;

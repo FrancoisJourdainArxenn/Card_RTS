@@ -32,6 +32,7 @@ public static class EffectRegistry
     {
         _listeners.Clear();
         TempEffectTracker.Reset();
+        PassiveAuraManager.Reset();
     }
 
     // ── Enregistrement ────────────────────────────────────────────────────────
@@ -45,6 +46,13 @@ public static class EffectRegistry
         {
             if (data.Trigger == TriggerType.OnPlay)
                 continue;
+
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, creature.UniqueCreatureID, () => new EffectContext
+                    { Caster = creature.owner, Source = creature });
+                continue;
+            }
 
             AddListener(data, creature.UniqueCreatureID, () => new EffectContext
                 { Caster = creature.owner, Source = creature });
@@ -61,6 +69,13 @@ public static class EffectRegistry
             if (data.Trigger == TriggerType.OnPlay)
                 continue;
 
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, building.UniqueBuildingID, () => new EffectContext
+                    { Caster = building.owner, Source = building });
+                continue;
+            }
+
             AddListener(data, building.UniqueBuildingID, () => new EffectContext
                 { Caster = building.owner, Source = building });
         }
@@ -76,6 +91,13 @@ public static class EffectRegistry
             if (data.Trigger == TriggerType.OnPlay)
                 continue;
 
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, playerBase.ID, () => new EffectContext
+                    { Caster = playerBase.owner, Source = playerBase });
+                continue;
+            }
+
             AddListener(data, playerBase.ID, () => new EffectContext
                 { Caster = playerBase.owner, Source = playerBase });
         }
@@ -85,6 +107,7 @@ public static class EffectRegistry
     {
         foreach (List<RegisteredEffect> list in _listeners.Values)
             list.RemoveAll(re => re.OwnerID == ownerID);
+        PassiveAuraManager.Unregister(ownerID);
     }
 
     // ── Triggers instantanés ──────────────────────────────────────────────────
@@ -226,6 +249,19 @@ public static class EffectRegistry
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = hit };
         FireListenersPredicted(TriggerType.OnAllyTakeDamage, eventCtx, hitDeferKey,
             re => re.ContextFactory().Caster == hitOwner && re.OwnerID != hit.UniqueCreatureID);
+    }
+
+    // Notifie les AUTRES créatures alliées qui réagissent à une attaque (trigger OnFriendlyUnitAttacks) —
+    // même principe "immédiat sous le defer key de CETTE attaque" que NotifyCreatureTookDamagePredicted :
+    // résolu au moment où ZoneCombatResolver assigne l'attaque (AssignSingleAttack), jamais groupé en
+    // début de combat pour toutes les créatures qui vont attaquer.
+    public static void NotifyFriendlyUnitAttackedPredicted(CreatureLogic attacker, Player attackerOwner, int attackDeferKey)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = attacker };
+        // OwnerID != attacker.UniqueCreatureID : l'attaquant ne réagit pas à sa propre attaque via ce
+        // trigger réactif — seuls les AUTRES alliés (son propre OnAttack couvre déjà son cas).
+        FireListenersPredicted(TriggerType.OnFriendlyUnitAttacks, eventCtx, attackDeferKey,
+            re => re.ContextFactory().Caster == attackerOwner && re.OwnerID != attacker.UniqueCreatureID);
     }
 
     // Variante de FireListeners qui exécute chaque listener tout de suite (au lieu d'attendre le
@@ -517,6 +553,15 @@ public static class EffectRegistry
                 return tokenSO != null ? tokenSO.TokenToSummon : null;
             }
 
+        // Carte Action/Order jouée depuis la main (pas de créature/bâtiment/base sur le plateau) —
+        // voir EffectContext.ResolveEffectReplayKey.
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+            {
+                TokenGenerationSO tokenSO = playedCard.ca.Effects[effectIndex].Effect as TokenGenerationSO;
+                return tokenSO != null ? tokenSO.TokenToSummon : null;
+            }
+
         return null;
     }
 
@@ -533,6 +578,10 @@ public static class EffectRegistry
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect.EffectVisual;
+
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect.EffectVisual;
 
         return null;
     }
@@ -551,6 +600,10 @@ public static class EffectRegistry
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect as ChooseOneSO;
 
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect as ChooseOneSO;
+
         return null;
     }
 
@@ -567,6 +620,10 @@ public static class EffectRegistry
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
+
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
 
         return null;
     }

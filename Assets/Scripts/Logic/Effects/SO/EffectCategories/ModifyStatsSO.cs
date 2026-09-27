@@ -95,6 +95,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
             attackBonus = _amplifiedAttackBonus,
             healthBonus = _amplifiedHealthBonus,
         });
+        new RefreshHandStatsCommand(context.Caster).AddToQueue();
     }
 
     // Scales AttackBonus/HealthBonus by a dynamic count (e.g. "per unit in your zone") instead of
@@ -103,9 +104,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
     // an amount through for Uniform/RandomSingleTarget repartition.
     private void ExecuteScaled(string EffectName, EffectContext context, EffectInfo effectInfo, EffectVisualData visualData)
     {
-        int count = effectInfo.scalingSource == ScalingSource.SourceShield
-            ? context.GetSourceShieldValue()
-            : context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries);
+        int count = context.GetScalingCount(effectInfo);
         if (count == 0)
         {
             Log($"{EffectName}: scaling count is 0, effect cancelled.");

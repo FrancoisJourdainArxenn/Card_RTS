@@ -657,8 +657,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.6228943, y: 2.999878}
-  m_SizeDelta: {x: -22.2458, y: -72}
+  m_AnchoredPosition: {x: 1.2911987, y: -2.0975037}
+  m_SizeDelta: {x: -47.583, y: -82.195}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4045282970201654801
 CanvasRenderer:
@@ -680,7 +680,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 2100000, guid: ada626051d1790c4880d443b23357874, type: 2}
+  m_Material: {fileID: 0}
   m_Color: {r: 0.17661981, g: 0.764151, b: 0.17661981, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -1215,6 +1215,7 @@ MonoBehaviour:
   TierImage: {fileID: 324688849012847317}
   RowIcon: {fileID: 0}
   hoverZoomEnabled: 0
+  trackUnlockProgress: 0
 --- !u!222 &3158186617022222924
 CanvasRenderer:
   m_ObjectHideFlags: 0

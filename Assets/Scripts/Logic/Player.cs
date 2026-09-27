@@ -81,6 +81,24 @@ public class Player : MonoBehaviour, ILivable
     // pas sur le CardAsset (partagé entre joueurs) pour ne pas buffer l'adversaire.
     public List<PermanentCreatureBuff> permanentCreatureBuffs = new List<PermanentCreatureBuff>();
 
+    // Somme des buffs permanents qui s'appliqueraient à une créature de ce CardAsset si elle était
+    // créée maintenant — même logique que le constructeur de CreatureLogic, réutilisée pour afficher
+    // les stats "réelles" des cartes en main.
+    public (int attack, int health) GetPermanentCreatureBuff(CardAsset ca)
+    {
+        int attack = 0;
+        int health = 0;
+        foreach (PermanentCreatureBuff buff in permanentCreatureBuffs)
+        {
+            if (buff.filter != null && buff.filter.Matches(ca))
+            {
+                attack += buff.attackBonus;
+                health += buff.healthBonus;
+            }
+        }
+        return (attack, health);
+    }
+
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -598,7 +616,8 @@ public class Player : MonoBehaviour, ILivable
         EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
             Caster = this,
-            Target = target
+            Target = target,
+            PlayedCardUniqueID = playedCard.UniqueCardID
         }, preResolvedSelections);
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
@@ -656,7 +675,7 @@ public class Player : MonoBehaviour, ILivable
         EffectSO.SetNetworkRng(new System.Random(seed));
         try
         {
-            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, PlayedCardUniqueID = cardUniqueID }, preResolvedSelections);
         }
         finally
         {

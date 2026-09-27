@@ -96,6 +96,17 @@ public class OneLivableManager : MonoBehaviour, ITargetableVisual
         }
     }
 
+    // Affiche des stats données, avec la même couleur buff/debuff (par rapport au CardAsset) que
+    // BuffStats/TakeDamage, mais sans animation — pour un visuel créé avec des stats déjà modifiées.
+    public void SetDisplayedStats(int attack, int health)
+    {
+        EnsureColorsCached();
+        AttackText.text = attack.ToString();
+        ApplyStatColor(AttackText, attack, cardAsset.Attack, _originalAttackColor);
+        HealthText.text = health.ToString();
+        ApplyStatColor(HealthText, health, cardAsset.MaxHealth, _originalHealthColor);
+    }
+
     public void SetPendingIcon(bool visible, Sprite sprite = null)
     {
         if (pendingIcon == null) return;

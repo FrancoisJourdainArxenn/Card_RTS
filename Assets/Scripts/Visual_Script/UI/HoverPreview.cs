@@ -135,7 +135,16 @@ public class HoverPreview : MonoBehaviour
         BuildingLogic sourceBuilding = null;
 
         IDHolder idHolder = GetComponentInParent<IDHolder>();
-        if (idHolder != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
+        OneCreatureManager creatureManager = GetComponentInParent<OneCreatureManager>();
+
+        CreatureLogic creature = null;
+        if (idHolder != null)
+            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out creature);
+        // Ghost de déplacement : même aperçu que la créature d'origine qu'il représente.
+        if (creature == null && creatureManager != null && creatureManager.IsPendingMoveGhost)
+            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureManager.PendingMoveSourceCreatureID, out creature);
+
+        if (creature != null)
         {
             sourceCreature = creature;
             attackOverride    = creature.Attack;
@@ -145,6 +154,19 @@ public class HoverPreview : MonoBehaviour
         else if (idHolder != null && BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building))
         {
             sourceBuilding = building;
+        }
+        else if (creatureManager != null && creatureManager.HasGhostStats)
+        {
+            attackOverride    = creatureManager.GhostAttack;
+            healthOverride    = creatureManager.GhostHealth;
+            maxHealthOverride = creatureManager.GhostMaxHealth;
+        }
+        else if (owner != null && asset.MaxHealth > 0)
+        {
+            (int bonusAttack, int bonusHealth) = owner.GetPermanentCreatureBuff(asset);
+            attackOverride    = Mathf.Max(0, asset.Attack + bonusAttack);
+            healthOverride    = asset.MaxHealth + bonusHealth;
+            maxHealthOverride = asset.MaxHealth;
         }
 
         CardPreviewUI.Instance?.Show(asset, previewOffset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature, sourceBuilding);

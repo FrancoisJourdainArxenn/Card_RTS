@@ -72,6 +72,18 @@ public class HandVisual : MonoBehaviour
         return CardsInHand[index];
     }
 
+    // Réapplique les buffs permanents du propriétaire aux cartes déjà en main — appelé quand un
+    // nouveau buff permanent est enregistré (voir RefreshHandStatsCommand).
+    public void RefreshPermanentBuffStats()
+    {
+        foreach (GameObject card in CardsInHand)
+        {
+            OneCardManager manager = card.GetComponent<OneCardManager>();
+            if (manager != null)
+                manager.ApplyPermanentBuffPreview();
+        }
+    }
+
     // Position (monde) juste à gauche de la carte actuellement la plus à gauche de la main —
     // utilisé par CardHoldSlotVisual pour se positionner dynamiquement au bout de la main plutôt
     // qu'à un endroit fixe de la scène. "Gauche" = X local le plus petit dans l'espace de `slots`,
@@ -158,7 +170,9 @@ public class HandVisual : MonoBehaviour
         OneCardManager manager = card.GetComponent<OneCardManager>();
         manager.cardAsset = c;
         manager.owner = owner;
+        manager.trackUnlockProgress = true;
         manager.ReadCardFromAsset();
+        manager.ApplyPermanentBuffPreview();
 
         return card;
     }

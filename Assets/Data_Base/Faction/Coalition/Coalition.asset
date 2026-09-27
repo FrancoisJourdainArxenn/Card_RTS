@@ -18,6 +18,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 623bb9f1f7dba204ea89cb8370f047a1, type: 2}
   - {fileID: 11400000, guid: 4440a2483af2a10428298f298a777186, type: 2}
   - {fileID: 11400000, guid: b06cc3bd481e75f41badc1ad64066efa, type: 2}
+  - {fileID: 11400000, guid: 66182dd66bcfa4742aa607a78e67d151, type: 2}
   secondCardPools:
   - {fileID: 11400000, guid: 1df3592972e94e84f8364bd1ef20cc51, type: 2}
   - {fileID: 11400000, guid: d721e0a31363d7141b0a68d5fb8f15b7, type: 2}

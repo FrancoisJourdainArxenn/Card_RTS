@@ -29,6 +29,8 @@ public class VisualManager : MonoBehaviour
     [Header("Pop Animation")]
     public float popStrength = 2f;
     public float popDuration = 0.5f;
+    public float heroProgressPopStrength = 0.15f; // pop léger de la carte héros en main à chaque progression de sa condition
+    public float heroProgressPopDuration = 0.25f;
 
     [Header("Camera Shake (on damage dealt)")]
     [Tooltip("How long (seconds) before the visual impact the camera shake starts, so it reads as landing on the hit instead of after it.")]

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
+  m_Name: GenerateWeapon
+  m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+  CardPool:
+  - {fileID: 11400000, guid: 6c7f3ec3a3093134492baf8fb613babc, type: 2}
+  - {fileID: 11400000, guid: ad434d014d189264db86ef8b5dc676e8, type: 2}
+  - {fileID: 11400000, guid: 57ca8ab4668646a4f814d5b1e5e35a9c, type: 2}
+  - {fileID: 11400000, guid: 289fd9a221a9c3a4d9e85ec369130636, type: 2}
+  - {fileID: 11400000, guid: 6727f4777cecd9642b511b3f63a55ed0, type: 2}
+  CardCount: 1
