@@ -579,7 +579,6 @@ public class CameraController : MonoBehaviour
     static int GetAttackValue(int uniqueID)
     {
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic c)) return c.Attack;
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(uniqueID, out BuildingLogic b)) return b.Attack;
         return -1;
     }
 }

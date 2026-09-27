@@ -14,7 +14,7 @@ public class Command
     // la CreatureDieCommand de la créature qui meurt (voir CreatureLogic.ScheduleBattleDeath).
     public static bool DeferForBattleReplay = false;
     private static readonly Dictionary<int, List<Action>> _deferredBySource = new();
-    // Bucket séparé pour les commandes de mort (CreatureDieCommand/BuildingDieCommand) — toujours
+    // Bucket séparé pour les commandes de mort (CreatureDieCommand) — toujours
     // rejoué APRÈS _deferredBySource pour la même clé (voir FlushDeferredCommands), pour qu'une mort
     // ne soit jamais rejouée avant les commandes "cause" qui doivent la précéder visuellement.
     private static readonly Dictionary<int, List<Action>> _deferredDeathsBySource = new();
@@ -140,15 +140,14 @@ public class Command
     public static int? CurrentDeferSourceID =>
         DeferForBattleReplay ? (_explicitDeferSourceID ?? EffectRegistry.CurrentSourceID) : (int?)null;
 
-    // Point d'entrée unique pour transformer les morts logiques accumulées (CreatureLogic/BuildingLogic)
-    // en commandes visuelles. À appeler explicitement par l'orchestrateur (EffectRegistry.Execute,
+    // Point d'entrée unique pour transformer les morts logiques accumulées (CreatureLogic) en
+    // commandes visuelles. À appeler explicitement par l'orchestrateur (EffectRegistry.Execute,
     // ZoneCombatResolver.EnqueueBattleCommands, ...) juste APRÈS avoir mis en file ses propres commandes
-    // "cause" — jamais automatiquement depuis le setter Health, pour garantir que la CreatureDieCommand/
-    // BuildingDieCommand d'une cible n'entre jamais dans la file avant l'animation censée la tuer.
+    // "cause" — jamais automatiquement depuis le setter Health, pour garantir que la CreatureDieCommand
+    // d'une cible n'entre jamais dans la file avant l'animation censée la tuer.
     public static void FlushPendingDeaths()
     {
         CreatureLogic.QueuePendingDeathVisuals();
-        BuildingLogic.QueuePendingDeathVisuals();
     }
 
     public virtual void StartCommandExecution()

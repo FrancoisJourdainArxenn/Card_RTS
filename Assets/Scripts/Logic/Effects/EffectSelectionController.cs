@@ -101,9 +101,6 @@ public static class EffectSelectionController
         foreach (KeyValuePair<int, CreatureLogic> e in CreatureLogic.CreaturesCreatedThisGame)
             UpdateEntityVisual(e.Key, e.Value, sel);
 
-        foreach (KeyValuePair<int, BuildingLogic> e in BuildingLogic.BuildingsCreatedThisGame)
-            UpdateEntityVisual(e.Key, e.Value, sel);
-
         foreach (KeyValuePair<int, BaseLogic> e in BaseLogic.BasesCreatedThisGame)
         {
             if (!e.Value.IsHomeBase)
@@ -144,9 +141,6 @@ public static class EffectSelectionController
         TargetingVisualEvents.RaiseTargetingEnded();
 
         foreach (int id in CreatureLogic.CreaturesCreatedThisGame.Keys)
-            ClearEntityVisual(id);
-
-        foreach (int id in BuildingLogic.BuildingsCreatedThisGame.Keys)
             ClearEntityVisual(id);
 
         foreach (KeyValuePair<int, BaseLogic> e in BaseLogic.BasesCreatedThisGame)

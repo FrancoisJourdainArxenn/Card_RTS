@@ -202,7 +202,6 @@ public class Player : MonoBehaviour, ILivable
     }
 
     public List<CreatureLogic> Creatures => playedCards.Creatures;
-    public List<BuildingLogic> Buildings => playedCards.Buildings;
     public List<ZoneLogic> VisibleZones
     {
         get
@@ -211,8 +210,7 @@ public class Player : MonoBehaviour, ILivable
             foreach (PlayerArea pa in PAreas)
             {
                 if (pa == MainPArea
-                    || playedCards.Creatures.Exists(c => c.BaseID == pa.baseID)
-                    || playedCards.Buildings.Exists(b => b.OriginSpot.Zone == pa.parentZone))
+                    || playedCards.Creatures.Exists(c => c.BaseID == pa.baseID))
                     zones.Add(pa.parentZone.Logic);
             }
             foreach (BaseLogic bl in controlledBases)
@@ -307,7 +305,6 @@ public class Player : MonoBehaviour, ILivable
 
         // --- Plateau / main / pioche pondérée ---
         playedCards.Creatures.Clear();
-        playedCards.Buildings.Clear();
         hand.CardsInHand.Clear();
         // deck.drawConfig N'EST PAS remis à null ici, volontairement : contrairement à HomeUnit
         // (classe C# custom, non correctement revert par Unity entre deux sessions Play), drawConfig
@@ -429,8 +426,6 @@ public class Player : MonoBehaviour, ILivable
         {
             foreach (CreatureLogic cl in playedCards.Creatures)
                 cl.OnTurnStart();
-            foreach (BuildingLogic bl in playedCards.Buildings)
-                bl.OnTurnStart();
         }
     }
 
@@ -1065,15 +1060,6 @@ public class Player : MonoBehaviour, ILivable
             if (creatureManager.PendingMoveGhost == null && !creatureManager.HasPendingBoard)
                 creatureManager.SetPending(crl.HasSummoningSickness);
         }
-
-        foreach (BuildingLogic bl in playedCards.Buildings)
-        {
-            GameObject g = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
-            if (g == null) continue;
-            OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
-            if (bm == null) continue;
-        }
-
     }
 
     public OneCreatureManager CheckCreatureManager(GameObject g)
@@ -1465,29 +1451,6 @@ public class Player : MonoBehaviour, ILivable
         new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, baseUniqueID);
         new BuildNeutralBaseCommand(baseUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
-    }
-
-    public void ShowBuildings(BuildSpotVisual spot)
-    {
-        // Debug.Log("Show Buildings for player " + PlayerID);
-        GlobalSettings.Instance.buildingShop.Show(deck.playerDeck.buildings, spot);
-    }
-
-    public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
-    {
-        if (NetworkSessionData.IsNetworkSession)
-        {
-            MainRessourceAvailable -= building.MainCost;
-            spot.SpawnPendingBuilding(building, this);
-            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.playerDeck.buildings.IndexOf(building), spot.SpotID);
-        }
-        else
-            ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());
-    }
-
-    public void ExecutePlaceBuilding(CardAsset building, BuildSpotVisual spot, int buildingUniqueID, bool alreadyPaid = false)
-    {
-        new PlaceBuildingCommand(building, this, spot, buildingUniqueID, alreadyPaid).AddToQueue();
     }
 
 

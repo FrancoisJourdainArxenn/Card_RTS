@@ -12,9 +12,7 @@ public class SceneReloader: MonoBehaviour {
         IDHolder.ClearIDHoldersList();
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
-        BuildingLogic.BuildingsCreatedThisGame.Clear();
         CreatureLogic.PendingDeathList.Clear();
-        BuildingLogic.PendingDeathVisualQueue.Clear();
         Command.CommandQueue.Clear();
         Command.ClearDeferredState();
         Command.CommandExecutionComplete();

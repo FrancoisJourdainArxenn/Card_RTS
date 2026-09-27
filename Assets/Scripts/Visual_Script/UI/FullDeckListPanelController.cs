@@ -5,7 +5,7 @@ using TMPro;
 
 // Vit sur FullDeckList_Panel (copie de Deck_ListPanel.prefab dans MenuScene) : consultation en
 // lecture seule du deck complet et fusionne du hero (mainPool + secondPool, voir
-// DeckSO.cards/buildings), independant de DeckListPanelController qui gere le hover/click-preview
+// DeckSO.cards), independant de DeckListPanelController qui gere le hover/click-preview
 // MainDeck/SecondDeck sur son propre DeckList_Panel.
 public class FullDeckListPanelController : MonoBehaviour
 {
@@ -47,8 +47,6 @@ public class FullDeckListPanelController : MonoBehaviour
         if (deck.heroCard != null)
             SpawnEntry(deck.heroCard);
         foreach (CardAsset card in deck.cards)
-            SpawnEntry(card);
-        foreach (CardAsset card in deck.buildings)
             SpawnEntry(card);
     }
 

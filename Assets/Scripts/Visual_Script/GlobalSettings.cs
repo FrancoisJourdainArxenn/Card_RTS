@@ -18,7 +18,6 @@ public class GlobalSettings : MonoBehaviour
     public HandBoundsVisual localPlayerHandBounds;
     public CardHoldSlotVisual localPlayerHoldSlot;
     public UiPlayerVisual UiPlayerVisual;
-    public BuildingShopVisual buildingShop;
 
     [Header("Colors")]
     public Color32 TopColor;
@@ -45,7 +44,6 @@ public class GlobalSettings : MonoBehaviour
     public GameObject RangedProjectilePrefab;
     public GameObject MeleeMultiTargetVfxPrefab;
     public GameObject NeutralBasePrefab;
-    public GameObject BuildingPrefab;
 
     [Header("Row Keywords")]
     public Keyword MeleeRowKeyword;
@@ -92,7 +90,6 @@ public class GlobalSettings : MonoBehaviour
         }
         UiPlayerVisual?.RefreshUI();
         FogOfWarManager.Refresh();
-        BuildSpotVisual.RefreshAll();
     }
 
     public void InitFromMap()
@@ -209,7 +206,6 @@ public class GlobalSettings : MonoBehaviour
             FogOfWarManager.Refresh();
             PathVisual.RefreshAll();
             RefreshEndPhaseButtons();
-            BuildSpotVisual.RefreshAll();
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))

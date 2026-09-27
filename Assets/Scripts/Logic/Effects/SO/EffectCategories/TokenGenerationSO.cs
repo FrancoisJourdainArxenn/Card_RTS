@@ -118,13 +118,6 @@ public class TokenGenerationSO : EffectSO
             PlayerArea sourceArea = context.Caster.GetPlayerAreaByID(sourceCreature.BaseID);
             if (sourceArea != null) target = sourceArea;
         }
-        else if (context.Source is BuildingLogic sourceBuilding)
-        {
-            PlayerArea sourceArea = System.Array.Find(
-                context.Caster.PAreas,
-                a => a.parentZone?.Logic == sourceBuilding.Zone);
-            if (sourceArea != null) target = sourceArea;
-        }
         return target;
     }
 

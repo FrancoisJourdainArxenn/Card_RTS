@@ -16,5 +16,5 @@ MonoBehaviour:
   difficultyLevel: 3
   deckTooltip: Overwhelm your opponent under a flood of tokens units.
   heroCard: {fileID: 11400000, guid: a05b586751b75b74b8b92256ed65768d, type: 2}
-  mainPool: {fileID: 11400000, guid: 8ed15b8f85077fe4b88bc35d92f35397, type: 2}
+  mainPool: {fileID: 11400000, guid: fcf733b72e307b24ba1f18c25c0c8c45, type: 2}
   secondPool: {fileID: 11400000, guid: 36c37d0ad6924654c81a6482ce7d6b68, type: 2}

@@ -559,18 +559,6 @@ public static class PhaseEffectPipeline
             return creature.ca.Effects[effectIdx];
         }
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceID, out BuildingLogic building))
-        {
-            bool indexIsValid = building.ca.Effects != null
-                && effectIdx >= 0 && effectIdx < building.ca.Effects.Count;
-
-            if (!indexIsValid)
-                return null;
-
-            ctx = new EffectContext { Caster = building.owner, Source = building };
-            return building.ca.Effects[effectIdx];
-        }
-
         return null;
     }
 
@@ -579,16 +567,13 @@ public static class PhaseEffectPipeline
         // -1 est le seul sentinel "pas de cible" (voir SelectedTarget?.ID ?? -1 un peu partout) —
         // id < 0 rejetait à tort toute cible dont l'ID est un hash pouvant tomber négatif (zones :
         // ZoneManager.Awake utilise Animator.StringToHash, un CRC32 signé), alors que
-        // Creature/Building/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
+        // Creature/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
         // caché ce bug jusqu'à ce qu'un effet de carte cible une Zone par ID à travers le réseau.
         if (id == -1)
             return null;
 
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c))
             return c;
-
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic b))
-            return b;
 
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic pb))
             return pb;

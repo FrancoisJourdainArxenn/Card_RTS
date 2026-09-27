@@ -39,7 +39,7 @@ public class ChooseOneSO : EffectSO
 
             if (sourceEntityID == -1 || effectIndex == -1)
             {
-                Log($"{EffectName}: impossible de résoudre sourceEntityID/effectIndex (carte non-créature/bâtiment ?), annulé.");
+                Log($"{EffectName}: impossible de résoudre sourceEntityID/effectIndex (carte non-créature ?), annulé.");
                 return;
             }
 

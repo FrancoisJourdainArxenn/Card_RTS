@@ -76,7 +76,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     // directement — sinon un deuxième coup fatal dans la même zone rejouerait l'animation). L'ancien
     // "puis révèle GameOverPanel" a été retiré : GameOverPanel n'est assigné dans aucune scène, et la
     // fin de partie passe désormais par GameOverCommand (message + retour menu).
-    // Réutilise VfxManager.PlayDeath() (même mécanisme que CreatureDieCommand/BuildingDieCommand) au
+    // Réutilise VfxManager.PlayDeath() (même mécanisme que CreatureDieCommand) au
     // lieu d'un champ prefab séparé — le composant VfxManager de ce GameObject a déjà un emplacement
     // dédié pour l'animation de mort, pas besoin d'en dupliquer un.
     public void PlayDeathAnimationAndHide(System.Action onComplete)

@@ -89,7 +89,5 @@ public class PlayACreatureCommand : Command
             int rawTablePos = selectedPArea.tableVisual.FromNetworkTablePos(cl.ca.melee, tablePos);
             selectedPArea.tableVisual.AddCreatureAtIndex(cl.ca, creatureID, rawTablePos, selectedPArea.baseID, overrideAttack: spawnAttack, overrideHealth: spawnHealth);
         }
-        BuildSpotVisual.RefreshAll();
-
     }
 }

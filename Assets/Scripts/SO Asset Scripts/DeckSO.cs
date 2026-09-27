@@ -19,7 +19,7 @@ public class DeckSO : ScriptableObject
     public CardPoolSO mainPool;
     public CardPoolSO secondPool;
 
-    // Deck effectif du heros : fusion des cartes/batiments de mainPool et secondPool.
+    // Deck effectif du heros : fusion des cartes de mainPool et secondPool.
     public List<CardAsset> cards
     {
         get
@@ -27,17 +27,6 @@ public class DeckSO : ScriptableObject
             List<CardAsset> merged = new List<CardAsset>();
             if (mainPool != null) merged.AddRange(mainPool.cards);
             if (secondPool != null) merged.AddRange(secondPool.cards);
-            return merged;
-        }
-    }
-
-    public List<CardAsset> buildings
-    {
-        get
-        {
-            List<CardAsset> merged = new List<CardAsset>();
-            if (mainPool != null) merged.AddRange(mainPool.buildings);
-            if (secondPool != null) merged.AddRange(secondPool.buildings);
             return merged;
         }
     }

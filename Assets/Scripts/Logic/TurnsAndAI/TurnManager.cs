@@ -216,7 +216,6 @@ public class TurnManager : MonoBehaviour
 
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
-        BuildingLogic.BuildingsCreatedThisGame.Clear();
         // Sans ça, une base neutre capturée pendant une partie précédente (jamais retirée de ce
         // dictionnaire statique tant qu'elle n'est pas détruite en jeu) resterait comptée dans
         // Player.controlledBases de la partie suivante — voir Player.ResetForNewGame ci-dessous, qui
@@ -229,7 +228,6 @@ public class TurnManager : MonoBehaviour
         // sur un ID désormais réutilisé par IDFactory) corrompt/détruit la créature actuelle qui
         // partage cet ID — typiquement la nouvelle HomeUnit.
         CreatureLogic.PendingDeathList.Clear();
-        BuildingLogic.PendingDeathVisualQueue.Clear();
 
         // Doit tourner après les Clear() ci-dessus (sinon l'entrée CreaturesCreatedThisGame/
         // BasesCreatedThisGame fraîchement créée serait aussitôt effacée) et avant tout tirage de
@@ -374,8 +372,7 @@ public class TurnManager : MonoBehaviour
                     participantIndex,
                     assignment.CreatureIDs,     assignment.CreatureDamages,
                     assignment.BaseIDs,         assignment.BaseDamages,
-                    assignment.TargetPlayerIDs, assignment.PlayerDamages,
-                    assignment.BuildingIDs,     assignment.BuildingDamages);
+                    assignment.TargetPlayerIDs, assignment.PlayerDamages);
                 return;
             }
 
@@ -849,13 +846,12 @@ public class TurnManager : MonoBehaviour
         }
         ZoneCombatResolver.BattleAssignment assignment =
             ZoneCombatResolver.SerializeMyAttackAssignments(localIndex);
-        Debug.Log($"[Battle][Client] AutoSubmitBattleAssignment — joueur {localIndex} | créatures={assignment.CreatureIDs.Length} bases={assignment.BaseIDs.Length} joueurs={assignment.TargetPlayerIDs.Length} bâtiments={assignment.BuildingIDs.Length}");
+        Debug.Log($"[Battle][Client] AutoSubmitBattleAssignment — joueur {localIndex} | créatures={assignment.CreatureIDs.Length} bases={assignment.BaseIDs.Length} joueurs={assignment.TargetPlayerIDs.Length}");
         GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
             localIndex,
             assignment.CreatureIDs,     assignment.CreatureDamages,
             assignment.BaseIDs,         assignment.BaseDamages,
-            assignment.TargetPlayerIDs, assignment.PlayerDamages,
-            assignment.BuildingIDs,     assignment.BuildingDamages);
+            assignment.TargetPlayerIDs, assignment.PlayerDamages);
     }
 
     IEnumerator AutoAdvanceFromEndBattle()

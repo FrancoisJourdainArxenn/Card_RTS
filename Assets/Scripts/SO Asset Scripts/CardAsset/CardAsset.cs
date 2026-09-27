@@ -5,9 +5,10 @@ using TMPro;
 
 public enum CardType
 {
-    Unit,
-    Building,
-    Action,
+    // Valeurs explicites : c'est l'entier qui est sérialisé dans les CardAsset (1 = ancien Building,
+    // retiré) — ne jamais renuméroter, sinon toutes les cartes Action deviendraient invalides.
+    Unit   = 0,
+    Action = 2,
 }
 
 public enum SubType

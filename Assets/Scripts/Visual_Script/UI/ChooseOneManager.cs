@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,9 +13,13 @@ public class ChooseOneManager : MonoBehaviour
     public Transform cardContainer; // parent avec un HorizontalLayoutGroup
 
     [Header("Card Prefabs (PAS les prefabs de main — les mêmes que CardPreviewUI)")]
-    public GameObject cardPreviewPrefab;      // Card_Unit_Preview — créatures/bâtiments
+    public GameObject cardPreviewPrefab;      // Card_Unit_Preview — créatures
     public GameObject heroCardPreviewPrefab;  // Hero_Preview
     public GameObject spellCardPreviewPrefab; // Card_Action_Preview — sorts (CardType.Action)
+
+    [Header("Bouton Hide/Show (HORS de panelRoot, sinon il disparaît avec lui)")]
+    public GameObject toggleButtonRoot;
+    public TMP_Text toggleButtonLabel;
 
     private class PendingChoice
     {
@@ -27,6 +32,7 @@ public class ChooseOneManager : MonoBehaviour
     private readonly Queue<PendingChoice> _queue = new Queue<PendingChoice>();
     private PendingChoice _current;
     private readonly List<GameObject> _spawnedCards = new List<GameObject>();
+    private bool _isHidden;
 
     public bool AnyPending => _current != null || _queue.Count > 0;
 
@@ -36,7 +42,7 @@ public class ChooseOneManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        if (panelRoot != null) panelRoot.SetActive(false);
+        RefreshVisibility();
     }
 
     /// <summary>Appelé par ChooseOneSO.Execute (solo) ou GameNetworkManager.ChooseOneOfferClientRpc (réseau).</summary>
@@ -75,13 +81,15 @@ public class ChooseOneManager : MonoBehaviour
         if (_queue.Count == 0)
         {
             _current = null;
-            if (panelRoot != null) panelRoot.SetActive(false);
+            _isHidden = false;
+            RefreshVisibility();
             GlobalSettings.Instance?.RefreshEndPhaseButtons();
             return;
         }
 
         _current = _queue.Dequeue();
-        if (panelRoot != null) panelRoot.SetActive(true);
+        _isHidden = false;
+        RefreshVisibility();
 
         foreach (GameObject go in _spawnedCards)
             if (go != null) Destroy(go);
@@ -129,8 +137,8 @@ public class ChooseOneManager : MonoBehaviour
         foreach (GameObject go in _spawnedCards)
             if (go != null) Destroy(go);
         _spawnedCards.Clear();
-        if (panelRoot != null) panelRoot.SetActive(false);
         _current = null;
+        RefreshVisibility();
 
         if (!NetworkSessionData.IsNetworkSession)
         {
@@ -147,5 +155,21 @@ public class ChooseOneManager : MonoBehaviour
             GameNetworkManager.Instance.SubmitChooseOnePickServerRpc(playerIndex, resolved.SourceEntityID, resolved.EffectIndex, poolIndex);
 
         ShowNext();
+    }
+
+    /// <summary>Branché sur le OnClick du bouton Hide/Show.</summary>
+    public void ToggleVisibility()
+    {
+        if (_current == null) return;
+        _isHidden = !_isHidden;
+        RefreshVisibility();
+    }
+
+    void RefreshVisibility()
+    {
+        bool hasChoice = _current != null;
+        if (panelRoot != null) panelRoot.SetActive(hasChoice && !_isHidden);
+        if (toggleButtonRoot != null) toggleButtonRoot.SetActive(hasChoice);
+        if (toggleButtonLabel != null) toggleButtonLabel.text = _isHidden ? "Show" : "Hide";
     }
 }

@@ -1,8 +1,7 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// Ajouté dynamiquement par ChooseOneManager sur chaque carte offerte — évite de toucher
-// OneCardManager.OnPointerClick (déjà utilisé pour BuildingShopVisual, sans rapport ici).
+// Ajouté dynamiquement par ChooseOneManager sur chaque carte offerte.
 public class ChooseOneCardClickHandler : UnityEngine.MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     private ChooseOneManager _manager;

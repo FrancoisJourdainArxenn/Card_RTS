@@ -8,7 +8,7 @@ public class CardTooltipManager : MonoBehaviour
     public static CardTooltipManager Instance;
 
     [Header("Mini card prefabs (même logique de choix que CardPreviewUI)")]
-    public GameObject cardTooltipPrefab;       // fallback (Unit / Building)
+    public GameObject cardTooltipPrefab;       // fallback (Unit)
     public GameObject actionCardTooltipPrefab;
     public GameObject heroCardTooltipPrefab;
 

@@ -26,7 +26,7 @@ public class AmplifyEffectSO : EffectSO
         }
 
         // Bonus permanent : chaque application obtient son propre ID local unique (jamais lié à une
-        // entité vivante), pour ne jamais être retiré si la source (créature/bâtiment) meurt ensuite
+        // entité vivante), pour ne jamais être retiré si la source (créature) meurt ensuite
         // et pour s'additionner à chaque nouvelle application au lieu d'écraser la précédente. Sûr en
         // réseau : ce sourceID n'est calculé et utilisé que côté serveur puis diffusé tel quel via
         // EffectAmplifierClientRpc (voir GameNetworkManager), jamais recalculé côté client.

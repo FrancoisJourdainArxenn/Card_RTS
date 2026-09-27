@@ -29,10 +29,6 @@ public class HealDamageCommand : Command {
         {
             target.GetComponent<OneBaseManager>().HealDamage(amount, healthAfter);
         }
-        else if (target != null && target.GetComponent<OneBuildingManager>() != null)
-        {
-            target.GetComponent<OneBuildingManager>().HealDamage(amount, healthAfter);
-        }
         else
         {
             target?.GetComponent<OneCreatureManager>()?.HealDamage(amount, healthAfter);

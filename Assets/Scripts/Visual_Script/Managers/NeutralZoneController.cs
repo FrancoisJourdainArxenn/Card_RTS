@@ -78,8 +78,6 @@ public class NeutralZoneController : MonoBehaviour
         if (hover != null) hover.ThisPreviewEnabled = true;
         baseCard.tag = player.tag;
         bool isLowPlayer = player == GlobalSettings.Instance.LowPlayer;
-        string playerTag = isLowPlayer ? "LowPlayer" : "TopPlayer";
-        SetBuildingSpotTag(playerTag);
 
 
         IDHolder idHolder = baseCard.GetComponent<IDHolder>();
@@ -132,7 +130,7 @@ public class NeutralZoneController : MonoBehaviour
     // Enfilée UNE SEULE FOIS par BaseDieCommand, après que toute la zone où cette base meurt ait fini
     // d'être traitée (voir ZoneCombatResolver.EnqueueBattleCommands / diedNeutralBases). Fait
     // disparaître la base, joue son animation de mort via VfxManager.PlayDeath() (même mécanisme que
-    // CreatureDieCommand/BuildingDieCommand — le composant VfxManager de Card_Board_Base a déjà un
+    // CreatureDieCommand — le composant VfxManager de Card_Board_Base a déjà un
     // emplacement dédié, pas besoin d'un champ prefab séparé), attend sa durée, puis nettoie via
     // RemoveBaseWithID (spawner réactivé/plot reconstructible seulement une fois l'animation
     // terminée, pas avant).
@@ -239,18 +237,6 @@ public class NeutralZoneController : MonoBehaviour
             if (_base != null && _base.CompareTag(player.tag))
                 _base.SetActive(true);
         }
-    }
-
-    public void SetBuildingSpotTag(string playerTag)
-    {
-        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>(true))
-            spot.TakePlayerTag(playerTag);
-    }
-
-    public void ResetBuildingSpotTag()
-    {
-        foreach (BuildSpotVisual spot in GetComponentsInChildren<BuildSpotVisual>(true))
-            spot.ResetTag();
     }
 
 

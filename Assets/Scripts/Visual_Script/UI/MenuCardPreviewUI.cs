@@ -11,7 +11,7 @@ public class MenuCardPreviewUI : MonoBehaviour
     [SerializeField] private float previewScale = 1f;
 
     [Header("Mêmes prefabs que CardPreviewUI en BattleScene")]
-    [SerializeField] private GameObject unitCardPreviewPrefab;   // Card_Unit_Preview (fallback Unit/Building)
+    [SerializeField] private GameObject unitCardPreviewPrefab;   // Card_Unit_Preview (fallback Unit)
     [SerializeField] private GameObject heroCardPreviewPrefab;   // Hero_Preview
     [SerializeField] private GameObject actionCardPreviewPrefab; // Card_Action_Preview
 
@@ -88,7 +88,6 @@ public class MenuCardPreviewUI : MonoBehaviour
         manager.cardAsset = asset;
         manager.owner = null;
         manager.sourceCreature = null;
-        manager.sourceBuilding = null;
         manager.ReadCardFromAsset();
         manager.OverrideStats(null, null, null);
 

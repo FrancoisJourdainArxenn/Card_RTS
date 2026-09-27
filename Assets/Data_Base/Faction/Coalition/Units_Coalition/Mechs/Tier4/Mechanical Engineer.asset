@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Mechanical Engineer
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
   subType: 6
   tier: 4
-  Description: <b>Battle Start:</b> Mechs gains +1/+0.
+  Description: When you play a Weapon, a Mechanical unit gains +1/+1.
   CardImage: {fileID: 21300000, guid: ca5f52a1754e23b498e588b0c860c40d, type: 3}
   MainCost: 1
   IsHero: 0
@@ -40,10 +40,10 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Patch up
-    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
-    Trigger: 14
-    Condition: {fileID: 0}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Trigger: 17
+    Condition: {fileID: 11400000, guid: ec7e6e658c7ba104884d3557261ed6ef, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
@@ -52,7 +52,7 @@ MonoBehaviour:
         queries:
         - team: 1
           statusFilter: 0
-          zoneFilter: 1
+          zoneFilter: 0
           cardFilter: {fileID: 11400000, guid: 1ac9c9099f47a9a43b1e3edcdde0afd0, type: 2}
         requiresPlayerSelection: 0
       affectedElements:
@@ -61,7 +61,7 @@ MonoBehaviour:
         includesSource: 0
         includesEventSubject: 0
         queries: []
-      repartition: 0
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

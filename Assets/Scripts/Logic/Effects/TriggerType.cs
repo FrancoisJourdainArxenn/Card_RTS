@@ -27,8 +27,7 @@ public enum TriggerType
     // Other objects dying
     OnFriendlyCreatureDies = 7,
     OnEnemyCreatureDies = 8,
-    OnFriendlyBuildingDies = 9,
-    OnEnemyBuildingDies = 10,
+    // 9/10 = anciens OnFriendly/EnemyBuildingDies (retirés) — ne pas réutiliser ces valeurs.
 
     // Token
     OnTokenCreated = 11,
@@ -41,6 +40,6 @@ public enum TriggerType
     OnTierUpgrade = 19, // déclenché une seule fois, quand BaseLogic.TryUpgrade() fait passer
                         // CurrentTier à une nouvelle valeur — voir EffectRegistry.NotifyBaseTierUpgraded
 
-    Passive = 21, // actif en continu tant que la source (créature/bâtiment/base) est en jeu, réévalué
+    Passive = 21, // actif en continu tant que la source (créature/base) est en jeu, réévalué
                   // (Condition + ciblage) à chaque changement de plateau — voir PassiveAuraManager.
 }

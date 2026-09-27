@@ -16,5 +16,4 @@ public class CardPoolSO : ScriptableObject
     public Sprite cardPoolIcon;
 
     public List<CardAsset> cards = new List<CardAsset>();
-    public List<CardAsset> buildings = new List<CardAsset>();
 }

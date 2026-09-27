@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-// Condition générique sur le sujet d'un trigger réactif (EventSubjectCreature / EventSubjectBuilding) :
+// Condition générique sur le sujet d'un trigger réactif (EventSubjectCreature) :
 // l'allié qui vient de mourir, la créature qui vient d'être jouée/créée, etc.
 //
 // À la différence de CondEntityCount (qui scanne le plateau vivant via TargetFunctions), celle-ci
@@ -16,13 +16,13 @@ public class CondEventSubjectMatch : ConditionSO
 {
     public enum SubjectSource
     {
-        Entity,     // EventSubjectCreature / EventSubjectBuilding — une entité du plateau
+        Entity,     // EventSubjectCreature — une entité du plateau
         PlayedCard, // context.PlayedCard — un sort/action joué (OnActionPlayed), sans entité de plateau
     }
 
     public enum EncounterCombatTarget
     {
-        EventSubject, // le sujet de l'évènement (EventSubjectCreature/Building) — cohérent avec le reste de la condition
+        EventSubject, // le sujet de l'évènement (EventSubjectCreature) — cohérent avec le reste de la condition
         Source,       // context.Source — l'unité qui porte l'effet/trigger
         Either        // vrai si l'un des deux est dans un combat de rencontre
     }
@@ -63,8 +63,7 @@ public class CondEventSubjectMatch : ConditionSO
         }
 
         CreatureLogic creature = context.EventSubjectCreature;
-        BuildingLogic building = context.EventSubjectBuilding;
-        ILivable subject = (ILivable)creature ?? (ILivable)building;
+        ILivable subject = creature;
 
         // Un trigger "direct" (ex: OnBattleStart) n'a pas de sujet d'évènement — seul context.Source
         // existe. On ne bloque donc que si un filtre a réellement besoin du sujet (tout sauf un check
@@ -73,11 +72,11 @@ public class CondEventSubjectMatch : ConditionSO
             || (requireEncounterZone && encounterCombatTarget != EncounterCombatTarget.Source);
         if (needsSubject && subject == null) return false;
 
-        CardAsset ca = creature != null ? creature.ca : building?.ca;
+        CardAsset ca = creature?.ca;
 
         if (filterByTeam)
         {
-            Player subjectOwner = creature != null ? creature.owner : building?.owner;
+            Player subjectOwner = creature?.owner;
             bool isFriendly = subjectOwner != null && subjectOwner == context.Owner;
             if (requiredTeam == TargetTeam.Friendly && !isFriendly) return false;
             if (requiredTeam == TargetTeam.Enemy && isFriendly) return false;
@@ -107,7 +106,6 @@ public class CondEventSubjectMatch : ConditionSO
         ZoneCombatResolver resolver = livable switch
         {
             CreatureLogic creature => ZoneCombatResolver.FindForBase(creature.BaseID),
-            BuildingLogic building => ZoneCombatResolver.FindForBuilding(building),
             _ => null,
         };
         if (resolver == null || !resolver.isEncounterZone) return false;

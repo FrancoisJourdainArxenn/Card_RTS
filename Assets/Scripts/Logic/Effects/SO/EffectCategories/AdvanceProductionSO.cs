@@ -1,10 +1,10 @@
 using UnityEngine;
 
-// Fait avancer de N tours les effets périodiques d'une cible (créature ou bâtiment) — utile pour les
-// unités/bâtiments à production périodique pilotés par un CondCounter (WrappedCondition, resetCount)
-// sur un effet (ex: Research Lab / Every3Turns, un Unit avec IsStructureUnit=true, pas un
-// CardType.Building). Rejoue EffectRegistry.Execute() sur cet effet plutôt que de toucher directement
-// le compteur interne de CondCounter (CreatureLogic/BuildingLogic.IncrementConditionCounter) : ce
+// Fait avancer de N tours les effets périodiques d'une cible (créature) — utile pour les unités à
+// production périodique pilotées par un CondCounter (WrappedCondition, resetCount) sur un effet
+// (ex: Research Lab / Every3Turns, un Unit avec IsStructureUnit=true). Rejoue EffectRegistry.Execute()
+// sur cet effet plutôt que de toucher directement le compteur interne de CondCounter
+// (CreatureLogic.IncrementConditionCounter) : ce
 // compteur n'est vérifié par rapport au seuil qu'à l'intérieur de ConditionSO.Evaluate(), donc
 // l'incrémenter à la main sans repasser par Evaluate() désynchroniserait sa parité et retarderait
 // la prochaine production au lieu de l'avancer. targetTrigger doit matcher le Trigger réellement
@@ -50,7 +50,6 @@ public class AdvanceProductionSO : EffectSO
         switch (target)
         {
             case CreatureLogic c: ca = c.ca; owner = c.owner; source = c; break;
-            case BuildingLogic b: ca = b.ca; owner = b.owner; source = b; break;
             default: return;
         }
         if (ca.Effects == null) return;

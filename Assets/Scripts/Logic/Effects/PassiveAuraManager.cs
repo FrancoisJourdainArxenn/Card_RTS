@@ -68,7 +68,15 @@ public static class PassiveAuraManager
         IPassiveAuraEffect auraEffect = (IPassiveAuraEffect)registration.Data.Effect;
         EffectContext context = registration.ContextFactory();
 
-        bool conditionMet = registration.Data.Condition == null || registration.Data.Condition.Evaluate(context);
+        // Le combat résout la mort d'une créature immédiatement, en pleine planification (voir
+        // CreatureLogic.ResolvePredictedBattleDeath, appelé par ZoneCombatResolver dès que la créature
+        // franchit le seuil de mort) — bien avant le vrai Die()/UnregisterEntity, qui n'arrive qu'au
+        // drain de fin de Battle. Une source déjà tuée prédictivement ne doit plus accorder son aura
+        // pour le reste de CE combat, même si elle est encore techniquement enregistrée ici.
+        bool sourceAlive = context.Source == null || (!context.Source.IsPendingDeath && !context.Source.OnDeathResolvedInBattle);
+
+        bool conditionMet = sourceAlive
+            && (registration.Data.Condition == null || registration.Data.Condition.Evaluate(context));
         List<ILivable> currentTargets = conditionMet
             ? registration.Data.Effect.GetAffectedElements(context, registration.Data.Effectinfo).OfType<ILivable>().ToList()
             : new List<ILivable>();

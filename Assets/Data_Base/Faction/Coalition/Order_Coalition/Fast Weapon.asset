@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 10
   tier: 1
-  Description: Gives "Arcing Attacks" to target ally unit.
+  Description: Gives "Multi Strike" to target ally unit.
   CardImage: {fileID: 21300000, guid: e34c076d81c029341a114bfe6ef01c79, type: 3}
   MainCost: 0
   IsHero: 0

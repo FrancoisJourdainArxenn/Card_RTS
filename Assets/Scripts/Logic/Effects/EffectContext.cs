@@ -10,7 +10,7 @@ public partial class EffectContext
     public CardAsset PlayedCard; // la carte jouée/lancée à l'origine de cette résolution — renseigné par EffectRegistry.ETB
     // UniqueCardID de l'instance de carte jouée (voir CardLogic.CardsCreatedThisGame) — seul moyen de
     // retrouver l'effet côté réseau quand Source est null (carte Action/Order jouée depuis la main, sans
-    // créature/bâtiment sur le plateau) : voir ResolveEffectReplayKey ci-dessous et
+    // créature sur le plateau) : voir ResolveEffectReplayKey ci-dessous et
     // Player.PlayASpellFromHand/NetworkPendingPlaySpell qui le renseignent. -1 = non applicable.
     public int PlayedCardUniqueID = -1;
     // Sous-ensemble de PlayedCard : uniquement quand l'effet qui s'exécute EST l'effet propre de cette
@@ -19,7 +19,6 @@ public partial class EffectContext
     // (ex: Orteg "Empowered") héritent à tort du bonus destiné au sort lui-même.
     public CardAsset AmplifierCard;
     public CreatureLogic EventSubjectCreature; // la creature qui vient de mourrir ou d'être jouée
-    public BuildingLogic EventSubjectBuilding; // le bâtiment qui vient de mourrir ou d'être jouée
     public TurnManager.TurnPhases CurrentPhase; // la phase actuelle du tour
 
     public IIdentifiable SelectedTarget; // set by BeginCombatEffectManager when player picks a target
@@ -44,7 +43,6 @@ public partial class EffectContext
     private IIdentifiable GetSourceByType(EffectObjectType type) => type switch
     {
         EffectObjectType.Creature => Source as CreatureLogic,
-        EffectObjectType.Building => Source as BuildingLogic,
         EffectObjectType.Base     => Source as BaseLogic,
         EffectObjectType.Zone     => TargetedZone,
         EffectObjectType.Player   => Caster,
@@ -55,7 +53,6 @@ public partial class EffectContext
         type switch
         {
             EffectObjectType.Creature => GetCreatureTargets(queries, targetZone),
-            EffectObjectType.Building => GetBuildingTargets(queries, targetZone),
             EffectObjectType.Base     => GetBaseTargets(queries, targetZone),
             EffectObjectType.Zone     => GetZoneTargets(queries, targetZone),
             EffectObjectType.Player   => GetPlayerTargets(queries),
@@ -106,15 +103,13 @@ public partial class EffectContext
 
     // Résout (sourceEntityID, effectIndex) pour le rejeu réseau déterministe de cet effet — utilisé par
     // ChooseOneSO/TokenGenerationSO/GenerateCardsFromPoolSO pour que EffectRegistry.GetChooseOneSO (etc.)
-    // le retrouvent plus tard côté client. Priorité aux entités de plateau (créature/bâtiment/base) ;
+    // le retrouvent plus tard côté client. Priorité aux entités de plateau (créature/base) ;
     // si Source est null (carte Action/Order jouée depuis la main — voir Player.PlayASpellFromHand/
     // NetworkPendingPlaySpell), retombe sur PlayedCardUniqueID/PlayedCard. (-1, -1) si rien ne matche.
     public (int sourceEntityID, int effectIndex) ResolveEffectReplayKey(EffectSO effect)
     {
         if (Source is CreatureLogic sc && sc.ca?.Effects != null)
             return (sc.UniqueCreatureID, sc.ca.Effects.FindIndex(e => e.Effect == effect));
-        if (Source is BuildingLogic sb && sb.ca?.Effects != null)
-            return (sb.UniqueBuildingID, sb.ca.Effects.FindIndex(e => e.Effect == effect));
         if (Source is BaseLogic spb && spb.ba?.Effects != null)
             return (spb.ID, spb.ba.Effects.FindIndex(e => e.Effect == effect));
         if (PlayedCardUniqueID != -1 && PlayedCard?.Effects != null)
@@ -159,7 +154,6 @@ public partial class EffectContext
     private IIdentifiable GetEventSubjectByType(EffectObjectType type) => type switch
     {
         EffectObjectType.Creature => EventSubjectCreature,
-        EffectObjectType.Building => EventSubjectBuilding,
         _                         => null
     };
 }

@@ -106,7 +106,7 @@ public class DeckListPanelController : MonoBehaviour
         Debug.Log($"[DeckList] Ouverture : {deck.deckName} (frame {Time.frameCount}).");
         if (deckNameText != null)
             deckNameText.text = deck.deckName;
-        ShowCardList(deck.cards, deck.buildings, positionAtMouse: true);
+        ShowCardList(deck.cards, positionAtMouse: true);
     }
 
     public void ShowDeckList(CardPoolSO pool)
@@ -124,17 +124,14 @@ public class DeckListPanelController : MonoBehaviour
         // d'un CardPoolSlot (souvent petit), recentrer le panneau dessus le recouvrirait et
         // casserait son propre raycast (boucle Enter/Exit). DeckList_Panel garde sa position
         // d'origine dans la scene.
-        ShowCardList(pool.cards, pool.buildings, positionAtMouse: false);
+        ShowCardList(pool.cards, positionAtMouse: false);
     }
 
-    private void ShowCardList(List<CardAsset> cards, List<CardAsset> buildings, bool positionAtMouse)
+    private void ShowCardList(List<CardAsset> cards, bool positionAtMouse)
     {
         ClearEntries();
 
         foreach (CardAsset card in cards)
-            SpawnEntry(card);
-
-        foreach (CardAsset card in buildings)
             SpawnEntry(card);
 
         PlayOpenAnimation(deckListPanel);
@@ -223,7 +220,7 @@ public class DeckListPanelController : MonoBehaviour
 
         // Le DeckSO du hero (asset preset, retrouve par reference dans MenuRegistry.decks pour
         // la sync reseau par index) porte desormais directement les deux pools choisis : ce choix
-        // devient ainsi le deck reellement utilise au lancement de partie (voir DeckSO.cards/buildings).
+        // devient ainsi le deck reellement utilise au lancement de partie (voir DeckSO.cards).
         if (originatingHero.deck != null)
         {
             if (kind == CardPoolSlot.SlotKind.Main)

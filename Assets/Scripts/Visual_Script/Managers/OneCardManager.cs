@@ -2,21 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using DG.Tweening;
 using TMPro;
 
 // holds the refs to all the Text, Images on the card
-public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class OneCardManager : MonoBehaviour
 {
 
     public CardAsset cardAsset;
     public Player owner;
-    // Instance vivante correspondant à cardAsset, quand ce OneCardManager représente une créature/
-    // bâtiment déjà sur le plateau (pas rempli pour une carte en main) — permet d'afficher la
-    // progression d'un CondCounter (source = WrappedCondition), dont le compteur vit sur l'instance.
+    // Instance vivante correspondant à cardAsset, quand ce OneCardManager représente une créature
+    // déjà sur le plateau (pas rempli pour une carte en main) — permet d'afficher la progression
+    // d'un CondCounter (source = WrappedCondition), dont le compteur vit sur l'instance.
     public CreatureLogic sourceCreature;
-    public BuildingLogic sourceBuilding;
     // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
@@ -34,7 +32,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image TierImage;
     public Image RowIcon;
 
-    public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
     private Color _originalAttackColor;
     private Color _originalHealthColor;
@@ -266,7 +263,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         foreach (CardEffectData data in cardAsset.Effects)
         {
             if (data.Condition is not CondCounter counter) continue;
-            string progress = counter.GetProgressText(sourceCreature, sourceBuilding, owner);
+            string progress = counter.GetProgressText(sourceCreature, owner);
             if (!string.IsNullOrEmpty(progress))
                 DescriptionText.text += $" {progress}";
         }
@@ -304,26 +301,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         _popTween?.Kill();
         transform.localScale = originalScale;
         _popTween = transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
-            transform.DOScale(originalScale * 1.1f, 0.15f);
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
-            transform.DOScale(originalScale, 0.15f);
-    }
-
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (!BuildingShopVisual.IsOpen) return;
-        if (!canBePlayedNow) return;
-        GlobalSettings.Instance.buildingShop.OnBuildingSelected(cardAsset);
     }
 
 }

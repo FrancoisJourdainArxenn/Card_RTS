@@ -126,8 +126,8 @@ public class CreatureLogic: ILivable
     // creatures) have already been fired ahead of time for THIS death during battle planning
     // (see ResolvePredictedBattleDeath / EffectRegistry.NotifyCreatureDiedPredicted). Prevents
     // NotifyCreatureDied from firing the creature-owned listeners a second time when the real
-    // Die() eventually runs — building-owned listeners are not covered by the predictive path
-    // yet, so NotifyCreatureDied still fires those regardless of this flag.
+    // Die() eventually runs — non-creature listeners (e.g. base-owned) are not covered by the
+    // predictive path yet, so NotifyCreatureDied still fires those regardless of this flag.
     public bool ReactiveDeathTriggersResolvedInBattle { get; private set; }
 
     public int ShieldValue { get; private set; } = 0;
@@ -875,6 +875,12 @@ public class CreatureLogic: ILivable
         // Inconditionnel (pas dans le bloc ca.Effects != null ci-dessus) : une créature SANS aucun
         // effet propre peut quand même faire réagir Rex.
         EffectRegistry.NotifyCreatureDiedPredicted(this, owner);
+
+        // Même raisonnement qu'au-dessus : une aura Passive accordée par CETTE créature doit cesser de
+        // s'appliquer pour le reste de CE combat, pas seulement au drain de fin de Battle (voir le garde
+        // sourceAlive dans PassiveAuraManager.Recompute, qui s'appuie sur OnDeathResolvedInBattle
+        // positionné juste au-dessus).
+        PassiveAuraManager.RecomputeAll();
     }
 
     // Clé de report dédiée à OnAttack, distincte de UniqueCreatureID (utilisé tel quel comme clé par
@@ -1048,7 +1054,7 @@ public class CreatureLogic: ILivable
 
         // Cible de CETTE attaque (OnAttack uniquement) — -1 sinon. Résolue via le même chemin
         // générique que SelectedTarget (PhaseEffectPipeline.ResolveEntityByID) : couvre
-        // Creature/Building/Base/Zone, renvoie null pour un Player (pas de voisinage pour un joueur).
+        // Creature/Base/Zone, renvoie null pour un Player (pas de voisinage pour un joueur).
         ILivable replayTarget = PhaseEffectPipeline.ResolveEntityByID(targetID) as ILivable;
 
         // effectIndex=-1 : sentinel posé par ResolvePredictedBattleDeath pour une créature morte en
@@ -1133,7 +1139,7 @@ public class CreatureLogic: ILivable
                         EffectSO.ClearNetworkRng();
                         EffectSO.SetLastAllocation(previousAllocation);
                     }
-                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueCreatureID, false, i, seed, allocation);
+                    ZoneCombatResolver.RecordOnBattleStartReplay(zoneDeferKey, UniqueCreatureID, i, seed, allocation);
                 }
                 // Client réseau : ne résout rien ici — rejoué via ReplayBattleStartEffect
                 // à partir des triplets diffusés par le serveur.

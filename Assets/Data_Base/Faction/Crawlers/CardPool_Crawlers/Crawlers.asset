@@ -16,10 +16,4 @@ MonoBehaviour:
   FactionName: Crawlers
   mainCardPools:
   - {fileID: 11400000, guid: fcf733b72e307b24ba1f18c25c0c8c45, type: 2}
-  - {fileID: 11400000, guid: f9866eb31713a3442968d573501b2e8f, type: 2}
-  - {fileID: 11400000, guid: 8ed15b8f85077fe4b88bc35d92f35397, type: 2}
-  secondCardPools:
-  - {fileID: 11400000, guid: 11be75d69d27c1f4ba37403c8e95037e, type: 2}
-  - {fileID: 11400000, guid: 36c37d0ad6924654c81a6482ce7d6b68, type: 2}
-  - {fileID: 11400000, guid: e24857c4ee515ba43a4b9fc6573fe128, type: 2}
-  - {fileID: 11400000, guid: 289cdc2a91348f04a9fe4fd4e5786185, type: 2}
+  secondCardPools: []

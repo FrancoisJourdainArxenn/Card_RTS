@@ -68,7 +68,6 @@ public class GameNetworkManager : NetworkBehaviour
         public int[] CreatureIDs,     CreatureDamages;
         public int[] BaseIDs,         BaseDamages;
         public int[] TargetPlayerIDs, PlayerDamages;
-        public int[] BuildingIDs,     BuildingDamages;
     }
     private Dictionary<int, BattleSubmission> _battleSubmissions = new Dictionary<int, BattleSubmission>();
 
@@ -117,17 +116,15 @@ public class GameNetworkManager : NetworkBehaviour
         int playerIndex,
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
-        int[] targetPlayerIDs, int[] playerDamages,
-        int[] buildingIDs,     int[] buildingDamages)
+        int[] targetPlayerIDs, int[] playerDamages)
     {
         _battleSubmissions[playerIndex] = new BattleSubmission
         {
             CreatureIDs     = creatureIDs,     CreatureDamages  = creatureDamages,
             BaseIDs         = baseIDs,         BaseDamages      = baseDamages,
-            TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages,
-            BuildingIDs     = buildingIDs,     BuildingDamages  = buildingDamages
+            TargetPlayerIDs = targetPlayerIDs, PlayerDamages    = playerDamages
         };
-        Debug.Log($"[BattleAssignment][Server] Soumission reçue — joueur {playerIndex} | créatures={creatureIDs.Length} bases={baseIDs.Length} joueurs={targetPlayerIDs.Length} bâtiments={buildingIDs.Length} | total soumis: {_battleSubmissions.Count}/2");
+        Debug.Log($"[BattleAssignment][Server] Soumission reçue — joueur {playerIndex} | créatures={creatureIDs.Length} bases={baseIDs.Length} joueurs={targetPlayerIDs.Length} | total soumis: {_battleSubmissions.Count}/2");
 
         if (_battleSubmissions.Count < 2)
         {
@@ -235,7 +232,6 @@ public class GameNetworkManager : NetworkBehaviour
         List<ZoneCombatResolver.OnBattleStartReplay> onBattleStartReplays = ZoneCombatResolver.DrainOnBattleStartReplays();
         int[] battleStartZoneKeys   = new int[onBattleStartReplays.Count];
         int[] battleStartSourceIDs  = new int[onBattleStartReplays.Count];
-        int[] battleStartIsBuilding = new int[onBattleStartReplays.Count];
         int[] battleStartEffectIdxs = new int[onBattleStartReplays.Count];
         int[] battleStartSeeds      = new int[onBattleStartReplays.Count];
         // Même idiome à plat que predictedAllocCounts/IDs/Amounts ci-dessus.
@@ -246,7 +242,6 @@ public class GameNetworkManager : NetworkBehaviour
         {
             battleStartZoneKeys[i]   = onBattleStartReplays[i].ZoneDeferKey;
             battleStartSourceIDs[i]  = onBattleStartReplays[i].SourceID;
-            battleStartIsBuilding[i] = onBattleStartReplays[i].IsBuilding ? 1 : 0;
             battleStartEffectIdxs[i] = onBattleStartReplays[i].EffectIndex;
             battleStartSeeds[i]      = onBattleStartReplays[i].Seed;
 
@@ -264,7 +259,6 @@ public class GameNetworkManager : NetworkBehaviour
             canonical.CreatureIDs,     canonical.CreatureDamages,
             canonical.BaseIDs,         canonical.BaseDamages,
             canonical.TargetPlayerIDs, canonical.PlayerDamages,
-            canonical.BuildingIDs,     canonical.BuildingDamages,
             canonical.ResolverP1Pools, canonical.ResolverP2Pools,
             predictedSourceIDs,        predictedEffectIdxs,        predictedSeeds,        predictedDeferKeys,
             predictedEventSubjectIDs,  predictedTargetIDs,
@@ -272,21 +266,21 @@ public class GameNetworkManager : NetworkBehaviour
             tokenSpawnSourceIDs,       tokenSpawnEffectIdxs,       tokenSpawnPlayerIdxs,
             tokenSpawnCardIDs,         tokenSpawnCreatureIDs,      tokenSpawnTablePos,
             tokenSpawnBaseIDs,         tokenSpawnDeferKeys,
-            battleStartZoneKeys,       battleStartSourceIDs,       battleStartIsBuilding,
+            battleStartZoneKeys,       battleStartSourceIDs,
             battleStartEffectIdxs,     battleStartSeeds,
             battleStartAllocCounts.ToArray(), battleStartAllocIDs.ToArray(), battleStartAllocAmounts.ToArray()
         );
 
         ZoneCombatResolver.SerializeBattleStepsForResolvers(
             resolverIdxs,
-            out int[] stepResolverIdxs, out int[] stepAttackerIDs, out int[] stepIsBuilding,
+            out int[] stepResolverIdxs, out int[] stepAttackerIDs,
             out int[] stepTargetIDs,    out int[] stepTargetKinds, out int[] stepDamages,
             out int[] stepOwnerPlayerIDs,
             out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
             out int[] stepCounterDamages, out int[] stepAttackerExhausted,
             out int[] stepShieldAbsorbed, out int[] stepAttackerShieldAbsorbed, out int[] stepSecondaryAbsorbed);
         BroadcastBattleStepsClientRpc(
-            stepResolverIdxs, stepAttackerIDs, stepIsBuilding,
+            stepResolverIdxs, stepAttackerIDs,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
             stepCounterDamages, stepAttackerExhausted,
@@ -303,12 +297,12 @@ public class GameNetworkManager : NetworkBehaviour
 
     /// <summary>
     /// Reçu par TOUS les clients : reconstruit la séquence de combat et enqueue les commandes
-    /// d'animation step-by-step (ZoneClashMove puis CreatureAttackCommand / BuildingAttackCommand).
+    /// d'animation step-by-step (ZoneClashMove puis CreatureAttackCommand).
     /// Doit être reçu après ApplyCanonicalBattleAssignmentClientRpc pour que pendingDamage soit set.
     /// </summary>
     [ClientRpc]
     void BroadcastBattleStepsClientRpc(
-        int[] resolverIdxs, int[] attackerIDs, int[] isBuilding,
+        int[] resolverIdxs, int[] attackerIDs,
         int[] targetIDs, int[] targetKinds, int[] damages, int[] ownerPlayerIDs,
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
         int[] counterDamages, int[] attackerExhausted,
@@ -317,15 +311,15 @@ public class GameNetworkManager : NetworkBehaviour
         bool decisive, bool isDraw, int winnerPlayerID,
         int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
     {
-        int nCreature = 0, nBuilding = 0, nBase = 0, nPlayer = 0;
+        int nCreature = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
         {
-            switch (targetKinds[i]) { case 0: nCreature++; break; case 1: nBuilding++; break; case 2: nBase++; break; case 3: nPlayer++; break; }
-            // Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Bât,2=Base,3=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
+            switch (targetKinds[i]) { case 0: nCreature++; break; case 1: nBase++; break; case 2: nPlayer++; break; }
+            // Debug.Log($"  [BroadcastSteps] step[{i}] kind={targetKinds[i]}(0=Créature,1=Base,2=Joueur) resolver={resolverIdxs[i]} attaquant={attackerIDs[i]} cible={targetIDs[i]} dmg={damages[i]}");
         }
-        // Debug.Log($"[BroadcastSteps] étape={(ZoneCombatResolver.BattleStage)stage} {resolverIdxs.Length} steps reçus — Créature={nCreature} Bâtiment={nBuilding} Base={nBase} Joueur={nPlayer}");
+        // Debug.Log($"[BroadcastSteps] étape={(ZoneCombatResolver.BattleStage)stage} {resolverIdxs.Length} steps reçus — Créature={nCreature} Base={nBase} Joueur={nPlayer}");
         ZoneCombatResolver.EnqueueStageReconstructedBattleCommands(
-            resolverIdxs, attackerIDs, isBuilding, targetIDs, targetKinds, damages, ownerPlayerIDs,
+            resolverIdxs, attackerIDs, targetIDs, targetKinds, damages, ownerPlayerIDs,
             secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
             shieldAbsorbed, attackerShieldAbsorbed, secondaryAbsorbed,
             (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
@@ -531,7 +525,6 @@ public class GameNetworkManager : NetworkBehaviour
         int[] creatureIDs,     int[] creatureDamages,
         int[] baseIDs,         int[] baseDamages,
         int[] targetPlayerIDs, int[] playerDamages,
-        int[] buildingIDs,     int[] buildingDamages,
         int[] p1Pools,         int[] p2Pools,
         int[] predictedSourceIDs, int[] predictedEffectIndexes, int[] predictedSeeds, int[] predictedDeferKeys,
         int[] predictedEventSubjectIDs, int[] predictedTargetIDs,
@@ -539,13 +532,13 @@ public class GameNetworkManager : NetworkBehaviour
         int[] tokenSpawnSourceIDs, int[] tokenSpawnEffectIdxs, int[] tokenSpawnPlayerIdxs,
         int[] tokenSpawnCardIDs,   int[] tokenSpawnCreatureIDs, int[] tokenSpawnTablePos,
         int[] tokenSpawnBaseIDs,   int[] tokenSpawnDeferKeys,
-        int[] battleStartZoneKeys, int[] battleStartSourceIDs, int[] battleStartIsBuilding,
+        int[] battleStartZoneKeys, int[] battleStartSourceIDs,
         int[] battleStartEffectIndexes, int[] battleStartSeeds,
         int[] battleStartAllocCounts, int[] battleStartAllocIDs, int[] battleStartAllocAmounts)
     {
         ZoneCombatResolver.ApplyCanonicalAssignment(
             creatureIDs, creatureDamages, baseIDs, baseDamages,
-            targetPlayerIDs, playerDamages, buildingIDs, buildingDamages);
+            targetPlayerIDs, playerDamages);
         ZoneCombatResolver.ApplyCanonicalPools(p1Pools, p2Pools);
 
         // OnBattleStart précède logiquement les dégâts/morts de combat : rejoué en premier.
@@ -562,9 +555,9 @@ public class GameNetworkManager : NetworkBehaviour
                     battleStartAllocCursor++;
                 }
 
-                // Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} isBuilding={battleStartIsBuilding[i]} effectIdx={battleStartEffectIndexes[i]}");
+                // Debug.Log($"[DBG][ApplyCanonical] OnBattleStart replay #{i} — zoneKey={battleStartZoneKeys[i]} sourceID={battleStartSourceIDs[i]} effectIdx={battleStartEffectIndexes[i]}");
                 ZoneCombatResolver.ReplayOnBattleStartEffect(
-                    battleStartZoneKeys[i], battleStartSourceIDs[i], battleStartIsBuilding[i] != 0,
+                    battleStartZoneKeys[i], battleStartSourceIDs[i],
                     battleStartEffectIndexes[i], battleStartSeeds[i], allocation);
             }
         }
@@ -1056,9 +1049,6 @@ public class GameNetworkManager : NetworkBehaviour
             case ActionType.BoardCreature:
                 BoardCreatureClientRpc(action.param1, action.param2);
                 break;
-            case ActionType.PlaceBuilding:
-                PlaceBuildingClientRpc(action.playerIndex, action.param1, action.param2, action.param3);
-                break;
             case ActionType.PlaySpell:
                 PlaySpellClientRpc(action.playerIndex, action.param1);
                 break;
@@ -1248,7 +1238,7 @@ public class GameNetworkManager : NetworkBehaviour
         finally { EffectSO.ClearForcedAllocation(); }
     }
 
-    // Pendant la résolution serveur du OnPlay d'une créature/bâtiment tout juste joué (voir
+    // Pendant la résolution serveur du OnPlay d'une créature tout juste jouée (voir
     // ResolveOnServerAndCaptureAllocation ci-dessus), un effet type TokenGenerationSO/
     // GenerateCardsFromPoolSO/ChooseOneSO peut se référer à CETTE MÊME entité comme source
     // (context.Source) et vouloir diffuser aussitôt un ClientRpc dérivant l'asset via
@@ -1256,7 +1246,7 @@ public class GameNetworkManager : NetworkBehaviour
     // ClientRpc qui révèle l'entité elle-même côté client (ShowPendingPlayCreatureClientRpc /
     // ImmediatePlayCreatureClientRpc, envoyés APRÈS la résolution complète), il arrive en premier
     // chez les autres clients — qui ne trouvent alors pas encore sourceEntityID dans
-    // CreaturesCreatedThisGame/BuildingsCreatedThisGame ("[Token] Asset introuvable"). On met donc
+    // CreaturesCreatedThisGame ("[Token] Asset introuvable"). On met donc
     // en attente ces broadcasts pendant la résolution, pour les vider juste après l'envoi du RPC de
     // reveal — l'ordre d'arrivée côté client est alors garanti correct.
     private static bool _deferringReveal = false;
@@ -2170,40 +2160,6 @@ public class GameNetworkManager : NetworkBehaviour
             return;
         }
         Player.Players[playerIndex].homeBaseLogic?.TryUpgrade();
-    }
-
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    public void PlaceBuildingServerRpc(int playerIndex, int buildingIndex, int spotID)
-    {
-        int buildingUniqueID = IDFactory.GetUniqueID();
-        RegisterAction(new PendingAction
-        {
-            type = ActionType.PlaceBuilding,
-            playerIndex = playerIndex,
-            param1 = buildingIndex,
-            param2 = spotID,
-            param3 = buildingUniqueID
-        });
-    }
-    [ClientRpc]
-    void PlaceBuildingClientRpc(int playerIndex, int buildingIndex, int spotID, int buildingUniqueID)
-    {
-        if (!BuildSpotVisual.Registry.TryGetValue(spotID, out BuildSpotVisual spot))
-        {
-            Debug.LogError($"PlaceBuildingClientRpc: spot not found id={spotID}");
-            return;
-        }
-
-        Player player = Player.Players[playerIndex];
-        CardAsset building = player.deck.FindBuildingByIndex(buildingIndex);
-        if (building == null)
-        {
-            Debug.LogError($"PlaceBuildingClientRpc: building not found index={buildingIndex}");
-            return;
-        }
-
-        bool alreadyPaid = (player == GlobalSettings.Instance.localPlayer);
-        player.ExecutePlaceBuilding(building, spot, buildingUniqueID, alreadyPaid);
     }
 
     // -------------------------------------------------------------------------

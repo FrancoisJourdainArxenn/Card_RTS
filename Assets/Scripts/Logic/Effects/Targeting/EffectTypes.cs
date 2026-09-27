@@ -36,9 +36,10 @@ public enum EffectRepartition
 
 public enum EffectObjectType
 {
-    Creature,
-    Building,
-    Base,
-    Zone,
-    Player,
+    // Valeurs explicites : c'est l'entier qui est sérialisé dans les assets (1 = ancien Building,
+    // retiré) — ne jamais renuméroter.
+    Creature = 0,
+    Base     = 2,
+    Zone     = 3,
+    Player   = 4,
 }
