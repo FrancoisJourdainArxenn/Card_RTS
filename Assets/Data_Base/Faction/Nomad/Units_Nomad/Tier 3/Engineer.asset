@@ -17,7 +17,8 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 3
-  Description: <b>Start of Turn:</b> Gain an Invention.
+  Description: <b>Start of turn:</b> Reduce by 1 turn the time it takes for your
+    <i>Research Labs</i> to produce an Invention.
   CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
   MainCost: 1
   IsHero: 0
@@ -37,18 +38,32 @@ MonoBehaviour:
   IsStructureUnit: 0
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
-  Keywords:
-  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
-  ReferencedCards: []
+  Keywords: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: e71d0fc941d06504db1a1c3865cb2f2d, type: 2}
   Effects:
-  - EffectName: Eureka
-    Effect: {fileID: 11400000, guid: 963e046538874a745bc026d13154a62d, type: 2}
+  - EffectName: Smarter, Faster, Better
+    Effect: {fileID: 11400000, guid: 8382976f7b4f28847bb671cbac45bb83, type: 2}
     Trigger: 2
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
-      repartition: 0
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 11400000, guid: 00250e7d57c4ebf499822a48d74fb0c9, type: 2}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 3
       useScalingCount: 0
       scalingQuery:
         targetType: 0

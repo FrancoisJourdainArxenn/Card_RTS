@@ -26,7 +26,7 @@ public class GainResourcesSO : EffectSO
         int sourceID = context.Source?.ID ?? -1;
 
         int count = effectInfo.useScalingCount
-            ? context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries)
+            ? context.GetScalingCount(effectInfo)
             : 1;
         int totalAmount = resourceAmount * count;
 

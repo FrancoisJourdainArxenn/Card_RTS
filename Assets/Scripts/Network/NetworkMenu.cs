@@ -58,6 +58,16 @@ public class NetworkMenu : MonoBehaviour
         return System.Array.IndexOf(menuRegistry.decks, selected);
     }
 
+    // A appeler juste avant de demarrer une session reseau (host ou client) : DeckSO.mainPool/
+    // secondPool sont mutes localement par ApplyPoolChoice et ne se propagent pas d'une machine a
+    // l'autre, donc on transmet le choix comme des index (voir GameNetworkManager/TurnManager).
+    private void ApplySelectedDeckToSession()
+    {
+        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+        NetworkSessionData.SelectedMainPoolIndex = HeroPortrait.SelectedMainPoolIndex;
+        NetworkSessionData.SelectedSecondPoolIndex = HeroPortrait.SelectedSecondPoolIndex;
+    }
+
     public async void StartHost()
     {
         statusText.text = "Démarrage du serveur...";
@@ -94,7 +104,7 @@ public class NetworkMenu : MonoBehaviour
 
         statusText.text = $"Connexion vers {ip}...";
         NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(ip, Port);
-        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+        ApplySelectedDeckToSession();
 
         NetworkManager.Singleton.StartClient();
         mapDropdown.gameObject.SetActive(false);
@@ -109,7 +119,7 @@ public class NetworkMenu : MonoBehaviour
         await EnsureNetworkShutdownAsync();
 
         statusText.text = "Création de la session distante...";
-        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+        ApplySelectedDeckToSession();
 
         SessionOptions options = new SessionOptions
         {
@@ -140,7 +150,7 @@ public class NetworkMenu : MonoBehaviour
         await EnsureNetworkShutdownAsync();
 
         statusText.text = $"Connexion à {joinCode}...";
-        NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+        ApplySelectedDeckToSession();
 
         try
         {
@@ -212,7 +222,7 @@ public class NetworkMenu : MonoBehaviour
                 ? Random.Range(0, menuRegistry.maps.Length)
                 : idx - 1;
             
-            NetworkSessionData.SelectedDeckPresetIndex = GetSelectedDeckPresetIndex();
+            ApplySelectedDeckToSession();
             NetworkManager.Singleton.SceneManager.LoadScene(battleSceneName,
                 UnityEngine.SceneManagement.LoadSceneMode.Single);
         }

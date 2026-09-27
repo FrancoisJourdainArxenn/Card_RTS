@@ -15,7 +15,7 @@ MonoBehaviour:
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 6
+  subType: 0
   tier: 4
   Description: When an ally takes damages, it gains <b>Shield 1</b>.
   CardImage: {fileID: 21300000, guid: ec3e165f0b56beb4789a83e83c6fdb8d, type: 3}

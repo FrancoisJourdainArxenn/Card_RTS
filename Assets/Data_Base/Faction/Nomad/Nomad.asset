@@ -14,3 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FactionAsset
   Faction: 1
   FactionName: Nomad
+  mainCardPools:
+  - {fileID: 11400000, guid: 41370af7c6c4da24280ec3b0f1b8d10a, type: 2}
+  - {fileID: 11400000, guid: 8afc63953ec03eb4aaa2290779d6a5c6, type: 2}
+  secondCardPools:
+  - {fileID: 11400000, guid: 212901fd2d68fe640806b1174e62d752, type: 2}
+  - {fileID: 11400000, guid: cbbd13476b18a4a4a8f809659715c89f, type: 2}
+  - {fileID: 11400000, guid: 918ea965e71ee7547b5245e1e954d4a2, type: 2}

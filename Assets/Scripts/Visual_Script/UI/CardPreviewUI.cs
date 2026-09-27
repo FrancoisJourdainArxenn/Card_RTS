@@ -89,7 +89,6 @@ public class CardPreviewUI : MonoBehaviour
         ZoneLogic zone = entity switch
         {
             CreatureLogic c => GetCreatureZone(c),
-            BuildingLogic b => b.OriginSpot.Zone.Logic,
             BaseLogic     b => b.Zone,
             _               => null
         };
@@ -111,7 +110,7 @@ public class CardPreviewUI : MonoBehaviour
     private void HandleTargetingStarted(List<PendingEffectSelection> queue, int currentIndex)
     {
         // Le ciblage de sort a sa propre flèche dédiée (voir SpellTargetingArrow) et n'a jamais de
-        // popup d'effet associé (CreateTargetingPreview exige un OneCreatureManager/OneBuildingManager) :
+        // popup d'effet associé (CreateTargetingPreview exige un OneCreatureManager) :
         // rien à faire ici pour ce cas.
         if (queue[currentIndex].IsSpellTargeting)
             return;
@@ -179,16 +178,14 @@ public class CardPreviewUI : MonoBehaviour
     //     // on ne vient pas superposer un popup auto par-dessus.
     //     if (_targetingPreviews.Count > 0) return;
     //
-    //     // Récupère la CardAsset de la source (créature OU bâtiment — un seul des deux est non-null).
-    //     CardAsset ca = (context.Source as CreatureLogic)?.ca
-    //                 ?? (context.Source as BuildingLogic)?.ca;
+    //     // Récupère la CardAsset de la source.
+    //     CardAsset ca = (context.Source as CreatureLogic)?.ca;
     //     if (ca == null) return; // pas de carte associée à la source → rien à afficher
     //
     //     // Récupère l'ID unique de la source, pour pouvoir retrouver son GameObject dans la scène
     //     // plus tard (IDHolder.GetGameObjectWithID), utilisé pour lire la CardAsset ET pour l'animation
     //     // de trail (SpawnTrail).
     //     int sourceID = (context.Source as CreatureLogic)?.UniqueCreatureID
-    //                 ?? (context.Source as BuildingLogic)?.UniqueBuildingID
     //                 ?? -1;
     //
     //     // Si l'effet appartient à l'adversaire du joueur local, on applique le matériau "hologramme"
@@ -322,9 +319,8 @@ public class CardPreviewUI : MonoBehaviour
         GameObject sourceGO = IDHolder.GetGameObjectWithID(selection.SourceEntityID);
         if (sourceGO == null) return null; // source introuvable (déjà détruite, ID invalide -1, etc.)
 
-        // Récupère la CardAsset depuis le manager de la source (créature ou bâtiment).
-        CardAsset cardAsset = sourceGO.GetComponent<OneCreatureManager>()?.cardAsset
-                        ?? sourceGO.GetComponent<OneBuildingManager>()?.cardAsset;
+        // Récupère la CardAsset depuis le manager de la source.
+        CardAsset cardAsset = sourceGO.GetComponent<OneCreatureManager>()?.cardAsset;
         if (cardAsset == null) return null;
 
         if (effectTriggeredPrefab == null) return null; // champ non assigné dans l'inspecteur
@@ -360,7 +356,7 @@ public class CardPreviewUI : MonoBehaviour
         previewingEffects = false;
     }
 
-    public void Show(CardAsset asset, Vector2 mouseOffset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null, BuildingLogic sourceBuilding = null)
+    public void Show(CardAsset asset, Vector2 mouseOffset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null)
     {
         if(previewingEffects)
             return;
@@ -376,10 +372,10 @@ public class CardPreviewUI : MonoBehaviour
         Vector2 previewPosition = localPoint + mouseOffset;
         _anchorRect.anchoredPosition = previewPosition;
 
-        ShowPreview(asset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature, sourceBuilding);
+        ShowPreview(asset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature);
     }
 
-    private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null, BuildingLogic sourceBuilding = null)
+    private void ShowPreview(CardAsset asset, Player owner = null, int? attackOverride = null, int? healthOverride = null, int? maxHealthOverride = null, CreatureLogic sourceCreature = null)
     {
         GameObject prefabToUse = (asset.IsHero && heroCardPreviewPrefab != null) ? heroCardPreviewPrefab
             : (asset.Type == CardType.Action && actionCardPreviewPrefab != null) ? actionCardPreviewPrefab
@@ -404,7 +400,6 @@ public class CardPreviewUI : MonoBehaviour
         manager.cardAsset = asset;
         manager.owner = owner;
         manager.sourceCreature = sourceCreature;
-        manager.sourceBuilding = sourceBuilding;
         manager.ReadCardFromAsset();
         manager.OverrideStats(attackOverride, healthOverride, maxHealthOverride);
         ReminderTextManager.Instance?.BuildTooltips(BuildTooltipKeywords(asset, sourceCreature));
@@ -564,11 +559,8 @@ public class CardPreviewUI : MonoBehaviour
 
     private Vector2 ComputeScreenShift(RectTransform rect, Camera cam)
     {
-        Vector3[] corners = new Vector3[4];
-        rect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
-
-        Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
-        Vector2 max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+        Vector2 min, max;
+        GetScreenBounds(rect, cam, out min, out max);
 
         float shiftX = 0f;
         if (min.x < 0f) shiftX = -min.x;
@@ -579,6 +571,29 @@ public class CardPreviewUI : MonoBehaviour
         else if (max.y > Screen.height) shiftY = Screen.height - max.y;
 
         return new Vector2(shiftX, shiftY) / _canvas.scaleFactor;
+    }
+
+    // ReminderTextManager/CardTooltipManager gardent une largeur de conteneur figée (ContentSizeFitter
+    // horizontal = Unconstrained) pendant que leur HorizontalLayoutGroup/VerticalLayoutGroup positionne
+    // des enfants (panneaux de mots-clés, mini-cartes) qui débordent largement de cette largeur — donc
+    // on mesure l'étendue réelle en incluant les enfants, pas seulement le rect (figé) du conteneur.
+    private void GetScreenBounds(RectTransform rect, Camera cam, out Vector2 min, out Vector2 max)
+    {
+        Vector3[] corners = new Vector3[4];
+        rect.GetWorldCorners(corners); // 0 = bas-gauche, 2 = haut-droite
+        min = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+        max = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+
+        for (int i = 0; i < rect.childCount; i++)
+        {
+            if (rect.GetChild(i) is not RectTransform child) continue;
+
+            child.GetWorldCorners(corners);
+            Vector2 childMin = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+            Vector2 childMax = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+            min = Vector2.Min(min, childMin);
+            max = Vector2.Max(max, childMax);
+        }
     }
 
     // Partie 1 désactivée : plus aucun appelant (HandleAutoEffect commenté ci-dessus).

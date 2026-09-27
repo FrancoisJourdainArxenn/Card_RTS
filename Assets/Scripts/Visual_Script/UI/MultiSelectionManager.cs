@@ -315,6 +315,16 @@ public class MultiSelectionManager : MonoBehaviour
                 if (dca == null) continue;
 
                 bool isMelee = so.cardAsset != null && so.cardAsset.melee;
+
+                // RowHasSpace (TableVisual.PendingIncomingGhostCount) compte désormais directement les
+                // ghosts déjà posés dans la rangée cible, et chaque Move() de cette boucle en spawn un
+                // avant l'itération suivante — le check se met donc déjà à jour tout seul. Lui ajouter
+                // meleeOffset/rangedOffset ici compterait ces mêmes unités deux fois (une fois via leur
+                // ghost, une fois via l'offset) et rejetterait le reste du groupe bien avant que la
+                // rangée soit réellement pleine.
+                if (!targetArea.tableVisual.RowHasSpace(isMelee))
+                    continue;
+
                 int slot;
                 if (isMelee)
                 {

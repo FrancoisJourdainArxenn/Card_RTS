@@ -534,6 +534,7 @@ public class DragCreatureActions : DraggingActions {
         ghostManager.CanReorderNow = true;
         ghostManager.CanMoveNow = false;
         ghostManager.UpdateGlow();
+        ghostManager.SetDisplayedStats(creatureLogic.Attack, creatureLogic.Health);
 
         manager.PendingMoveGhost = ghostGO;
         manager.SetPending(true, isPendingMove: true); // la carte d'origine s'assombrit et affiche l'icône tant que le déplacement est en attente ; le ghost reste net, sans icône

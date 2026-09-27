@@ -16,4 +16,5 @@ MonoBehaviour:
   difficultyLevel: 4
   deckTooltip: Managing the life of your units carefully will be the key to victory.
   heroCard: {fileID: 11400000, guid: a7e9c5fbe49685f4d9622cd8fb560cfd, type: 2}
-  sharedPool: {fileID: 11400000, guid: 64e5dbc0ab75cbc40ae299c024f62af3, type: 2}
+  mainPool: {fileID: 11400000, guid: 41370af7c6c4da24280ec3b0f1b8d10a, type: 2}
+  secondPool: {fileID: 11400000, guid: 212901fd2d68fe640806b1174e62d752, type: 2}

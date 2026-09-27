@@ -81,6 +81,24 @@ public class Player : MonoBehaviour, ILivable
     // pas sur le CardAsset (partagé entre joueurs) pour ne pas buffer l'adversaire.
     public List<PermanentCreatureBuff> permanentCreatureBuffs = new List<PermanentCreatureBuff>();
 
+    // Somme des buffs permanents qui s'appliqueraient à une créature de ce CardAsset si elle était
+    // créée maintenant — même logique que le constructeur de CreatureLogic, réutilisée pour afficher
+    // les stats "réelles" des cartes en main.
+    public (int attack, int health) GetPermanentCreatureBuff(CardAsset ca)
+    {
+        int attack = 0;
+        int health = 0;
+        foreach (PermanentCreatureBuff buff in permanentCreatureBuffs)
+        {
+            if (buff.filter != null && buff.filter.Matches(ca))
+            {
+                attack += buff.attackBonus;
+                health += buff.healthBonus;
+            }
+        }
+        return (attack, health);
+    }
+
 
     // REFERENCES TO LOGICAL STUFF THAT BELONGS TO THIS PLAYER
     public Deck deck;
@@ -184,7 +202,6 @@ public class Player : MonoBehaviour, ILivable
     }
 
     public List<CreatureLogic> Creatures => playedCards.Creatures;
-    public List<BuildingLogic> Buildings => playedCards.Buildings;
     public List<ZoneLogic> VisibleZones
     {
         get
@@ -193,8 +210,7 @@ public class Player : MonoBehaviour, ILivable
             foreach (PlayerArea pa in PAreas)
             {
                 if (pa == MainPArea
-                    || playedCards.Creatures.Exists(c => c.BaseID == pa.baseID)
-                    || playedCards.Buildings.Exists(b => b.OriginSpot.Zone == pa.parentZone))
+                    || playedCards.Creatures.Exists(c => c.BaseID == pa.baseID))
                     zones.Add(pa.parentZone.Logic);
             }
             foreach (BaseLogic bl in controlledBases)
@@ -289,7 +305,6 @@ public class Player : MonoBehaviour, ILivable
 
         // --- Plateau / main / pioche pondérée ---
         playedCards.Creatures.Clear();
-        playedCards.Buildings.Clear();
         hand.CardsInHand.Clear();
         // deck.drawConfig N'EST PAS remis à null ici, volontairement : contrairement à HomeUnit
         // (classe C# custom, non correctement revert par Unity entre deux sessions Play), drawConfig
@@ -300,7 +315,7 @@ public class Player : MonoBehaviour, ILivable
         // (WeightedDraw.Draw retombait sur ce garde et retournait null, voir Deck.DrawWeightedCard).
     }
 
-    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.sharedPool)
+    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.mainPool)
     // l'unité qui remplace la base principale comme condition de victoire (voir HomeUnit) : une
     // CreatureLogic tout à fait normale, spawnée directement dans MainPArea sans passer par la main
     // — même idiome que NetworkSpawnTokenToZone. networkID doit être identique sur toutes les
@@ -313,7 +328,7 @@ public class Player : MonoBehaviour, ILivable
     public void SpawnHomeUnitIfConfigured(int networkID = -1)
     {
         if (HomeUnit != null) return;
-        CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.sharedPool?.homeUnit : null;
+        CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.mainPool?.homeUnit : null;
         if (homeUnitAsset == null || MainPArea == null) return;
 
         int baseID = MainPArea.baseID;
@@ -411,8 +426,6 @@ public class Player : MonoBehaviour, ILivable
         {
             foreach (CreatureLogic cl in playedCards.Creatures)
                 cl.OnTurnStart();
-            foreach (BuildingLogic bl in playedCards.Buildings)
-                bl.OnTurnStart();
         }
     }
 
@@ -598,7 +611,8 @@ public class Player : MonoBehaviour, ILivable
         EffectRegistry.ETB(playedCard.ca, new EffectContext
         {
             Caster = this,
-            Target = target
+            Target = target,
+            PlayedCardUniqueID = playedCard.UniqueCardID
         }, preResolvedSelections);
 
         new PlayASpellCardCommand(this, playedCard).AddToQueue();
@@ -656,7 +670,7 @@ public class Player : MonoBehaviour, ILivable
         EffectSO.SetNetworkRng(new System.Random(seed));
         try
         {
-            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this }, preResolvedSelections);
+            EffectRegistry.ETB(playedCard.ca, new EffectContext { Caster = this, PlayedCardUniqueID = cardUniqueID }, preResolvedSelections);
         }
         finally
         {
@@ -1046,15 +1060,6 @@ public class Player : MonoBehaviour, ILivable
             if (creatureManager.PendingMoveGhost == null && !creatureManager.HasPendingBoard)
                 creatureManager.SetPending(crl.HasSummoningSickness);
         }
-
-        foreach (BuildingLogic bl in playedCards.Buildings)
-        {
-            GameObject g = IDHolder.GetGameObjectWithID(bl.UniqueBuildingID);
-            if (g == null) continue;
-            OneBuildingManager bm = g.GetComponent<OneBuildingManager>();
-            if (bm == null) continue;
-        }
-
     }
 
     public OneCreatureManager CheckCreatureManager(GameObject g)
@@ -1446,29 +1451,6 @@ public class Player : MonoBehaviour, ILivable
         new BaseLogic(this, neutralBaseVisual.baseAsset, neutralBaseVisual.neutralBaseController, baseUniqueID);
         new BuildNeutralBaseCommand(baseUniqueID, this, neutralBaseVisual).AddToQueue();
         FogOfWarManager.Refresh();
-    }
-
-    public void ShowBuildings(BuildSpotVisual spot)
-    {
-        // Debug.Log("Show Buildings for player " + PlayerID);
-        GlobalSettings.Instance.buildingShop.Show(deck.playerDeck.buildings, spot);
-    }
-
-    public void RequestPlaceBuilding(CardAsset building, BuildSpotVisual spot)
-    {
-        if (NetworkSessionData.IsNetworkSession)
-        {
-            MainRessourceAvailable -= building.MainCost;
-            spot.SpawnPendingBuilding(building, this);
-            GameNetworkManager.Instance.PlaceBuildingServerRpc(playerIndex, deck.playerDeck.buildings.IndexOf(building), spot.SpotID);
-        }
-        else
-            ExecutePlaceBuilding(building, spot, IDFactory.GetUniqueID());
-    }
-
-    public void ExecutePlaceBuilding(CardAsset building, BuildSpotVisual spot, int buildingUniqueID, bool alreadyPaid = false)
-    {
-        new PlaceBuildingCommand(building, this, spot, buildingUniqueID, alreadyPaid).AddToQueue();
     }
 
 

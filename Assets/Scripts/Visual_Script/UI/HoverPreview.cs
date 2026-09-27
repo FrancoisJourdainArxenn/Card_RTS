@@ -57,13 +57,10 @@ public class HoverPreview : MonoBehaviour
         }
 
         GetComponentInParent<OneCreatureManager>()?.OnCreatureClicked();
-        GetComponentInParent<OneBuildingManager>()?.OnBuildingClicked();
     }
 
     void OnMouseEnter()
     {
-
-        if (BuildingShopVisual.IsOpen) return;
         // Carte d'une main cachée (voir HandVisual.HideFromView, ex: main de l'IA face à un joueur
         // humain) : OnMouseEnter réagit au collider physique de la carte, indépendant du CanvasGroup.
         // alpha=0/blocksRaycasts=false posé sur cette même carte (qui ne bloque que le raycast UI) —
@@ -91,8 +88,7 @@ public class HoverPreview : MonoBehaviour
 
     void TriggerTooltip()
     {
-        CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset
-                       ?? GetComponentInParent<OneBuildingManager>()?.cardAsset;
+        CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset;
 
 
     }
@@ -104,7 +100,6 @@ public class HoverPreview : MonoBehaviour
         if (_cardCanvasGroup != null) _cardCanvasGroup.alpha = alphaHide;
 
         CardAsset asset = GetComponentInParent<OneCreatureManager>()?.cardAsset
-                    ?? GetComponentInParent<OneBuildingManager>()?.cardAsset
                     ?? GetComponentInParent<OneCardManager>()?.cardAsset;
 
         if (asset == null)
@@ -132,22 +127,39 @@ public class HoverPreview : MonoBehaviour
         int? healthOverride    = null;
         int? maxHealthOverride = null;
         CreatureLogic sourceCreature = null;
-        BuildingLogic sourceBuilding = null;
 
         IDHolder idHolder = GetComponentInParent<IDHolder>();
-        if (idHolder != null && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out CreatureLogic creature))
+        OneCreatureManager creatureManager = GetComponentInParent<OneCreatureManager>();
+
+        CreatureLogic creature = null;
+        if (idHolder != null)
+            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(idHolder.UniqueID, out creature);
+        // Ghost de déplacement : même aperçu que la créature d'origine qu'il représente.
+        if (creature == null && creatureManager != null && creatureManager.IsPendingMoveGhost)
+            CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureManager.PendingMoveSourceCreatureID, out creature);
+
+        if (creature != null)
         {
             sourceCreature = creature;
             attackOverride    = creature.Attack;
             healthOverride    = creature.Health;
             maxHealthOverride = creature.MaxHealth;
         }
-        else if (idHolder != null && BuildingLogic.BuildingsCreatedThisGame.TryGetValue(idHolder.UniqueID, out BuildingLogic building))
+        else if (creatureManager != null && creatureManager.HasGhostStats)
         {
-            sourceBuilding = building;
+            attackOverride    = creatureManager.GhostAttack;
+            healthOverride    = creatureManager.GhostHealth;
+            maxHealthOverride = creatureManager.GhostMaxHealth;
+        }
+        else if (owner != null && asset.MaxHealth > 0)
+        {
+            (int bonusAttack, int bonusHealth) = owner.GetPermanentCreatureBuff(asset);
+            attackOverride    = Mathf.Max(0, asset.Attack + bonusAttack);
+            healthOverride    = asset.MaxHealth + bonusHealth;
+            maxHealthOverride = asset.MaxHealth;
         }
 
-        CardPreviewUI.Instance?.Show(asset, previewOffset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature, sourceBuilding);
+        CardPreviewUI.Instance?.Show(asset, previewOffset, owner, attackOverride, healthOverride, maxHealthOverride, sourceCreature);
     }
 
 

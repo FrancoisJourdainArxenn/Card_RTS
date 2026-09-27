@@ -5,7 +5,7 @@ using Unity.Netcode;
 
 /// <summary>
 /// Registre des écouteurs d'effets.
-/// - Enregistre / désenregistre les effets des entités (créatures, bâtiments).
+/// - Enregistre / désenregistre les effets des entités (créatures, bases).
 /// - Déclenche les triggers instantanés : ETB, OnDeath, triggers réactifs de mort.
 /// - Collecte les effets de phase différés (retournés à PhaseEffectPipeline).
 /// - Execute() : vérifie la condition → appelle SO.Execute → lève l'event visuel.
@@ -32,6 +32,7 @@ public static class EffectRegistry
     {
         _listeners.Clear();
         TempEffectTracker.Reset();
+        PassiveAuraManager.Reset();
     }
 
     // ── Enregistrement ────────────────────────────────────────────────────────
@@ -46,23 +47,15 @@ public static class EffectRegistry
             if (data.Trigger == TriggerType.OnPlay)
                 continue;
 
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, creature.UniqueCreatureID, () => new EffectContext
+                    { Caster = creature.owner, Source = creature });
+                continue;
+            }
+
             AddListener(data, creature.UniqueCreatureID, () => new EffectContext
                 { Caster = creature.owner, Source = creature });
-        }
-    }
-
-    public static void RegisterBuildingEffects(BuildingLogic building, CardAsset ca)
-    {
-        if (ca.Effects == null)
-            return;
-
-        foreach (CardEffectData data in ca.Effects)
-        {
-            if (data.Trigger == TriggerType.OnPlay)
-                continue;
-
-            AddListener(data, building.UniqueBuildingID, () => new EffectContext
-                { Caster = building.owner, Source = building });
         }
     }
 
@@ -76,6 +69,13 @@ public static class EffectRegistry
             if (data.Trigger == TriggerType.OnPlay)
                 continue;
 
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, playerBase.ID, () => new EffectContext
+                    { Caster = playerBase.owner, Source = playerBase });
+                continue;
+            }
+
             AddListener(data, playerBase.ID, () => new EffectContext
                 { Caster = playerBase.owner, Source = playerBase });
         }
@@ -85,6 +85,7 @@ public static class EffectRegistry
     {
         foreach (List<RegisteredEffect> list in _listeners.Values)
             list.RemoveAll(re => re.OwnerID == ownerID);
+        PassiveAuraManager.Unregister(ownerID);
     }
 
     // ── Triggers instantanés ──────────────────────────────────────────────────
@@ -168,10 +169,10 @@ public static class EffectRegistry
         // Notifie les entités qui écoutent les morts alliées / ennemies. Les listeners portés par
         // une créature ont déjà été résolus par anticipation si cette mort a eu lieu en combat (voir
         // ResolvePredictedBattleDeath → NotifyCreatureDiedPredicted ci-dessous) : on les exclut ici
-        // pour ne pas les déclencher une seconde fois. Seuls les listeners portés par un bâtiment
-        // restent à déclencher dans ce cas (pas encore couverts par le rejeu prédictif réseau, voir
-        // FireListenersPredicted) ; pour une mort hors combat (ReactiveDeathTriggersResolvedInBattle
-        // reste false), tout se déclenche ici comme avant.
+        // pour ne pas les déclencher une seconde fois. Seuls les listeners qui ne sont pas portés par
+        // une créature (ex: une base) restent à déclencher dans ce cas (pas couverts par le rejeu
+        // prédictif réseau, voir FireListenersPredicted) ; pour une mort hors combat
+        // (ReactiveDeathTriggersResolvedInBattle reste false), tout se déclenche ici comme avant.
         FireListeners(TriggerType.OnFriendlyCreatureDies, eventCtx,
             re => re.ContextFactory().Caster == dyingOwner
                 && (!died.ReactiveDeathTriggersResolvedInBattle || !IsCreatureListener(re)));
@@ -196,7 +197,7 @@ public static class EffectRegistry
     // place : le buff (ex: Rex "+1/+0 quand un allié meurt") s'applique au reste de CE combat et
     // est visible dès que la créature meurt visuellement, au lieu d'attendre le drain de fin de
     // Battle (NotifyCreatureDied, qui reste le chemin utilisé pour une mort hors combat et pour les
-    // listeners portés par un bâtiment — voir FireListenersPredicted).
+    // listeners qui ne sont pas portés par une créature — voir FireListenersPredicted).
     public static void NotifyCreatureDiedPredicted(CreatureLogic died, Player dyingOwner)
     {
         EffectContext eventCtx = new EffectContext { EventSubjectCreature = died };
@@ -228,6 +229,19 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster == hitOwner && re.OwnerID != hit.UniqueCreatureID);
     }
 
+    // Notifie les AUTRES créatures alliées qui réagissent à une attaque (trigger OnFriendlyUnitAttacks) —
+    // même principe "immédiat sous le defer key de CETTE attaque" que NotifyCreatureTookDamagePredicted :
+    // résolu au moment où ZoneCombatResolver assigne l'attaque (AssignSingleAttack), jamais groupé en
+    // début de combat pour toutes les créatures qui vont attaquer.
+    public static void NotifyFriendlyUnitAttackedPredicted(CreatureLogic attacker, Player attackerOwner, int attackDeferKey)
+    {
+        EffectContext eventCtx = new EffectContext { EventSubjectCreature = attacker };
+        // OwnerID != attacker.UniqueCreatureID : l'attaquant ne réagit pas à sa propre attaque via ce
+        // trigger réactif — seuls les AUTRES alliés (son propre OnAttack couvre déjà son cas).
+        FireListenersPredicted(TriggerType.OnFriendlyUnitAttacks, eventCtx, attackDeferKey,
+            re => re.ContextFactory().Caster == attackerOwner && re.OwnerID != attacker.UniqueCreatureID);
+    }
+
     // Variante de FireListeners qui exécute chaque listener tout de suite (au lieu d'attendre le
     // drain de fin de Battle) au lieu de le laisser à NotifyCreatureDied, reportée visuellement sous
     // deferKey (l'ID de la créature qui meurt et cause ces réactions) exactement comme le OnDeath de
@@ -237,8 +251,9 @@ public static class EffectRegistry
     //
     // Ne couvre que les listeners portés par une créature : le rejeu déterministe côté client
     // (CreatureLogic.ReplayPredictedTriggerEffect) ne sait résoudre que des CreatureLogic.ca.Effects,
-    // comme OnDeath/OnAttack/OnTakeDamage avant lui. Un listener porté par un bâtiment est ignoré ici
-    // et reste couvert par le chemin existant (NotifyCreatureDied, à la fin de la Battle phase).
+    // comme OnDeath/OnAttack/OnTakeDamage avant lui. Un listener porté par une autre entité (ex: une
+    // base) est ignoré ici et reste couvert par le chemin existant (NotifyCreatureDied, à la fin de la
+    // Battle phase).
     //
     // L'ID de la créature qui meurt (baseCtx.EventSubjectCreature) est transporté jusqu'au client via
     // PredictedTriggerReplay.EventSubjectID, pour que ReplayPredictedTriggerEffect puisse reconstruire
@@ -256,7 +271,7 @@ public static class EffectRegistry
         {
             if (!filter(re)) continue;
             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(re.OwnerID, out CreatureLogic listenerCreature))
-                continue; // bâtiments — voir NotifyCreatureDied
+                continue; // listener non-créature (ex: base) — voir NotifyCreatureDied
 
             // Un listener déjà mort plus tôt dans CE MÊME combat (prédiction déjà résolue, pas encore
             // désenregistré — UnregisterEntity n'a lieu qu'au vrai Die(), bien plus tard) ne doit pas
@@ -268,7 +283,6 @@ public static class EffectRegistry
 
             EffectContext ctx = re.ContextFactory();
             ctx.EventSubjectCreature = baseCtx.EventSubjectCreature ?? ctx.EventSubjectCreature;
-            ctx.EventSubjectBuilding = baseCtx.EventSubjectBuilding ?? ctx.EventSubjectBuilding;
 
             if (!NetworkSessionData.IsNetworkSession)
             {
@@ -323,30 +337,6 @@ public static class EffectRegistry
         }
     }
 
-    public static void NotifyBuildingDied(BuildingLogic died, Player dyingOwner)
-    {
-        if (died.ca.Effects != null)
-            foreach (CardEffectData data in died.ca.Effects)
-            {
-                if (data.Trigger != TriggerType.OnDeath)
-                    continue;
-
-                Execute(data, new EffectContext { Caster = dyingOwner, Source = died });
-            }
-
-        EffectContext eventCtx = new EffectContext { EventSubjectBuilding = died };
-
-        FireListeners(TriggerType.OnFriendlyBuildingDies, eventCtx,
-            re => re.ContextFactory().Caster == dyingOwner);
-        FireListeners(TriggerType.OnEnemyBuildingDies, eventCtx,
-            re => re.ContextFactory().Caster != dyingOwner);
-
-        UnregisterEntity(died.UniqueBuildingID);
-        dyingOwner.RemoveBonusIncomeFromSource(died.UniqueBuildingID); // ← ajouté pour retirer les bonus de revenu liés au bâtiment mort
-        dyingOwner.RemoveBonusShieldFromSource(died.UniqueBuildingID);
-        dyingOwner.RemoveEffectAmplifier(died.UniqueBuildingID);
-    }
-
     // ── Triggers de base ──────────────────────────────────────────────────────
 
     public static void NotifyBaseTierUpgraded(BaseLogic playerBase)
@@ -382,8 +372,6 @@ public static class EffectRegistry
         EffectContext eventCtx = new EffectContext();
         if (playedEntity is CreatureLogic creature)
             eventCtx.EventSubjectCreature = creature;
-        else if (playedEntity is BuildingLogic building)
-            eventCtx.EventSubjectBuilding = building;
 
         FireListeners(TriggerType.OnCardPlayed, eventCtx,
             re => re.ContextFactory().Caster == playingPlayer && re.ContextFactory().Source != playedEntity);
@@ -503,17 +491,19 @@ public static class EffectRegistry
                 return tokenSO != null ? tokenSO.TokenToSummon : null;
             }
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
-            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-            {
-                TokenGenerationSO tokenSO = building.ca.Effects[effectIndex].Effect as TokenGenerationSO;
-                return tokenSO != null ? tokenSO.TokenToSummon : null;
-            }
-
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
             {
                 TokenGenerationSO tokenSO = playerBase.ba.Effects[effectIndex].Effect as TokenGenerationSO;
+                return tokenSO != null ? tokenSO.TokenToSummon : null;
+            }
+
+        // Carte Action/Order jouée depuis la main (pas de créature/base sur le plateau) —
+        // voir EffectContext.ResolveEffectReplayKey.
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+            {
+                TokenGenerationSO tokenSO = playedCard.ca.Effects[effectIndex].Effect as TokenGenerationSO;
                 return tokenSO != null ? tokenSO.TokenToSummon : null;
             }
 
@@ -526,13 +516,13 @@ public static class EffectRegistry
             if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
                 return creature.ca.Effects[effectIndex].Effect.EffectVisual;
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
-            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-                return building.ca.Effects[effectIndex].Effect.EffectVisual;
-
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect.EffectVisual;
+
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect.EffectVisual;
 
         return null;
     }
@@ -543,13 +533,13 @@ public static class EffectRegistry
             if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
                 return creature.ca.Effects[effectIndex].Effect as ChooseOneSO;
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
-            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-                return building.ca.Effects[effectIndex].Effect as ChooseOneSO;
-
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect as ChooseOneSO;
+
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect as ChooseOneSO;
 
         return null;
     }
@@ -560,13 +550,13 @@ public static class EffectRegistry
             if (creature.ca?.Effects != null && effectIndex >= 0 && effectIndex < creature.ca.Effects.Count)
                 return creature.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceEntityID, out BuildingLogic building))
-            if (building.ca?.Effects != null && effectIndex >= 0 && effectIndex < building.ca.Effects.Count)
-                return building.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
-
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(sourceEntityID, out BaseLogic playerBase))
             if (playerBase.ba?.Effects != null && effectIndex >= 0 && effectIndex < playerBase.ba.Effects.Count)
                 return playerBase.ba.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
+
+        if (CardLogic.CardsCreatedThisGame.TryGetValue(sourceEntityID, out CardLogic playedCard))
+            if (playedCard.ca?.Effects != null && effectIndex >= 0 && effectIndex < playedCard.ca.Effects.Count)
+                return playedCard.ca.Effects[effectIndex].Effect as GenerateCardsFromPoolSO;
 
         return null;
     }
@@ -587,7 +577,6 @@ public static class EffectRegistry
 
             EffectContext ctx = re.ContextFactory();
             ctx.EventSubjectCreature = baseCtx.EventSubjectCreature ?? ctx.EventSubjectCreature;
-            ctx.EventSubjectBuilding = baseCtx.EventSubjectBuilding ?? ctx.EventSubjectBuilding;
             ctx.PlayedCard           = baseCtx.PlayedCard           ?? ctx.PlayedCard;
             // AmplifierCard volontairement pas propagé : un trigger réactif n'est pas l'effet du sort joué.
 
@@ -608,9 +597,6 @@ public static class EffectRegistry
     {
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(ownerID, out CreatureLogic creature))
             return creature.ca.Effects?.IndexOf(data) ?? -1;
-
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(ownerID, out BuildingLogic building))
-            return building.ca.Effects?.IndexOf(data) ?? -1;
 
         return -1;
     }

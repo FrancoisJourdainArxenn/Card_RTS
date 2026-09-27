@@ -17,4 +17,5 @@ MonoBehaviour:
   deckTooltip: Prepare your armies for it's grand arrival, for their deaths will
     lead it to complete domination.
   heroCard: {fileID: 11400000, guid: de8d6547937170c4ab1edaefb2012eb2, type: 2}
-  sharedPool: {fileID: 11400000, guid: faa2b109910e9b143bc2f91d80444285, type: 2}
+  mainPool: {fileID: 11400000, guid: fcf733b72e307b24ba1f18c25c0c8c45, type: 2}
+  secondPool: {fileID: 11400000, guid: e24857c4ee515ba43a4b9fc6573fe128, type: 2}

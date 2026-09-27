@@ -45,7 +45,7 @@ public static class PhaseEffectPipeline
         _currentLocalPlayerIndex = -1;
         _hasSubmitted            = false;
         _isComplete              = false;
-        // Debug.Log("[Pipeline] ResetForNewPhase — tout l'état réinitialisé");
+        Debug.Log("[Pipeline] ResetForNewPhase — tout l'état réinitialisé");
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public static class PhaseEffectPipeline
             .Where(e => e.Data.RequiresPlayerInput && e.EligibleTargets.Count > 0)
             .ToList();
 
-        // Debug.Log($"[Pipeline] StartSession — joueur {playerIndex} ({player?.name}) | {effects.Count} effet(s) dont {selectionEffects.Count} avec sélection | triggers: {string.Join(", ", triggers)}");
+        Debug.Log($"[Pipeline] StartSession — joueur {playerIndex} ({player?.name}) | {effects.Count} effet(s) dont {selectionEffects.Count} avec sélection | triggers: {string.Join(", ", triggers)}");
 
         // foreach (PendingEffectSelection e in effects)
         //     Debug.Log($"[Pipeline]   effet: {e.Data.EffectName} | Input [{(e.Data.RequiresPlayerInput ? "X" : " ")}] | Cibles éligibles: {e.EligibleTargets.Count}");
@@ -103,7 +103,7 @@ public static class PhaseEffectPipeline
     /// </summary>
     public static void BeginLocalSelectionSession()
     {
-        // Debug.Log($"[Pipeline] BeginLocalSelectionSession — réseau={NetworkSessionData.IsNetworkSession} | queueLocale=[{string.Join(", ", _localPlayerQueue)}]");
+        Debug.Log($"[Pipeline] BeginLocalSelectionSession — réseau={NetworkSessionData.IsNetworkSession} | queueLocale=[{string.Join(", ", _localPlayerQueue)}]");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -163,7 +163,7 @@ public static class PhaseEffectPipeline
     public static void ConfirmAndSubmit(Player player)
     {
         int playerIndex = GetIndex(player);
-        // Debug.Log($"[Pipeline] ConfirmAndSubmit — joueur {playerIndex} ({player?.name}) | réseau={NetworkSessionData.IsNetworkSession}");
+        Debug.Log($"[Pipeline] ConfirmAndSubmit — joueur {playerIndex} ({player?.name}) | réseau={NetworkSessionData.IsNetworkSession} | isComplete={_isComplete} | currentLocalPlayerIndex={_currentLocalPlayerIndex} | confirmedPlayers=[{string.Join(",", _confirmedPlayers)}]");
 
         if (_isComplete)
             return;
@@ -175,14 +175,22 @@ public static class PhaseEffectPipeline
 
             if (playerIndex == _currentLocalPlayerIndex)
             {
-                if (EffectSelectionController.Advance())
+                if (!EffectSelectionController.Advance())
+                {
+                    List<PendingEffectSelection> pending = EffectStack.GetSelectionEffectsFor(playerIndex);
+                    Debug.Log($"[Pipeline][DEBUG] ConfirmAndSubmit — joueur {playerIndex} est currentLocalPlayerIndex mais Advance() a échoué (HasPendingSelection={EffectSelectionController.HasPendingSelection}, effets en attente=[{string.Join(", ", pending.Select(e => e.Data.EffectName))}]) : sélection jamais faite (UI souris uniquement), le joueur reste bloqué.");
+                }
+                else
                     AdvanceLocalPlayer();
             }
             else
             {
-                int selCount = EffectStack.GetSelectionEffectsFor(playerIndex).Count;
-                if (selCount > 0)
+                List<PendingEffectSelection> pending = EffectStack.GetSelectionEffectsFor(playerIndex);
+                if (pending.Count > 0)
+                {
+                    Debug.Log($"[Pipeline][DEBUG] ConfirmAndSubmit — joueur {playerIndex} bloqué : {pending.Count} effet(s) à sélection en attente et sans logique de résolution automatique ({string.Join(", ", pending.Select(e => e.Data.EffectName))}). currentLocalPlayerIndex={_currentLocalPlayerIndex}");
                     return;
+                }
 
                 _confirmedPlayers.Add(playerIndex);
                 GlobalSettings.Instance?.RefreshEndPhaseButtons();
@@ -284,7 +292,7 @@ public static class PhaseEffectPipeline
         _currentLocalPlayerIndex = playerIndex;
 
         List<PendingEffectSelection> selectionEffects = EffectStack.GetSelectionEffectsFor(playerIndex);
-        // Debug.Log($"[Pipeline] LoadLocalPlayerSelections — joueur {playerIndex} | {selectionEffects.Count} sélection(s)");
+        Debug.Log($"[Pipeline] LoadLocalPlayerSelections — joueur {playerIndex} | {selectionEffects.Count} sélection(s) : [{string.Join(", ", selectionEffects.Select(e => e.Data.EffectName))}]");
 
         EffectSelectionController.LoadQueue(selectionEffects);
 
@@ -307,14 +315,14 @@ public static class PhaseEffectPipeline
 
         if (_localPlayerQueue.Count > 0)
         {
-            // Debug.Log($"[Pipeline] AdvanceLocalPlayer — joueur {_currentLocalPlayerIndex} confirmé → passage joueur {_localPlayerQueue[0]}");
+            Debug.Log($"[Pipeline] AdvanceLocalPlayer — joueur {_currentLocalPlayerIndex} confirmé → passage joueur {_localPlayerQueue[0]}");
             LoadLocalPlayerSelections(_localPlayerQueue[0]);
         }
         else
         {
             _currentLocalPlayerIndex = -1;
             List<PendingEffectSelection> allEffects = EffectStack.GetAllEffects();
-            // Debug.Log($"[Pipeline] AdvanceLocalPlayer — tous joueurs traités → {(allEffects.Count == 0 ? "complétion immédiate" : $"ExecuteAll ({allEffects.Count} effet(s))")}");
+            Debug.Log($"[Pipeline] AdvanceLocalPlayer — tous joueurs traités → {(allEffects.Count == 0 ? "complétion immédiate" : $"ExecuteAll ({allEffects.Count} effet(s))")}");
             GlobalSettings.Instance?.RefreshEndPhaseButtons();
             // Pas d'effets : on complète immédiatement sans passer par la coroutine,
             // pour éviter une race condition si le joueur clique avant la fin du délai.
@@ -528,7 +536,7 @@ public static class PhaseEffectPipeline
     private static void OnAllEffectsComplete()
     {
         _isComplete = true;
-        // Debug.Log("[Pipeline] OnAllEffectsComplete — _isComplete = true");
+        Debug.Log("[Pipeline] OnAllEffectsComplete — _isComplete = true");
         TurnManager.RefreshAllPlayableHighlights();
         GlobalSettings.Instance?.RefreshEndPhaseButtons();
     }
@@ -551,18 +559,6 @@ public static class PhaseEffectPipeline
             return creature.ca.Effects[effectIdx];
         }
 
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(sourceID, out BuildingLogic building))
-        {
-            bool indexIsValid = building.ca.Effects != null
-                && effectIdx >= 0 && effectIdx < building.ca.Effects.Count;
-
-            if (!indexIsValid)
-                return null;
-
-            ctx = new EffectContext { Caster = building.owner, Source = building };
-            return building.ca.Effects[effectIdx];
-        }
-
         return null;
     }
 
@@ -571,16 +567,13 @@ public static class PhaseEffectPipeline
         // -1 est le seul sentinel "pas de cible" (voir SelectedTarget?.ID ?? -1 un peu partout) —
         // id < 0 rejetait à tort toute cible dont l'ID est un hash pouvant tomber négatif (zones :
         // ZoneManager.Awake utilise Animator.StringToHash, un CRC32 signé), alors que
-        // Creature/Building/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
+        // Creature/Base utilisent IDFactory.GetUniqueID() (toujours positif), ce qui a
         // caché ce bug jusqu'à ce qu'un effet de carte cible une Zone par ID à travers le réseau.
         if (id == -1)
             return null;
 
         if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c))
             return c;
-
-        if (BuildingLogic.BuildingsCreatedThisGame.TryGetValue(id, out BuildingLogic b))
-            return b;
 
         if (BaseLogic.BasesCreatedThisGame.TryGetValue(id, out BaseLogic pb))
             return pb;

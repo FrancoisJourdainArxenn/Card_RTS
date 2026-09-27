@@ -9,7 +9,7 @@ public enum CountComparison
     AtMost,
 }
 
-// Condition générique : compte les entités (créatures/bâtiments/zones/joueurs) correspondant à
+// Condition générique : compte les entités (créatures/zones/joueurs) correspondant à
 // une CountQuery (même struct que le scaling des effets, cf. EffectInfo.scalingQuery) et compare
 // ce compte à un seuil. Remplace les anciennes conditions à un seul axe (CondMelee, CondMyZone,
 // CondSubType, CondCardInZone) : team/zone/statut/carte se règlent tous depuis l'inspecteur via

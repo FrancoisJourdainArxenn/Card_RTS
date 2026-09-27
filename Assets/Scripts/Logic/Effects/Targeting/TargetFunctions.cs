@@ -92,12 +92,6 @@ public partial class EffectContext
             getEnemy:    () => Opponent.Creatures,
             targetZone:  targetZone);
 
-    public List<IIdentifiable> GetBuildingTargets(List<TargetQuery> queries, ZoneLogic targetZone = null) =>
-        GetTargetsByTeam(queries,
-            getFriendly: () => Caster.Buildings,
-            getEnemy:    () => Opponent.Buildings,
-            targetZone:  targetZone);
-
     public List<IIdentifiable> GetBaseTargets(List<TargetQuery> queries, ZoneLogic targetZone = null) =>
         GetTargetsByTeam(queries,
             getFriendly: () => Caster.controlledBases,
@@ -137,7 +131,6 @@ public partial class EffectContext
     private static CardAsset GetCardAsset(IIdentifiable target) => target switch
     {
         CreatureLogic c => c.ca,
-        BuildingLogic b => b.ca,
         _               => null
     };
 

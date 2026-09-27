@@ -44,9 +44,7 @@ public class ApplyShieldSO : EffectSO
     // back onto the shared ScriptableObject field — same reasoning as ModifyStatsSO.ExecuteScaled.
     private void ExecuteScaled(string EffectName, EffectContext context, EffectInfo effectInfo, EffectVisualData visualData)
     {
-        int count = effectInfo.scalingSource == ScalingSource.SourceShield
-            ? context.GetSourceShieldValue()
-            : context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries);
+        int count = context.GetScalingCount(effectInfo);
         if (count == 0)
         {
             Log($"{EffectName}: scaling count is 0, effect cancelled.");

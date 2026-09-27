@@ -17,4 +17,5 @@ MonoBehaviour:
   deckTooltip: Chosing the right elements to bless you will greatly help your spellcasters
     lead you to victory.
   heroCard: {fileID: 11400000, guid: b61472c1f9dcd9d4f9df330fed2ce09e, type: 2}
-  sharedPool: {fileID: 11400000, guid: 66182dd66bcfa4742aa607a78e67d151, type: 2}
+  mainPool: {fileID: 11400000, guid: 623bb9f1f7dba204ea89cb8370f047a1, type: 2}
+  secondPool: {fileID: 11400000, guid: 66272f56a5126ed4ab261d584f9e2aba, type: 2}

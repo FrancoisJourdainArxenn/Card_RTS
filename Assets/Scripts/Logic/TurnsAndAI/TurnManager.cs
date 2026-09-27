@@ -106,7 +106,24 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null)
+    // DeckSO.mainPool/secondPool sont mutes en memoire locale par ApplyPoolChoice (menu) et ne se
+    // propagent pas d'une machine a l'autre en reseau : chaque machine reapplique donc le choix a
+    // partir des memes index (voir NetworkSessionData/GameNetworkManager), resolus depuis les listes
+    // statiques FactionAsset.mainCardPools/secondCardPools qui sont identiques sur toutes les machines.
+    private static void ApplySyncedPools(DeckSO preset, int mainPoolIdx, int secondPoolIdx)
+    {
+        FactionAsset faction = preset.heroCard != null ? preset.heroCard.Faction : null;
+        if (faction == null)
+            return;
+
+        if (mainPoolIdx >= 0 && faction.mainCardPools != null && mainPoolIdx < faction.mainCardPools.Count)
+            preset.mainPool = faction.mainCardPools[mainPoolIdx];
+        if (secondPoolIdx >= 0 && faction.secondCardPools != null && secondPoolIdx < faction.secondCardPools.Count)
+            preset.secondPool = faction.secondCardPools[secondPoolIdx];
+    }
+
+    public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null,
+        int mainPoolIdxLow = -1, int secondPoolIdxLow = -1, int mainPoolIdxTop = -1, int secondPoolIdxTop = -1)
     {
         EffectRegistry.Reset();
         // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
@@ -114,6 +131,10 @@ public class TurnManager : MonoBehaviour
         // bloqué > 0 et gèle tout repositionnement de table pour la nouvelle partie (voir
         // CreatureAttackVisual.ResetFlightCounter).
         CreatureAttackVisual.ResetFlightCounter();
+        // Même raison : ReplaceCardEffectSO mute en place un CardAsset partagé (ex: Lab passe de
+        // ChoseInvention à ChoseGreaterInvention) — sans ce reset, le remplacement survivait à la
+        // partie précédente et s'appliquait dès le début de la suivante.
+        ReplaceCardEffectSO.ResetAll();
         if (Player.Players == null || Player.Players.Length < 2)
         {
             // Debug.LogError("TurnManager: need at least 2 Player instances.");
@@ -131,9 +152,10 @@ public class TurnManager : MonoBehaviour
                 DeckSO preset = GameNetworkManager.Instance.GetDeckPresetForPlayer(isLow ? deckIdxLow : deckIdxTop);
                 if (preset != null)
                 {
+                    ApplySyncedPools(preset, isLow ? mainPoolIdxLow : mainPoolIdxTop, isLow ? secondPoolIdxLow : secondPoolIdxTop);
                     p.deck.LoadDeck(preset);
-                    if (preset.sharedPool != null && preset.sharedPool.baseAsset != null)
-                        p.ApplyBaseAssetOverride(preset.sharedPool.baseAsset);
+                    if (preset.mainPool != null && preset.mainPool.baseAsset != null)
+                        p.ApplyBaseAssetOverride(preset.mainPool.baseAsset);
                 }
             }
         }
@@ -155,7 +177,7 @@ public class TurnManager : MonoBehaviour
 
             foreach (Player p in Player.Players)
             {
-                BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.sharedPool?.baseAsset : null;
+                BaseAsset poolBaseAsset = p.deck.playerDeck != null ? p.deck.playerDeck.mainPool?.baseAsset : null;
                 if (poolBaseAsset != null)
                     p.ApplyBaseAssetOverride(poolBaseAsset);
             }
@@ -194,7 +216,6 @@ public class TurnManager : MonoBehaviour
 
         CardLogic.CardsCreatedThisGame.Clear();
         CreatureLogic.CreaturesCreatedThisGame.Clear();
-        BuildingLogic.BuildingsCreatedThisGame.Clear();
         // Sans ça, une base neutre capturée pendant une partie précédente (jamais retirée de ce
         // dictionnaire statique tant qu'elle n'est pas détruite en jeu) resterait comptée dans
         // Player.controlledBases de la partie suivante — voir Player.ResetForNewGame ci-dessous, qui
@@ -207,7 +228,6 @@ public class TurnManager : MonoBehaviour
         // sur un ID désormais réutilisé par IDFactory) corrompt/détruit la créature actuelle qui
         // partage cet ID — typiquement la nouvelle HomeUnit.
         CreatureLogic.PendingDeathList.Clear();
-        BuildingLogic.PendingDeathVisualQueue.Clear();
 
         // Doit tourner après les Clear() ci-dessus (sinon l'entrée CreaturesCreatedThisGame/
         // BasesCreatedThisGame fraîchement créée serait aussitôt effacée) et avant tout tirage de
@@ -318,7 +338,7 @@ public class TurnManager : MonoBehaviour
             (player == null || PhaseEffectPipeline.IsPlayerTargetingComplete(player));
         bool routeToConfirm = currentPhase == TurnPhases.BeginCombat || (!PhaseEffectPipeline.IsComplete && !playerTargetingDone);
 
-        // Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
+        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} | phase={currentPhase} | IsComplete={PhaseEffectPipeline.IsComplete} | playerTargetingDone={playerTargetingDone} | réseau={NetworkSessionData.IsNetworkSession} | → {(routeToConfirm ? "ConfirmAndSubmit" : "MarkReady")}");
 
         if (routeToConfirm)
         {
@@ -352,8 +372,7 @@ public class TurnManager : MonoBehaviour
                     participantIndex,
                     assignment.CreatureIDs,     assignment.CreatureDamages,
                     assignment.BaseIDs,         assignment.BaseDamages,
-                    assignment.TargetPlayerIDs, assignment.PlayerDamages,
-                    assignment.BuildingIDs,     assignment.BuildingDamages);
+                    assignment.TargetPlayerIDs, assignment.PlayerDamages);
                 return;
             }
 
@@ -373,6 +392,7 @@ public class TurnManager : MonoBehaviour
             return;
 
         phaseReady[participantIndex] = true;
+        Debug.Log($"[TurnMgr] RegisterEndPhase — idx={participantIndex} marqué prêt. phaseReady=[{string.Join(",", phaseReady)}]");
 
         if (NetworkSessionData.IsNetworkSession)
         {
@@ -385,7 +405,9 @@ public class TurnManager : MonoBehaviour
                 GlobalSettings.Instance.RefreshEndPhaseButtons();
         }
 
-        if (AllParticipantsRegisteredEndPhase())
+        bool allReady = AllParticipantsRegisteredEndPhase();
+        Debug.Log($"[TurnMgr] RegisterEndPhase — AllParticipantsRegisteredEndPhase={allReady}");
+        if (allReady)
             AdvancePhaseWhenAllReady();
     }
 
@@ -455,7 +477,18 @@ public class TurnManager : MonoBehaviour
                 FlushSoloPlayBuffer();
                 FlushSoloBoardBuffer();
                 FlushSoloMoveBuffer();
-                ResolveStationaryTransportDisembarks();
+                // ResolveStationaryTransportDisembarks doit attendre que la queue de Command ait fini
+                // de jouer les CreatureMoveCommand mis en file par FlushSoloMoveBuffer (creature.Move
+                // met à jour CreatureLogic.BaseID tout de suite, mais manager.BaseID et
+                // BoardedCreatureIDs — lus par CreatureMoveVisual.DisembarkCargoInPlace — ne sont mis à
+                // jour qu'à l'exécution différée de ce Command). Sans cette attente, un transport qui
+                // vient de bouger est encore vu ici avec son ANCIEN manager.BaseID et des passagers pas
+                // encore débarqués : il est donc traité à tort comme "resté sur place" et ses passagers
+                // débarquent dans la zone d'origine au lieu de la zone d'arrivée. Voir l'équivalent
+                // réseau (GameNetworkManager.ApplyDeathDrainAndTransition), qui attend déjà playingQueue
+                // avant d'appeler ResolveStationaryTransportDisembarks — ce chemin solo ne le faisait pas.
+                StartCoroutine(ResolveStationaryTransportDisembarksThenEnterPhase(next));
+                return;
             }
             bool isCombatPhase = currentPhase == TurnPhases.BeginCombat ||
                                  currentPhase == TurnPhases.Battle      ||
@@ -475,6 +508,16 @@ public class TurnManager : MonoBehaviour
                 EnterPhase(next);
             }
         }
+    }
+
+    // Voir l'appel dans AdvancePhaseWhenAllReady : laisse la queue de Command finir de jouer les
+    // déplacements différés (FlushSoloMoveBuffer) avant de statuer sur quels transports ont bougé.
+    // currentPhase == Command à l'appel ⇒ roundEnded est toujours faux, rien à répliquer de ce côté.
+    IEnumerator ResolveStationaryTransportDisembarksThenEnterPhase(TurnPhases next)
+    {
+        yield return new WaitWhile(() => Command.playingQueue);
+        ResolveStationaryTransportDisembarks();
+        EnterPhase(next);
     }
 
     bool AnyZoneHasPossibleCombat()
@@ -803,13 +846,12 @@ public class TurnManager : MonoBehaviour
         }
         ZoneCombatResolver.BattleAssignment assignment =
             ZoneCombatResolver.SerializeMyAttackAssignments(localIndex);
-        Debug.Log($"[Battle][Client] AutoSubmitBattleAssignment — joueur {localIndex} | créatures={assignment.CreatureIDs.Length} bases={assignment.BaseIDs.Length} joueurs={assignment.TargetPlayerIDs.Length} bâtiments={assignment.BuildingIDs.Length}");
+        Debug.Log($"[Battle][Client] AutoSubmitBattleAssignment — joueur {localIndex} | créatures={assignment.CreatureIDs.Length} bases={assignment.BaseIDs.Length} joueurs={assignment.TargetPlayerIDs.Length}");
         GameNetworkManager.Instance.SubmitBattleAssignmentServerRpc(
             localIndex,
             assignment.CreatureIDs,     assignment.CreatureDamages,
             assignment.BaseIDs,         assignment.BaseDamages,
-            assignment.TargetPlayerIDs, assignment.PlayerDamages,
-            assignment.BuildingIDs,     assignment.BuildingDamages);
+            assignment.TargetPlayerIDs, assignment.PlayerDamages);
     }
 
     IEnumerator AutoAdvanceFromEndBattle()
@@ -997,6 +1039,7 @@ public class TurnManager : MonoBehaviour
             if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic creature))
             {
                 int finalBaseID = redirects.TryGetValue(id, out int redirectedBaseID) ? redirectedBaseID : baseID;
+                Debug.Log($"[Transport][MoveTrace] FlushSoloMoveBuffer — {creature.DisplayName}(ID:{id}) requestedBaseID={baseID} finalBaseID={finalBaseID} redirected={finalBaseID != baseID}");
                 creature.Move(finalBaseID, pos);
             }
         }

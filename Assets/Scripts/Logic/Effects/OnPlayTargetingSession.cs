@@ -103,7 +103,7 @@ public static class OnPlayTargetingSession
         PendingEffectSelection current = _queue[_cursor];
         if (!current.EligibleTargets.Contains(clicked))
         {
-            // Clic sur une cible invalide (créature/bâtiment/base/zone non éligible) : comme un drag
+            // Clic sur une cible invalide (créature/base/zone non éligible) : comme un drag
             // relâché dans une zone non valide, on annule et la carte retourne en main.
             Cancel();
             return true;

@@ -81,10 +81,4 @@ public class Deck : MonoBehaviour {
         _runtimeCards.SelectRandomCardFromSeed(seed);
     }
 
-    public CardAsset FindBuildingByIndex(int index)
-    {
-        if (index < 0 || index >= playerDeck.buildings.Count) return null;
-        return playerDeck.buildings[index];
-    }
-
 }

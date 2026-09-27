@@ -22,5 +22,5 @@ MonoBehaviour:
     onSource: 1
     vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
   TokenCount: 2
-  TokenToSummon: {fileID: 11400000, guid: dd6cf9dfb35e895498a4715c7cea383d, type: 2}
+  TokenToSummon: {fileID: 11400000, guid: 570018d2cd1f20842924f4f44dec844b, type: 2}
   Placement: 2

@@ -33,8 +33,7 @@ public class CastSpellSO : EffectSO
                 Caster = context.Caster,
                 Source = context.Source,
                 Target = context.Target,
-                EventSubjectCreature = context.EventSubjectCreature,
-                EventSubjectBuilding = context.EventSubjectBuilding
+                EventSubjectCreature = context.EventSubjectCreature
             });
         }
     }

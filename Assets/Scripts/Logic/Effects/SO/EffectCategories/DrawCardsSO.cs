@@ -22,7 +22,7 @@ public class DrawCardsSO : EffectSO
         }
 
         int count = effectInfo.useScalingCount
-            ? context.GetTargetCount(effectInfo.scalingQuery.targetType, effectInfo.scalingQuery.queries)
+            ? context.GetScalingCount(effectInfo)
             : 1;
         int totalCount = CardCount * count;
 

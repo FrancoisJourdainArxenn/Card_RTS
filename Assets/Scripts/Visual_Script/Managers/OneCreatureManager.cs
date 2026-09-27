@@ -43,6 +43,22 @@ public class OneCreatureManager : OneLivableManager
     // Sur la créature réelle en cours de déplacement, référence vers son ghost dans la zone cible :
     [HideInInspector] public GameObject PendingMoveGhost;
 
+    // Ghost sans CreatureLogic propre (ghost de brouillard, placeholder de pose en attente de ciblage) :
+    // stats figées lues par HoverPreview, pour que l'aperçu agrandi soit identique au ghost.
+    [HideInInspector] public bool HasGhostStats;
+    [HideInInspector] public int GhostAttack;
+    [HideInInspector] public int GhostHealth;
+    [HideInInspector] public int GhostMaxHealth;
+
+    public void SetGhostStats(int attack, int health, int maxHealth)
+    {
+        HasGhostStats  = true;
+        GhostAttack    = attack;
+        GhostHealth    = health;
+        GhostMaxHealth = maxHealth;
+        SetDisplayedStats(attack, health);
+    }
+
     // Vrai tant qu'un embarquement (Board) est en attente sur cette créature — pendant de
     // (PendingMoveGhost != null) pour un déplacement classique, mais Board ne crée jamais de ghost
     // (voir DragCreatureActions.Board). Protège le visuel "pending" (voir Player.HighlightPlayableCards)

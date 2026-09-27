@@ -62,7 +62,6 @@ public class NeutralBaseVisual : MonoBehaviour {
 
     void OnMouseEnter()
     {
-        if (BuildingShopVisual.IsOpen) return;
         localPlayer = GlobalSettings.Instance.localPlayer;
         bool hasEnoughRessources = localPlayer.MainRessourceAvailable >= baseAsset.mainRessourceBaseCost;
         Glow.GetComponent<Image>().color = hasEnoughRessources ? Color.green : Color.red;
@@ -93,7 +92,6 @@ public class NeutralBaseVisual : MonoBehaviour {
     public void ResetBuildingZone()
     {
         neutralBaseController.SetOwnerColor(GlobalSettings.Instance.NeutralColor);
-        neutralBaseController.ResetBuildingSpotTag();
         canBuild = true;
     }
 

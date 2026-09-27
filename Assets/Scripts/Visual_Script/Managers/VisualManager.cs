@@ -29,6 +29,8 @@ public class VisualManager : MonoBehaviour
     [Header("Pop Animation")]
     public float popStrength = 2f;
     public float popDuration = 0.5f;
+    public float heroProgressPopStrength = 0.15f; // pop léger de la carte héros en main à chaque progression de sa condition
+    public float heroProgressPopDuration = 0.25f;
 
     [Header("Camera Shake (on damage dealt)")]
     [Tooltip("How long (seconds) before the visual impact the camera shake starts, so it reads as landing on the hit instead of after it.")]
@@ -44,6 +46,7 @@ public class VisualManager : MonoBehaviour
 
     [Header("Card Tier Icons")]
     public Sprite[] CardTierIcons = new Sprite[5]; // index 0 = T1, 1 = T2, 2 = T3, 3 = T4, 4 = T5
+    public Sprite HeroTierIcon; // remplace le tier icon quand la carte est le Hero (CardAsset.IsHero)
 
     [Header("Granted Keywords")]
     public Keyword CelerityKeyword;

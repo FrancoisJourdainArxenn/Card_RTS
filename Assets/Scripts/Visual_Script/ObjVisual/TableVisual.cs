@@ -65,6 +65,16 @@ public class TableVisual : MonoBehaviour
             && !go.GetComponent<OneCreatureManager>().HasPendingMove);
     }
 
+    // Nombre de ghosts d'unités entrantes déjà posés dans cette rangée (voir SpawnPendingMoveGhost) —
+    // fiable en session réseau ET en solo différé (le ghost est spawné localement dans les deux cas),
+    // contrairement à TurnManager.PendingIncomingMoveCount qui ne lit que le buffer solo et manque
+    // donc tous les déplacements entrants en session réseau.
+    public int PendingIncomingGhostCount(bool isMelee)
+    {
+        List<GameObject> row = isMelee ? MeleeCreaturesOnTable : RangedCreaturesOnTable;
+        return row.Count(go => go != null && IsGhost(go));
+    }
+
     // extraCommitted : créatures déjà comptées ailleurs (pas dans cette rangée visuelle) mais qui vont
     // s'y ajouter de façon certaine — voir Player.PendingRevealCount, pour les cartes commises mais
     // pas encore révélées visuellement (DragCreatureOnTable.DragSuccessful).
@@ -72,12 +82,7 @@ public class TableVisual : MonoBehaviour
     {
         Player owner = ownerArea?.GetOwnerPlayer();
         int max = owner != null ? owner.GetMaxCreaturePerRow(ownerArea.baseID) : GlobalSettings.Instance.MaxCreaturePerRow;
-        // Déplacements déjà enfilés (EnqueueSoloMove) vers cette rangée mais pas encore flush — voir
-        // TurnManager.PendingIncomingMoveCount : sans ça, plusieurs renforts convergeant sur la même
-        // rangée dans la même phase Command ne se voient pas entre eux.
-        int pendingIncomingMoves = ownerArea != null && TurnManager.Instance != null
-            ? TurnManager.Instance.PendingIncomingMoveCount(ownerArea.baseID, isMelee)
-            : 0;
+        int pendingIncomingMoves = PendingIncomingGhostCount(isMelee);
         bool hasSpace = EffectiveRowCount(isMelee) + extraCommitted + pendingIncomingMoves < max;
         Debug.Log($"[RowCheck] owner={owner?.name} base={ownerArea?.baseID} melee={isMelee} count={EffectiveRowCount(isMelee)} pending={extraCommitted} incomingMoves={pendingIncomingMoves} max={max} hasSpace={hasSpace}");
         return hasSpace;
@@ -124,7 +129,6 @@ public class TableVisual : MonoBehaviour
 
     public void SetHighlight(bool active)
     {
-        if (BuildingShopVisual.IsOpen) active = false;
         if (glow == null) return;
         glow.GetComponent<Image>().color = ownerColor;
         glow.SetActive(active);
@@ -165,6 +169,11 @@ public class TableVisual : MonoBehaviour
         GameObject creature = CreateCreatureGO(ca, UniqueID, baseID, spawnPos, overrideAttack, overrideHealth);
         creature.transform.SetParent(rowSlots.transform);
         targetList.Insert(listIndex, creature);
+
+        int postCountAdd = EffectiveRowCount(isMelee);
+        int capNowAdd = ownerArea?.GetOwnerPlayer()?.GetMaxCreaturePerRow(baseID) ?? -1;
+        if (postCountAdd > capNowAdd)
+            Debug.LogWarning($"[RowOverflow] AddCreatureAtIndex base={baseID} melee={isMelee} postCount={postCountAdd} cap={capNowAdd} creatureID={UniqueID}");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = rowLocalPos;
@@ -207,6 +216,11 @@ public class TableVisual : MonoBehaviour
         // idempotent, jamais un index recalculé de façon incrémentale (voir DragCreatureActions.BroadcastRowOrder).
         targetList.Insert(Mathf.Min(rowLocalPos, targetList.Count), creature);
         SortListByIDs(targetList, isMelee ? _lastKnownMeleeOrder : _lastKnownRangedOrder);
+
+        int postCountMove = EffectiveRowCount(isMelee);
+        int capNowMove = ownerArea?.GetOwnerPlayer()?.GetMaxCreaturePerRow(baseID) ?? -1;
+        if (postCountMove > capNowMove)
+            Debug.LogWarning($"[RowOverflow] MoveCreatureToIndex base={baseID} melee={isMelee} postCount={postCountMove} cap={capNowMove} creatureID={UniqueID}");
 
         WhereIsTheCardOrCreature w = creature.GetComponent<WhereIsTheCardOrCreature>();
         w.Slot = targetList.IndexOf(creature);
@@ -695,16 +709,14 @@ public class TableVisual : MonoBehaviour
         // cette commande de spawn ne s'exécute.
         if (overrideAttack.HasValue || overrideHealth.HasValue)
         {
-            manager.AttackText.text = (overrideAttack ?? ca.Attack).ToString();
-            manager.HealthText.text = (overrideHealth ?? ca.MaxHealth).ToString();
+            manager.SetDisplayedStats(overrideAttack ?? ca.Attack, overrideHealth ?? ca.MaxHealth);
         }
         // Si la logique existe déjà et a été modifiée avant que ce visuel soit créé
         // (ex: reveal différé côté réseau, buffs OnPlay résolus avant l'affichage),
         // on affiche les stats actuelles plutôt que les stats imprimées de la carte.
         else if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(uniqueID, out CreatureLogic cl))
         {
-            manager.AttackText.text = cl.Attack.ToString();
-            manager.HealthText.text = cl.Health.ToString();
+            manager.SetDisplayedStats(cl.Attack, cl.Health);
             if (cl.ShieldValue > 0)
                 creature.GetComponent<VfxManager>().ShowShieldVfx(cl.ShieldVfxPrefab, cl.ShieldValue);
         }
@@ -736,7 +748,13 @@ public class TableVisual : MonoBehaviour
             ghostOcm.Owner = owner;
             ghostOcm.cardAsset = ocm.cardAsset;
             ghostOcm.ReadCreatureFromAsset();
-            ghostOcm.HealthText.text = ocm.HealthText.text;
+            IDHolder sourceId = c.GetComponent<IDHolder>();
+            int sourceCreatureID = ocm.IsPendingMoveGhost ? ocm.PendingMoveSourceCreatureID
+                                 : sourceId != null ? sourceId.UniqueID : -1;
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(sourceCreatureID, out CreatureLogic sourceLogic))
+                ghostOcm.SetGhostStats(sourceLogic.Attack, sourceLogic.Health, sourceLogic.MaxHealth);
+            else
+                ghostOcm.HealthText.text = ocm.HealthText.text;
             ghostOcm.isGhost = true;
             ghostOcm.SetGray(true);
 

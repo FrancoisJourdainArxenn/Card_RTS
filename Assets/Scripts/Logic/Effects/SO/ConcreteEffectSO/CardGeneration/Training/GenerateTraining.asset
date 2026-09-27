@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cae71c27f71131446bdaf28564886bc2, type: 3}
+  m_Name: GenerateTraining
+  m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+  CardPool:
+  - {fileID: 11400000, guid: c59e4fbb80cc26a4abe2a80a379a6656, type: 2}
+  - {fileID: 11400000, guid: 7706e55e31c331048b4206527ce30d4d, type: 2}
+  - {fileID: 11400000, guid: ba27e150b951ef4479e26a1793489f6b, type: 2}
+  CardCount: 1

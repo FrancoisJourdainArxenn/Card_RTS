@@ -22,6 +22,7 @@ public enum ScalingSource
 {
     TargetCount,   // compte scalingQuery (comportement existant)
     SourceShield,  // ShieldValue de la source de l'effet
+    CasterTier,    // tier actuel du Caster (lu sur homeBaseLogic)
 }
 
 public enum EffectRepartition
@@ -35,9 +36,10 @@ public enum EffectRepartition
 
 public enum EffectObjectType
 {
-    Creature,
-    Building,
-    Base,
-    Zone,
-    Player,
+    // Valeurs explicites : c'est l'entier qui est sérialisé dans les assets (1 = ancien Building,
+    // retiré) — ne jamais renuméroter.
+    Creature = 0,
+    Base     = 2,
+    Zone     = 3,
+    Player   = 4,
 }

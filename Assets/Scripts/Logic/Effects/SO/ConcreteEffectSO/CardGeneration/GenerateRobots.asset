@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GenerateCardsFromPoolSO
   Description: 
   EffectVisual:
-    vfxPrefab: {fileID: 0}
+    vfxPrefab: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
     onSource: 1
-    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 1791c2fb535660f4c8cb7493625783a0, type: 3}
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
   CardPool:
   - {fileID: 11400000, guid: 0a2ef7afe7117fe48897eb09c62b0e61, type: 2}
   - {fileID: 11400000, guid: 4c6dc73027f06f24d8bdf1db08e56a13, type: 2}

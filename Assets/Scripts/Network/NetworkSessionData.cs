@@ -28,6 +28,16 @@ public static class NetworkSessionData
     public static int SelectedDeckPresetIndex { get; set; } = -1;
 
     /// <summary>
+    /// Index du CardPoolSO choisi dans FactionAsset.mainCardPools/secondCardPools pour le hero
+    /// sélectionné. Transmis en session réseau (voir GameNetworkManager) au lieu de laisser chaque
+    /// machine lire son propre DeckSO.mainPool/secondPool local : ces champs sont mutés en mémoire
+    /// par ApplyPoolChoice et ne se propagent pas d'une machine à l'autre.
+    /// -1 = utilise le mainPool/secondPool déjà assigné sur le preset (défaut).
+    /// </summary>
+    public static int SelectedMainPoolIndex { get; set; } = -1;
+    public static int SelectedSecondPoolIndex { get; set; } = -1;
+
+    /// <summary>
     /// Vrai si le joueur Top de cette session locale (non-réseau) est piloté par l'IA.
     /// </summary>
     public static bool IsVsAI { get; set; } = false;

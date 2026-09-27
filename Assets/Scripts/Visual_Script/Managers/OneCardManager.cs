@@ -2,21 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using DG.Tweening;
 using TMPro;
 
 // holds the refs to all the Text, Images on the card
-public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+public class OneCardManager : MonoBehaviour
 {
 
     public CardAsset cardAsset;
     public Player owner;
-    // Instance vivante correspondant à cardAsset, quand ce OneCardManager représente une créature/
-    // bâtiment déjà sur le plateau (pas rempli pour une carte en main) — permet d'afficher la
-    // progression d'un CondCounter (source = WrappedCondition), dont le compteur vit sur l'instance.
+    // Instance vivante correspondant à cardAsset, quand ce OneCardManager représente une créature
+    // déjà sur le plateau (pas rempli pour une carte en main) — permet d'afficher la progression
+    // d'un CondCounter (source = WrappedCondition), dont le compteur vit sur l'instance.
     public CreatureLogic sourceCreature;
-    public BuildingLogic sourceBuilding;
     // public OneCardManager PreviewManager;
     [Header("Text Component References")]
     public TMP_Text NameText;
@@ -34,12 +32,15 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public Image TierImage;
     public Image RowIcon;
 
-    public bool hoverZoomEnabled = false;
     private Vector3 originalScale;
     private Color _originalAttackColor;
     private Color _originalHealthColor;
     private HeroUnlockConditionSO _unlockCondition;
     private bool _wasLocked;
+    // Activé uniquement par HandVisual : seule la carte en main réagit à la progression.
+    [HideInInspector] public bool trackUnlockProgress;
+    private Player _subscribedOwner;
+    private string _lastUnlockProgress;
 
     void Awake()
     {
@@ -78,8 +79,6 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         NameText.text = string.IsNullOrEmpty(cardAsset.Name) ? cardAsset.name : cardAsset.Name;
         MainCostText.text = cardAsset.MainCost.ToString();
         subType.text = cardAsset.subType.ToString();
-        // 4) add description
-        DescriptionText.text = cardAsset.GetResolvedDescription(owner);
         // 5) Change the card graphic sprite
         ArtImage.sprite = cardAsset.CardImage;
         if (TierImage != null && VisualManager.Instance != null)
@@ -90,9 +89,8 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
 
         _unlockCondition = cardAsset.IsHero ? cardAsset.UnlockCondition : null;
-        PrependGrantedKeywordsText();
-        ApplyUnlockDescriptionIfLocked();
-        AppendCounterProgressText();
+        RefreshDescription();
+        SubscribeToUnlockProgress();
 
         if (cardAsset.MaxHealth != 0)
         {
@@ -145,6 +143,17 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
     }
 
+    // Carte en main : affiche les stats qu'aura la créature une fois jouée, buffs permanents du
+    // propriétaire inclus (voir Player.GetPermanentCreatureBuff). Sans effet sur une carte qui
+    // représente une créature déjà en jeu (sourceCreature), dont les stats viennent de l'instance.
+    public void ApplyPermanentBuffPreview()
+    {
+        if (owner == null || sourceCreature != null || cardAsset == null || cardAsset.MaxHealth <= 0) return;
+
+        (int bonusAttack, int bonusHealth) = owner.GetPermanentCreatureBuff(cardAsset);
+        OverrideStats(Mathf.Max(0, cardAsset.Attack + bonusAttack), cardAsset.MaxHealth + bonusHealth, cardAsset.MaxHealth);
+    }
+
     public void ReadEffectFromAsset(string effectName)
     {
         if (NameText != null)        NameText.text = effectName;
@@ -152,6 +161,56 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         if (ArtImage != null)        ArtImage.sprite = cardAsset.CardImage;
     }
 
+
+    private void RefreshDescription()
+    {
+        DescriptionText.text = cardAsset.GetResolvedDescription(owner);
+        PrependGrantedKeywordsText();
+        ApplyUnlockDescriptionIfLocked();
+        AppendCounterProgressText();
+    }
+
+    private void SubscribeToUnlockProgress()
+    {
+        UnsubscribeFromUnlockProgress();
+        if (!trackUnlockProgress || _unlockCondition == null || owner == null) return;
+
+        _subscribedOwner = owner;
+        _subscribedOwner.matchStats.OnChanged += OnMatchStatsChanged;
+        _lastUnlockProgress = _unlockCondition.GetDescription(owner);
+    }
+
+    private void UnsubscribeFromUnlockProgress()
+    {
+        if (_subscribedOwner == null) return;
+        _subscribedOwner.matchStats.OnChanged -= OnMatchStatsChanged;
+        _subscribedOwner = null;
+    }
+
+    // GetDescription contient le "remaining" : s'il ne change pas, la stat modifiée ne concerne pas ce héros.
+    private void OnMatchStatsChanged()
+    {
+        string progress = _unlockCondition.GetDescription(owner);
+        if (progress == _lastUnlockProgress) return;
+        _lastUnlockProgress = progress;
+
+        RefreshDescription();
+
+        // Testé ici et non à l'abonnement : le héros de départ est pioché avant que
+        // GlobalSettings.localPlayer soit assigné. Jamais de pop pour l'adversaire (révèlerait sa progression).
+        if (GlobalSettings.Instance == null || owner != GlobalSettings.Instance.localPlayer) return;
+
+        bool isLocked = !_unlockCondition.IsUnlocked(owner);
+        if (_wasLocked && !isLocked) PopCard();
+        else PopCardLight();
+        // Évite un second pop dans NotifyLockState si ce changement vient de débloquer le héros.
+        _wasLocked = isLocked;
+    }
+
+    void OnDestroy()
+    {
+        UnsubscribeFromUnlockProgress();
+    }
 
     public void ApplyUnlockDescriptionIfLocked()
     {
@@ -204,7 +263,7 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         foreach (CardEffectData data in cardAsset.Effects)
         {
             if (data.Condition is not CondCounter counter) continue;
-            string progress = counter.GetProgressText(sourceCreature, sourceBuilding, owner);
+            string progress = counter.GetProgressText(sourceCreature, owner);
             if (!string.IsNullOrEmpty(progress))
                 DescriptionText.text += $" {progress}";
         }
@@ -220,37 +279,28 @@ public class OneCardManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     private Tween _popTween;
 
-    // Ne tue que le punch-scale précédent (évite l'empilement d'échelle en cas de déclenchements
-    // rapides), sans toucher aux autres tweens du même transform (repositionnement de main,
-    // dépôt dans un CardHoldSlotVisual...) qu'un DOKill() global interromprait en plein vol.
     private void PopCard()
     {
         float strength = VisualManager.Instance != null ? VisualManager.Instance.popStrength : 1f;
         float duration = VisualManager.Instance != null ? VisualManager.Instance.popDuration : 1f;
+        PopCard(strength, duration);
+    }
 
+    private void PopCardLight()
+    {
+        float strength = VisualManager.Instance != null ? VisualManager.Instance.heroProgressPopStrength : 0.15f;
+        float duration = VisualManager.Instance != null ? VisualManager.Instance.heroProgressPopDuration : 0.25f;
+        PopCard(strength, duration);
+    }
+
+    // Ne tue que le punch-scale précédent (évite l'empilement d'échelle en cas de déclenchements
+    // rapides), sans toucher aux autres tweens du même transform (repositionnement de main,
+    // dépôt dans un CardHoldSlotVisual...) qu'un DOKill() global interromprait en plein vol.
+    private void PopCard(float strength, float duration)
+    {
         _popTween?.Kill();
         transform.localScale = originalScale;
         _popTween = transform.DOPunchScale(originalScale * strength, duration, 1, 0.5f);
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
-            transform.DOScale(originalScale * 1.1f, 0.15f);
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (BuildingShopVisual.IsOpen && hoverZoomEnabled)
-            transform.DOScale(originalScale, 0.15f);
-    }
-
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        if (!BuildingShopVisual.IsOpen) return;
-        if (!canBePlayedNow) return;
-        GlobalSettings.Instance.buildingShop.OnBuildingSelected(cardAsset);
     }
 
 }

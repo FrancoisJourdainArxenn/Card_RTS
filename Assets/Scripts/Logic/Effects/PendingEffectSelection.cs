@@ -6,7 +6,7 @@ public class PendingEffectSelection
     public EffectContext Context;
     public List<IIdentifiable> EligibleTargets;
     public IIdentifiable SelectedTarget;
-    public int SourceEntityID;   // unique ID of the creature/building owning this effect
+    public int SourceEntityID;   // unique ID of the creature owning this effect
     public int EffectIndexInCard; // index in CardAsset.Effects[]
 
     // Vrai uniquement pour une sélection issue d'un drag de sort ciblé (voir DragSpellOnTarget) :

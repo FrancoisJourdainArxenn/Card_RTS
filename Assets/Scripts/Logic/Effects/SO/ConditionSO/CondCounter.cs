@@ -5,12 +5,12 @@ public enum CounterSource
     // Compteur global déjà tenu par le moteur (Player.matchStats / HeroCountUnlock — le même
     // mécanisme que le déblocage des héros).
     MatchStat,
-    // Compte les fois où `condition` est vraie. Compteur local à CETTE instance de créature/
-    // bâtiment (cf. CreatureLogic/BuildingLogic.IncrementConditionCounter) — utile pour des
-    // compteurs que le moteur ne tient pas nativement (ex: "morts alliées dans MA zone").
+    // Compte les fois où `condition` est vraie. Compteur local à CETTE instance de créature
+    // (cf. CreatureLogic.IncrementConditionCounter) — utile pour des compteurs que le moteur ne
+    // tient pas nativement (ex: "morts alliées dans MA zone").
     WrappedCondition,
     // Tier actuel de la home base du joueur (Self/Opponent selon `owner`) — reste valable même si
-    // context.Source est une créature/bâtiment ou une base secondaire, dont le CurrentTier propre
+    // context.Source est une créature ou une base secondaire, dont le CurrentTier propre
     // reste toujours figé à T1. `threshold` s'exprime alors en valeur de CardTier (T1=1..T5=5).
     BaseTier,
 }
@@ -61,7 +61,6 @@ public class CondCounter : ConditionSO
             count = context.Source switch
             {
                 CreatureLogic c => c.IncrementConditionCounter(this),
-                BuildingLogic b => b.IncrementConditionCounter(this),
                 _ => 0
             };
         }
@@ -93,16 +92,15 @@ public class CondCounter : ConditionSO
     // Texte de progression pour l'UI (ex: "(2/4)"), en lecture seule — contrairement à Evaluate(),
     // ne fait jamais avancer le compteur WrappedCondition. Retourne null quand ce compteur ne
     // s'applique pas au contexte donné (ex: WrappedCondition affiché sur une carte encore en main,
-    // qui n'a donc pas encore d'instance CreatureLogic/BuildingLogic vivante).
-    public string GetProgressText(CreatureLogic sourceCreature, BuildingLogic sourceBuilding, Player cardOwner)
+    // qui n'a donc pas encore d'instance CreatureLogic vivante).
+    public string GetProgressText(CreatureLogic sourceCreature, Player cardOwner)
     {
         int count;
 
         if (source == CounterSource.WrappedCondition)
         {
-            if (sourceCreature != null) count = sourceCreature.PeekConditionCounter(this);
-            else if (sourceBuilding != null) count = sourceBuilding.PeekConditionCounter(this);
-            else return null;
+            if (sourceCreature == null) return null;
+            count = sourceCreature.PeekConditionCounter(this);
         }
         else if (source == CounterSource.BaseTier)
         {

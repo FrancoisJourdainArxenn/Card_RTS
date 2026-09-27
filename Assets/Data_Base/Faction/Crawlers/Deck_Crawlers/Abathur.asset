@@ -16,4 +16,5 @@ MonoBehaviour:
   difficultyLevel: 3
   deckTooltip: Take the upper hand with strong Melee units.
   heroCard: {fileID: 11400000, guid: 9c8745fd772bc6440a2e1b3b85fdfd45, type: 2}
-  sharedPool: {fileID: 11400000, guid: faa2b109910e9b143bc2f91d80444285, type: 2}
+  mainPool: {fileID: 11400000, guid: fcf733b72e307b24ba1f18c25c0c8c45, type: 2}
+  secondPool: {fileID: 0}

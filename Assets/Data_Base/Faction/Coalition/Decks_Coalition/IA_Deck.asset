@@ -16,4 +16,5 @@ MonoBehaviour:
   difficultyLevel: 1
   deckTooltip: <b>Soldiers</b> together strong !
   heroCard: {fileID: 11400000, guid: 6c267daced5cbd84e85c6ac679d86266, type: 2}
-  sharedPool: {fileID: 11400000, guid: 222a6f4b08de0c24c897140ba3ce62eb, type: 2}
+  mainPool: {fileID: 11400000, guid: a66d7384008df6e4bb0fc4179c4b02e5, type: 2}
+  secondPool: {fileID: 11400000, guid: 222a6f4b08de0c24c897140ba3ce62eb, type: 2}

@@ -1,12 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum Faction{ Coalition, Nomad, Crawlers, Terrans}
 
-public class FactionAsset : ScriptableObject 
+public class FactionAsset : ScriptableObject
 {
 	public Faction Faction;
 	public string FactionName;
+
+	[Header("Card Pool Choices")]
+	public List<CardPoolSO> mainCardPools;
+	public List<CardPoolSO> secondCardPools;
 	//public int MaxHealth = 30;
 	//public string HeroPowerName;
 	//public Sprite AvatarImage;

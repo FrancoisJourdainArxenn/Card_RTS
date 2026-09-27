@@ -8,7 +8,6 @@ enum AttackTargetType
     Player,
     Base,
     Creature,
-    Building,
     Unknown
 }
 
@@ -93,11 +92,6 @@ public class CreatureAttackVisual : MonoBehaviour
                  CreatureLogic.CreaturesCreatedThisGame[targetUniqueID] != null)
         {
             return AttackTargetType.Creature;
-        }
-        else if (BuildingLogic.BuildingsCreatedThisGame.ContainsKey(targetUniqueID) &&
-                 BuildingLogic.BuildingsCreatedThisGame[targetUniqueID] != null)
-        {
-            return AttackTargetType.Building;
         }
         return AttackTargetType.Unknown;
     }
@@ -272,10 +266,6 @@ public class CreatureAttackVisual : MonoBehaviour
             else if (hitTarget.GetComponent<OneCreatureManager>() is OneCreatureManager cm)
             {
                 cm.HealthText.text = healthAfter.ToString();
-            }
-            else if (hitTarget.GetComponent<OneBuildingManager>() is OneBuildingManager bm)
-            {
-                bm.HealthText.text = healthAfter.ToString();
             }
             else
             {

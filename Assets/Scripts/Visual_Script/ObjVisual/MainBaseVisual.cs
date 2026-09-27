@@ -76,7 +76,7 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
     // directement — sinon un deuxième coup fatal dans la même zone rejouerait l'animation). L'ancien
     // "puis révèle GameOverPanel" a été retiré : GameOverPanel n'est assigné dans aucune scène, et la
     // fin de partie passe désormais par GameOverCommand (message + retour menu).
-    // Réutilise VfxManager.PlayDeath() (même mécanisme que CreatureDieCommand/BuildingDieCommand) au
+    // Réutilise VfxManager.PlayDeath() (même mécanisme que CreatureDieCommand) au
     // lieu d'un champ prefab séparé — le composant VfxManager de ce GameObject a déjà un emplacement
     // dédié pour l'animation de mort, pas besoin d'en dupliquer un.
     public void PlayDeathAnimationAndHide(System.Action onComplete)
@@ -168,6 +168,11 @@ public class MainBaseVisual : MonoBehaviour, ITargetableVisual {
 
     public void RefreshTierIcon()
     {
+        // Ne pas mettre à jour l'icône tant qu'on n'a pas la vision actuelle : sinon un changement
+        // de tier ennemi (OnUpgradeCostChanged) ou de ressources (Player.mainRessourceAvailable)
+        // traverserait le fog of war instantanément. RefreshTierIcon() sera rappelée avec
+        // currentlyVisible == true dès que la vision revient (voir ApplyLookFromAsset).
+        if (!currentlyVisible) return;
         if (player?.homeBaseLogic == null || CurrentTierImage == null) return;
 
         BaseLogic bl = player.homeBaseLogic;

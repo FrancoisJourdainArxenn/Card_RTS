@@ -24,6 +24,7 @@ public enum MatchStatType
 public class HeroCountUnlock
 {
     public string OwnerLabel = "Unknown";
+    public event System.Action OnChanged;
     private readonly Dictionary<MatchStatType, int> _values = new();
 
     public int Get(MatchStatType stat) => _values.GetValueOrDefault(stat, 0);
@@ -32,18 +33,21 @@ public class HeroCountUnlock
     {
         if (amount == 0) return;
         _values[stat] = Get(stat) + amount;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} +{amount} => {_values[stat]}");
     }
 
     public void Reset()
     {
         _values.Clear();
+        OnChanged?.Invoke();
         // Debug.Log("[HeroCountUnlock] Reset");
     }
 
     public void Reset(MatchStatType stat)
     {
         _values[stat] = 0;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} reset to 0");
     }
 
@@ -55,12 +59,14 @@ public class HeroCountUnlock
     {
         if (amount == 0) return;
         _subTypePlayedValues[subType] = GetSubTypePlayed(subType) + amount;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Played {subType} +{amount} => {_subTypePlayedValues[subType]}");
     }
 
     public void ResetSubTypePlayed(SubType subType)
     {
         _subTypePlayedValues[subType] = 0;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Played {subType} reset to 0");
     }
 
@@ -72,12 +78,14 @@ public class HeroCountUnlock
     {
         if (amount == 0) return;
         _subTypeCreatedValues[subType] = GetSubTypeCreated(subType) + amount;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Created {subType} +{amount} => {_subTypeCreatedValues[subType]}");
     }
 
     public void ResetSubTypeCreated(SubType subType)
     {
         _subTypeCreatedValues[subType] = 0;
+        OnChanged?.Invoke();
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] SubType Created {subType} reset to 0");
     }
 }

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "Effects/GiveCelerityEffectSO")]
-public class GiveCeleritySO : EffectSO
+public class GiveCeleritySO : EffectSO, IPassiveAuraEffect
 {
     public override EffectPriority Priority => EffectPriority.ModifyStats;
     protected override bool IsBuffEffect => true;
@@ -38,4 +38,21 @@ public class GiveCeleritySO : EffectSO
     protected override bool IsTargetSaturated(EffectTarget target) => false;
 
     public override string GetDescription() => "gagne la Célérité";
+
+    // ── IPassiveAuraEffect (TriggerType.Passive) ────────────────────────────────
+    // GrantCelerity/RemoveCelerity comptent les sources actives (voir CreatureLogic) — safe même si
+    // plusieurs auras Célérité indépendantes touchent la même créature en même temps.
+    public object ComputeAuraPayload(EffectContext context, ILivable target) => true;
+
+    public void ApplyAura(ILivable target, object payload)
+    {
+        if (target is CreatureLogic creature)
+            creature.GrantCelerity();
+    }
+
+    public void RevertAura(ILivable target, object payload)
+    {
+        if (target is CreatureLogic creature)
+            creature.RemoveCelerity();
+    }
 }
