@@ -44,7 +44,10 @@ MonoBehaviour:
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
-  ReferencedCards: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: c59e4fbb80cc26a4abe2a80a379a6656, type: 2}
+  - {fileID: 11400000, guid: 7706e55e31c331048b4206527ce30d4d, type: 2}
+  - {fileID: 11400000, guid: ba27e150b951ef4479e26a1793489f6b, type: 2}
   Effects:
   - EffectName: Training
     Effect: {fileID: 11400000, guid: 3a26b374bec0b994f9315e31292bd3d6, type: 2}

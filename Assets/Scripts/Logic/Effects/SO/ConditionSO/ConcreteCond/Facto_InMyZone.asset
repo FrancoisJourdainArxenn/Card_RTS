@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e08c587c7da8b194eb030861174cdaad, type: 3}
-  m_Name: ResearchLabInMyZone
+  m_Name: Facto_InMyZone
   m_EditorClassIdentifier: Assembly-CSharp::CondEntityCount
   query:
     targetType: 0

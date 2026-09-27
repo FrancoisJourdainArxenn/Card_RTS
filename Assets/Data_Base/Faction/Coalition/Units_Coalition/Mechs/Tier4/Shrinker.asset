@@ -10,29 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Anti-Siege Turret
+  m_Name: Shrinker
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
+  Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
   Type: 0
-  subType: 3
-  tier: 3
-  Description: '<b>Splash Attack</b>.
-
-    This unit can''t move.'
-  CardImage: {fileID: 21300000, guid: 0a2b9348586169a4eb4f8f51b0509835, type: 3}
+  subType: 6
+  tier: 2
+  Description: <b>On Attack :</b> Gain an Invention.
+  CardImage: {fileID: 21300000, guid: 720be9c9b4d45f7408808f1aaeb82a7f, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
+  Attack: 1
   MaxHealth: 2
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
-  AttackModifiers:
-  - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
+  AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 0
+  MoveSpeed: 1
   Celerity: 0
   melee: 0
   Flying: 0
@@ -41,6 +38,19 @@ MonoBehaviour:
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
-  - {fileID: 11400000, guid: ba63f570a19b14145869245e404c3173, type: 2}
+  - {fileID: 11400000, guid: d2f1182ca543f07418893f9bac15605d, type: 2}
   ReferencedCards: []
-  Effects: []
+  Effects:
+  - EffectName: "Eur\xEAka ! "
+    Effect: {fileID: 11400000, guid: 963e046538874a745bc026d13154a62d, type: 2}
+    Trigger: 15
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

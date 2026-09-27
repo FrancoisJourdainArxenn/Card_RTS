@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e0fcc113c045acc4c952f0166ce18e59, type: 3}
-  m_Name: Research Lab
+  m_Name: Weapons
   m_EditorClassIdentifier: Assembly-CSharp::CardFilterSO
-  filterBySubType: 0
-  requiredSubType: 11
-  filterByName: 1
-  requiredName: Research Lab
+  filterBySubType: 1
+  requiredSubType: 10
+  filterByName: 0
+  requiredName: 
   filterByCelerity: 0
   requiredCelerity: 0

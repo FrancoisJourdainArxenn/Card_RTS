@@ -10,55 +10,53 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Krysiulium Weapon
+  m_Name: Factory Protector
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
   Faction: {fileID: 11400000, guid: 72390aef465be454194079dd9e4f3863, type: 2}
-  Type: 2
-  subType: 10
+  Type: 0
+  subType: 0
   tier: 1
-  Description: Gives +{0}/+{1} target unit.
-  CardImage: {fileID: 21300000, guid: a76e0bbcac8314f48bd79c183834d758, type: 3}
-  MainCost: 0
+  Description: <b>Battle Start:</b> If there's a <i>Factory</i> in my zone, I gain
+    +1/+0 until end of turn.
+  CardImage: {fileID: 21300000, guid: 333b37dfc4a8ee341992c1b414f1faec, type: 3}
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 0
-  MaxHealth: 0
-  AttacksForOneTurn: 0
-  AttackSpeedMultiplier: 0
+  MaxHealth: 3
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
-  MoveSpeed: 0
+  MoveSpeed: 1
   Celerity: 0
-  melee: 0
+  melee: 1
   Flying: 0
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
-  ReferencedCards: []
+  ReferencedCards:
+  - {fileID: 11400000, guid: 16216028187733646bbe63beae1c727b, type: 2}
   Effects:
-  - EffectName: Buff
-    Effect: {fileID: 11400000, guid: 8f5fa8d87ed089d43a48b4dabb4f0393, type: 2}
-    Trigger: 0
-    Condition: {fileID: 0}
+  - EffectName: 
+    Effect: {fileID: 11400000, guid: 3a5e648d35a26d745bff2d8fcb1eff6d, type: 2}
+    Trigger: 14
+    Condition: {fileID: 11400000, guid: b4666f7f52937464d88e7bcb69f9826c, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 0
-        queries:
-        - team: 1
-          statusFilter: 0
-          zoneFilter: 0
-          cardFilter: {fileID: 0}
-        requiresPlayerSelection: 1
+        onlySource: 1
+        queries: []
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 1
-        includesSource: 0
+        includesTarget: 0
+        includesSource: 1
         includesEventSubject: 0
         queries: []
       repartition: 0
