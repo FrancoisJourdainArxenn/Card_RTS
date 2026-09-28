@@ -571,6 +571,7 @@ public class TurnManager : MonoBehaviour
         switch (phase)
         {
             case TurnPhases.Regroup:
+                AmbushTracker.Clear();
                 // new ShowMessageCommand("Regroup", 1.5f).AddToQueue();
                 OnRoundStart?.Invoke();
                 foreach (Player p in Player.Players)
@@ -588,6 +589,7 @@ public class TurnManager : MonoBehaviour
             //     StartCoroutine(AutoAdvanceFromBeginCombat());
             //     break;
             case TurnPhases.Battle:
+                AmbushTracker.Snapshot();
                 // new ShowMessageCommand("Battle", 1.5f).AddToQueue();
                 foreach (Player p in Player.Players)
                     p.DiscardHand(); // Begin Combat désactivé temporairement — discard déplacé ici (voir TurnMaker.OnBeginCombatPhaseEntered)

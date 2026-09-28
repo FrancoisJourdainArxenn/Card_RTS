@@ -19,18 +19,18 @@ MonoBehaviour:
   tier: 1
   Description: <b>Ambush:</b> Gain 1 Ressource.
   CardImage: {fileID: 21300000, guid: e12f90b6be85ba14b87f9072b8157daf, type: 3}
-  MainCost: 1
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
-  MaxHealth: 1
+  Attack: 1
+  MaxHealth: 10
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 0
+  Celerity: 1
   melee: 1
   Flying: 0
   TransportCapacity: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
   - EffectName: Looting !
     Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
     Trigger: 14
-    Condition: {fileID: 11400000, guid: 66c20f14eb2c168488a5289f65a41b88, type: 2}
+    Condition: {fileID: 11400000, guid: 2d11a672959074c41b2aafa50e0c6c16, type: 2}
     Effectinfo:
       effectTargets: []
       affectedElements: []

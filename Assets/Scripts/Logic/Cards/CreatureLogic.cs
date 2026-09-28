@@ -434,6 +434,15 @@ public class CreatureLogic: ILivable
     private int movementsForOneTurn = 1;
     public int MovementsLeftThisTurn { get; set; }
 
+    // Dernière zone dans laquelle cette créature est entrée par un déplacement (Move, ou débarquement
+    // d'un transport qui vient lui-même de s'y déplacer) et le round correspondant. RelocateAfterCombat
+    // ne les touche pas : un survivant de combat de rencontre renvoyé vers sa destination n'"entre" pas.
+    public ZoneLogic ZoneEnteredByMove { get; private set; }
+    public int ZoneEnteredByMoveRound { get; private set; } = -1;
+
+    // Statut Embuscade, figé à l'entrée en phase Battle et effacé au Regroup suivant (voir AmbushTracker).
+    public bool IsAmbushing { get; set; }
+
     // Vrai depuis l'entrée en jeu (main ou token) jusqu'au début du prochain tour de son propriétaire,
     // sauf célérité (voir constructeur / GrantCelerity). Contrairement à (MovementsLeftThisTurn <= 0),
     // ne redevient jamais vrai après un déplacement normal plus tard dans la partie.
@@ -1215,8 +1224,14 @@ public class CreatureLogic: ILivable
     {
         MovementsLeftThisTurn--;
         Debug.Log($"[MoveTrace] Move creatureID={UniqueCreatureID} ({DisplayName}) BaseID {BaseID}->{baseID} tablePos={tablePos}");
+        ZoneLogic originZone = Zone;
         BaseID = baseID;
         IsPendingMove = false;
+        if (Zone != null && Zone != originZone)
+        {
+            ZoneEnteredByMove = Zone;
+            ZoneEnteredByMoveRound = TurnManager.Instance.CurrentRound;
+        }
         FogOfWarManager.Refresh();
         PassiveAuraManager.RecomputeAll();
         new CreatureMoveCommand(UniqueCreatureID, baseID, tablePos).AddToQueue();
@@ -1271,7 +1286,8 @@ public class CreatureLogic: ILivable
     public void DisembarkAt(int baseID, int tablePos)
     {
         int? fromCarrier = TransportCarrierID;
-        if (TransportCarrierID.HasValue && CreaturesCreatedThisGame.TryGetValue(TransportCarrierID.Value, out CreatureLogic carrier))
+        CreatureLogic carrier = null;
+        if (TransportCarrierID.HasValue && CreaturesCreatedThisGame.TryGetValue(TransportCarrierID.Value, out carrier))
         {
             carrier._boardedCreatureIDs.Remove(UniqueCreatureID);
             carrier.RemoveFromManifest(UniqueCreatureID);
@@ -1279,6 +1295,14 @@ public class CreatureLogic: ILivable
         }
         TransportCarrierID = null;
         BaseID = baseID;
+        // Débarqué dans la zone où son transporteur vient d'entrer par déplacement CE round : le passager
+        // y "entre" aussi (AmbushTracker). Pas le cas s'il est laissé derrière à l'origine, ni pour un
+        // débarquement sur place (transport immobile) ou manuel dans une zone déjà occupée.
+        if (carrier != null && carrier.ZoneEnteredByMoveRound == TurnManager.Instance.CurrentRound && carrier.ZoneEnteredByMove == Zone)
+        {
+            ZoneEnteredByMove = Zone;
+            ZoneEnteredByMoveRound = carrier.ZoneEnteredByMoveRound;
+        }
         FogOfWarManager.Refresh();
         PassiveAuraManager.RecomputeAll();
         //Debug.Log($"[Transport] DisembarkAt — {DisplayName}(ID:{UniqueCreatureID}) leaves carrier ID:{fromCarrier} -> baseID={baseID}, networkTablePos={tablePos}");

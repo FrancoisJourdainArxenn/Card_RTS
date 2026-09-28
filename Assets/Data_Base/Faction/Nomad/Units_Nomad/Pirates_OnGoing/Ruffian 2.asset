@@ -17,20 +17,20 @@ MonoBehaviour:
   Type: 0
   subType: 7
   tier: 1
-  Description: The Fort gains Scout ? -> Invention ?
+  Description: 
   CardImage: {fileID: 21300000, guid: e12f90b6be85ba14b87f9072b8157daf, type: 3}
-  MainCost: 1
+  MainCost: 0
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 3
-  MaxHealth: 1
+  Attack: 1
+  MaxHealth: 10
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
-  Celerity: 0
+  Celerity: 1
   melee: 1
   Flying: 0
   TransportCapacity: 0
@@ -42,12 +42,26 @@ MonoBehaviour:
   ReferencedCards: []
   Effects:
   - EffectName: Looting !
-    Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
+    Effect: {fileID: 11400000, guid: 3a5e648d35a26d745bff2d8fcb1eff6d, type: 2}
     Trigger: 14
-    Condition: {fileID: 11400000, guid: 66c20f14eb2c168488a5289f65a41b88, type: 2}
+    Condition: {fileID: 11400000, guid: 2d11a672959074c41b2aafa50e0c6c16, type: 2}
     Effectinfo:
-      effectTargets: []
-      affectedElements: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 1
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
       repartition: 0
       useScalingCount: 0
       scalingQuery:
