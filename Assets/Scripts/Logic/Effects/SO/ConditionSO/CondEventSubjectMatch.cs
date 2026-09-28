@@ -95,7 +95,9 @@ public class CondEventSubjectMatch : ConditionSO
             if (!subjectOk && !sourceOk) return false;
         }
 
-        if (cardFilter != null && !cardFilter.Matches(ca))
+        // Sur la créature plutôt que sa seule carte : voit aussi le statut d'unité-base accordé en jeu
+        // (voir CardFilterSO.filterByHomeBase).
+        if (cardFilter != null && !cardFilter.Matches(creature))
             return false;
 
         return true;

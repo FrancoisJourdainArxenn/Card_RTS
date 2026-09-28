@@ -12,6 +12,15 @@ public struct PermanentCreatureBuff
     public int healthBonus;
 }
 
+// Effets accordés pour le reste de la partie par GrantEffectsSO : toute créature de ce joueur qui
+// entre en jeu ensuite et correspond à filter les reçoit (voir EffectRegistry.ApplyPermanentGrants).
+[System.Serializable]
+public struct PermanentCreatureGrant
+{
+    public CardFilterSO filter;
+    public List<CardEffectData> effects;
+}
+
 [System.Flags]
 public enum EffectCategory
 {
@@ -81,6 +90,10 @@ public class Player : MonoBehaviour, ILivable
     // pas sur le CardAsset (partagé entre joueurs) pour ne pas buffer l'adversaire.
     public List<PermanentCreatureBuff> permanentCreatureBuffs = new List<PermanentCreatureBuff>();
 
+    // Même principe pour les effets accordés par GrantEffectsSO (mots-clés, auras...), appliqués eux à
+    // l'entrée en jeu de la créature plutôt que dans son constructeur (voir EffectRegistry.ETB).
+    public List<PermanentCreatureGrant> permanentCreatureGrants = new List<PermanentCreatureGrant>();
+
     // Somme des buffs permanents qui s'appliqueraient à une créature de ce CardAsset si elle était
     // créée maintenant — même logique que le constructeur de CreatureLogic, réutilisée pour afficher
     // les stats "réelles" des cartes en main.
@@ -107,11 +120,58 @@ public class Player : MonoBehaviour, ILivable
     public PlayedCards playedCards;
     public HeroCountUnlock matchStats = new HeroCountUnlock();
     [HideInInspector] public BaseLogic homeBaseLogic;
-    // Non-null quand le CardPool de ce joueur définit CardPoolSO.homeUnit : cette créature remplace
-    // la base principale comme condition de victoire (voir SpawnHomeUnitIfConfigured). homeBaseLogic
-    // continue d'exister en parallèle pour l'income/les tiers — seul son rôle "point de vie
-    // destructible" est désactivé (voir BaseLogic.Zone, ZoneCombatResolver.AssignSingleAttack).
-    [HideInInspector] public CreatureLogic HomeUnit;
+
+    // Vrai tant que le bâtiment (baseVisual / Player.Health) compte comme base de ce joueur : dès le
+    // départ si le deck ne définit pas de homeUnit (sinon voir SpawnHomeUnitIfConfigured), jusqu'à sa
+    // destruction (voir DestroyHomeBuilding). homeBaseLogic continue d'exister dans tous les cas pour
+    // l'income/les tiers.
+    [HideInInspector] public bool HomeBuildingActive;
+
+    // Bâtiment tombé à 0 PV : il cesse d'être une base — plus une cible de combat, plus de vision ni de
+    // déploiement gratuit dans sa zone (tout ce qui lit HomeBuildingActive). L'appelant enfile
+    // MainBaseDeathAnimationCommand, qui le cache. Si c'était la dernière base, la défaite est décidée
+    // ailleurs (ComputeRoundOutcome, TurnManager.CheckImmediateDefeat) ; sinon la partie continue et
+    // homeBaseLogic, toujours source de l'income et des tiers, suit l'unité-base de référence (voir
+    // HomeArea) — exactement comme pour un deck à homeUnit.
+    public void DestroyHomeBuilding()
+    {
+        if (!HomeBuildingActive) return;
+        HomeBuildingActive = false;
+        FogOfWarManager.Refresh();
+        CalculatePlayerIncome(); // income/Under Attack/panneau de ressources suivent désormais HomeArea
+    }
+
+    // Unités-bases de ce joueur actuellement en jeu (voir CreatureLogic.IsHomeUnit). Recalculée à
+    // chaque lecture depuis playedCards.Creatures : Die() (serveur) et SilentDie() (client) en
+    // retirent déjà la créature, donc aucune inscription/désinscription à maintenir. Contient encore
+    // les unités mourantes (IsPendingDeath) jusqu'à DrainPendingDeaths.
+    public List<CreatureLogic> HomeUnits => playedCards.Creatures.Where(c => c.IsHomeUnit).ToList();
+
+    // Unité-base de référence (zone de l'income et du panneau de ressources, zone "maison" de l'IA) :
+    // la vivante au plus petit ID. Pas la première de playedCards.Creatures, dont l'ordre change quand on
+    // réorganise une rangée.
+    public CreatureLogic PrimaryHomeUnit => playedCards.Creatures
+        .Where(c => c.IsHomeUnit && !c.IsPendingDeath && c.Health > 0)
+        .OrderBy(c => c.UniqueCreatureID)
+        .FirstOrDefault();
+
+    // Au moins une base encore debout, d'après l'état actuel — pas une prédiction de combat (voir
+    // ZoneCombatResolver.PredictRemainingBases). Une unité-base marquée mourante compte déjà comme tombée
+    // (voir PrimaryHomeUnit). Voir TurnManager.CheckImmediateDefeat.
+    public bool HasLivingBase => (HomeBuildingActive && Health > 0) || PrimaryHomeUnit != null;
+
+    // Zone de la base de référence de ce joueur (income/Under Attack via BaseLogic.Zone, zone "maison"
+    // de l'IA) : MainPArea tant que le bâtiment est actif, sinon celle de PrimaryHomeUnit. Null s'il
+    // ne reste plus aucune base.
+    public PlayerArea HomeArea
+    {
+        get
+        {
+            if (HomeBuildingActive) return MainPArea;
+            CreatureLogic primary = PrimaryHomeUnit;
+            return primary != null ? GetPlayerAreaByID(primary.BaseID) : null;
+        }
+    }
 
 
     // a static array that will store both players, should always have 2 players
@@ -149,10 +209,16 @@ public class Player : MonoBehaviour, ILivable
                 health = baseAsset.MaxHealth;
             else
                 health = value;
-            // Die() is no longer triggered reactively here — the game-over decision is now made
-            // ahead of time by ZoneCombatResolver.ComputeRoundOutcome() and acted upon explicitly
-            // by GameOverCommand once the decisive main-base combat(s) finish animating. See
-            // GameOverCommand.cs / ZoneCombatResolver.EnqueueMainBaseBattleCommands.
+            // Bâtiment détruit hors combat (sort, effet...) : animation enfilée à la frame suivante, après
+            // les visuels de l'effet en cours (voir TurnManager.EnqueueNextFrame), puis défaite immédiate
+            // si c'était la dernière base. En combat, voir ZoneCombatResolver.EnqueueBattleCommands et
+            // TurnManager.ResolveBaseLossesAfterDrain.
+            if (health <= 0 && HomeBuildingActive && !TurnManager.InCombatPhase && !TurnManager.IsGameOver)
+            {
+                TurnManager.EnqueueNextFrame(new MainBaseDeathAnimationCommand(PlayerID));
+                DestroyHomeBuilding();
+                TurnManager.CheckImmediateDefeat();
+            }
         }
     }
 
@@ -189,7 +255,7 @@ public class Player : MonoBehaviour, ILivable
             if (spent > 0)
             {
                 matchStats.Add(MatchStatType.RessourcesSpent, spent);
-                EffectRegistry.NotifyRessourceSpent(this);
+                EffectRegistry.NotifyRessourceSpent(this, spent);
             }
 
             //PArea.ManaBar.AvailableCrystals = manaLeft;
@@ -245,16 +311,12 @@ public class Player : MonoBehaviour, ILivable
         matchStats.OwnerLabel = $"Player {PlayerID} ({name})";
         controlledBaseAssets.Add(baseAsset);
         homeBaseLogic = new BaseLogic(this);
-        // Contrairement à baseVisual (vrai GameObject, correctement détruit par Unity à la sortie du
-        // Play précédent) ou à homeBaseLogic ci-dessus (toujours réassigné, jamais gardé "si déjà
-        // là"), HomeUnit est une simple référence C# — Unity ne la remet pas à null entre deux
-        // sessions Play (Domain/Scene Reload désactivés en test). ResetForNewGame() la nettoie aussi,
-        // mais bien plus tard (TurnManager.OnGameStart, tourne APRÈS GlobalSettings.Awake ->
-        // InitFromMap -> SpawnMainBase -> CalculatePlayerIncome -> BaseLogic.EffectiveIncome, qui la
-        // lit dès Awake) : sans ce reset ICI, une HomeUnit fantôme d'une partie précédente y est
-        // encore lue avant que GlobalSettings ait fini d'initialiser les zones de la map, et
-        // CreatureLogic.Zone plante ou résout un BaseID obsolète.
-        HomeUnit = null;
+        // Dès Awake, pas seulement dans ResetForNewGame() : lu par BaseLogic.Zone (via HomeArea) bien
+        // avant TurnManager.OnGameStart, depuis GlobalSettings.Awake -> InitFromMap -> SpawnMainBase ->
+        // CalculatePlayerIncome -> BaseLogic.EffectiveIncome. Vrai = HomeArea s'en tient à MainPArea,
+        // sans lire playedCards.Creatures, qui peut encore contenir les unités d'une partie précédente
+        // (Domain/Scene Reload désactivés en test).
+        HomeBuildingActive = true;
     }
 
     // Remet à zéro tout l'état "par partie" de ce joueur avant que TurnManager.OnGameStart() (re)joue
@@ -274,8 +336,8 @@ public class Player : MonoBehaviour, ILivable
     // homeBaseLogic avec le bon baseAsset déjà résolu pour cette partie).
     public void ResetForNewGame()
     {
-        // --- HomeUnit / base principale ---
-        HomeUnit = null;
+        // --- Bases principales ---
+        HomeBuildingActive = true;
         if (baseVisual != null)
             baseVisual.gameObject.SetActive(true);
         homeBaseLogic = new BaseLogic(this);
@@ -301,13 +363,14 @@ public class Player : MonoBehaviour, ILivable
         _shieldBonusFromSources.Clear();
         _effectAmplifiersFromSources.Clear();
         permanentCreatureBuffs.Clear();
+        permanentCreatureGrants.Clear();
         ReservedCard = null;
 
         // --- Plateau / main / pioche pondérée ---
         playedCards.Creatures.Clear();
         hand.CardsInHand.Clear();
-        // deck.drawConfig N'EST PAS remis à null ici, volontairement : contrairement à HomeUnit
-        // (classe C# custom, non correctement revert par Unity entre deux sessions Play), drawConfig
+        // deck.drawConfig N'EST PAS remis à null ici, volontairement : contrairement à une référence
+        // vers une classe C# custom (non correctement revert par Unity entre deux sessions Play), drawConfig
         // est une simple référence vers un ScriptableObject (WeightedDrawConfig) — Unity la restaure
         // déjà correctement à sa valeur Tier 1 câblée dans l'Inspector à chaque sortie de Play. La
         // vider ici la laissait à null jusqu'à un upgrade manuel de tier (TryUpgrade, jamais appelé
@@ -315,19 +378,19 @@ public class Player : MonoBehaviour, ILivable
         // (WeightedDraw.Draw retombait sur ce garde et retournait null, voir Deck.DrawWeightedCard).
     }
 
-    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.mainPool)
-    // l'unité qui remplace la base principale comme condition de victoire (voir HomeUnit) : une
-    // CreatureLogic tout à fait normale, spawnée directement dans MainPArea sans passer par la main
-    // — même idiome que NetworkSpawnTokenToZone. networkID doit être identique sur toutes les
-    // machines en session réseau (voir TurnManager.OnGameStart) ; -1 en solo génère un ID local.
-    // No-op si le pool ne définit pas homeUnit, ou si déjà spawnée (voir ResetForNewGame, appelé
-    // juste avant dans TurnManager.OnGameStart, qui remet HomeUnit à null pour CETTE partie).
-    // homeBaseLogic continue d'exister pour l'income/les tiers (voir CalculatePlayerIncome) — seul
-    // son rôle de bâtiment ciblable/point de vie est retiré ici (baseVisual désactivé, plus jamais
-    // touché par AssignSingleAttack une fois HomeUnit assignée).
+    // Fait de la CardAsset désignée par CardPoolSO.homeUnit (voir deck.playerDeck.mainPool) la
+    // première unité-base de ce joueur (voir HomeUnits), à la place du bâtiment : une CreatureLogic
+    // tout à fait normale, spawnée directement dans MainPArea sans passer par la main — même idiome
+    // que NetworkSpawnTokenToZone. networkID doit être identique sur toutes les machines en session
+    // réseau (voir TurnManager.OnGameStart) ; -1 en solo génère un ID local.
+    // No-op si le pool ne définit pas homeUnit, ou si déjà spawnée pour cette partie (bâtiment déjà
+    // désactivé — voir ResetForNewGame, appelé juste avant dans TurnManager.OnGameStart, qui le
+    // réactive). homeBaseLogic continue d'exister pour l'income/les tiers (voir CalculatePlayerIncome)
+    // — seul son rôle de bâtiment ciblable/point de vie est retiré ici (HomeBuildingActive = false,
+    // baseVisual désactivé).
     public void SpawnHomeUnitIfConfigured(int networkID = -1)
     {
-        if (HomeUnit != null) return;
+        if (!HomeBuildingActive) return;
         CardAsset homeUnitAsset = deck != null ? deck.playerDeck?.mainPool?.homeUnit : null;
         if (homeUnitAsset == null || MainPArea == null) return;
 
@@ -345,12 +408,15 @@ public class Player : MonoBehaviour, ILivable
         CardLogic homeUnitCard = new CardLogic(homeUnitAsset, IDFactory.GetLocalOnlyID());
         homeUnitCard.owner = this;
 
-        HomeUnit = new CreatureLogic(this, homeUnitAsset, baseID, creatureID);
+        CreatureLogic homeUnit = new CreatureLogic(this, homeUnitAsset, baseID, creatureID);
+        // Avant FogOfWarManager.Refresh() ci-dessous, qui lira HomeBuildingActive.
+        homeUnit.GrantHomeUnit();
+        HomeBuildingActive = false;
         int logicalIndex = GetLogicalInsertIndex(homeUnitAsset.melee, baseID, 0);
-        playedCards.Creatures.Insert(logicalIndex, HomeUnit);
+        playedCards.Creatures.Insert(logicalIndex, homeUnit);
         FogOfWarManager.Refresh();
 
-        new PlayACreatureCommand(homeUnitCard, this, 0, HomeUnit.UniqueCreatureID, MainPArea).AddToQueue();
+        new PlayACreatureCommand(homeUnitCard, this, 0, homeUnit.UniqueCreatureID, MainPArea).AddToQueue();
 
         if (baseVisual != null)
             baseVisual.gameObject.SetActive(false);
@@ -1208,10 +1274,11 @@ public class Player : MonoBehaviour, ILivable
         if (area == null) return false;
         if (!System.Array.Exists(PAreas, a => a == area)) return false;
         // Zone de déploiement "gratuite" (pas besoin de Commandement/Renfort/base neutre possédée) :
-        // MainPArea pour une base classique toujours présente, ou la zone où se trouve HomeUnit pour
-        // une base mobile (même principe que BaseLogic.Zone) — sans base ni HomeUnit physiquement là,
-        // MainPArea retombe sur les mêmes règles que n'importe quelle autre zone.
-        if (HomeUnit != null ? area.baseID == HomeUnit.BaseID : area == MainPArea) return true;
+        // MainPArea tant que le bâtiment est actif, et la zone de chacune des unités-bases (voir
+        // HomeUnits) — sans base physiquement là, MainPArea retombe sur les mêmes règles que
+        // n'importe quelle autre zone.
+        if (HomeBuildingActive && area == MainPArea) return true;
+        if (HomeUnits.Exists(u => u.BaseID == area.baseID)) return true;
         if (HasCommandCreatureInArea(area)) return true;
         if (cardToPlay != null && cardToPlay.Renfort && HasFriendlyCreatureInArea(area)) return true;
         NeutralZoneController c = GetNeutralControllerForArea(area);
@@ -1365,17 +1432,21 @@ public class Player : MonoBehaviour, ILivable
         baseVisual.ApplyLookFromAsset();
     }
 
-    // Affiche l'income/Under Attack de homeBaseLogic directement sur HomeUnit (voir OneCreatureManager.
-    // RessourcePanel) — homeBaseLogic reste la source d'économie même en mode HomeUnit (voir
-    // BaseLogic.Zone), seul son affichage se déplace de MainBaseVisual (désactivée, voir
-    // SpawnHomeUnitIfConfigured) vers la créature elle-même. Rappelée à chaque CalculatePlayerIncome,
-    // donc pas besoin d'un hook dédié "au spawn" : le panel s'active dès que le GameObject de la
-    // créature existe (revealed par PlayACreatureCommand, potentiellement après ce premier appel —
-    // no-op silencieux jusque-là, comme HighlightPlayableCards ailleurs).
+    // Affiche l'income/Under Attack de homeBaseLogic directement sur l'unité-base de référence (voir
+    // PrimaryHomeUnit, OneCreatureManager.RessourcePanel) quand le bâtiment n'est pas actif —
+    // homeBaseLogic reste la source d'économie (voir BaseLogic.Zone), seul son affichage se déplace
+    // de MainBaseVisual (désactivée, voir SpawnHomeUnitIfConfigured) vers la créature elle-même.
+    // Rappelée à chaque CalculatePlayerIncome, donc pas besoin d'un hook dédié "au spawn" : le panel
+    // s'active dès que le GameObject de la créature existe (revealed par PlayACreatureCommand,
+    // potentiellement après ce premier appel — no-op silencieux jusque-là, comme
+    // HighlightPlayableCards ailleurs). Si l'unité de référence meurt, la suivante (voir
+    // PrimaryHomeUnit) reçoit le panel au prochain appel.
     private void RefreshHomeUnitRessourcePanel()
     {
-        if (HomeUnit == null || homeBaseLogic == null) return;
-        GameObject go = IDHolder.GetGameObjectWithID(HomeUnit.UniqueCreatureID);
+        if (HomeBuildingActive || homeBaseLogic == null) return;
+        CreatureLogic primary = PrimaryHomeUnit;
+        if (primary == null) return;
+        GameObject go = IDHolder.GetGameObjectWithID(primary.UniqueCreatureID);
         OneCreatureManager mgr = go != null ? go.GetComponent<OneCreatureManager>() : null;
         if (mgr == null) return;
         mgr.ActivateRessourcePanel();

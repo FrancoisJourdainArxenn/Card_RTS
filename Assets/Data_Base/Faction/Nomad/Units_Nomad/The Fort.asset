@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 3
   tier: 1
-  Description: <b>Base, Flying</b>
+  Description: <b>Main Base, Flying</b>
   CardImage: {fileID: 21300000, guid: 1164a574cc48d744da21f1be5cb92740, type: 3}
   MainCost: 0
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 1
   Keywords:
   - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}

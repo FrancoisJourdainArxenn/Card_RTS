@@ -11,6 +11,10 @@ public class ScoutEnterSO : EffectSO
         foreach (CreatureLogic scout in ActiveScouts)
         {
             if (scout.owner != localPlayer) continue;
+            // Un Scout accordé en jeu (voir GrantEffectsSO) n'a pas de ScoutDieSO pour le retirer
+            // d'ActiveScouts à sa mort : on ignore donc toute créature qui n'est plus (ou bientôt plus)
+            // en jeu, plutôt que de compter sur ce retrait.
+            if (!scout.owner.playedCards.Creatures.Contains(scout) || scout.IsPendingDeath || scout.OnDeathResolvedInBattle) continue;
             if (scout.Zone == null) continue;
             if (zone == scout.Zone) continue;
             if (zone.IsAdjacentTo(scout.Zone, includeAerialPaths: false))

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a2837219dd84bf408f09cc8384ac85c, type: 3}
   m_Name: Base Unit
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
-  displayName: Base
+  displayName: Main Base
   description: This units counts a Main Base. If you have no Main Base, you lose
     the game.
   icon: {fileID: 21300000, guid: a23f951ac542bc54aa2d09aeb4c79571, type: 3}

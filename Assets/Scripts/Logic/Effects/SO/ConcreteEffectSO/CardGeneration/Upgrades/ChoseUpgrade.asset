@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0a9c79f2052124aad14b514c62f792, type: 3}
+  m_Name: ChoseUpgrade
+  m_EditorClassIdentifier: Assembly-CSharp::ChooseOneSO
+  Description: 
+  EffectVisual:
+    vfxPrefab: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+    overlayMaterial: {fileID: 0}
+    OverrideOverlayDuration: 0
+    travelFromSource: 0
+    suppressAttackFallback: 0
+    onSource: 1
+    vfxPrefabOnSource: {fileID: 3087267072665922783, guid: 43b86e55fd2e08049b40a30810fd57e0, type: 3}
+  CardPool:
+  - {fileID: 11400000, guid: aa3e75e70d512894abb43672dedd0b64, type: 2}
+  - {fileID: 11400000, guid: 34cb67dd8b19d984cb9896da289d0fad, type: 2}
+  - {fileID: 11400000, guid: 6b03e8059caa43048b6c0d35ee31cb49, type: 2}
+  - {fileID: 11400000, guid: 1309feb3a1370ca40a827f0a6d0afe1d, type: 2}
+  - {fileID: 11400000, guid: 636a5a8bac43a6f41af3a141aa8db5cf, type: 2}
+  - {fileID: 11400000, guid: 919ff809648ec5b4d9cf261e33ae1947, type: 2}
+  - {fileID: 11400000, guid: 884d9fb6909998e45a7224e9232da2f2, type: 2}
+  ChooseBetweenCount: 3

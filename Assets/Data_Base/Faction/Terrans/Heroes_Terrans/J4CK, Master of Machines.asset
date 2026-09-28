@@ -35,12 +35,18 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
-  ActivationsForOneTurn: 0
+  Flying: 0
+  TransportCapacity: 0
+  IsStructureUnit: 0
+  IsTeleporter: 0
+  CountsAsHomeBase: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
+  ReferencedCards: []
   Effects:
   - EffectName: Raise the Machines
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 13
+    Trigger: 22
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets:
@@ -68,3 +74,4 @@ MonoBehaviour:
       scalingQuery:
         targetType: 0
         queries: []
+      scalingSource: 0

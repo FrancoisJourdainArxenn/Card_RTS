@@ -15,7 +15,29 @@ MonoBehaviour:
   baseAsset: {fileID: 11400000, guid: 36ff9ff878158864f8139fc090e3a9d8, type: 2}
   homeUnit: {fileID: 11400000, guid: 0f2dbfa314a19ff44b543b5a72c8b5a1, type: 2}
   poolName: Pirates
-  cardPoolIcon: {fileID: 21300000, guid: ba76d49effbfb164bad15bada60404e3, type: 3}
+  cardPoolIcon: {fileID: 21300000, guid: 14e1c4b6cf27b774cb71b8ec70bbdd82, type: 3}
   cards:
+  - {fileID: 11400000, guid: ff69c9bf97119bf4f872124244d92115, type: 2}
+  - {fileID: 11400000, guid: cafe64bdd8bbb694fa245809884b8ce8, type: 2}
+  - {fileID: 11400000, guid: e7d83645335937749864dbbe602142cf, type: 2}
   - {fileID: 11400000, guid: b1188450e9d1ff5498a1dc7579139d6a, type: 2}
-  - {fileID: 11400000, guid: 5e5f8dbd215f43b41b7fec2667d6e5a3, type: 2}
+  - {fileID: 11400000, guid: bf71a0eb61b4d324daa57da5ed60f213, type: 2}
+  - {fileID: 11400000, guid: 65c84c3aa9fba7d4589ec0ecf69fe654, type: 2}
+  - {fileID: 11400000, guid: 939ca2e030c6f9a4dae5d1977c5ebb43, type: 2}
+  - {fileID: 11400000, guid: 4f8f8a3060e35c7409befc2e5da01fab, type: 2}
+  - {fileID: 11400000, guid: c16261627bd194a43bfcdd361be69eff, type: 2}
+  - {fileID: 11400000, guid: 16e17866a9916204984f609fc5eb4a4d, type: 2}
+  - {fileID: 11400000, guid: aa24c76ce81111a428745a2ede893768, type: 2}
+  - {fileID: 11400000, guid: d8ddc64894116784986d80d7e72d16c7, type: 2}
+  - {fileID: 11400000, guid: 12696af23bc344448a67565c17c0f91e, type: 2}
+  - {fileID: 11400000, guid: eb3be99258bcc4846b42ef0ba3910fb5, type: 2}
+  - {fileID: 11400000, guid: b80cdea8a106e5b4bae758e243824b97, type: 2}
+  - {fileID: 11400000, guid: 0b27f43b47b0e3c478f5b0fb80bf520a, type: 2}
+  - {fileID: 11400000, guid: 02e54b754bebd56418812ea989cc03c6, type: 2}
+  - {fileID: 11400000, guid: a739421264012544ca942b1d0fbf80d2, type: 2}
+  - {fileID: 11400000, guid: 6f4fa30d4488ec5449644fa8de872f2f, type: 2}
+  - {fileID: 11400000, guid: 2c7604edf61cb7e4db0eb122287ece24, type: 2}
+  - {fileID: 11400000, guid: 73a6c4908f7cd2c40bcb36efd816caa7, type: 2}
+  - {fileID: 11400000, guid: d03dee7c7320a9f4b89d26bbbd46808a, type: 2}
+  - {fileID: 11400000, guid: b9f95be7b69c3c1488de01e128854191, type: 2}
+  - {fileID: 11400000, guid: 527846a1cb2aded4bbb2e3eb95b01c3f, type: 2}

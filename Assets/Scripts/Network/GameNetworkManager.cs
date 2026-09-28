@@ -96,6 +96,13 @@ public class GameNetworkManager : NetworkBehaviour
     private ZoneCombatResolver.BattleStage _currentBattleStage;
 
     /// <summary>
+    /// Répartition des zones entre les 3 étapes du round en cours, calculée une seule fois par
+    /// SubmitBattleAssignmentServerRpc et réutilisée par ServerAdvanceToNextStageAfterDrain — jamais
+    /// recalculée entre deux étapes (voir ZoneCombatResolver.BuildBattleStagePlan).
+    /// </summary>
+    private ZoneCombatResolver.BattleStagePlan _battleStagePlan;
+
+    /// <summary>
     /// true entre l'envoi de BroadcastStageDrainClientRpc (morts + relocalisations de fin d'étape)
     /// et la réception des 2 confirmations correspondantes — distingue, dans
     /// ReportBattleAnimationsDoneServerRpc, une confirmation "animations de combat terminées" d'une
@@ -135,8 +142,8 @@ public class GameNetworkManager : NetworkBehaviour
         _battleSubmissions.Clear();
         Debug.Log("[BattleAssignment][Server] Les deux joueurs ont soumis — début de la Battle Phase par étapes");
 
-        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
-        ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.Encounters, plan.EncounterResolverIdxs);
+        _battleStagePlan = ZoneCombatResolver.BuildBattleStagePlan();
+        ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.Encounters, _battleStagePlan.EncounterResolverIdxs);
     }
 
     /// <summary>
@@ -163,7 +170,7 @@ public class GameNetworkManager : NetworkBehaviour
             // ReportBattleAnimationsDoneServerRpc, et transmis ci-dessous à BroadcastBattleStepsClientRpc
             // pour que chaque machine rejoue le même ordre/découpage — jamais recalculé indépendamment
             // côté client.
-            roundOutcome = ZoneCombatResolver.ComputeRoundOutcome();
+            roundOutcome = ZoneCombatResolver.ComputeRoundOutcome(resolverIdxs);
             _pendingRoundOutcome = roundOutcome;
         }
 
@@ -279,6 +286,12 @@ public class GameNetworkManager : NetworkBehaviour
             out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
             out int[] stepCounterDamages, out int[] stepAttackerExhausted,
             out int[] stepShieldAbsorbed, out int[] stepAttackerShieldAbsorbed, out int[] stepSecondaryAbsorbed);
+        // Liste exacte des resolvers de cette étape, dans l'ordre de rejeu (celui de ComputeRoundOutcome
+        // pour la Base principale, celui du plan sinon) — le client ne la recalcule jamais (voir
+        // ZoneCombatResolver.EnqueueStageReconstructedBattleCommands).
+        int[] stageResolverOrder = stage == ZoneCombatResolver.BattleStage.MainBase
+            ? roundOutcome.MainBaseOrder.ToArray()
+            : resolverIdxs.ToArray();
         BroadcastBattleStepsClientRpc(
             stepResolverIdxs, stepAttackerIDs,
             stepTargetIDs, stepTargetKinds, stepDamages, stepOwnerPlayerIDs,
@@ -287,7 +300,7 @@ public class GameNetworkManager : NetworkBehaviour
             stepShieldAbsorbed, stepAttackerShieldAbsorbed, stepSecondaryAbsorbed,
             (int)stage,
             roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
-            roundOutcome.FirstMainBaseResolverIdx, roundOutcome.SecondMainBaseResolverIdx);
+            stageResolverOrder);
 
         // La suite (étape suivante, ou transition vers EndBattle) est déclenchée depuis
         // ReportBattleAnimationsDoneServerRpc, une fois que CHAQUE client a confirmé que sa file de
@@ -309,7 +322,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] shieldAbsorbed, int[] attackerShieldAbsorbed, int[] secondaryAbsorbed,
         int stage,
         bool decisive, bool isDraw, int winnerPlayerID,
-        int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
+        int[] stageResolverOrder)
     {
         int nCreature = 0, nBase = 0, nPlayer = 0;
         for (int i = 0; i < targetKinds.Length; i++)
@@ -322,7 +335,7 @@ public class GameNetworkManager : NetworkBehaviour
             resolverIdxs, attackerIDs, targetIDs, targetKinds, damages, ownerPlayerIDs,
             secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
             shieldAbsorbed, attackerShieldAbsorbed, secondaryAbsorbed,
-            (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, firstMainBaseResolverIdx, secondMainBaseResolverIdx);
+            (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, stageResolverOrder);
         // Debug.Log($"[BroadcastSteps] EnqueueStageReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
     }
@@ -490,6 +503,11 @@ public class GameNetworkManager : NetworkBehaviour
                     creature.RelocateAfterCombat(relocBaseIDs[i], 0);
         }
 
+        // Sur chaque machine, une fois les morts de l'étape appliquées (le host les a déjà appliquées
+        // dans ServerDrainStageAndBroadcast) — voir TurnManager.ResolveBaseLossesAfterDrain. Le serveur
+        // s'arrête ensuite de lui-même en cas de défaite (voir ServerAdvanceToNextStageAfterDrain).
+        TurnManager.ResolveBaseLossesAfterDrain();
+
         yield return new WaitWhile(() => Command.playingQueue);
 
         int localIndex = System.Array.IndexOf(Player.Players, GlobalSettings.Instance.localPlayer);
@@ -504,14 +522,19 @@ public class GameNetworkManager : NetworkBehaviour
     /// <summary>Serveur uniquement. Enchaîne sur l'étape suivante après le drain de l'étape courante.</summary>
     void ServerAdvanceToNextStageAfterDrain()
     {
-        ZoneCombatResolver.BattleStagePlan plan = ZoneCombatResolver.BuildBattleStagePlan();
+        // Défaite immédiate constatée à la fin du drain qui vient d'être confirmé (voir
+        // ApplyStageDrainAndReport) : plus d'étape suivante.
+        if (TurnManager.IsGameOver) return;
+
         switch (_currentBattleStage)
         {
             case ZoneCombatResolver.BattleStage.Encounters:
-                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.MainBase, plan.MainBaseResolverIdxs);
+                // Le dispatch de croisement vient d'être appliqué (voir ServerDrainStageAndBroadcast).
+                ZoneCombatResolver.PromoteNeutralZonesWithBases(ref _battleStagePlan);
+                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.MainBase, _battleStagePlan.MainBaseResolverIdxs);
                 break;
             case ZoneCombatResolver.BattleStage.MainBase:
-                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.NeutralBases, plan.NeutralBaseResolverIdxs);
+                ServerPlanAndBroadcastStage(ZoneCombatResolver.BattleStage.NeutralBases, _battleStagePlan.NeutralBaseResolverIdxs);
                 break;
         }
     }
@@ -1679,9 +1702,13 @@ public class GameNetworkManager : NetworkBehaviour
             CreatureLogic.PendingDeathList.Clear();
         }
 
+        // Même principe que ApplyStageDrainAndReport.
+        TurnManager.ResolveBaseLossesAfterDrain();
+
         // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue démarré (playingQueue={Command.playingQueue})");
         yield return new WaitWhile(() => Command.playingQueue);
         // Debug.Log($"[DeathDrain]{drainRole} WaitWhile queue résolu → EnterPhase({nextPhase})");
+        if (TurnManager.IsGameOver) yield break;
 
         if (nextPhase == TurnManager.TurnPhases.Battle)
             TurnManager.Instance.ResolveStationaryTransportDisembarks();

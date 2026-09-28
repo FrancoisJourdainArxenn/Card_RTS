@@ -134,14 +134,14 @@ public class FogOfWarManager : MonoBehaviour
 
         // --- Bases joueur (fog comme les bases neutres) ---
         // L'observer voit toujours sa propre base (ApplyFogForObserver met à jour le texte PV) —
-        // sauf si HomeUnit est assignée : le bâtiment n'existe plus comme objet de jeu (voir
-        // Player.SpawnHomeUnitIfConfigured, qui le désactive), donc le fog ne doit jamais le
-        // réafficher — sans ce garde, ApplyFogForObserver(true) le SetActive(true) inconditionnellement
-        // dès le premier recalcul de fog qui suit.
+        // sauf si le bâtiment n'est pas actif (voir Player.HomeBuildingActive) : il n'existe plus comme
+        // objet de jeu (voir Player.SpawnHomeUnitIfConfigured, qui le désactive), donc le fog ne doit
+        // jamais le réafficher — sans ce garde, ApplyFogForObserver(true) le SetActive(true)
+        // inconditionnellement dès le premier recalcul de fog qui suit.
         if (observer.MainPArea != null
             && observer.MainPArea.parentZone == zone
             && observer.baseVisual != null
-            && observer.HomeUnit == null)
+            && observer.HomeBuildingActive)
         {
             observer.baseVisual.ApplyFogForObserver(true);
         }
@@ -151,7 +151,7 @@ public class FogOfWarManager : MonoBehaviour
             && enemy.MainPArea != null
             && enemy.MainPArea.parentZone == zone
             && enemy.baseVisual != null
-            && enemy.HomeUnit == null)
+            && enemy.HomeBuildingActive)
         {
             enemy.baseVisual.ApplyFogForObserver(observerHasPresence);
         }
@@ -167,12 +167,11 @@ public class FogOfWarManager : MonoBehaviour
 
     bool HasPresenceInZone(Player player, ZoneManager zone, NeutralZoneController nbc)
     {
-        // Base classique (pas de HomeUnit) : toujours présente dans sa zone d'origine.
-        // Si HomeUnit est assignée (base mobile), la présence suit HomeUnit comme n'importe
-        // quelle autre créature (voir la boucle playedCards.Creatures ci-dessous, même principe
-        // que Player.CanPlayCreatureInArea) — MainPArea ne garantit plus la vision une fois que
-        // HomeUnit a physiquement quitté la zone.
-        if (player.HomeUnit == null && player.MainPArea.parentZone == zone)
+        // Bâtiment actif (voir Player.HomeBuildingActive) : toujours présent dans sa zone d'origine.
+        // Les unités-bases, elles, donnent la présence comme n'importe quelle autre créature (voir la
+        // boucle playedCards.Creatures ci-dessous, même principe que Player.CanPlayCreatureInArea) —
+        // sans bâtiment actif, MainPArea ne garantit plus la vision.
+        if (player.HomeBuildingActive && player.MainPArea.parentZone == zone)
         {
             return true;
         }

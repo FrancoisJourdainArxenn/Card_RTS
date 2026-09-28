@@ -268,12 +268,13 @@ public class ZoneCombatResolver : MonoBehaviour
         Player p2 = GlobalSettings.Instance.TopPlayer;
         int p1CreatureCount = GetCreaturesInMyZone(p1, zoneView).Count;
         int p2CreatureCount = GetCreaturesInMyZone(p2, zoneView).Count;
-        // Quand pX.HomeUnit est assignée, sa zone de départ (MainPArea) n'est plus un point de vie
-        // destructible (voir AssignSingleAttack) — un ennemi non bloqué là-bas ne doit donc plus
-        // compter comme "combat possible" ici non plus, sinon les popups OnBattleStart et le focus
-        // caméra (ZoneBattleStartRevealCommand) se déclenchent pour un combat qui n'aura jamais lieu.
-        bool p1MainZoneIsLiveTarget = p1.HomeUnit == null && zoneView.subZones.Contains(p1.MainPArea);
-        bool p2MainZoneIsLiveTarget = p2.HomeUnit == null && zoneView.subZones.Contains(p2.MainPArea);
+        // Quand le bâtiment de pX n'est pas actif (voir Player.HomeBuildingActive), sa zone de départ
+        // (MainPArea) n'est plus un point de vie destructible (voir AssignSingleAttack) — un ennemi non
+        // bloqué là-bas ne doit donc plus compter comme "combat possible" ici non plus, sinon les popups
+        // OnBattleStart et le focus caméra (ZoneBattleStartRevealCommand) se déclenchent pour un combat
+        // qui n'aura jamais lieu.
+        bool p1MainZoneIsLiveTarget = p1.HomeBuildingActive && zoneView.subZones.Contains(p1.MainPArea);
+        bool p2MainZoneIsLiveTarget = p2.HomeBuildingActive && zoneView.subZones.Contains(p2.MainPArea);
 
         if (
             (p1CreatureCount > 0 && p2CreatureCount > 0) ||
@@ -604,11 +605,12 @@ public class ZoneCombatResolver : MonoBehaviour
             attackerLogic?.ResolvePredictedOnAttack(defenderBase);
             return (0, new BattleStepRecord { attackerID = attacker.id, targetID = defenderBase.ID, targetKind = TargetKind.Base, damage = dmg, targetOwnerPlayerID = defender.PlayerID, attackerExhausted = willExhaustAttacker });
         }
-        // Quand defender.HomeUnit est assignée, la base principale n'est plus un point de vie
-        // destructible dans sa zone de départ : le seul moyen de blesser ce joueur est de tuer
-        // l'unité elle-même (déjà couverte plus haut, tiers 2/3, comme n'importe quelle créature, où
-        // qu'elle se trouve). Un attaquant sans cible dans cette zone n'inflige donc plus rien ici.
-        if (defender.HomeUnit == null && zoneView.subZones.Contains(defender.MainPArea))
+        // Quand le bâtiment de defender n'est pas actif (voir Player.HomeBuildingActive), la base
+        // principale n'est plus un point de vie destructible dans sa zone de départ : le seul moyen de
+        // blesser ce joueur est de tuer ses unités-bases (déjà couvertes plus haut, tiers 2/3, comme
+        // n'importe quelle créature, où qu'elles se trouvent). Un attaquant sans cible dans cette zone
+        // n'inflige donc plus rien ici.
+        if (defender.HomeBuildingActive && zoneView.subZones.Contains(defender.MainPArea))
         {
             pendingPlayerDamage.TryGetValue(defender.PlayerID, out int existing);
             pendingPlayerDamage[defender.PlayerID] = existing + dmg;
@@ -885,8 +887,17 @@ public class ZoneCombatResolver : MonoBehaviour
         // Command ne rappellent CommandExecutionComplete qu'une fois l'animation terminée.
         foreach ((int baseID, NeutralZoneController controller) in diedNeutralBases)
             new BaseDieCommand(baseID, controller).AddToQueue();
+        // Le bâtiment cesse aussitôt d'être une base (voir Player.DestroyHomeBuilding) — ComputeRoundOutcome
+        // a déjà tranché ce round : s'il était la dernière base, GameOverCommand suit ; sinon la partie
+        // continue sans lui.
         foreach (int deadPlayerID in diedHomeBasePlayerIDs)
+        {
             new MainBaseDeathAnimationCommand(deadPlayerID).AddToQueue();
+            Player deadPlayer = deadPlayerID == GlobalSettings.Instance.LowPlayer.PlayerID
+                ? GlobalSettings.Instance.LowPlayer
+                : GlobalSettings.Instance.TopPlayer;
+            deadPlayer.DestroyHomeBuilding();
+        }
 
         Debug.Log($"[Enqueue:{zoneView.name}] Terminé — {steps.Count} step(s) traité(s), file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
     }
@@ -972,8 +983,10 @@ public class ZoneCombatResolver : MonoBehaviour
 
     // La liste des resolvers concernés par cette étape n'est PAS déduite des tableaux à plat
     // (resolverIdxs ne contient que les resolvers ayant produit au moins un step — un resolver sans
-    // combat n'y apparaît pas du tout) : elle est recalculée localement via BuildBattleStagePlan(),
-    // exactement comme toute autre donnée structurelle de ce fichier — jamais transmise. Ça garantit
+    // combat n'y apparaît pas du tout) : le serveur la transmet explicitement (stageResolverOrder,
+    // déjà dans l'ordre de rejeu — RoundOutcome.MainBaseOrder pour la Base principale). Jamais
+    // recalculée ici via BuildBattleStagePlan : la répartition dépend de la position des unités-bases,
+    // qui a pu changer depuis que le serveur l'a figée en début de Battle Phase. Ça garantit aussi
     // qu'un resolver sans combat cette étape reçoit quand même EnqueueBattleCommands([]) (nécessaire
     // pour purger ses popups OnBattleStart différés via zoneDeferKey), comme le fait déjà le serveur.
     public static void EnqueueStageReconstructedBattleCommands(
@@ -983,7 +996,7 @@ public class ZoneCombatResolver : MonoBehaviour
         int[] counterDamages, int[] attackerExhausted,
         int[] shieldAbsorbed, int[] attackerShieldAbsorbed, int[] secondaryAbsorbed,
         BattleStage stage, bool decisive, bool isDraw, int winnerPlayerID,
-        int firstMainBaseResolverIdx, int secondMainBaseResolverIdx)
+        int[] stageResolverOrder)
     {
         Dictionary<int, List<BattleStepRecord>> stepsByResolver = new();
         int secCursor = 0;
@@ -1020,6 +1033,7 @@ public class ZoneCombatResolver : MonoBehaviour
         System.Func<int, List<BattleStepRecord>> resolveSteps = idx =>
             stepsByResolver.TryGetValue(idx, out List<BattleStepRecord> found) ? found : new List<BattleStepRecord>();
 
+        List<int> stageIdxs = new List<int>(stageResolverOrder ?? System.Array.Empty<int>());
         if (stage == BattleStage.MainBase)
         {
             RoundOutcome outcome = new RoundOutcome
@@ -1027,15 +1041,12 @@ public class ZoneCombatResolver : MonoBehaviour
                 Decisive = decisive,
                 IsDraw = isDraw,
                 WinnerPlayerID = winnerPlayerID,
-                FirstMainBaseResolverIdx = firstMainBaseResolverIdx,
-                SecondMainBaseResolverIdx = secondMainBaseResolverIdx
+                MainBaseOrder = stageIdxs
             };
             EnqueueMainBaseBattleCommands(outcome, resolveSteps);
         }
         else
         {
-            BattleStagePlan plan = BuildBattleStagePlan();
-            List<int> stageIdxs = stage == BattleStage.Encounters ? plan.EncounterResolverIdxs : plan.NeutralBaseResolverIdxs;
             EnqueueStageBattleCommands(stageIdxs, resolveSteps);
         }
     }
@@ -1181,7 +1192,7 @@ public class ZoneCombatResolver : MonoBehaviour
 
     // Santé prédite de cette créature à l'issue de ce round (dégâts en attente moins bouclier,
     // jamais sous 0) — version numérique de WouldSurvive, nécessaire pour ComputeRoundOutcome quand
-    // un joueur utilise une HomeUnit (voir Player.HomeUnit) : contrairement à Player.Health, une
+    // un joueur a des unités-bases (voir Player.HomeUnits) : contrairement à Player.Health, une
     // simple comparaison à 0 ne suffit pas, il faut aussi comparer les PV finaux des deux joueurs
     // entre eux pour décider qui joue en premier.
     public static int PredictedHealth(CreatureLogic creature)
@@ -1436,10 +1447,9 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         public bool Decisive;
         public bool IsDraw;
-        public int WinnerPlayerID;              // -1 si égalité ou round non décisif
-        public int FirstMainBaseResolverIdx;    // PV final le plus haut — joué en premier
-        public int SecondMainBaseResolverIdx;   // peut être égal à FirstMainBaseResolverIdx si les
-                                                 // deux MainPArea appartiennent à la même zone
+        public int WinnerPlayerID;          // -1 si égalité ou round non décisif
+        public List<int> MainBaseOrder;     // resolvers de l'étape Base principale (voir
+                                            // BattleStagePlan.MainBaseResolverIdxs), dans l'ordre de rejeu
     }
 
     // Calculé une fois par round, une fois que les resolvers de l'étape Base principale ont fini
@@ -1447,59 +1457,86 @@ public class ZoneCombatResolver : MonoBehaviour
     // commande de cette étape ne soit enfilée — le serveur (ou la machine solo) connaît donc déjà
     // l'issue de la partie avant la moindre animation de Base principale (les étapes Rencontres
     // précédentes, elles, ont déjà été enfilées et animées — voir TurnManager.DelayedBattleStart).
-    // Détermine l'ordre de rejeu des deux combats de base principale (le PV final le plus haut
-    // d'abord — voir EnqueueMainBaseBattleCommands) et si ce round met fin à la partie.
-    public static RoundOutcome ComputeRoundOutcome()
+    // Un joueur perd quand il ne lui reste plus aucune base (voir PredictRemainingBases).
+    //
+    // mainBaseResolverIdxs = BattleStagePlan.MainBaseResolverIdxs du plan figé en début de Battle
+    // Phase : MainBaseOrder n'en est qu'une permutation, jamais une liste recalculée ici — une zone
+    // déjà jouée en Rencontres ne peut donc jamais être rejouée, ni une zone planifiée pour cette
+    // étape sautée, même si une unité-base est morte ou a été déplacée entre-temps. Les zones où le
+    // joueur en retard (score le plus bas) a une base passent en dernier : le combat décisif est ainsi
+    // le dernier animé avant GameOverCommand (voir EnqueueMainBaseBattleCommands).
+    public static RoundOutcome ComputeRoundOutcome(List<int> mainBaseResolverIdxs)
     {
         Player low = GlobalSettings.Instance.LowPlayer;
         Player top = GlobalSettings.Instance.TopPlayer;
+        (bool lowAlive, int lowScore) = PredictRemainingBases(low);
+        (bool topAlive, int topScore) = PredictRemainingBases(top);
 
-        int finalLowHP, finalTopHP, lowIdx, topIdx;
-
-        // Pour un joueur en mode HomeUnit (voir Player.HomeUnit), les PV finaux et la zone à rejouer
-        // en priorité (voir EnqueueMainBaseBattleCommands) viennent de l'unité elle-même — où qu'elle
-        // se trouve sur la carte — plutôt que de Player.Health/MainPArea, ancrés sur la zone de
-        // départ fixe et sans plus aucun sens une fois la base principale mobile.
-        if (low.HomeUnit != null)
+        bool decisive = !lowAlive || !topAlive;
+        bool isDraw = !lowAlive && !topAlive && lowScore == topScore;
+        int winnerPlayerID = -1;
+        if (decisive && !isDraw)
         {
-            ZoneCombatResolver lowHomeResolver = FindForBase(low.HomeUnit.BaseID);
-            finalLowHP = PredictedHealth(low.HomeUnit);
-            lowIdx = lowHomeResolver != null ? lowHomeResolver.resolverIndex : 0;
-        }
-        else
-        {
-            ZoneCombatResolver lowResolver = FindResolverForPlayer(low);
-            int lowPending = lowResolver != null && lowResolver.pendingPlayerDamage.TryGetValue(low.PlayerID, out int lp) ? lp : 0;
-            finalLowHP = low.Health - lowPending;
-            lowIdx = lowResolver != null ? lowResolver.resolverIndex : 0;
+            if (lowAlive != topAlive)
+                winnerPlayerID = lowAlive ? low.PlayerID : top.PlayerID;
+            else
+                // Les deux perdent leur dernière base ce round : le moins "overkillé" l'emporte.
+                winnerPlayerID = topScore > lowScore ? top.PlayerID : low.PlayerID;
         }
 
-        if (top.HomeUnit != null)
+        Player behind = lowScore < topScore ? low : (topScore < lowScore ? top : null);
+        List<int> order = new List<int>(mainBaseResolverIdxs);
+        order.Sort((a, b) =>
         {
-            ZoneCombatResolver topHomeResolver = FindForBase(top.HomeUnit.BaseID);
-            finalTopHP = PredictedHealth(top.HomeUnit);
-            topIdx = topHomeResolver != null ? topHomeResolver.resolverIndex : lowIdx;
-        }
-        else
-        {
-            ZoneCombatResolver topResolver = FindResolverForPlayer(top);
-            int topPending = topResolver != null && topResolver.pendingPlayerDamage.TryGetValue(top.PlayerID, out int tp) ? tp : 0;
-            finalTopHP = top.Health - topPending;
-            topIdx = topResolver != null ? topResolver.resolverIndex : lowIdx;
-        }
-
-        bool decisive = finalLowHP <= 0 || finalTopHP <= 0;
-        bool isDraw = decisive && finalLowHP == finalTopHP;
-        bool topFirst = finalTopHP > finalLowHP || (finalTopHP == finalLowHP && topIdx <= lowIdx);
+            int aLast = behind != null && HasBaseInZone(behind, allResolvers[a]) ? 1 : 0;
+            int bLast = behind != null && HasBaseInZone(behind, allResolvers[b]) ? 1 : 0;
+            return aLast != bLast ? aLast.CompareTo(bLast) : a.CompareTo(b);
+        });
 
         return new RoundOutcome
         {
             Decisive = decisive,
             IsDraw = isDraw,
-            WinnerPlayerID = isDraw ? -1 : (finalTopHP > finalLowHP ? top.PlayerID : low.PlayerID),
-            FirstMainBaseResolverIdx  = topFirst ? topIdx : lowIdx,
-            SecondMainBaseResolverIdx = topFirst ? lowIdx : topIdx
+            WinnerPlayerID = winnerPlayerID,
+            MainBaseOrder = order
         };
+    }
+
+    // Bases de ce joueur à l'issue de ce round, d'après la planification en cours : vivant tant qu'au
+    // moins une survit (bâtiment actif, voir Player.HomeBuildingActive, ou unité-base, voir
+    // Player.HomeUnits). score = somme de leurs PV restants prédits — ordonne les combats de Base
+    // principale et départage deux joueurs qui perdent leur dernière base le même round. Seul le
+    // bâtiment peut finir en négatif (overkill, voir EnqueueBattleCommands, cas TargetKind.Player) :
+    // PredictedHealth plafonne une unité à 0.
+    static (bool alive, int score) PredictRemainingBases(Player player)
+    {
+        bool alive = false;
+        int score = 0;
+        if (player.HomeBuildingActive)
+        {
+            ZoneCombatResolver resolver = FindResolverForPlayer(player);
+            int pending = resolver != null && resolver.pendingPlayerDamage.TryGetValue(player.PlayerID, out int dmg) ? dmg : 0;
+            int buildingHP = player.Health - pending;
+            score += buildingHP;
+            if (buildingHP > 0) alive = true;
+        }
+        foreach (CreatureLogic unit in player.HomeUnits)
+        {
+            int unitHP = PredictedHealth(unit);
+            score += unitHP;
+            if (unitHP > 0) alive = true;
+        }
+        return (alive, score);
+    }
+
+    // Vrai si ce joueur a une base dans la zone de ce resolver : bâtiment actif, ou unité-base
+    // (mourante comprise — elle n'est retirée de HomeUnits qu'au DrainPendingDeaths).
+    static bool HasBaseInZone(Player player, ZoneCombatResolver resolver)
+    {
+        if (player.HomeBuildingActive && resolver.zoneView.subZones.Contains(player.MainPArea)) return true;
+        foreach (CreatureLogic unit in player.HomeUnits)
+            if (resolver.OwnsCreature(unit.BaseID)) return true;
+        return false;
     }
 
     // -------------------------------------------------------------------------
@@ -1511,7 +1548,7 @@ public class ZoneCombatResolver : MonoBehaviour
     public struct BattleStagePlan
     {
         public List<int> EncounterResolverIdxs;
-        public List<int> MainBaseResolverIdxs;    // 1 ou 2 entrées, NON ordonné (voir BuildBattleStagePlan)
+        public List<int> MainBaseResolverIdxs;    // une entrée par zone contenant une base, NON ordonné (voir BuildBattleStagePlan)
         public List<int> NeutralBaseResolverIdxs;
     }
 
@@ -1523,29 +1560,29 @@ public class ZoneCombatResolver : MonoBehaviour
         return false;
     }
 
-    // Classification purement structurelle (aucun état de combat) — identique sur chaque machine
-    // sans la moindre synchronisation réseau, à recalculer à chaque étape plutôt que mise en cache.
-    // À ne JAMAIS confondre avec RoundOutcome.First/SecondMainBaseResolverIdx (mêmes resolvers,
-    // mais ORDONNÉS par PV finaux et calculés une fois par ComputeRoundOutcome) : celui-ci décide
-    // seulement quelles zones appartiennent à quelle étape, jamais dans quel ordre les rejouer ni
-    // qui gagne.
+    // Répartition des zones entre les 3 étapes — calculée UNE SEULE FOIS par Battle Phase, avant la
+    // première étape (TurnManager.DelayedBattleStart en solo, GameNetworkManager.
+    // SubmitBattleAssignmentServerRpc en réseau), puis réutilisée telle quelle pour les 3 étapes :
+    // chaque zone est ainsi jouée exactement une fois par round. Elle dépend de la position des bases
+    // (voir AddBaseZoneIdxs), qui peut changer entre deux étapes (unité-base morte, ou relocalisée par
+    // ApplyCrossingDispatch) — la recalculer en cours de route ferait rejouer, ou sauter, la zone
+    // concernée. Seule retouche autorisée : PromoteNeutralZonesWithBases, qui avance en Base
+    // principale une zone de Bases neutres pas encore jouée. Jamais recalculée côté client non plus :
+    // le serveur transmet la liste de chaque étape (voir EnqueueStageReconstructedBattleCommands).
+    // À ne JAMAIS confondre avec RoundOutcome.MainBaseOrder (mêmes resolvers, mais ORDONNÉS pour le
+    // rejeu par ComputeRoundOutcome) : celui-ci décide seulement quelles zones appartiennent à quelle
+    // étape, jamais dans quel ordre les rejouer ni qui gagne.
     //
-    // Repère la zone de base principale de chaque joueur avec la MÊME logique HomeUnit-aware que
-    // ComputeRoundOutcome (FindForBase(player.HomeUnit.BaseID) plutôt que FindResolverForPlayer,
-    // ancré sur la MainPArea fixe) — sans quoi, une fois la base principale rendue mobile, la zone
-    // qui contient réellement l'unité serait classée à tort comme une zone de Rencontre : elle
-    // serait alors planifiée et enfilée dès l'étape 1 via EnqueueStageBattleCommands (sans
-    // GameOverCommand), PUIS son _lastBattleSteps périmé serait réenfilé une seconde fois à l'étape
-    // 2 par EnqueueMainBaseBattleCommands — combat rejoué deux fois.
+    // Toute zone contenant une base (bâtiment actif ou unité-base, de l'un ou l'autre joueur) va en
+    // Base principale — sauf une zone de croisement, voir AddBaseZoneIdxs : c'est la seule étape dont
+    // ComputeRoundOutcome connaît l'issue ET qui rejoue ses combats juste avant GameOverCommand. Une
+    // zone de Bases neutres, planifiée après lui, pourrait tuer la dernière base d'un joueur sans que
+    // la partie ne se termine.
     public static BattleStagePlan BuildBattleStagePlan()
     {
-        Player low = GlobalSettings.Instance.LowPlayer;
-        Player top = GlobalSettings.Instance.TopPlayer;
-        ZoneCombatResolver lowR = low.HomeUnit != null ? FindForBase(low.HomeUnit.BaseID) : FindResolverForPlayer(low);
-        ZoneCombatResolver topR = top.HomeUnit != null ? FindForBase(top.HomeUnit.BaseID) : FindResolverForPlayer(top);
         HashSet<int> mainBaseIdxs = new HashSet<int>();
-        if (lowR != null) mainBaseIdxs.Add(lowR.resolverIndex);
-        if (topR != null) mainBaseIdxs.Add(topR.resolverIndex);
+        AddBaseZoneIdxs(GlobalSettings.Instance.LowPlayer, mainBaseIdxs);
+        AddBaseZoneIdxs(GlobalSettings.Instance.TopPlayer, mainBaseIdxs);
 
         List<int> encounters = new List<int>();
         List<int> neutralBases = new List<int>();
@@ -1560,6 +1597,50 @@ public class ZoneCombatResolver : MonoBehaviour
             MainBaseResolverIdxs = new List<int>(mainBaseIdxs),
             NeutralBaseResolverIdxs = neutralBases
         };
+    }
+
+    // Zones où ce joueur a une base : celle du bâtiment s'il est actif, et celle de chaque unité-base —
+    // sauf une zone de croisement (CrossingZoneSlot), qui reste toujours en Rencontres : son combat
+    // doit être résolu AVANT CommandMoveTracker.ComputeCrossingDispatch. Classée en Base principale,
+    // elle ne serait jouée qu'après ce dispatch, qui trouverait alors les deux camps "survivants" et
+    // renverrait chacun à son origine sans qu'ils se soient jamais battus. L'unité-base qui en ressort
+    // est rattrapée ensuite par PromoteNeutralZonesWithBases.
+    static void AddBaseZoneIdxs(Player player, HashSet<int> mainBaseIdxs)
+    {
+        if (player.HomeBuildingActive)
+        {
+            ZoneCombatResolver resolver = FindResolverForPlayer(player);
+            if (resolver != null) mainBaseIdxs.Add(resolver.resolverIndex);
+        }
+        foreach (CreatureLogic unit in player.HomeUnits)
+        {
+            ZoneCombatResolver resolver = FindForBase(unit.BaseID);
+            if (resolver != null && !IsCrossingSlotZone(resolver)) mainBaseIdxs.Add(resolver.resolverIndex);
+        }
+    }
+
+    static bool IsCrossingSlotZone(ZoneCombatResolver resolver)
+    {
+        foreach (CrossingZoneSlot slot in CrossingZoneSlot.AllSlots)
+            if (slot.Resolver == resolver) return true;
+        return false;
+    }
+
+    // À appeler juste avant de planifier l'étape Base principale, donc APRÈS
+    // CommandMoveTracker.ApplyCrossingDispatch : une unité-base qui sort d'un croisement (vers sa
+    // destination ou son origine) peut atterrir dans une zone de Bases neutres, qui ne serait jouée
+    // qu'après ComputeRoundOutcome — si elle y mourait en étant la dernière base de son joueur, la
+    // partie ne se terminerait qu'au round suivant. Ces zones n'ont pas encore été jouées : les avancer
+    // en Base principale ne rejoue ni ne saute rien. Une zone de Rencontres, déjà jouée, n'est jamais
+    // déplacée (l'unité n'y combat simplement plus ce round-ci).
+    public static void PromoteNeutralZonesWithBases(ref BattleStagePlan plan)
+    {
+        HashSet<int> baseIdxs = new HashSet<int>();
+        AddBaseZoneIdxs(GlobalSettings.Instance.LowPlayer, baseIdxs);
+        AddBaseZoneIdxs(GlobalSettings.Instance.TopPlayer, baseIdxs);
+        foreach (int idx in baseIdxs)
+            if (plan.NeutralBaseResolverIdxs.Remove(idx))
+                plan.MainBaseResolverIdxs.Add(idx);
     }
 
     // Planification (voir OnBattlePhaseStart) limitée à un sous-ensemble de resolvers — permet de
@@ -1587,7 +1668,7 @@ public class ZoneCombatResolver : MonoBehaviour
     // contenait viennent d'être réellement appliqués à Health (voir EnqueueBattleCommands) — le
     // laisser rempli ferait compter ces dégâts une deuxième fois dans PredictedHealth/WouldSurvive
     // (qui scannent pendingDamage de TOUS les resolvers) lors de la planification d'une étape
-    // ultérieure, avec un risque concret sur ComputeRoundOutcome (cas HomeUnit) et sur l'occupation
+    // ultérieure, avec un risque concret sur ComputeRoundOutcome (unités-bases) et sur l'occupation
     // de rangée (TokenGenerationSO). pendingBaseDamage/pendingPlayerDamage n'ont pas ce problème :
     // rien ne les scanne inter-resolvers de cette façon.
     static void EnqueueStageBattleCommands(List<int> resolverIdxs, System.Func<int, List<BattleStepRecord>> resolveSteps)
@@ -1607,17 +1688,13 @@ public class ZoneCombatResolver : MonoBehaviour
         }
     }
 
-    // Étape Base principale : garde l'ordre par PV final (outcome.First/SecondMainBaseResolverIdx)
-    // et le GameOverCommand inline si le round est décisif — comportement inchangé par rapport à
-    // l'ancien EnqueueOrderedBattleCommands, désormais limité aux 1-2 zones de base principale.
+    // Étape Base principale : rejoue les zones dans l'ordre décidé par ComputeRoundOutcome
+    // (outcome.MainBaseOrder), puis enfile GameOverCommand si le round est décisif.
     static void EnqueueMainBaseBattleCommands(RoundOutcome outcome, System.Func<int, List<BattleStepRecord>> resolveSteps)
     {
-        List<int> order = outcome.FirstMainBaseResolverIdx == outcome.SecondMainBaseResolverIdx
-            ? new List<int> { outcome.FirstMainBaseResolverIdx }
-            : new List<int> { outcome.FirstMainBaseResolverIdx, outcome.SecondMainBaseResolverIdx };
-        EnqueueStageBattleCommands(order, resolveSteps);
+        EnqueueStageBattleCommands(outcome.MainBaseOrder, resolveSteps);
         if (outcome.Decisive)
-            new GameOverCommand(outcome.WinnerPlayerID, outcome.IsDraw).AddToQueue();
+            TurnManager.TriggerGameOver(outcome.WinnerPlayerID, outcome.IsDraw);
     }
 
     // Chemin solo : chaque resolver de cette étape a déjà planifié son combat (_lastBattleSteps,

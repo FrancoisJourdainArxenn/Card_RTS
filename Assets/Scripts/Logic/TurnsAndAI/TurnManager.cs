@@ -45,6 +45,100 @@ public class TurnManager : MonoBehaviour
 
     public int ParticipantCount => Player.Players != null ? Player.Players.Length : 0;
 
+    // Vrai dès que l'issue de la partie est décidée, sur chaque machine au même point logique : round
+    // décisif (ZoneCombatResolver.ComputeRoundOutcome) ou défaite immédiate (voir CheckImmediateDefeat).
+    // Bloque toute transition de phase ultérieure (voir EnterPhase / AdvancePhaseWhenAllReady) :
+    // GameOverCommand renvoie au menu quelques secondes plus tard, la partie ne doit plus avancer d'ici
+    // là. Statique (lu depuis CreatureLogic/Player/GameNetworkManager) — remis à false par OnGameStart.
+    public static bool IsGameOver { get; private set; }
+
+    // Phases où la mort d'une créature est différée (MarkPendingDeath) puis traitée par un drain —
+    // même liste que CreatureLogic.Health.
+    public static bool InCombatPhase => Instance != null && (
+        Instance.currentPhase == TurnPhases.BeginCombat ||
+        Instance.currentPhase == TurnPhases.Battle      ||
+        Instance.currentPhase == TurnPhases.EndBattle);
+
+    // Commandes à enfiler à la frame suivante, dans leur ordre d'appel — pour passer après tout ce que
+    // l'effet en cours de résolution a encore à animer : une mort hors combat survient en plein milieu
+    // d'un effet (ex: DealDamageSO appelle TakeDamage AVANT d'enfiler son propre DealDamageCommand).
+    // Une seule liste pour tous les appelants : l'animation de destruction d'un bâtiment (voir
+    // Player.Health) passe ainsi toujours avant le GameOverCommand qu'elle déclenche. Vidée par
+    // OnGameStart (une coroutine interrompue par un changement de scène la laisserait remplie).
+    static readonly List<Command> _nextFrameCommands = new List<Command>();
+
+    public static void EnqueueNextFrame(Command command)
+    {
+        if (Instance == null)
+        {
+            command.AddToQueue();
+            return;
+        }
+        _nextFrameCommands.Add(command);
+        if (_nextFrameCommands.Count == 1)
+            Instance.StartCoroutine(FlushNextFrameCommands());
+    }
+
+    static IEnumerator FlushNextFrameCommands()
+    {
+        yield return null;
+        List<Command> commands = new List<Command>(_nextFrameCommands);
+        _nextFrameCommands.Clear();
+        foreach (Command command in commands)
+            command.AddToQueue();
+    }
+
+    // Point d'entrée unique de la fin de partie (round décisif ou défaite immédiate) — idempotent.
+    // Décide tout de suite (IsGameOver) mais n'enfile GameOverCommand qu'à la frame suivante (voir
+    // EnqueueNextFrame).
+    public static void TriggerGameOver(int winnerPlayerID, bool isDraw)
+    {
+        if (IsGameOver) return;
+        IsGameOver = true;
+        EnqueueNextFrame(new GameOverCommand(winnerPlayerID, isDraw));
+    }
+
+    // Fin d'un drain de morts de combat, sur chaque machine : un bâtiment tombé à 0 PV pendant le combat
+    // sans passer par un coup de l'étape Base principale (effet déclenché dans une autre zone...) est
+    // détruit ici, avec son animation — ceux tués en étape Base principale l'ont déjà été par
+    // ZoneCombatResolver.EnqueueBattleCommands. Puis défaite immédiate éventuelle.
+    public static void ResolveBaseLossesAfterDrain()
+    {
+        if (IsGameOver) return;
+        foreach (Player p in Player.Players)
+        {
+            if (!p.HomeBuildingActive || p.Health > 0) continue;
+            new MainBaseDeathAnimationCommand(p.PlayerID).AddToQueue();
+            p.DestroyHomeBuilding();
+        }
+        CheckImmediateDefeat();
+    }
+
+    // Défaite immédiate : un joueur qui n'a plus aucune base debout (voir Player.HasLivingBase) perd tout
+    // de suite, sans attendre la prochaine décision de fin de round. Appelé après chaque mort d'unité-base
+    // hors combat (CreatureLogic.Die), chaque bâtiment tombé à 0 PV hors combat (Player.Health), et à la
+    // fin de chaque drain de morts de combat (voir ResolveBaseLossesAfterDrain) — en bloc, jamais mort
+    // par mort : côté client, un drain est
+    // rejoué via SilentDie sans l'état intermédiaire du serveur (PV des victimes d'OnDeath en cascade),
+    // seul l'état final est identique partout. Tourne sur chaque machine au même point logique (morts
+    // répliquées à l'identique : effets rejoués avec la même seed, drains rejoués via SilentDie), donc
+    // chacune décide seule, sans RPC dédié — comme ComputeRoundOutcome. Plus aucune base des deux côtés
+    // au même instant = match nul.
+    // PROBLÈME CONNU (accepté, ne devrait pas arriver en jeu) : un effet de zone HORS combat qui tue les
+    // deux dernières bases donne la victoire au joueur dont la base meurt en second, au lieu d'un match
+    // nul — la première mort a déjà terminé la partie (les cibles d'un effet meurent une par une).
+    public static void CheckImmediateDefeat()
+    {
+        if (IsGameOver) return;
+        Player low = GlobalSettings.Instance.LowPlayer;
+        Player top = GlobalSettings.Instance.TopPlayer;
+        bool lowAlive = low.HasLivingBase;
+        bool topAlive = top.HasLivingBase;
+        if (lowAlive && topAlive) return;
+        bool isDraw = !lowAlive && !topAlive;
+        TriggerGameOver(isDraw ? -1 : (lowAlive ? low.PlayerID : top.PlayerID), isDraw);
+    }
+
     void Awake()
     {
         Instance = this;
@@ -125,6 +219,9 @@ public class TurnManager : MonoBehaviour
     public void OnGameStart(int? seed = null, int[] cardInHandIDs = null, int deckIdxLow = -1, int deckIdxTop = -1, int[] heroCardIDs = null, int[] homeUnitCreatureIDs = null,
         int mainPoolIdxLow = -1, int secondPoolIdxLow = -1, int mainPoolIdxTop = -1, int secondPoolIdxTop = -1)
     {
+        // Statiques : survivent à la partie précédente (Domain/Scene Reload désactivés en test).
+        IsGameOver = false;
+        _nextFrameCommands.Clear();
         EffectRegistry.Reset();
         // Sans ça, une attaque interrompue en plein vol pendant une partie précédente (même session
         // Play, sans reload de scène complet — voir SceneReloader.ReloadScene) laisse le compteur
@@ -442,6 +539,8 @@ public class TurnManager : MonoBehaviour
 
     void AdvancePhaseWhenAllReady()
     {
+        if (IsGameOver) return; // voir EnterPhase
+
         // if (timer != null)
         //     timer.StopTimer();
 
@@ -548,6 +647,10 @@ public class TurnManager : MonoBehaviour
 
     public void EnterPhase(TurnPhases phase)
     {
+        // Partie terminée (voir IsGameOver) : plus aucune phase ne démarre, quel que soit l'appelant
+        // (coroutines d'auto-avance, RPC de transition, fin de drain...).
+        if (IsGameOver) return;
+
         bool isServer = NetworkSessionData.IsNetworkSession && Unity.Netcode.NetworkManager.Singleton.IsServer;
         // Debug.Log($"[EnterPhase] {currentPhase} → {phase} | round={currentRound} | role={(isServer ? "SERVER" : "CLIENT")} | frame={Time.frameCount}");
         // Debug.Log($"[TurnMgr] EnterPhase → {phase} (depuis {currentPhase}, round {currentRound})");
@@ -674,6 +777,9 @@ public class TurnManager : MonoBehaviour
         yield return null; // laisser la file démarrer avant d'attendre qu'elle se vide (voir DrainPendingDeaths)
         yield return StartCoroutine(DrainPendingDeaths());
         Debug.Log("[DiagStage] Étape 1 — DrainPendingDeaths terminé");
+        // Dernière base tombée pendant les Rencontres (voir CheckImmediateDefeat, en fin de drain) :
+        // défaite immédiate, plus d'étape Base principale ni Bases neutres.
+        if (IsGameOver) yield break;
         // Déplacement immédiat des survivantes de croisement — déplacé ici (au lieu de la fin de
         // toute la Battle Phase, voir AutoAdvanceFromEndBattle) précisément pour qu'elles arrivent
         // avant la planification de l'étape suivante.
@@ -681,13 +787,14 @@ public class TurnManager : MonoBehaviour
         Debug.Log($"[DiagStage] ComputeCrossingDispatch — relocations={crossingDispatch.Relocations.Count}");
         CommandMoveTracker.ApplyCrossingDispatch(crossingDispatch);
         Debug.Log("[DiagStage] ApplyCrossingDispatch terminé — planification étape 2");
+        ZoneCombatResolver.PromoteNeutralZonesWithBases(ref plan);
 
         // Étape 2 — Base principale : planifiée avec le plateau à jour. C'est ici, et seulement ici,
         // que l'issue du round est connue (voir ComputeRoundOutcome).
         ZoneCombatResolver.PlanStage(plan.MainBaseResolverIdxs);
         Debug.Log("[DiagStage] Étape 2 planifiée");
-        ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome();
-        Debug.Log($"[DiagStage] ComputeRoundOutcome — Decisive={outcome.Decisive} First={outcome.FirstMainBaseResolverIdx} Second={outcome.SecondMainBaseResolverIdx}");
+        ZoneCombatResolver.RoundOutcome outcome = ZoneCombatResolver.ComputeRoundOutcome(plan.MainBaseResolverIdxs);
+        Debug.Log($"[DiagStage] ComputeRoundOutcome — Decisive={outcome.Decisive} Ordre=[{string.Join(",", outcome.MainBaseOrder)}]");
         ZoneCombatResolver.EnqueueMainBaseBattleCommandsSolo(outcome);
         Debug.Log("[DiagStage] Étape 2 enfilée");
         if (outcome.Decisive)
@@ -700,6 +807,7 @@ public class TurnManager : MonoBehaviour
         yield return null;
         yield return StartCoroutine(DrainPendingDeaths());
         Debug.Log("[DiagStage] Étape 2 — DrainPendingDeaths terminé — planification étape 3");
+        if (IsGameOver) yield break; // voir l'étape 1
 
         // Étape 3 — Bases neutres.
         ZoneCombatResolver.PlanStage(plan.NeutralBaseResolverIdxs);
@@ -803,6 +911,7 @@ public class TurnManager : MonoBehaviour
             yield return new WaitWhile(() => Command.playingQueue);   // attend la fin de la chaîne
         }
         // ici : queue vide ET aucune mort en attente
+        ResolveBaseLossesAfterDrain();
     }
     IEnumerator AutoAdvanceFromBeginCombat()
     {

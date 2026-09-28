@@ -35,6 +35,9 @@ public enum TriggerType
     //Reactions
     OnCardPlayed = 12,
     OnRessourceSpent = 13,
+    OnEachRessourceSpent = 22, // déclenché une fois PAR Ressource dépensée (une dépense de 5 = 5 déclenchements),
+                               // contrairement à OnRessourceSpent (une fois par dépense, quel que soit le montant).
+                               // Combiné à un CondCounter WrappedCondition + resetCount → "toutes les N Ressources".
     OnActionPlayed = 17, // déclenché quand une carte Action (sort/order) est jouée/lancée, via ETB
                          // (main du joueur ou CastSpellSO) — voir EffectRegistry.NotifyActionPlayed
     OnTierUpgrade = 19, // déclenché une seule fois, quand BaseLogic.TryUpgrade() fait passer

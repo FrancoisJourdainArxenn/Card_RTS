@@ -36,12 +36,14 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:
   - EffectName: 
     Effect: {fileID: 11400000, guid: 8289fd6539174714ab2bf1171d0225b9, type: 2}
-    Trigger: 13
+    Trigger: 22
     Condition: {fileID: 0}
     Effectinfo:
       effectTargets: []

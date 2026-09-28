@@ -1,10 +1,11 @@
 using UnityEngine;
 
-// Enfilée UNE SEULE FOIS par joueur par ZoneCombatResolver.EnqueueBattleCommands, après que toute la
-// zone où sa base principale meurt ait fini d'être traitée (voir diedHomeBasePlayerIDs) — jamais
-// directement par le setter Health, ni par MainBaseVisual.ApplyHealthDisplay à chaque coup. Bloque la
-// file de commandes (donc la transition caméra vers la zone suivante, et un éventuel GameOverCommand
-// déjà enfilé juste après) jusqu'à ce que l'animation de mort ait fini de jouer.
+// Enfilée UNE SEULE FOIS par destruction de bâtiment principal (voir Player.DestroyHomeBuilding) : par
+// ZoneCombatResolver.EnqueueBattleCommands après que toute la zone où il meurt ait fini d'être traitée
+// (voir diedHomeBasePlayerIDs), par Player.Health hors combat (à la frame suivante), ou par
+// TurnManager.ResolveBaseLossesAfterDrain — jamais par MainBaseVisual.ApplyHealthDisplay à chaque coup.
+// Bloque la file de commandes (donc la transition caméra vers la zone suivante, et un éventuel
+// GameOverCommand enfilé après) jusqu'à ce que l'animation de mort ait fini de jouer.
 public class MainBaseDeathAnimationCommand : Command
 {
     private readonly int playerID;

@@ -88,12 +88,69 @@ public static class EffectRegistry
         PassiveAuraManager.Unregister(ownerID);
     }
 
+    // ── Effets accordés (GrantEffectsSO) ──────────────────────────────────────
+
+    // Applique à `creature` des effets accordés en jeu, comme s'ils étaient écrits sur sa carte, avec
+    // elle comme Source : OnPlay est exécuté une seule fois, tout de suite ("gagne X") ; Passive devient
+    // une aura portée par la créature ("confère X"), retirée à sa mort comme les siennes (voir
+    // UnregisterEntity). Tout autre trigger est ignoré : son rejeu réseau retrouve l'effet par son index
+    // dans ca.Effects (voir FindEffectIndex), qu'un effet accordé n'a pas. Ignoré aussi : un OnPlay à
+    // cible choisie par le joueur, faute de moment pour la lui faire choisir ici.
+    public static void ApplyGrantedEffects(CreatureLogic creature, List<CardEffectData> effects)
+    {
+        if (effects == null)
+            return;
+
+        foreach (CardEffectData data in effects)
+        {
+            if (data.Trigger == TriggerType.OnPlay && !data.RequiresPlayerInput)
+            {
+                Execute(data, new EffectContext { Caster = creature.owner, Source = creature });
+                continue;
+            }
+
+            if (data.Trigger == TriggerType.Passive)
+            {
+                PassiveAuraManager.Register(data, creature.UniqueCreatureID, () => new EffectContext
+                    { Caster = creature.owner, Source = creature });
+                continue;
+            }
+
+            Debug.LogWarning($"[EffectRegistry] Effet accordé '{data.EffectName}' ({data.Trigger}) ignoré sur {creature.DisplayName} : seuls OnPlay (sans cible choisie par le joueur) et Passive sont supportés.");
+        }
+    }
+
+    // Dons "pour le reste de la partie" (voir GrantEffectsSO.PersistentFilter) reçus par une créature qui
+    // entre en jeu après coup — même principe que Player.permanentCreatureBuffs, appliqués eux dans le
+    // constructeur de CreatureLogic.
+    private static void ApplyPermanentGrants(CreatureLogic creature)
+    {
+        // Copie : un effet accordé peut lui-même enregistrer un nouveau don (GrantEffectsSO accordé).
+        foreach (PermanentCreatureGrant grant in new List<PermanentCreatureGrant>(creature.owner.permanentCreatureGrants))
+            if (grant.filter != null && grant.filter.Matches(creature))
+                ApplyGrantedEffects(creature, grant.effects);
+    }
+
     // ── Triggers instantanés ──────────────────────────────────────────────────
 
     public static void ETB(CardAsset ca, EffectContext context, List<PendingEffectSelection> preResolvedSelections = null)
     {
         if (ca.Type == CardType.Action)
             NotifyActionPlayed(context.Caster, ca);
+
+        // Point d'entrée commun à toutes les façons de poser une créature (main, IA, réseau, tokens),
+        // là où ses propres OnPlay se résolvent — elle est déjà dans playedCards.Creatures ici. `ca`
+        // doit être la carte de la créature elle-même : CastSpellSO passe aussi sa créature en Source,
+        // pour un sort. Dons et auras passent avant les OnPlay de la carte, qui voient donc déjà la
+        // créature telle qu'elle entre en jeu.
+        if (context.Source is CreatureLogic enteringCreature && enteringCreature.ca == ca)
+        {
+            ApplyPermanentGrants(enteringCreature);
+            // Une aura déjà active (ex: "Celerity aux alliés de ma zone") doit aussi toucher ce nouvel
+            // arrivant : rien d'autre ne recalcule les auras à l'entrée en jeu d'une créature (le
+            // Register de ses propres auras, dans son constructeur, a lieu avant qu'elle soit posée).
+            PassiveAuraManager.RecomputeAll();
+        }
 
         if (ca.Effects == null)
             return;
@@ -377,12 +434,16 @@ public static class EffectRegistry
             re => re.ContextFactory().Caster == playingPlayer && re.ContextFactory().Source != playedEntity);
     }
 
-    public static void NotifyRessourceSpent(Player spendingPlayer)
+    public static void NotifyRessourceSpent(Player spendingPlayer, int amount)
     {
         EffectContext eventCtx = new EffectContext();
 
         FireListeners(TriggerType.OnRessourceSpent, eventCtx,
             re => re.ContextFactory().Caster == spendingPlayer);
+
+        for (int i = 0; i < amount; i++)
+            FireListeners(TriggerType.OnEachRessourceSpent, eventCtx,
+                re => re.ContextFactory().Caster == spendingPlayer);
     }
 
     // Déclenché depuis ETB pour toute carte CardType.Action (sort ou order), que ce soit joué depuis

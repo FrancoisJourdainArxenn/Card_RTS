@@ -22,8 +22,8 @@ public class GameOverCommand : Command
         // explicitement ici plutôt que réactivement depuis le setter Health.
         GlobalSettings.Instance.LowPlayer.Die();
 
-        // GameOverCommand tourne à l'identique sur chaque machine (voir ZoneCombatResolver.
-        // EnqueueMainBaseBattleCommands) — le message affiché est donc relatif au joueur local DE
+        // GameOverCommand tourne à l'identique sur chaque machine (voir TurnManager.TriggerGameOver)
+        // — le message affiché est donc relatif au joueur local DE
         // CETTE machine, pas une valeur transmise telle quelle. TODO: remplacer ce message texte par
         // un vrai écran de fin de partie — WinnerPlayerID/IsDraw restent disponibles pour ça.
         string message = IsDraw ? "Tie"

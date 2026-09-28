@@ -69,11 +69,15 @@ public partial class EffectContext
                 TargetStatusFilter.NonShielded    => candidates.Where(t => t is ILivable l && !l.IsShielded),
                 TargetStatusFilter.HighestHealth  => FilterToExtremeHealth(candidates, descending: true),
                 TargetStatusFilter.LowestHealth   => FilterToExtremeHealth(candidates, descending: false),
+                TargetStatusFilter.HomeBase       => candidates.Where(IsHomeBaseTarget),
                 _                                 => candidates
             };
 
+            // Sur la créature plutôt que sa seule carte : voit aussi le statut d'unité-base accordé en
+            // jeu (voir CardFilterSO.filterByHomeBase). Une base (BaseLogic) n'a pas de carte, elle
+            // n'est jamais retenue par un cardFilter.
             if (query.cardFilter != null)
-                candidates = candidates.Where(t => query.cardFilter.Matches(GetCardAsset(t)));
+                candidates = candidates.Where(t => t is CreatureLogic c && query.cardFilter.Matches(c));
 
 
             targets.AddRange(candidates);
@@ -128,10 +132,15 @@ public partial class EffectContext
         return livables.Where(l => l.Health == extreme).Cast<IIdentifiable>();
     }
 
-    private static CardAsset GetCardAsset(IIdentifiable target) => target switch
+    // Filtre TargetStatusFilter.HomeBase : chaque unité-base (voir CreatureLogic.IsHomeUnit), et le
+    // bâtiment principal seulement tant qu'il est actif (voir Player.HomeBuildingActive). Jamais une base
+    // neutre capturée, ni homeBaseLogic quand le bâtiment est désactivé : sa zone suit alors l'unité-base
+    // de référence (voir BaseLogic.Zone), qu'une requête Creature compte déjà.
+    private static bool IsHomeBaseTarget(IIdentifiable target) => target switch
     {
-        CreatureLogic c => c.ca,
-        _               => null
+        CreatureLogic c => c.IsHomeUnit,
+        BaseLogic b     => b.IsHomeBase && b.owner.HomeBuildingActive,
+        _               => false
     };
 
     // Un "voisin" est la créature juste avant/après `anchor` dans playedCards.Creatures, sur la

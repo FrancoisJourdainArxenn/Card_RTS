@@ -36,6 +36,9 @@ public enum TargetStatusFilter
     NonShielded,
     HighestHealth,
     LowestHealth,
+    // Base principale au sens "condition de défaite" : unité-base ou bâtiment principal actif — voir
+    // EffectContext.IsHomeBaseTarget. Valeur sérialisée dans les assets : ne jamais la renuméroter.
+    HomeBase = 8,
     // Undamaged,
     // Visible,
     // Fogged,

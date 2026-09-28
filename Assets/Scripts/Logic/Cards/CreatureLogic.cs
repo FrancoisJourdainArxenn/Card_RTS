@@ -481,6 +481,17 @@ public class CreatureLogic: ILivable
     // relie entre elles toutes les zones où le même joueur a un téléporteur.
     public bool IsTeleporter => ca.IsTeleporter;
 
+    // Vrai si cette créature compte comme base principale de son propriétaire (voir Player.HomeUnits) :
+    // soit innée (ca.CountsAsHomeBase), soit accordée en jeu (unité de départ du deck, voir
+    // Player.SpawnHomeUnitIfConfigured).
+    private bool runtimeHomeUnit = false;
+    public bool IsHomeUnit => ca.CountsAsHomeBase || runtimeHomeUnit;
+
+    public void GrantHomeUnit()
+    {
+        runtimeHomeUnit = true;
+    }
+
     // IDs des créatures actuellement embarquées (portées), dans l'ordre d'embarquement (FIFO —
     // détermine la priorité de débarquement si la zone d'arrivée n'a pas assez de place, voir
     // CreatureMoveVisual.DisembarkCargo).
@@ -704,6 +715,12 @@ public class CreatureLogic: ILivable
 
         if (ca.IsHero)
             ReturnHeroToHand();
+
+        // Défaite immédiate si c'était la dernière base de son propriétaire — hors combat seulement : en
+        // combat, cette mort passe par un drain, vérifié en bloc à sa fin (voir
+        // TurnManager.CheckImmediateDefeat).
+        if (wasInList && IsHomeUnit && !TurnManager.InCombatPhase)
+            TurnManager.CheckImmediateDefeat();
     }
 
     // A hero that dies comes back to its owner's hand, locked again.

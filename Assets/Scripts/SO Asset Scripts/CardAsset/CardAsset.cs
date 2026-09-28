@@ -27,6 +27,7 @@ public enum SubType
     Spell = 4,
     Order = 8,
     Weapons = 10,
+    Upgrade = 12,
 
     //Structures
     Structure = 11,
@@ -102,6 +103,9 @@ public class CardAsset : ScriptableObject
     // Relie entre elles, en maillage complet, toutes les zones où le même joueur a un téléporteur
     // vivant — voir TeleporterNetwork/CreatureLogic.IsTeleporter.
     public bool IsTeleporter = false;
+    // Cette créature compte comme une base principale de son propriétaire tant qu'elle est en jeu
+    // (voir Player.HomeUnits) : le joueur ne perd que lorsque toutes ses bases sont détruites.
+    public bool CountsAsHomeBase = false;
     // Nombre de OnTurnStart (côté propriétaire) supplémentaires à ignorer avant de lever le mal
     // d'invocation, au-delà du comportement par défaut (1 tour, levé au prochain OnTurnStart de
     // son propriétaire — voir CreatureLogic.HasSummoningSickness). Sert notamment pour la HomeUnit

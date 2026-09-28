@@ -230,7 +230,7 @@ public class AITurnMaker : TurnMaker
 
     private bool TryPlayHero()
     {
-        PlayerArea homeArea = p.HomeUnit != null ? p.GetPlayerAreaByID(p.HomeUnit.BaseID) : p.MainPArea;
+        PlayerArea homeArea = p.HomeArea;
         if (homeArea == null)
             return false;
 
@@ -309,7 +309,7 @@ public class AITurnMaker : TurnMaker
     private PlayerArea GetAreaForBase(BaseLogic baseLogic)
     {
         if (baseLogic.IsHomeBase)
-            return p.HomeUnit != null ? p.GetPlayerAreaByID(p.HomeUnit.BaseID) : p.MainPArea;
+            return p.HomeArea;
 
         return System.Array.Find(p.PAreas, pa => pa.parentZone == baseLogic.neutralBaseController.zone);
     }

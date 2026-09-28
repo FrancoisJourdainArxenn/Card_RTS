@@ -86,7 +86,7 @@ public class ModifyStatsSO : EffectSO, IRevertable
 
             filter = ScriptableObject.CreateInstance<CardFilterSO>();
             filter.filterByName = true;
-            filter.requiredName = firstCreature.ca.Name;
+            filter.requiredName = CardFilterSO.EffectiveName(firstCreature.ca);
         }
 
         context.Caster.permanentCreatureBuffs.Add(new PermanentCreatureBuff
