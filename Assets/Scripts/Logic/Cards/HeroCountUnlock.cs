@@ -18,6 +18,7 @@ public enum MatchStatType
     MeleeUnitsSummoned,   // unités Melee créées (jouées ou tokens), toutes sources confondues
     MeleeUnitAttack,     // nombre d'attaques initiées par des unités Melee (une par step de combat, hors ripostes)
     RangedUnitAttack,     // nombre d'attaques initiées par des unités Ranged (une par step de combat, hors ripostes)
+    Invasions,            // combats (une fois par zone et par round) où mes unités participent dans une zone contenant une base adverse
     // ajoutez ici les compteurs dont vous aurez besoin pour vos futures conditions de héros
 }
 

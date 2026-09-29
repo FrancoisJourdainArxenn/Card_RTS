@@ -16,14 +16,14 @@ MonoBehaviour:
   Faction: {fileID: 0}
   Type: 0
   subType: 5
-  tier: 3
+  tier: 2
   Description: <b>On Play:</b> Gives +1/+0 to Melee Units.
   CardImage: {fileID: 21300000, guid: 494f4175dea01824fabaa4559ad1dfb1, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 1
-  MaxHealth: 2
+  MaxHealth: 1
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 3
   AttackModifiers: []
@@ -36,6 +36,8 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
+  ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:

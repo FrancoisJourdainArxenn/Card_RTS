@@ -9,6 +9,12 @@ public class KillAndAbsorbStatsSO : HealthEffectSO
     [Header("Assimilate VFX")]
     [SerializeField] private GameObject beamPrefab;
 
+    [Header("Fixed Stats (optionnel)")]
+    [Tooltip("Si coché, la source gagne FixedAttack/FixedHealth au lieu des stats actuelles de la cible.")]
+    [SerializeField] private bool useFixedStats;
+    [SerializeField] private int FixedAttack;
+    [SerializeField] private int FixedHealth;
+
     private ILivable _source;
 
     public override void Execute(
@@ -56,9 +62,20 @@ public class KillAndAbsorbStatsSO : HealthEffectSO
             }
         }
 
-        // Stats capturées avant la mort — vie ACTUELLE, pas la vie max.
-        int stolenAttack = target.Attack;
-        int stolenHealth = target.Health;
+        int stolenAttack;
+        int stolenHealth;
+        if (useFixedStats)
+        {
+            (int bonusAttack, int bonusHealth) = _caster != null ? _caster.GetStatBonus(_playedCard) : (0, 0);
+            stolenAttack = FixedAttack + bonusAttack;
+            stolenHealth = FixedHealth + bonusHealth;
+        }
+        else
+        {
+            // Stats capturées avant la mort — vie ACTUELLE, pas la vie max.
+            stolenAttack = target.Attack;
+            stolenHealth = target.Health;
+        }
 
         // Mise à mort directe : ne passe pas par TakeDamage, donc aucun bouclier ne peut absorber
         // le coup et aucun DealDamageCommand (pas de VFX/nombre de dégâts) n'est mis en file.
@@ -76,6 +93,14 @@ public class KillAndAbsorbStatsSO : HealthEffectSO
 
     protected override bool IsTargetSaturated(EffectTarget target) => true;
 
-    public override string GetDescription() =>
-        "Tue la cible et gagne son Attaque et sa Vie actuelle.";
+    public override string GetDescription() => useFixedStats
+        ? $"Tue la cible et gagne +{FixedAttack}/+{FixedHealth}."
+        : "Tue la cible et gagne son Attaque et sa Vie actuelle.";
+
+    public override object[] GetDescriptionValues(Player viewer, CardAsset playedCard)
+    {
+        if (!useFixedStats) return base.GetDescriptionValues(viewer, playedCard);
+        (int bonusAttack, int bonusHealth) = viewer != null ? viewer.GetStatBonus(playedCard) : (0, 0);
+        return new object[] { FixedAttack + bonusAttack, FixedHealth + bonusHealth };
+    }
 }

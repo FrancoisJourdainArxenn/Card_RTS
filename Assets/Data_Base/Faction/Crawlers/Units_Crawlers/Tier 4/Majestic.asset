@@ -10,40 +10,42 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Tigran
+  m_Name: Majestic
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 0}
   Type: 0
   subType: 5
-  tier: 1
-  Description: <b>On Invade:</b> I gain +1/+1.
-  CardImage: {fileID: 21300000, guid: feadbf24d65626a42a86254dde4df1b2, type: 3}
+  tier: 4
+  Description: '<b>Flying
+
+    On Invade:</b> I gain +2/+2.'
+  CardImage: {fileID: 21300000, guid: fbd051b05286f4e4ca42069b3d7563d1, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 2
+  Attack: 2
+  MaxHealth: 3
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
   MoveSpeed: 1
   Celerity: 0
   melee: 1
-  Flying: 0
+  Flying: 1
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
   CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
-  - {fileID: 11400000, guid: 282ae802ac0207e4898fcc90ea736791, type: 2}
+  - {fileID: 11400000, guid: 1f071ab7446086e45ab9fa30661f0f86, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: 
-    Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
+    Effect: {fileID: 11400000, guid: fbde9110f8bc44741860133b3a5bdb95, type: 2}
     Trigger: 14
     Condition: {fileID: 11400000, guid: 09d4ed13a1489a745a706c4eedb664ed, type: 2}
     Effectinfo:

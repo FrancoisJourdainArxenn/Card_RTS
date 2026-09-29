@@ -30,6 +30,7 @@ public class StatThresholdUnlockCondition : HeroUnlockConditionSO
             MatchStatType.MeleeUnitsSummoned   => $"Summon {remaining} Melee Units to Unlock me.",
             MatchStatType.MeleeUnitAttack      => $"Attack {remaining} times with Melee Units to Unlock me.",
             MatchStatType.RangedUnitAttack     => $"Attack {remaining} times with Ranged Units to Unlock me.",
+            MatchStatType.Invasions            => $"Invade {remaining} times to Unlock me.",
             _ => $"{Stat} : {remaining}"
         };
     }

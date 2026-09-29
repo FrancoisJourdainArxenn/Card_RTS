@@ -10,22 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Aggressor
+  m_Name: Hill King
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Faction: {fileID: 0}
   Type: 0
   subType: 5
-  tier: 1
-  Description: <b>Battle Start:</b> If I Invade, I gain +1/+1.
-  CardImage: {fileID: 21300000, guid: e2e9f308f51d01948ac62e9b80781758, type: 3}
+  tier: 5
+  Description: <b>On Death:</b> ally units (<i>in my zone</i>) gain +1/+0. If I <b>Invaded</b>
+    thye gain an additionnal +1/+1.
+  CardImage: {fileID: 21300000, guid: 2347cc9d66ac93b4cabaf9247084b9b0, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 1
-  MaxHealth: 2
+  Attack: 2
+  MaxHealth: 6
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 3
+  AttackSpeedMultiplier: 2
   AttackModifiers: []
   Commandement: 0
   Renfort: 0
@@ -36,26 +37,58 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 282ae802ac0207e4898fcc90ea736791, type: 2}
   ReferencedCards: []
   Effects:
-  - EffectName: 
+  - EffectName: Buff ATK
+    Effect: {fileID: 11400000, guid: 93d57f0cbb0014147a8a323909e615cd, type: 2}
+    Trigger: 1
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Buff All
     Effect: {fileID: 11400000, guid: 4c1e8dd71781b174d9fe3b931bfc5813, type: 2}
-    Trigger: 14
+    Trigger: 1
     Condition: {fileID: 11400000, guid: 09d4ed13a1489a745a706c4eedb664ed, type: 2}
     Effectinfo:
       effectTargets:
       - targetType: 0
         includesSource: 0
-        onlySource: 1
-        queries: []
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 1
+          cardFilter: {fileID: 0}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
+        includesTarget: 1
+        includesSource: 0
         includesEventSubject: 0
         queries: []
       repartition: 0

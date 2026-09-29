@@ -9,16 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e08c587c7da8b194eb030861174cdaad, type: 3}
+  m_Script: {fileID: 11500000, guid: b783587ba222f1d4091f9195b858563b, type: 3}
   m_Name: InDefense
   m_EditorClassIdentifier: Assembly-CSharp::CondEntityCount
-  query:
-    targetType: 2
-    queries:
-    - team: 1
-      statusFilter: 0
-      zoneFilter: 1
-      cardFilter: {fileID: 0}
-  comparison: 0
-  threshold: 1
-  excludeSource: 1
+  mode: 1
+  Conditions:
+  - {fileID: 11400000, guid: ef2719f84cfd9ab4c9b00a29a01a13a5, type: 2}
+  - {fileID: 11400000, guid: e7a8cf558a025394097cd8961d0a086d, type: 2}

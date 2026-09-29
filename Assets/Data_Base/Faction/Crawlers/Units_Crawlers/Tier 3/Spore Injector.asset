@@ -17,8 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 5
   tier: 3
-  Description: '<b>On Battle Start:</b> If I Invade, gives +1/+1 to ally Melee units
-    until end of turn. '
+  Description: '<b>On Invade:</b> Gives +1/+1 to ally Melee units until end of turn. '
   CardImage: {fileID: 21300000, guid: 9fdaa3c1c72761240bec596532e6ac39, type: 3}
   MainCost: 1
   IsHero: 0
@@ -37,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 282ae802ac0207e4898fcc90ea736791, type: 2}

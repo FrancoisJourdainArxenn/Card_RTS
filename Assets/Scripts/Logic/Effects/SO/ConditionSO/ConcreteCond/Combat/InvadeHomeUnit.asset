@@ -9,10 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b783587ba222f1d4091f9195b858563b, type: 3}
-  m_Name: Invade
+  m_Script: {fileID: 11500000, guid: e08c587c7da8b194eb030861174cdaad, type: 3}
+  m_Name: InvadeHomeUnit
   m_EditorClassIdentifier: Assembly-CSharp::CondEntityCount
-  mode: 1
-  Conditions:
-  - {fileID: 11400000, guid: a8adf888e65a62a418ff9b452f5432f1, type: 2}
-  - {fileID: 11400000, guid: 42bc366b0c17dbc4e918166565112a9e, type: 2}
+  query:
+    targetType: 0
+    queries:
+    - team: 2
+      statusFilter: 8
+      zoneFilter: 1
+      cardFilter: {fileID: 0}
+  comparison: 0
+  threshold: 1
+  excludeSource: 1

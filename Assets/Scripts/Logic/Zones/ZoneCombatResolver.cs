@@ -676,6 +676,7 @@ public class ZoneCombatResolver : MonoBehaviour
             new ZoneBattleStartRevealCommand(zoneView.transform.position).AddToQueue();
             Command.FlushDeferredCommands(zoneDeferKey);
         }
+        RecordInvasions(steps);
         // Bases mortes pendant CETTE zone — animation de mort jouée UNE SEULE FOIS, après la boucle
         // ci-dessous, jamais immédiatement dans le switch : un round sans limite anti-overkill (voir
         // AssignSingleAttack, branches base/joueur) peut infliger plusieurs coups fatals successifs à
@@ -1223,6 +1224,46 @@ public class ZoneCombatResolver : MonoBehaviour
                 return _base;
         }
         return null;
+    }
+
+    // Une invasion = un combat (au moins un step) dans une zone où l'adversaire a une base, auquel le
+    // joueur participe (attaquant d'un step, ou créature ciblée). Comptée une seule fois par zone et par
+    // round. Appelé depuis EnqueueBattleCommands et non à la planification : ce code tourne des deux
+    // côtés en réseau (steps identiques), la planification uniquement sur le serveur.
+    void RecordInvasions(List<BattleStepRecord> steps)
+    {
+        if (steps.Count == 0) return;
+
+        Player p1 = GlobalSettings.Instance.LowPlayer;
+        Player p2 = GlobalSettings.Instance.TopPlayer;
+        bool p1Engaged = false;
+        bool p2Engaged = false;
+        foreach (BattleStepRecord step in steps)
+        {
+            if (CreatureLogic.CreaturesCreatedThisGame.TryGetValue(step.attackerID, out CreatureLogic attacker))
+            {
+                if (attacker.owner == p1) p1Engaged = true;
+                else if (attacker.owner == p2) p2Engaged = true;
+            }
+            if (step.targetKind == TargetKind.Creature)
+            {
+                if (step.targetOwnerPlayerID == p1.PlayerID) p1Engaged = true;
+                else if (step.targetOwnerPlayerID == p2.PlayerID) p2Engaged = true;
+            }
+        }
+
+        if (p1Engaged && HasBaseInThisZone(p2)) p1.matchStats.Add(MatchStatType.Invasions);
+        if (p2Engaged && HasBaseInThisZone(p1)) p2.matchStats.Add(MatchStatType.Invasions);
+    }
+
+    // Base principale (bâtiment, ou chaque unité-base — voir Player.HomeUnits) ou base neutre capturée.
+    bool HasBaseInThisZone(Player player)
+    {
+        foreach (BaseLogic b in player.controlledBases)
+            if (b.Zone == zoneView.Logic) return true;
+        foreach (CreatureLogic unit in player.HomeUnits)
+            if (OwnsCreature(unit.BaseID)) return true;
+        return false;
     }
 
     // Called from OneCreatureManager click — finds which resolver owns a baseID
