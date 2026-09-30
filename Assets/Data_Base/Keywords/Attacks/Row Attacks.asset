@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Row Attacks
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Row Attack
-  description: Also deals damage all units in that row (Melee or Ranged).
+  description: Also deals damage to all units in that row (Melee or Ranged).
   icon: {fileID: 0}

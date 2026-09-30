@@ -48,6 +48,24 @@ public abstract class EffectSO : ScriptableObject
     // vide avant que ResolveBattleStartEffects ne le lise pour Fire Bolt — la cible forcée diffusée au
     // client est vide, Fire Bolt ne s'applique jamais côté client).
     internal static void SetLastAllocation(List<(int id, int amount)> allocation) => LastAllocation = allocation ?? new();
+
+    // Règle commune de perte de buff (aura Passive retirée, buff temporaire expiré) : renvoie les deltas
+    // réellement appliqués, pour le popup. Gain de PV : PV max et PV actuels montent d'autant. Perte de
+    // PV : seuls les PV max baissent, les PV actuels sont plafonnés au nouveau max — les dégâts déjà
+    // encaissés sont pris sur le buff en premier, donc la perte d'un buff ne tue jamais une unité.
+    // Health n'est réassigné que s'il change : son setter déclenche Die() dès qu'on lui passe 0 hors combat.
+    protected static (int attackDelta, int healthDelta) ShiftStatsCapped(ILivable target, int attackDelta, int healthDelta)
+    {
+        int attackBefore = target.Attack;
+        int healthBefore = target.Health;
+        target.Attack    += attackDelta;
+        target.MaxHealth += healthDelta;
+        int newHealth = healthDelta > 0 ? healthBefore + healthDelta : Mathf.Min(healthBefore, target.MaxHealth);
+        if (newHealth != healthBefore)
+            target.Health = newHealth;
+        return (target.Attack - attackBefore, target.Health - healthBefore);
+    }
+
     protected class EffectTarget
     {
         public ILivable target;

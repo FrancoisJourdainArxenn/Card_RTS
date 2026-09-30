@@ -138,10 +138,9 @@ public class ModifyStatsSO : EffectSO, IRevertable
                 ILivable t = target;
                 TempEffectTracker.Register(t.ID, () =>
                 {
-                    int revertAttackBefore = t.Attack;
-                    ApplyStatsDelta(t, -scaledAttack, -scaledHealth);
-                    int actualRevertAttackDelta = t.Attack - revertAttackBefore;
-                    new ModifyStatsCommand(t.ID, actualRevertAttackDelta, t.Attack, -scaledHealth, t.Health, RevertVisual).AddToQueue();
+                    // Expiration : perte de buff plafonnée, jamais mortelle (voir EffectSO.ShiftStatsCapped).
+                    (int actualRevertAttackDelta, int actualRevertHealthDelta) = ShiftStatsCapped(t, -scaledAttack, -scaledHealth);
+                    new ModifyStatsCommand(t.ID, actualRevertAttackDelta, t.Attack, actualRevertHealthDelta, t.Health, RevertVisual).AddToQueue();
                 });
             }
         }
@@ -157,10 +156,9 @@ public class ModifyStatsSO : EffectSO, IRevertable
 
     public void Revert(ILivable target, int? _ = null)
     {
-        int attackBefore = target.Attack;
-        ApplyStatsDelta(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
-        int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -_amplifiedHealthBonus, target.Health, RevertVisual).AddToQueue();
+        // Expiration : perte de buff plafonnée, jamais mortelle (voir EffectSO.ShiftStatsCapped).
+        (int actualAttackDelta, int actualHealthDelta) = ShiftStatsCapped(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, actualHealthDelta, target.Health, RevertVisual).AddToQueue();
     }
 
     private static void ApplyStatsDelta(ILivable target, int attackDelta, int healthDelta)

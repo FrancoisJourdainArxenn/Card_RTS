@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 2
-  Description: '<b>Battle Start</b>: If I''m out numbered, I create a barrier.'
+  Description: <b>Battle Start:</b> If I'm outnumbered, I create a Barrier.
   CardImage: {fileID: 21300000, guid: cdc945c125f63a64cbee715cc61db430, type: 3}
   MainCost: 1
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards:

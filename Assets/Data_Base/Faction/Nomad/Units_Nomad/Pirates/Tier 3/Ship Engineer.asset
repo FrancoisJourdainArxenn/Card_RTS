@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 3
-  Description: <b>On Play:</b> Chose an Upgrade for your Main Base.
+  Description: <b>On Play:</b> Choose an Upgrade for your Main Base.
   CardImage: {fileID: 21300000, guid: 937878bc4bff4f547b2b6bad1ceb09f9, type: 3}
   MainCost: 1
   IsHero: 0

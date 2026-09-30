@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 8
   tier: 1
-  Description: Your Marines gains +1/+0, wherever they are.
+  Description: Your Marines gain +1/+0, wherever they are.
   CardImage: {fileID: 21300000, guid: d38843853b475e04e9e73c724d012d56, type: 3}
   MainCost: 0
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

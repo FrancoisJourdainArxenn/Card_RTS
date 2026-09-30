@@ -38,6 +38,8 @@ public struct EffectAmplifier
     public int AttackBonus;
     public int HealthBonus;
     public bool SpellsOnly; // true = ne s'applique qu'aux cartes Type == CardType.Action
+    public bool FilterBySubType; // true = ne s'applique qu'aux cartes dont subType == RequiredSubType (ex: Weapons, Upgrade)
+    public SubType RequiredSubType;
 }
 
 public class Player : MonoBehaviour, ILivable
@@ -415,6 +417,8 @@ public class Player : MonoBehaviour, ILivable
         int logicalIndex = GetLogicalInsertIndex(homeUnitAsset.melee, baseID, 0);
         playedCards.Creatures.Insert(logicalIndex, homeUnit);
         FogOfWarManager.Refresh();
+        // L'unité-base ne passe pas par EffectRegistry.ETB : le héros déjà en main doit la compter (Control X).
+        RefreshHeroUnlockState();
 
         new PlayACreatureCommand(homeUnitCard, this, 0, homeUnit.UniqueCreatureID, MainPArea).AddToQueue();
 
@@ -492,6 +496,8 @@ public class Player : MonoBehaviour, ILivable
         {
             foreach (CreatureLogic cl in playedCards.Creatures)
                 cl.OnTurnStart();
+            // Auras qui grandissent avec l'ancienneté de leur source (PassiveStatAuraSO.*GrowthPerTurn).
+            PassiveAuraManager.RecomputeAll();
         }
     }
 
@@ -1395,7 +1401,8 @@ public class Player : MonoBehaviour, ILivable
 
     private bool AmplifierApplies(EffectAmplifier amp, EffectCategory category, CardAsset playedCard) =>
         (amp.AppliesTo & category) != 0
-        && (!amp.SpellsOnly || (playedCard != null && playedCard.Type == CardType.Action));
+        && (!amp.SpellsOnly || (playedCard != null && playedCard.Type == CardType.Action))
+        && (!amp.FilterBySubType || (playedCard != null && playedCard.subType == amp.RequiredSubType));
 
     public int GetDamageBonus(CardAsset playedCard) =>
         _effectAmplifiersFromSources.Values.Where(a => AmplifierApplies(a, EffectCategory.Damage, playedCard)).Sum(a => a.DamageBonus);
@@ -1409,8 +1416,20 @@ public class Player : MonoBehaviour, ILivable
         return (applicable.Sum(a => a.AttackBonus), applicable.Sum(a => a.HealthBonus));
     }
 
+    // Une condition de déblocage de héros basée sur l'état du jeu (tier, income, unités contrôlées) a pu
+    // changer : texte/pop de la carte en main via matchStats.OnChanged, jouabilité via les highlights. Ce
+    // dernier refresh est limité à la phase de commande (seul moment où un héros peut être joué) : évite
+    // l'appel pendant l'init, où localPlayer n'est peut-être pas encore assigné.
+    public void RefreshHeroUnlockState()
+    {
+        matchStats.NotifyChanged();
+        if (TurnManager.Instance != null && TurnManager.Instance.IsCommandPhase)
+            TurnManager.RefreshAllPlayableHighlights();
+    }
+
     public void CalculatePlayerIncome()
     {
+        int previousIncome = playerMainIncome;
         playerMainIncome = bonusMainIncome;
         foreach (int amt in _incomeFromSources.Values)
             playerMainIncome += amt;
@@ -1424,6 +1443,9 @@ public class Player : MonoBehaviour, ILivable
                 mgr?.RefreshIncomeDisplay(b.EffectiveIncome, b.IsUnderAttack);
             }
         }
+
+        if (playerMainIncome != previousIncome)
+            RefreshHeroUnlockState();
 
         RefreshHomeUnitRessourcePanel();
 

@@ -83,10 +83,9 @@ public class DamageThenBuffAttackSO : HealthEffectSO, IRevertable
     {
         if (!_buffedTargets.Remove(target.ID)) return;
 
-        int attackBefore = target.Attack;
-        ApplyStatsDelta(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
-        int actualAttackDelta = target.Attack - attackBefore;
-        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, -_amplifiedHealthBonus, target.Health, RevertVisual).AddToQueue();
+        // Expiration : perte de buff plafonnée, jamais mortelle (voir EffectSO.ShiftStatsCapped).
+        (int actualAttackDelta, int actualHealthDelta) = ShiftStatsCapped(target, -_amplifiedAttackBonus, -_amplifiedHealthBonus);
+        new ModifyStatsCommand(target.ID, actualAttackDelta, target.Attack, actualHealthDelta, target.Health, RevertVisual).AddToQueue();
     }
 
     private static void ApplyStatsDelta(ILivable target, int attackDelta, int healthDelta)

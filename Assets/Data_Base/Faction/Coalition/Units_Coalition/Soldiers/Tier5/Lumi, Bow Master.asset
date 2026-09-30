@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 0
   tier: 5
-  Description: When an ally units (<i>in my zone</i>) Attacks, I deal 2 to a random
+  Description: When an ally unit (<i>in my zone</i>) attacks, I deal 2 to a random
     enemy unit.
   CardImage: {fileID: 21300000, guid: 919c9f2154bd51149bd7157a70d5d068, type: 3}
   MainCost: 1
@@ -37,6 +37,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

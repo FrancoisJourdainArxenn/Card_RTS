@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 5
   tier: 2
-  Description: <b>On Death :</b> Create a Nest in your hand, it cost 0.
+  Description: <b>On Death:</b> Create a Nest in your hand, it costs 0.
   CardImage: {fileID: 21300000, guid: fc83a7dade11b2b4ab2d015e14b4f5b8, type: 3}
   MainCost: 1
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards:

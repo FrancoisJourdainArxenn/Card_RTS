@@ -15,8 +15,8 @@ MonoBehaviour:
   displayName: Main Base
   description: 'A Main Base grants you 2 Income.
 
-    You can play unit in it''s
-    zone.
+    You can play units in its zone.
 
-    When destroyed, it''s controller loses the game.'
+    When
+    destroyed, its controller loses the game.'
   icon: {fileID: 21300000, guid: c0b6e05098ff085449341eee975007bd, type: 3}

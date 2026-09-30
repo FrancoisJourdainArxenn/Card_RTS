@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Protected
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Protected
-  description: Something happens if there's an ally Melee units in this unit zone.
+  description: Something happens if there's an ally Melee unit in this unit's zone.
   icon: {fileID: 0}

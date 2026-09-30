@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 1
   Description: '<b>Commander.</b>
 
-    <b>ALL TOKEN</b> units you create gain <b>Celerity.</b>'
+    Your Raptors gain <b>Celerity</b> and +0/+1.'
   CardImage: {fileID: 21300000, guid: a15911c780421f947a70abf3fb35fa22, type: 3}
   MainCost: 0
   IsHero: 1
@@ -38,6 +38,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
@@ -46,15 +47,51 @@ MonoBehaviour:
   Effects:
   - EffectName: Onslaught
     Effect: {fileID: 11400000, guid: 8fdbac8da54e74d4fb05677bc5398815, type: 2}
-    Trigger: 11
+    Trigger: 21
     Condition: {fileID: 0}
     Effectinfo:
-      effectTargets: []
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 11400000, guid: 28cbc08c3459425b93c533ff65741529, type: 2}
+        requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0
-        includesTarget: 0
+        includesTarget: 1
         includesSource: 0
-        includesEventSubject: 1
+        includesEventSubject: 0
+        queries: []
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Stronger
+    Effect: {fileID: 11400000, guid: d704c5b1a7ddd1740ac6bd9748274335, type: 2}
+    Trigger: 21
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets:
+      - targetType: 0
+        includesSource: 0
+        onlySource: 0
+        queries:
+        - team: 1
+          statusFilter: 0
+          zoneFilter: 0
+          cardFilter: {fileID: 11400000, guid: 28cbc08c3459425b93c533ff65741529, type: 2}
+        requiresPlayerSelection: 0
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 1
+        includesSource: 0
+        includesEventSubject: 0
         queries: []
       repartition: 0
       useScalingCount: 0

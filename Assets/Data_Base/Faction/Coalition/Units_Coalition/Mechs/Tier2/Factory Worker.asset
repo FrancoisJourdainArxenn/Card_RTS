@@ -17,8 +17,8 @@ MonoBehaviour:
   Type: 0
   subType: 6
   tier: 2
-  Description: <b>On Play:</b> Target a <i>Factory (in my zone)</i>. Reduce it's
-    production time by 1.
+  Description: <b>On Play:</b> Target a <i>Factory (in my zone)</i>. Reduce its production
+    time by 1.
   CardImage: {fileID: 21300000, guid: 9f6995de4bfb7dd4fbc9825fb239143c, type: 3}
   MainCost: 1
   IsHero: 0
@@ -37,6 +37,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

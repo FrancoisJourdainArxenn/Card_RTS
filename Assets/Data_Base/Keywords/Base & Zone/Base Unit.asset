@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Base Unit
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Main Base
-  description: This units counts a Main Base. If you have no Main Base, you lose
+  description: This unit counts as a Main Base. If you have no Main Base, you lose
     the game.
   icon: {fileID: 21300000, guid: a23f951ac542bc54aa2d09aeb4c79571, type: 3}

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Flying
   description: Flying units can traverse Aerial paths. They can't be attacked by
-    non-flyin Melee units.
+    non-flying Melee units.
   icon: {fileID: 0}

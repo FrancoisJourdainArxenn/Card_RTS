@@ -12,13 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
   m_Name: Temp+2+2
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: Gives +1/+1 until end of turn
+  Description: Gives +2/+2 until end of turn
   EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
   AttackBonus: 2
   HealthBonus: 2
   IsTempEffect: 1
@@ -28,5 +30,7 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
   PersistentFilter: {fileID: 0}
   MatchSameNameAsTarget: 0

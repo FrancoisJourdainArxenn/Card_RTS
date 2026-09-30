@@ -657,9 +657,14 @@ public class CreatureLogic: ILivable
             EffectRegistry.RegisterCreatureEffects(this, ca);
     }
 
+    // Nombre de débuts de tour (Regroup) passés en jeu — 0 le tour où la créature est posée. Vit sur
+    // l'instance : une créature morte puis rejouée (ex: héros revenu en main) repart de 0.
+    public int TurnsInPlay { get; private set; }
+
     // METHODS
     public void OnTurnStart()
     {
+        TurnsInPlay++;
         // Tant qu'il reste des tours de mal d'invocation "supplémentaires" à purger (voir
         // CardAsset.ExtraSummoningSicknessTurns), on consomme ce tour sans rien débloquer :
         // HasSummoningSickness reste vrai, AttacksLeftThisTurn/MovementsLeftThisTurn restent à 0.
@@ -711,6 +716,7 @@ public class CreatureLogic: ILivable
         {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
             FogOfWarManager.Refresh();
+            owner.RefreshHeroUnlockState(); // héros à condition "Control X" : peut se re-verrouiller
         }
 
         if (ca.IsHero)
@@ -738,10 +744,20 @@ public class CreatureLogic: ILivable
     }
 
     // Meurt silencieusement sans déclencher d'effets OnDeath.
-    // Utilisé côté client pour rejouer le résultat du drain serveur.
+    // Utilisé côté client pour rejouer le résultat du drain serveur (et par la resynchro, voir
+    // GameNetworkManager.SyncFullGameStateClientRpc) — idempotent : une seconde mort silencieuse
+    // recompterait la mort dans les stats.
+    private bool _silentDeathDone;
     public void SilentDie()
     {
+        if (_silentDeathDone) return;
+        _silentDeathDone = true;
         Debug.Log($"[Death][Client] SILENT_DIE — {DisplayName} (ID:{UniqueCreatureID})");
+        // Même raison que dans Die() : sans ça, Health garde sa valeur d'avant la mort, et
+        // Player.ResyncCreatureOrderForArea (filtre Health > 0) réinsère la créature dans
+        // playedCards.Creatures tant que son GameObject n'est pas encore détruit — créature "revenue"
+        // côté client alors qu'elle est morte côté serveur (bug Hill King).
+        health = 0;
         bool wasInList = owner.playedCards.Creatures.Remove(this);
         EffectRegistry.NotifyCreatureDeathStats(owner);
         TempEffectTracker.Unregister(UniqueCreatureID);
@@ -750,6 +766,7 @@ public class CreatureLogic: ILivable
         {
             new CreatureDieCommand(UniqueCreatureID, owner).AddToQueue();
             FogOfWarManager.Refresh();
+            owner.RefreshHeroUnlockState(); // héros à condition "Control X" : peut se re-verrouiller
         }
     }
 
@@ -788,6 +805,11 @@ public class CreatureLogic: ILivable
             Command.DeferDeath(deferKey, () => Command.FlushDeferredCommands(UniqueCreatureID));
             _deathVisualQueued = true;
         }
+
+        // Mort réelle au rejeu du combat (hôte ET client, via EnqueueBattleCommands) : une aura accordée
+        // par cette créature quitte ses cibles de la zone à CET instant, pas avant — voir
+        // PassiveAuraManager.Recompute et ZoneCombatResolver.ReservePredictedAuraLoss.
+        PassiveAuraManager.RecomputeAll();
     }
 
     // Met en file la CreatureDieCommand de toute créature marquée mourante EN DEHORS d'un contexte
@@ -906,7 +928,10 @@ public class CreatureLogic: ILivable
         // s'appliquer pour le reste de CE combat, pas seulement au drain de fin de Battle (voir le garde
         // sourceAlive dans PassiveAuraManager.Recompute, qui s'appuie sur OnDeathResolvedInBattle
         // positionné juste au-dessus).
-        PassiveAuraManager.RecomputeAll();
+        // Reporté sous la clé de CETTE mort (rejoué juste après sa CreatureDieCommand, voir
+        // MarkPendingDeath/QueuePendingDeathVisuals) : sinon le retrait visuel des buffs part en tout
+        // début de combat, avant même que la créature ne meure à l'écran.
+        Command.RunDeferred(UniqueCreatureID, PassiveAuraManager.RecomputeAll);
     }
 
     // Clé de report dédiée à OnAttack, distincte de UniqueCreatureID (utilisé tel quel comme clé par
@@ -1089,6 +1114,10 @@ public class CreatureLogic: ILivable
         if (effectIndex == -1)
         {
             creature.OnDeathResolvedInBattle = true;
+            // Miroir du RecomputeAll de ResolvePredictedBattleDeath côté serveur : sans lui, le client
+            // garde les auras d'une source (ou sur une cible) déjà morte en planification jusqu'au
+            // SilentDie du drain, alors que l'hôte les a déjà retirées.
+            Command.RunDeferred(deferKey, PassiveAuraManager.RecomputeAll);
             return;
         }
 

@@ -10,27 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
-  m_Name: Vok, Troup Leader
+  m_Name: Hammer Fall
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
-  Name: 
-  Faction: {fileID: 0}
+  Name: Hammer Fall
+  Faction: {fileID: 11400000, guid: 999270e85dd8e024f94d4d3b293a4708, type: 2}
   Type: 0
-  subType: 0
-  tier: 5
-  Description: '<b>Cone Attacks, Commander
-
-    On Attack:</b> Gain a Deploy card
-    in your hand.'
-  CardImage: {fileID: 21300000, guid: 7a9a635597b79994eaa4ed220daf3786, type: 3}
-  MainCost: 1
-  IsHero: 0
-  UnlockCondition: {fileID: 0}
-  Attack: 4
-  MaxHealth: 5
+  subType: 3
+  tier: 1
+  Description: <b>Commander, Splash Attacks</b>
+  CardImage: {fileID: 21300000, guid: 3a5d4ea6aa7a3b64cbc62cee5e477ec4, type: 3}
+  MainCost: 0
+  IsHero: 1
+  UnlockCondition: {fileID: 11400000, guid: 43defab445e3b97478885f7cffc76222, type: 2}
+  Attack: 3
+  MaxHealth: 6
   AttacksForOneTurn: 1
-  AttackSpeedMultiplier: 2
+  AttackSpeedMultiplier: 3
   AttackModifiers:
-  - {fileID: 11400000, guid: 2cefbc5f4370f9a44a513729ac52acce, type: 2}
+  - {fileID: 11400000, guid: f9b728649144c9a459449f819e4ac14f, type: 2}
   Commandement: 1
   Renfort: 0
   MoveSpeed: 1
@@ -40,15 +37,14 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
-  - {fileID: 11400000, guid: 909055c91f48c2d4593e541aebb536bb, type: 2}
-  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
-  ReferencedCards:
-  - {fileID: 11400000, guid: 0ba65762cbce60642b21655a65076d01, type: 2}
+  - {fileID: 11400000, guid: ba63f570a19b14145869245e404c3173, type: 2}
+  ReferencedCards: []
   Effects:
-  - EffectName: Deploy
-    Effect: {fileID: 11400000, guid: 6e13d231d25bada498019e0df153bee6, type: 2}
+  - EffectName: Training
+    Effect: {fileID: 11400000, guid: 3a26b374bec0b994f9315e31292bd3d6, type: 2}
     Trigger: 15
     Condition: {fileID: 0}
     Effectinfo:

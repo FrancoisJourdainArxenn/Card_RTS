@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 0
   subType: 5
   tier: 5
-  Description: '<b>On Attack:</b> Your Raptors gain +1/+1 (<i>wherever they are.</i>).
+  Description: '<b>On Attack:</b> Your Raptors gain +1/+1 (<i>wherever they are</i>).
 
     <b>On
     Death:</b> Create two Raptors.'
@@ -39,6 +39,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 3c79cd75b080b22499654913e3451fad, type: 2}

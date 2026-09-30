@@ -43,10 +43,11 @@ MonoBehaviour:
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 3077944f9312b2d4ab1ef56c691e544c, type: 2}
+  - {fileID: 11400000, guid: fc9476f68c4486e4ab491c27e1899d44, type: 2}
   ReferencedCards: []
   Effects:
   - EffectName: Raging !
-    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
+    Effect: {fileID: 11400000, guid: dff5da96ad5f71841afedebf33728eed, type: 2}
     Trigger: 14
     Condition: {fileID: 11400000, guid: 2d11a672959074c41b2aafa50e0c6c16, type: 2}
     Effectinfo:
@@ -57,8 +58,8 @@ MonoBehaviour:
         queries:
         - team: 1
           statusFilter: 0
-          zoneFilter: 1
-          cardFilter: {fileID: 0}
+          zoneFilter: 0
+          cardFilter: {fileID: 11400000, guid: 3bd8e800bb93ae74c99e58ef451657d3, type: 2}
         requiresPlayerSelection: 0
       affectedElements:
       - affectedElementType: 0

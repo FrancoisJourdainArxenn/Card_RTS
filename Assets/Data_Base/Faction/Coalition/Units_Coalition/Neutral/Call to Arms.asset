@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 8
   tier: 5
-  Description: 'You units gain +1/+1, wherever they are.
+  Description: 'Your units gain +1/+1, wherever they are.
 
     Gain a copy of Call
     to Arms in your hand.'
@@ -39,6 +39,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
   m_Name: +1 ATK_Wherever_Pirates
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: Gives +1 Attack to all Raptors.
+  Description: Gives +1 Attack to all Pirates.
   EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}

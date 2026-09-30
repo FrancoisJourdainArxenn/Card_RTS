@@ -15,3 +15,12 @@ public interface IPassiveAuraEffect
     // Retire de `target` exactement ce que ApplyAura(target, payload) avait accordé.
     void RevertAura(ILivable target, object payload);
 }
+
+// Aura dont le payload peut changer en cours de vie (ex: PassiveStatAuraSO qui grandit chaque tour) :
+// PassiveAuraManager passe directement de l'ancien au nouveau payload au lieu de Revert puis Apply —
+// sinon une aura de Vie qui grandit retirerait d'abord ses PV à une créature blessée (mort à 0 hors
+// combat) et afficherait deux pops au lieu d'un.
+public interface IUpdatablePassiveAura
+{
+    void UpdateAura(ILivable target, object oldPayload, object newPayload);
+}

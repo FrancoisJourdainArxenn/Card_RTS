@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3ed37fdaac26ff4a8351bf6691b885e, type: 3}
-  m_Name: +1 +1Wherever_Soldiers
+  m_Name: +1 +1Wherever_ALL
   m_EditorClassIdentifier: Assembly-CSharp::BuffAttackSO
-  Description: Gives +1/+1 to all Soldiers.
+  Description: Gives +1/+1 to all units.
   EffectVisual:
     vfxPrefab: {fileID: 7192022332265547404, guid: db1887da37073a94c90f39104f5e48df, type: 3}
     overlayMaterial: {fileID: 0}
@@ -32,5 +32,5 @@ MonoBehaviour:
     suppressAttackFallback: 0
     onSource: 0
     vfxPrefabOnSource: {fileID: 0}
-  PersistentFilter: {fileID: 11400000, guid: c092ae4baa50b8e45bb86b49a519f21d, type: 2}
+  PersistentFilter: {fileID: 11400000, guid: 6057d630a7cfde54a9cbdaf758dbbf85, type: 2}
   MatchSameNameAsTarget: 0

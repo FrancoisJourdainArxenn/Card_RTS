@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e206fc57f453a42b932de9e94caabf, type: 3}
+  m_Name: Grin, Fifth Anomaly
+  m_EditorClassIdentifier: Assembly-CSharp::CardAsset
+  Name: Grin, Fifth Anomaly
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
+  Type: 0
+  subType: 11
+  tier: 1
+  Description: 'Your Melee units have +0/+1 and your Ranged units +1/+0. These bonuses
+    grow by 1 each turn.
+
+    (<i>This unit can''t move or attack.</i>)'
+  CardImage: {fileID: 21300000, guid: 6d8ae5032497e034b808c7f55116e859, type: 3}
+  MainCost: 0
+  IsHero: 1
+  UnlockCondition: {fileID: 11400000, guid: 780cdc0ff40fe3b419405a311f7ed16c, type: 2}
+  Attack: 0
+  MaxHealth: 4
+  AttacksForOneTurn: 1
+  AttackSpeedMultiplier: 3
+  AttackModifiers: []
+  Commandement: 0
+  Renfort: 0
+  MoveSpeed: 0
+  Celerity: 0
+  melee: 0
+  Flying: 0
+  TransportCapacity: 0
+  IsStructureUnit: 1
+  IsTeleporter: 0
+  CountsAsHomeBase: 0
+  ExtraSummoningSicknessTurns: 0
+  Keywords: []
+  ReferencedCards: []
+  Effects:
+  - EffectName: Swarming ! (Card Play)
+    Effect: {fileID: 11400000, guid: 1f6dd7f1c8624d64cb5e39ef69aef21b, type: 2}
+    Trigger: 21
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 1
+          statusFilter: 1
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0
+  - EffectName: Swarming ! (Card Play)
+    Effect: {fileID: 11400000, guid: 030fa2a2679397d4aa4165b1804bcfcb, type: 2}
+    Trigger: 21
+    Condition: {fileID: 0}
+    Effectinfo:
+      effectTargets: []
+      affectedElements:
+      - affectedElementType: 0
+        includesTarget: 0
+        includesSource: 0
+        includesEventSubject: 0
+        queries:
+        - team: 1
+          statusFilter: 2
+          zoneFilter: 0
+          cardFilter: {fileID: 0}
+      repartition: 0
+      useScalingCount: 0
+      scalingQuery:
+        targetType: 0
+        queries: []
+      scalingSource: 0

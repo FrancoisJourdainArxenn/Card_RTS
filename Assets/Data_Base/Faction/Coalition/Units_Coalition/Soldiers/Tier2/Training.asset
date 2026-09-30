@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 8
   tier: 2
-  Description: Chose a training.
+  Description: Choose a training.
   CardImage: {fileID: 21300000, guid: 0eeabf5ae635ce64b88b3d48439b817f, type: 3}
   MainCost: 2
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

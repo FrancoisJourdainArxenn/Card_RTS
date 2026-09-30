@@ -16,7 +16,7 @@ MonoBehaviour:
   Faction: {fileID: 0}
   Type: 0
   subType: 3
-  tier: 3
+  tier: 2
   Description: '<b>Piercing Attacks</b>
 
     <i>(I cost 2 Ressources).</i>'
@@ -39,6 +39,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
   - {fileID: 11400000, guid: 618aae013f18b86459c9e2dca761e893, type: 2}

@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: Hill King
   m_EditorClassIdentifier: Assembly-CSharp::CardAsset
   Name: 
-  Faction: {fileID: 0}
+  Faction: {fileID: 11400000, guid: 6fa3bea34a4fadc428c2acf19964f209, type: 2}
   Type: 0
   subType: 5
   tier: 5
   Description: <b>On Death:</b> ally units (<i>in my zone</i>) gain +1/+0. If I <b>Invaded</b>
-    thye gain an additionnal +1/+1.
+    they gain an additional +1/+1.
   CardImage: {fileID: 21300000, guid: 2347cc9d66ac93b4cabaf9247084b9b0, type: 3}
   MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
-  Attack: 2
-  MaxHealth: 6
+  Attack: 4
+  MaxHealth: 4
   AttacksForOneTurn: 1
   AttackSpeedMultiplier: 2
   AttackModifiers: []

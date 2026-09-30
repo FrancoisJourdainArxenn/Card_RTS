@@ -17,7 +17,7 @@ MonoBehaviour:
   Type: 2
   subType: 10
   tier: 1
-  Description: Gives +{0}/+{1} target ally unit.
+  Description: Gives +{0}/+{1} to target ally unit.
   CardImage: {fileID: 21300000, guid: 37ef6e0e0a49fa842b7d83ce4199d323, type: 3}
   MainCost: 0
   IsHero: 0
@@ -36,6 +36,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []

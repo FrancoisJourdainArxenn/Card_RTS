@@ -11,6 +11,9 @@ public class AmplifyEffectSO : EffectSO
     public int AttackBonus;
     public int HealthBonus;
     public bool ActionOnly = true;
+    [Tooltip("Restreint l'amplification aux cartes jouées de ce sous-type (ex: Weapons pour Arch-Researcher, Upgrade pour Grand Engineer).")]
+    public bool FilterBySubType;
+    public SubType RequiredSubType;
 
     public override void Execute(
         string EffectName,
@@ -42,6 +45,8 @@ public class AmplifyEffectSO : EffectSO
             AttackBonus = AttackBonus,
             HealthBonus = HealthBonus,
             SpellsOnly = ActionOnly,
+            FilterBySubType = FilterBySubType,
+            RequiredSubType = RequiredSubType,
         };
 
         if (NetworkSessionData.IsNetworkSession)
@@ -64,7 +69,7 @@ public class AmplifyEffectSO : EffectSO
         if ((AppliesTo & EffectCategory.Damage) != 0) parts.Add($"+{DamageBonus} Dégâts");
         if ((AppliesTo & EffectCategory.Heal) != 0) parts.Add($"+{HealBonus} Soin");
         if ((AppliesTo & EffectCategory.StatBonus) != 0) parts.Add($"+{AttackBonus}/+{HealthBonus} sur les bonus de stats");
-        string scope = ActionOnly ? "de vos Sorts" : "de vos effets";
+        string scope = FilterBySubType ? $"de vos {RequiredSubType}" : ActionOnly ? "de vos Sorts" : "de vos effets";
         return $"{string.Join(" / ", parts)} {scope}";
     }
 }

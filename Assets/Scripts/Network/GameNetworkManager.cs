@@ -285,7 +285,8 @@ public class GameNetworkManager : NetworkBehaviour
             out int[] stepOwnerPlayerIDs,
             out int[] stepSecondaryCounts, out int[] stepSecondaryTargetIDs, out int[] stepSecondaryDamages,
             out int[] stepCounterDamages, out int[] stepAttackerExhausted,
-            out int[] stepShieldAbsorbed, out int[] stepAttackerShieldAbsorbed, out int[] stepSecondaryAbsorbed);
+            out int[] stepShieldAbsorbed, out int[] stepAttackerShieldAbsorbed, out int[] stepSecondaryAbsorbed,
+            out int[] stepTargetDies, out int[] stepAttackerDies, out int[] stepSecondaryDies);
         // Liste exacte des resolvers de cette étape, dans l'ordre de rejeu (celui de ComputeRoundOutcome
         // pour la Base principale, celui du plan sinon) — le client ne la recalcule jamais (voir
         // ZoneCombatResolver.EnqueueStageReconstructedBattleCommands).
@@ -298,6 +299,7 @@ public class GameNetworkManager : NetworkBehaviour
             stepSecondaryCounts, stepSecondaryTargetIDs, stepSecondaryDamages,
             stepCounterDamages, stepAttackerExhausted,
             stepShieldAbsorbed, stepAttackerShieldAbsorbed, stepSecondaryAbsorbed,
+            stepTargetDies, stepAttackerDies, stepSecondaryDies,
             (int)stage,
             roundOutcome.Decisive, roundOutcome.IsDraw, roundOutcome.WinnerPlayerID,
             stageResolverOrder);
@@ -320,6 +322,7 @@ public class GameNetworkManager : NetworkBehaviour
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
         int[] counterDamages, int[] attackerExhausted,
         int[] shieldAbsorbed, int[] attackerShieldAbsorbed, int[] secondaryAbsorbed,
+        int[] targetDies, int[] attackerDies, int[] secondaryDies,
         int stage,
         bool decisive, bool isDraw, int winnerPlayerID,
         int[] stageResolverOrder)
@@ -335,6 +338,7 @@ public class GameNetworkManager : NetworkBehaviour
             resolverIdxs, attackerIDs, targetIDs, targetKinds, damages, ownerPlayerIDs,
             secondaryCounts, secondaryTargetIDs, secondaryDamages, counterDamages, attackerExhausted,
             shieldAbsorbed, attackerShieldAbsorbed, secondaryAbsorbed,
+            targetDies, attackerDies, secondaryDies,
             (ZoneCombatResolver.BattleStage)stage, decisive, isDraw, winnerPlayerID, stageResolverOrder);
         // Debug.Log($"[BroadcastSteps] EnqueueStageReconstructedBattleCommands terminé — file de commandes: {Command.CommandQueue.Count} en attente, playingQueue={Command.playingQueue}");
         StartCoroutine(WaitForBattleAnimationsThenReport());
@@ -852,6 +856,22 @@ public class GameNetworkManager : NetworkBehaviour
                     continue;
                 }
 
+                // Déjà morte côté client : CreaturesCreatedThisGame n'est jamais purgé, et corriger ses
+                // stats fausse le suivi des auras (PassiveAuraManager la retire encore après coup).
+                if (!creature.owner.playedCards.Creatures.Contains(creature))
+                    continue;
+
+                // Morte côté serveur mais encore en jeu côté client (mort jamais reçue, ou créature
+                // réinsérée à tort) : retrait forcé, sans OnDeath — ses effets ont déjà été résolus côté
+                // serveur. Hors combat seulement : en combat, le serveur a des morts encore en attente
+                // (PV à 0, pas encore drainées) que le client doit rejouer lui-même, dans l'ordre.
+                if (creatureHealths[i] <= 0 && !TurnManager.InCombatPhase && !creature.IsPendingDeath)
+                {
+                    Debug.LogError($"[Desync] Créature {creatureIDs[i]} ({creature.DisplayName}) : morte côté serveur mais encore en jeu côté client. Retrait forcé (SilentDie).");
+                    creature.SilentDie();
+                    continue;
+                }
+
                 bool statsChanged = false;
 
                 if (creature.Health != creatureHealths[i] && creatureHealths[i] > 0)
@@ -949,59 +969,69 @@ public class GameNetworkManager : NetworkBehaviour
         Debug.Log($"[Buffer] Action enregistrée : {action.type} par joueur {action.playerIndex} (total={_actionBuffer.Count})");
     }
 
-    // Called when all players have ended their phase
-    // Executes all actions in order: Player 0 first, then Player 1
+    // Called when all players have ended their phase.
+    // Même ordre de résolution que le solo différé (TurnManager : FlushSoloPlayBuffer →
+    // FlushSoloBoardBuffer → FlushSoloMoveBuffer) : toutes les poses, puis tous les embarquements,
+    // puis tous les déplacements — joueur 0 avant joueur 1 dans chaque passe. L'ancien ordre
+    // d'enregistrement (Board triés sur place entre leurs propres emplacements) pouvait faire passer
+    // le Board d'une créature avant sa propre pose : embarquée puis débarquée avant d'être révélée,
+    // puis révélée dans sa zone de pose alors que sa logique était ailleurs (GO dans deux rangées).
+    // Sans risque pour la logique : au flush, Play/Spell ne font que révéler le visuel (voir
+    // Player.NetworkFlushPlayCreature / NetworkFlushPlaySpell).
     public void FlushBuffer()
     {
         Debug.Log($"[Buffer] Flush de {_actionBuffer.Count} action(s)");
 
         ResolveCrossingRedirects();
 
-        // Sort: player 0's actions come before player 1's, preserving relative order within each player
-        List<PendingAction> p0Actions = _actionBuffer.FindAll(a => a.playerIndex == 0);
-        List<PendingAction> p1Actions = _actionBuffer.FindAll(a => a.playerIndex == 1);
+        List<PendingAction> plays  = ByPlayer(_actionBuffer.FindAll(a => a.type == ActionType.PlayCreature || a.type == ActionType.PlaySpell));
+        List<PendingAction> boards = SortBoardActions(_actionBuffer.FindAll(a => a.type == ActionType.BoardCreature));
+        List<PendingAction> moves  = ByPlayer(_actionBuffer.FindAll(a => a.type == ActionType.MoveCreature));
 
-        // Réordonne uniquement les BoardCreature entre elles (mêlée avant distance, gauche avant
-        // droite — voir SortBoardActionsInPlace) : les autres types d'action gardent exactement leur
-        // position, comme TableVisual.SortListByIDs.
-        SortBoardActionsInPlace(p0Actions);
-        SortBoardActionsInPlace(p1Actions);
-
-        foreach (PendingAction action in p0Actions) ExecuteAction(action);
-        foreach (PendingAction action in p1Actions) ExecuteAction(action);
+        foreach (PendingAction action in plays)  ExecuteAction(action);
+        foreach (PendingAction action in boards) ExecuteAction(action);
+        foreach (PendingAction action in moves)  ExecuteAction(action);
 
         _actionBuffer.Clear();
     }
 
-    // Trie les actions BoardCreature de actions par (mêlée avant distance, boardOrderPos croissant —
-    // voir DragCreatureActions.Board/PendingAction.param3), en conservant leurs emplacements d'origine
-    // dans la liste pour ne jamais déplacer une action d'un autre type (même principe que
-    // TableVisual.SortListByIDs). Un tri global tous transports confondus suffit : BoardCreature ne
-    // touche que l'état propre à SON transporteur, donc l'ordre relatif entre deux transports
-    // différents n'a aucune conséquence — et deux joueurs ne peuvent jamais partager un transport.
-    private static void SortBoardActionsInPlace(List<PendingAction> actions)
+    // Joueur 0 avant joueur 1, ordre d'enregistrement conservé pour chacun.
+    private static List<PendingAction> ByPlayer(List<PendingAction> actions)
     {
-        List<int> slots = new List<int>();
-        List<PendingAction> boardActions = new List<PendingAction>();
-        for (int i = 0; i < actions.Count; i++)
-        {
-            if (actions[i].type != ActionType.BoardCreature) continue;
-            slots.Add(i);
-            boardActions.Add(actions[i]);
-        }
-        if (boardActions.Count <= 1) return;
+        List<PendingAction> ordered = actions.FindAll(a => a.playerIndex == 0);
+        ordered.AddRange(actions.FindAll(a => a.playerIndex == 1));
+        return ordered;
+    }
 
-        boardActions.Sort((a, b) =>
+    // Par joueur : mêlée avant distance, puis boardOrderPos croissant (voir DragCreatureActions.Board /
+    // PendingAction.param3). List.Sort n'étant pas stable, l'index d'enregistrement départage les
+    // égalités (ex: deux passagers posés tour à tour en position 0). Un tri global tous transports
+    // confondus suffit : BoardCreature ne touche que l'état propre à SON transporteur.
+    private static List<PendingAction> SortBoardActions(List<PendingAction> boards)
+    {
+        List<(PendingAction action, int index)> indexed = new List<(PendingAction action, int index)>();
+        for (int i = 0; i < boards.Count; i++)
+            indexed.Add((boards[i], i));
+
+        indexed.Sort((x, y) =>
         {
-            bool aMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(a.param1, out CreatureLogic ac) && ac.IsMelee;
-            bool bMelee = CreatureLogic.CreaturesCreatedThisGame.TryGetValue(b.param1, out CreatureLogic bc) && bc.IsMelee;
-            int rowCompare = (aMelee ? 0 : 1).CompareTo(bMelee ? 0 : 1);
-            return rowCompare != 0 ? rowCompare : a.param3.CompareTo(b.param3);
+            int playerCompare = x.action.playerIndex.CompareTo(y.action.playerIndex);
+            if (playerCompare != 0) return playerCompare;
+            int rowCompare = RowRank(x.action.param1).CompareTo(RowRank(y.action.param1));
+            if (rowCompare != 0) return rowCompare;
+            int posCompare = x.action.param3.CompareTo(y.action.param3);
+            return posCompare != 0 ? posCompare : x.index.CompareTo(y.index);
         });
 
-        for (int k = 0; k < slots.Count; k++)
-            actions[slots[k]] = boardActions[k];
+        List<PendingAction> ordered = new List<PendingAction>(indexed.Count);
+        for (int i = 0; i < indexed.Count; i++)
+            ordered.Add(indexed[i].action);
+        return ordered;
     }
+
+    // 0 = mêlée, 1 = distance : la mêlée embarque en premier.
+    private static int RowRank(int creatureID)
+        => CreatureLogic.CreaturesCreatedThisGame.TryGetValue(creatureID, out CreatureLogic c) && c.IsMelee ? 0 : 1;
 
     /// <summary>
     /// Serveur uniquement. Détecte les croisements d'armées parmi les MoveCreature bufferisés
@@ -1827,12 +1857,14 @@ public class GameNetworkManager : NetworkBehaviour
     {
         if (!IsServer) return;
         EffectAmplifierClientRpc(playerIndex, sourceID, (int)amplifier.AppliesTo,
-            amplifier.DamageBonus, amplifier.HealBonus, amplifier.AttackBonus, amplifier.HealthBonus, amplifier.SpellsOnly);
+            amplifier.DamageBonus, amplifier.HealBonus, amplifier.AttackBonus, amplifier.HealthBonus, amplifier.SpellsOnly,
+            amplifier.FilterBySubType, (int)amplifier.RequiredSubType);
     }
 
     [ClientRpc]
     public void EffectAmplifierClientRpc(int playerIndex, int sourceID, int appliesTo,
-        int damageBonus, int healBonus, int attackBonus, int healthBonus, bool spellsOnly)
+        int damageBonus, int healBonus, int attackBonus, int healthBonus, bool spellsOnly,
+        bool filterBySubType, int requiredSubType)
     {
         Player player = Player.Players[playerIndex];
         player.AddEffectAmplifier(sourceID, new EffectAmplifier
@@ -1843,6 +1875,8 @@ public class GameNetworkManager : NetworkBehaviour
             AttackBonus = attackBonus,
             HealthBonus = healthBonus,
             SpellsOnly = spellsOnly,
+            FilterBySubType = filterBySubType,
+            RequiredSubType = (SubType)requiredSubType,
         });
     }
 

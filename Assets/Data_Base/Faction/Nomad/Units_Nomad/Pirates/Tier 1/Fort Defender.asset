@@ -41,27 +41,4 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards:
   - {fileID: 11400000, guid: 0f2dbfa314a19ff44b543b5a72c8b5a1, type: 2}
-  Effects:
-  - EffectName: 
-    Effect: {fileID: 11400000, guid: 0aa8fe957061def478e55e5105937261, type: 2}
-    Trigger: 14
-    Condition: {fileID: 11400000, guid: e7a8cf558a025394097cd8961d0a086d, type: 2}
-    Effectinfo:
-      effectTargets:
-      - targetType: 0
-        includesSource: 0
-        onlySource: 1
-        queries: []
-        requiresPlayerSelection: 0
-      affectedElements:
-      - affectedElementType: 0
-        includesTarget: 0
-        includesSource: 1
-        includesEventSubject: 0
-        queries: []
-      repartition: 0
-      useScalingCount: 0
-      scalingQuery:
-        targetType: 0
-        queries: []
-      scalingSource: 0
+  Effects: []

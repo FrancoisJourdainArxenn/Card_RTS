@@ -145,6 +145,9 @@ public static class EffectRegistry
         // créature telle qu'elle entre en jeu.
         if (context.Source is CreatureLogic enteringCreature && enteringCreature.ca == ca)
         {
+            // Déjà dans playedCards.Creatures ici, contrairement au matchStats.Add(UnitsSummoned) de son
+            // constructeur : c'est ici que le héros à condition "Control X" doit la compter.
+            enteringCreature.owner.RefreshHeroUnlockState();
             ApplyPermanentGrants(enteringCreature);
             // Une aura déjà active (ex: "Celerity aux alliés de ma zone") doit aussi toucher ce nouvel
             // arrivant : rien d'autre ne recalcule les auras à l'entrée en jeu d'une créature (le

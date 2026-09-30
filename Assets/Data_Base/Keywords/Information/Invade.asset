@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Invade
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Invade
-  description: Something happens when this unit as an enemy base in it's zone.
+  description: Something happens when this unit has an enemy base in its zone.
   icon: {fileID: 0}

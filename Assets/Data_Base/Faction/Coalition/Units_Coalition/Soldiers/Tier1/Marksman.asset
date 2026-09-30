@@ -36,9 +36,10 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords:
-  - {fileID: 11400000, guid: 7e623988a375a2a418502d3260da7c24, type: 2}
+  - {fileID: 0}
   ReferencedCards: []
   Effects:
   - EffectName: Snipe

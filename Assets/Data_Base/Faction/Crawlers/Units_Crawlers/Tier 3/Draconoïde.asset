@@ -19,8 +19,8 @@ MonoBehaviour:
   tier: 3
   Description: '<b>Flying
 
-    On Play:</b> Assimilates target ALLY unit to gain
-    +2/+2.'
+    On Play:</b> Assimilates target ALLY unit (<i>in my
+    zone</i>) to gain +2/+2.'
   CardImage: {fileID: 21300000, guid: cfaef9c2599a2ff4880113f3168dc898, type: 3}
   MainCost: 1
   IsHero: 0

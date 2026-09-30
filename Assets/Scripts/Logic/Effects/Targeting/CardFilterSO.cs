@@ -19,6 +19,11 @@ public class CardFilterSO : ScriptableObject
     public bool filterByFlying;
     public bool requiredFlying = true;
 
+    [Header("Melee / Ranged")]
+    public bool filterByMelee;
+    [Tooltip("Coché = Melee, décoché = Ranged.")]
+    public bool requiredMelee = true;
+
     [Header("Home Base")]
     [Tooltip("Unité-base uniquement (voir CreatureLogic.IsHomeUnit) : carte cochée CountsAsHomeBase, ou, une fois en jeu, l'unité de départ du deck (CardPoolSO.homeUnit).")]
     public bool filterByHomeBase;
@@ -48,6 +53,7 @@ public class CardFilterSO : ScriptableObject
         if (filterByName && EffectiveName(ca) != requiredName) return false;
         if (filterByCelerity && ca.Celerity != requiredCelerity) return false;
         if (filterByFlying && ca.Flying != requiredFlying) return false;
+        if (filterByMelee && ca.melee != requiredMelee) return false;
         return true;
     }
 

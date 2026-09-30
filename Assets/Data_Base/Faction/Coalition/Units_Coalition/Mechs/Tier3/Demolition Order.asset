@@ -37,6 +37,7 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
@@ -69,7 +70,7 @@ MonoBehaviour:
         queries: []
       scalingSource: 0
   - EffectName: Ressource
-    Effect: {fileID: 11400000, guid: 02f3661dfac9c2f498d08a7ac3c2cf26, type: 2}
+    Effect: {fileID: 11400000, guid: e1e131f316e484146a9f9c6c4241c9aa, type: 2}
     Trigger: 0
     Condition: {fileID: 0}
     Effectinfo:

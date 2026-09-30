@@ -57,7 +57,7 @@ MonoBehaviour:
   - EffectName: Draw
     Effect: {fileID: 11400000, guid: 50935793bb75ac740a3ee0566f4b1d0e, type: 2}
     Trigger: 22
-    Condition: {fileID: 11400000, guid: e22d8871113c6c846a7efdf2404d8935, type: 2}
+    Condition: {fileID: 11400000, guid: 868cb61ea8c88be43a79bba49eb3092a, type: 2}
     Effectinfo:
       effectTargets: []
       affectedElements: []

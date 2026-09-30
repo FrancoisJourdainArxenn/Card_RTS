@@ -19,7 +19,7 @@ MonoBehaviour:
   tier: 4
   Description: <b>Flying, Arcing Attacks</b>
   CardImage: {fileID: 21300000, guid: 4c9bc675859c4a1439871e4c1922708b, type: 3}
-  MainCost: 0
+  MainCost: 1
   IsHero: 0
   UnlockCondition: {fileID: 0}
   Attack: 3
@@ -33,7 +33,7 @@ MonoBehaviour:
   MoveSpeed: 1
   Celerity: 0
   melee: 0
-  Flying: 0
+  Flying: 1
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0

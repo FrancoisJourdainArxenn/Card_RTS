@@ -36,13 +36,14 @@ MonoBehaviour:
   TransportCapacity: 0
   IsStructureUnit: 0
   IsTeleporter: 0
+  CountsAsHomeBase: 0
   ExtraSummoningSicknessTurns: 0
   Keywords: []
   ReferencedCards: []
   Effects:
   - EffectName: "Eur\xEAka !"
     Effect: {fileID: 11400000, guid: 1baaadb723166ae4fa9ed384b7d79f0a, type: 2}
-    Trigger: 12
+    Trigger: 17
     Condition: {fileID: 11400000, guid: 73d329ed8906a0e4cb2056bd4b3a95be, type: 2}
     Effectinfo:
       effectTargets: []

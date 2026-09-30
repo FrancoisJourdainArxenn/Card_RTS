@@ -19,9 +19,13 @@ MonoBehaviour:
     OverrideOverlayDuration: 0
     travelFromSource: 0
     suppressAttackFallback: 0
+    onSource: 0
+    vfxPrefabOnSource: {fileID: 0}
   AppliesTo: 4
   DamageBonus: 0
   HealBonus: 0
   AttackBonus: 1
   HealthBonus: 1
   ActionOnly: 1
+  FilterBySubType: 1
+  RequiredSubType: 10

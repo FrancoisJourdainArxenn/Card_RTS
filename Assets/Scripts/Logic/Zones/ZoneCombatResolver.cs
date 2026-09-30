@@ -17,6 +17,11 @@ public class ZoneCombatResolver : MonoBehaviour
     // fois la planification terminée (bug identifié : Tears/Fire-Forged Protector, quasi increvable
     // en combat malgré un calcul par coup qui aurait dû la tuer bien plus tôt).
     private Dictionary<int, int> pendingShieldConsumed = new Dictionary<int, int>();
+    // Pertes d'aura anticipées PENDANT cette planification (voir ReservePredictedAuraLoss) — jamais
+    // écrites sur CreatureLogic : la vraie perte n'a lieu qu'au rejeu, à la mort réelle de la source.
+    // Attaque à retirer de GetLiveAttack ; PV max déjà retirés (pour plafonner une 2e perte d'aura).
+    private Dictionary<int, int> pendingAttackLoss = new Dictionary<int, int>();
+    private Dictionary<int, int> pendingMaxHealthLoss = new Dictionary<int, int>();
     // Compteur virtuel des coups déjà "consommés" par créature PENDANT cette planification — jamais
     // persisté sur CreatureLogic (la vraie décrémentation de AttacksLeftThisTurn n'a lieu qu'après coup,
     // dans EnqueueBattleCommands, rejouée identiquement sur toutes les machines). Sert uniquement à
@@ -245,6 +250,15 @@ public class ZoneCombatResolver : MonoBehaviour
         // après coup (ex: "Get Mad!"/OnAllyTakeDamage, qui mute ShieldValue en cours de planification).
         public int shieldAbsorbed;
         public int attackerShieldAbsorbed;
+        // Issue de CE coup décidée par la planification (IsEffectivelyDead juste après le coup), diffusée
+        // à toutes les machines et appliquée telle quelle au rejeu (EnqueueBattleCommands) au lieu d'être
+        // redéduite des PV live : un effet résolu en pleine planification (buff/dégâts OnDeath, OnAttack...)
+        // modifie les PV tout de suite, donc un recalcul au rejeu pouvait tuer une unité que la
+        // planification voyait survivre — mort jamais prédite, OnDeath résolu côté hôte seulement
+        // (bug Hill King) — ou l'inverse. secondaryDies est parallèle à secondaryHits.
+        public bool targetDies;
+        public bool attackerDies;
+        public List<bool> secondaryDies;
     }
 
     // Index d'enregistrement de ce resolver dans allResolvers, capturé une fois pour toutes ici (avant
@@ -298,6 +312,8 @@ public class ZoneCombatResolver : MonoBehaviour
     {
         pendingDamage.Clear();
         pendingShieldConsumed.Clear();
+        pendingAttackLoss.Clear();
+        pendingMaxHealthLoss.Clear();
         pendingBaseDamage.Clear();
         pendingPlayerDamage.Clear();
         _planningAttacksRemaining.Clear();
@@ -336,6 +352,8 @@ public class ZoneCombatResolver : MonoBehaviour
 
         pendingDamage.Clear();
         pendingShieldConsumed.Clear();
+        pendingAttackLoss.Clear();
+        pendingMaxHealthLoss.Clear();
         ClearAllIndicators();
     }
 
@@ -558,12 +576,12 @@ public class ZoneCombatResolver : MonoBehaviour
             bool groundMeleeCantReachFlying = attackerIsFlyingMelee && !t.IsFlying;
             if (IsMeleeAttacker(attacker.id) && !groundMeleeCantReachFlying)
             {
-                counter2 = t.Attack;
-                attackerShieldAbsorbed2 = AddPendingCreatureDamage(attacker.id, t.Attack, stepIndex, 1);
+                counter2 = GetLiveAttack(t.UniqueCreatureID, t.Attack);
+                attackerShieldAbsorbed2 = AddPendingCreatureDamage(attacker.id, counter2, stepIndex, 1);
             }
             List<AttackHitResult> tier2SecondaryHits = ResolveAndReserveModifierHits(attacker.id, t, stepIndex);
             attackerLogic?.ResolvePredictedOnAttack(t);
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier2SecondaryHits, counterDamage = counter2, attackerExhausted = willExhaustAttacker, shieldAbsorbed = shieldAbsorbed2, attackerShieldAbsorbed = attackerShieldAbsorbed2 });
+            return (dmg - assign, WithPlannedDeaths(new BattleStepRecord { attackerID = attacker.id, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier2SecondaryHits, counterDamage = counter2, attackerExhausted = willExhaustAttacker, shieldAbsorbed = shieldAbsorbed2, attackerShieldAbsorbed = attackerShieldAbsorbed2 }, t, attackerLogic));
         }
 
         // Tier 3 : créatures ranged
@@ -588,12 +606,12 @@ public class ZoneCombatResolver : MonoBehaviour
             int attackerShieldAbsorbed3 = 0;
             if (IsMeleeAttacker(attacker.id))
             {
-                counter3 = t.Attack;
-                attackerShieldAbsorbed3 = AddPendingCreatureDamage(attacker.id, t.Attack, stepIndex, 1);
+                counter3 = GetLiveAttack(t.UniqueCreatureID, t.Attack);
+                attackerShieldAbsorbed3 = AddPendingCreatureDamage(attacker.id, counter3, stepIndex, 1);
             }
             List<AttackHitResult> tier3SecondaryHits = ResolveAndReserveModifierHits(attacker.id, t, stepIndex);
             attackerLogic?.ResolvePredictedOnAttack(t);
-            return (dmg - assign, new BattleStepRecord { attackerID = attacker.id, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier3SecondaryHits, counterDamage = counter3, attackerExhausted = willExhaustAttacker, shieldAbsorbed = shieldAbsorbed3, attackerShieldAbsorbed = attackerShieldAbsorbed3 });
+            return (dmg - assign, WithPlannedDeaths(new BattleStepRecord { attackerID = attacker.id, targetID = t.UniqueCreatureID, targetKind = TargetKind.Creature, damage = assign, targetOwnerPlayerID = defender.PlayerID, secondaryHits = tier3SecondaryHits, counterDamage = counter3, attackerExhausted = willExhaustAttacker, shieldAbsorbed = shieldAbsorbed3, attackerShieldAbsorbed = attackerShieldAbsorbed3 }, t, attackerLogic));
         }
 
         BaseLogic defenderBase = FindDefenderBaseInZone(defender);
@@ -620,6 +638,42 @@ public class ZoneCombatResolver : MonoBehaviour
         }
         Debug.Log($"[DiagQueue][Assign:{zoneView.name}][AucuneCible] attaquant={attacker.id} dégâts={dmg} perdus — aucune cible éligible (créatures/base/joueur)");
         return (dmg, null);
+    }
+
+    // PV d'une unité après un coup au rejeu, selon l'issue décidée par la planification (voir
+    // BattleStepRecord.targetDies) plutôt que selon ses seuls PV live. Signale tout écart : il vient d'un
+    // effet résolu en pleine planification qui a modifié ses PV avant que les coups ne soient rejoués.
+    int PlannedHealthAfter(CreatureLogic creature, int effectiveDamage, bool plannedDeath, string role)
+    {
+        if (creature.IsPendingDeath) return 0;
+        int live = creature.Health - effectiveDamage;
+        if (plannedDeath)
+        {
+            if (live > 0)
+                Debug.LogWarning($"[Enqueue:{zoneView.name}] {creature.DisplayName}(ID:{creature.UniqueCreatureID}) ({role}) — tuée par la planification mais resterait à {live} PV en live : mort appliquée.");
+            return 0;
+        }
+        if (live <= 0)
+        {
+            Debug.LogWarning($"[Enqueue:{zoneView.name}] {creature.DisplayName}(ID:{creature.UniqueCreatureID}) ({role}) — survit selon la planification mais tomberait à {live} PV en live : PV ramenés à 1.");
+            return 1;
+        }
+        return live;
+    }
+
+    // Fige dans le step l'issue décidée par la planification pour chaque unité touchée par CE coup (voir
+    // BattleStepRecord.targetDies) — appelé une fois le coup entier résolu (cible, riposte, touchés
+    // secondaires, OnAttack).
+    BattleStepRecord WithPlannedDeaths(BattleStepRecord step, CreatureLogic target, CreatureLogic attackerLogic)
+    {
+        step.targetDies = IsEffectivelyDead(target);
+        step.attackerDies = attackerLogic != null && IsEffectivelyDead(attackerLogic);
+        step.secondaryDies = new List<bool>();
+        if (step.secondaryHits != null)
+            foreach (AttackHitResult hit in step.secondaryHits)
+                step.secondaryDies.Add(CreatureLogic.CreaturesCreatedThisGame.TryGetValue(hit.TargetUniqueID, out CreatureLogic secondary)
+                    && IsEffectivelyDead(secondary));
+        return step;
     }
 
     // Résout, UNE SEULE FOIS pendant la planification (côté serveur en réseau), les cibles secondaires
@@ -731,7 +785,7 @@ public class ZoneCombatResolver : MonoBehaviour
                     // ce coup d'un bouclier qu'il n'avait pas réellement au moment où il a eu lieu.
                     int shieldAbsorbed = step.shieldAbsorbed;
                     int effectiveDamage = step.damage - shieldAbsorbed;
-                    int targetHealthAfter = Mathf.Max(0, target.Health - effectiveDamage);
+                    int targetHealthAfter = PlannedHealthAfter(target, effectiveDamage, step.targetDies, "cible");
                     Debug.Log($"[Shield/Resolver] {target.DisplayName} — Dégâts bruts: {step.damage} | Shield (au moment du coup): {target.ShieldValue} | Absorbés: {shieldAbsorbed} | Dégâts effectifs: {effectiveDamage} | PV avant: {target.Health} | PV après: {targetHealthAfter}");
                     if (shieldAbsorbed > 0) target.owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, shieldAbsorbed);
                     if (effectiveDamage > 0) target.owner.matchStats.Add(MatchStatType.DamageTaken, effectiveDamage);
@@ -740,7 +794,9 @@ public class ZoneCombatResolver : MonoBehaviour
                     int counterDamage = step.counterDamage;
                     int attackerShieldAbsorbed = step.attackerShieldAbsorbed;
                     int effectiveCounterDamage = counterDamage - attackerShieldAbsorbed;
-                    int attackerHealthAfter = Mathf.Max(0, attackerHP - effectiveCounterDamage);
+                    int attackerHealthAfter = attackerCreature != null
+                        ? PlannedHealthAfter(attackerCreature, effectiveCounterDamage, step.attackerDies, "attaquant")
+                        : Mathf.Max(0, attackerHP - effectiveCounterDamage);
                     Debug.Log($"[Shield/Resolver] {(attackerCreature != null ? attackerCreature.DisplayName : step.attackerID.ToString())} (attaquant) — Contre-dégâts: {counterDamage} | Shield (au moment du coup): {(attackerCreature != null ? attackerCreature.ShieldValue : 0)} | Absorbés: {attackerShieldAbsorbed} | PV avant: {attackerHP} | PV après: {attackerHealthAfter}");
                     if (attackerCreature != null)
                     {
@@ -763,22 +819,24 @@ public class ZoneCombatResolver : MonoBehaviour
                     // avant l'animation qui est censée la tuer.
                     List<AttackHitResult> secondaryHits = new List<AttackHitResult>();
                     if (step.secondaryHits != null)
-                        foreach (AttackHitResult reserved in step.secondaryHits)
+                        for (int si = 0; si < step.secondaryHits.Count; si++)
                         {
+                            AttackHitResult reserved = step.secondaryHits[si];
                             if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(reserved.TargetUniqueID, out CreatureLogic secTarget)) continue;
                             if (secTarget.IsPendingDeath) continue; // défensif — ne devrait pas arriver si la résolution planifiée est cohérente
                             // reserved.Absorbed vient de la planification (voir ResolveAndReserveModifierHits) —
                             // même raison que shieldAbsorbed plus haut : jamais recalculé depuis ShieldValue "final".
                             int secShieldAbs = reserved.Absorbed;
                             int secEffective = reserved.Damage - secShieldAbs;
-                            int secHealthAfter = Mathf.Max(0, secTarget.Health - secEffective);
+                            bool secDies = step.secondaryDies != null && si < step.secondaryDies.Count && step.secondaryDies[si];
+                            int secHealthAfter = PlannedHealthAfter(secTarget, secEffective, secDies, "cible secondaire");
                             secondaryHits.Add(new AttackHitResult(secTarget.UniqueCreatureID, reserved.Damage, secHealthAfter));
                             if (secShieldAbs > 0) secTarget.owner.matchStats.Add(MatchStatType.ShieldDamageAbsorbed, secShieldAbs);
                             if (secEffective > 0) secTarget.owner.matchStats.Add(MatchStatType.DamageTaken, secEffective);
                             if (secEffective > 0) attackerOwner?.matchStats.Add(MatchStatType.DamageDealt, secEffective);
                             if (secHealthAfter > 0)
                             {
-                                secTarget.Health -= secEffective;
+                                secTarget.Health = secHealthAfter;
                                 secTarget.ConsumeShieldQueued(secShieldAbs);
                             }
                         }
@@ -788,11 +846,12 @@ public class ZoneCombatResolver : MonoBehaviour
                         attackerCreature.AttacksLeftThisTurn--;
                     CreatureAttackCommand.EnqueueAttack(step.targetID, step.attackerID, counterDamage, step.damage, attackerHealthAfter, targetHealthAfter, attackerCreature?.AttackSpeedMultiplier ?? 1f, secondaryHits, step.attackerExhausted);
 
+                    // Issue décidée par la planification (voir PlannedHealthAfter), pas par les PV live.
                     if (targetHealthAfter <= 0)
                         target.ScheduleBattleDeath();
                     else
                     {
-                        target.Health -= effectiveDamage;
+                        target.Health = targetHealthAfter;
                         target.ConsumeShieldQueued(shieldAbsorbed);
                     }
 
@@ -802,7 +861,7 @@ public class ZoneCombatResolver : MonoBehaviour
                             attackerCreature.ScheduleBattleDeath();
                         else
                         {
-                            attackerCreature.Health -= effectiveCounterDamage;
+                            attackerCreature.Health = attackerHealthAfter;
                             attackerCreature.ConsumeShieldQueued(attackerShieldAbsorbed);
                         }
                     }
@@ -931,7 +990,8 @@ public class ZoneCombatResolver : MonoBehaviour
         out int[] targetIDs, out int[] targetKinds, out int[] damages, out int[] ownerPlayerIDs,
         out int[] secondaryCounts, out int[] secondaryTargetIDs, out int[] secondaryDamages,
         out int[] counterDamages, out int[] attackerExhausted,
-        out int[] shieldAbsorbed, out int[] attackerShieldAbsorbed, out int[] secondaryAbsorbed)
+        out int[] shieldAbsorbed, out int[] attackerShieldAbsorbed, out int[] secondaryAbsorbed,
+        out int[] targetDies, out int[] attackerDies, out int[] secondaryDies)
     {
         List<int> ri = new(); List<int> ai = new();
         List<int> ti = new();
@@ -941,6 +1001,7 @@ public class ZoneCombatResolver : MonoBehaviour
         List<int> cd = new();
         List<int> ex = new();
         List<int> sha = new(); List<int> asha = new();
+        List<int> tdie = new(); List<int> adie = new(); List<int> sdie = new();
 
         foreach (int i in resolverIdxs)
         {
@@ -956,16 +1017,19 @@ public class ZoneCombatResolver : MonoBehaviour
                 ex.Add(s.attackerExhausted ? 1 : 0);
                 sha.Add(s.shieldAbsorbed);
                 asha.Add(s.attackerShieldAbsorbed);
+                tdie.Add(s.targetDies ? 1 : 0);
+                adie.Add(s.attackerDies ? 1 : 0);
 
                 int secCount = s.secondaryHits?.Count ?? 0;
                 scnt.Add(secCount);
-                if (s.secondaryHits != null)
-                    foreach (AttackHitResult hit in s.secondaryHits)
-                    {
-                        stid.Add(hit.TargetUniqueID);
-                        sdmg.Add(hit.Damage);
-                        sabs.Add(hit.Absorbed);
-                    }
+                for (int k = 0; k < secCount; k++)
+                {
+                    AttackHitResult hit = s.secondaryHits[k];
+                    stid.Add(hit.TargetUniqueID);
+                    sdmg.Add(hit.Damage);
+                    sabs.Add(hit.Absorbed);
+                    sdie.Add(s.secondaryDies != null && k < s.secondaryDies.Count && s.secondaryDies[k] ? 1 : 0);
+                }
             }
         }
         resolverIdxsOut = ri.ToArray(); attackerIDs    = ai.ToArray();
@@ -980,6 +1044,9 @@ public class ZoneCombatResolver : MonoBehaviour
         shieldAbsorbed         = sha.ToArray();
         attackerShieldAbsorbed = asha.ToArray();
         secondaryAbsorbed      = sabs.ToArray();
+        targetDies    = tdie.ToArray();
+        attackerDies  = adie.ToArray();
+        secondaryDies = sdie.ToArray();
     }
 
     // La liste des resolvers concernés par cette étape n'est PAS déduite des tableaux à plat
@@ -996,6 +1063,7 @@ public class ZoneCombatResolver : MonoBehaviour
         int[] secondaryCounts, int[] secondaryTargetIDs, int[] secondaryDamages,
         int[] counterDamages, int[] attackerExhausted,
         int[] shieldAbsorbed, int[] attackerShieldAbsorbed, int[] secondaryAbsorbed,
+        int[] targetDies, int[] attackerDies, int[] secondaryDies,
         BattleStage stage, bool decisive, bool isDraw, int winnerPlayerID,
         int[] stageResolverOrder)
     {
@@ -1008,11 +1076,13 @@ public class ZoneCombatResolver : MonoBehaviour
                 stepsByResolver[rIdx] = new List<BattleStepRecord>();
 
             List<AttackHitResult> secondaryHits = new List<AttackHitResult>();
+            List<bool> stepSecondaryDies = new List<bool>();
             int secCount = (secondaryCounts != null && i < secondaryCounts.Length) ? secondaryCounts[i] : 0;
             for (int k = 0; k < secCount; k++)
             {
                 int secAbs = (secondaryAbsorbed != null && secCursor < secondaryAbsorbed.Length) ? secondaryAbsorbed[secCursor] : 0;
                 secondaryHits.Add(new AttackHitResult(secondaryTargetIDs[secCursor], secondaryDamages[secCursor], 0, secAbs));
+                stepSecondaryDies.Add(secondaryDies != null && secCursor < secondaryDies.Length && secondaryDies[secCursor] != 0);
                 secCursor++;
             }
 
@@ -1027,7 +1097,10 @@ public class ZoneCombatResolver : MonoBehaviour
                 counterDamage       = (counterDamages != null && i < counterDamages.Length) ? counterDamages[i] : 0,
                 attackerExhausted   = (attackerExhausted != null && i < attackerExhausted.Length) && attackerExhausted[i] != 0,
                 shieldAbsorbed         = (shieldAbsorbed != null && i < shieldAbsorbed.Length) ? shieldAbsorbed[i] : 0,
-                attackerShieldAbsorbed = (attackerShieldAbsorbed != null && i < attackerShieldAbsorbed.Length) ? attackerShieldAbsorbed[i] : 0
+                attackerShieldAbsorbed = (attackerShieldAbsorbed != null && i < attackerShieldAbsorbed.Length) ? attackerShieldAbsorbed[i] : 0,
+                targetDies    = targetDies != null && i < targetDies.Length && targetDies[i] != 0,
+                attackerDies  = attackerDies != null && i < attackerDies.Length && attackerDies[i] != 0,
+                secondaryDies = stepSecondaryDies
             });
         }
 
@@ -1071,11 +1144,44 @@ public class ZoneCombatResolver : MonoBehaviour
     }
 
     // Valeur d'attaque actuelle (live) d'un attaquant identifié par ID — reflète un éventuel
-    // buff OnDeath déjà résolu plus tôt dans cette même planification. fallbackValue est utilisé
-    // si l'entité est introuvable (ne devrait pas arriver, garde défensive).
+    // buff OnDeath déjà résolu plus tôt dans cette même planification, moins l'attaque d'aura dont la
+    // perte est déjà anticipée (voir ReservePredictedAuraLoss). fallbackValue est utilisé si l'entité
+    // est introuvable (ne devrait pas arriver, garde défensive).
     int GetLiveAttack(int id, int fallbackValue)
     {
-        return CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c) ? c.Attack : fallbackValue;
+        if (!CreatureLogic.CreaturesCreatedThisGame.TryGetValue(id, out CreatureLogic c)) return fallbackValue;
+        pendingAttackLoss.TryGetValue(id, out int attackLoss);
+        return Mathf.Max(0, c.Attack - attackLoss);
+    }
+
+    // La source d'une aura de stats vient d'être tuée en planification. Au rejeu, ses cibles de cette
+    // zone perdront l'aura à l'instant de sa mort réelle (CreatureLogic.MarkPendingDeath →
+    // PassiveAuraManager.Recompute), PV actuels plafonnés au nouveau max (EffectSO.ShiftStatsCapped).
+    // Les stats live ne bougent pas encore — les coups déjà planifiés doivent être rejoués sur les PV
+    // buffés — donc on anticipe ici la même perte : PV perdus ajoutés à pendingDamage, attaque perdue
+    // retirée de GetLiveAttack pour les coups et ripostes planifiés ensuite.
+    void ReservePredictedAuraLoss(CreatureLogic source)
+    {
+        foreach ((CreatureLogic target, int attackLoss, int healthLoss) in PassiveAuraManager.GetStatAuraLossOnDeath(source))
+        {
+            if (IsEffectivelyDead(target)) continue;
+            int id = target.UniqueCreatureID;
+
+            if (attackLoss != 0)
+            {
+                pendingAttackLoss.TryGetValue(id, out int existingAttackLoss);
+                pendingAttackLoss[id] = existingAttackLoss + attackLoss;
+            }
+            if (healthLoss == 0) continue;
+
+            pendingDamage.TryGetValue(id, out int existingDamage);
+            pendingMaxHealthLoss.TryGetValue(id, out int existingMaxLoss);
+            int remaining = target.Health - existingDamage;
+            int newMax = target.MaxHealth - existingMaxLoss - healthLoss;
+            pendingMaxHealthLoss[id] = existingMaxLoss + healthLoss;
+            if (remaining > newMax)
+                pendingDamage[id] = existingDamage + (remaining - newMax);
+        }
     }
 
     // Clé de report par COUP (pas par créature) pour OnTakeDamage — contrairement à OnDeath/OnAttack (au
@@ -1139,6 +1245,7 @@ public class ZoneCombatResolver : MonoBehaviour
         {
             Debug.Log($"[OnDeath:{zoneView.name}] Mort prédite en planification — {creature.DisplayName}(ID:{creature.UniqueCreatureID}) — résolution immédiate de OnDeath");
             creature.ResolvePredictedBattleDeath();
+            ReservePredictedAuraLoss(creature);
         }
 
         return absorbedNow;
@@ -1726,6 +1833,9 @@ public class ZoneCombatResolver : MonoBehaviour
                 Debug.LogError($"[EnqueueStage] EXCEPTION pour resolver #{idx}: {e}");
             }
             allResolvers[idx].pendingDamage.Clear();
+            // Pertes d'aura anticipées : désormais réellement appliquées au rejeu (MarkPendingDeath).
+            allResolvers[idx].pendingAttackLoss.Clear();
+            allResolvers[idx].pendingMaxHealthLoss.Clear();
         }
     }
 

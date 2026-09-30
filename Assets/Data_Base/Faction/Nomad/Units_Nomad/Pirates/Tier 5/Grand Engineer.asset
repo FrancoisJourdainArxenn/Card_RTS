@@ -18,7 +18,7 @@ MonoBehaviour:
   subType: 6
   tier: 5
   Description: Every 5 Ressources spent, your Upgrades (<i>giving stats</i>) give
-    an additionnal +1/+1.
+    an additional +1/+1.
   CardImage: {fileID: 21300000, guid: 87bcf0c6007228843b1aa22ac5a39786, type: 3}
   MainCost: 1
   IsHero: 0
@@ -42,8 +42,8 @@ MonoBehaviour:
   Keywords: []
   ReferencedCards: []
   Effects:
-  - EffectName: Draw
-    Effect: {fileID: 11400000, guid: 1418cbb7e0afd9b47bb0ab9051b2bc3d, type: 2}
+  - EffectName: Better Upgrades
+    Effect: {fileID: 11400000, guid: a455214420d634947866af1e80f84427, type: 2}
     Trigger: 22
     Condition: {fileID: 11400000, guid: e22d8871113c6c846a7efdf2404d8935, type: 2}
     Effectinfo:

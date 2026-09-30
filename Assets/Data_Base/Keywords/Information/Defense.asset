@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Defense
   m_EditorClassIdentifier: Assembly-CSharp::Keyword
   displayName: Defense
-  description: Something happens when this unit as an ally base in it's zone.
+  description: Something happens when this unit has an ally base in its zone.
   icon: {fileID: 0}

@@ -38,6 +38,9 @@ public class HeroCountUnlock
         // Debug.Log($"[HeroCountUnlock:{OwnerLabel}] {stat} +{amount} => {_values[stat]}");
     }
 
+    // Pour les conditions de héros qui ne reposent pas sur un compteur (ex : tier, income) : force le rafraîchissement de l'UI.
+    public void NotifyChanged() => OnChanged?.Invoke();
+
     public void Reset()
     {
         _values.Clear();

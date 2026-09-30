@@ -826,6 +826,8 @@ public class TurnManager : MonoBehaviour
         if (NetworkSessionData.IsNetworkSession)
         {
             Player local = GlobalSettings.Instance.localPlayer;
+            // Encore null pendant l'init réseau (assigné plus tard par AssignLocalPlayerControl).
+            if (local == null) return;
             if (PhaseEffectPipeline.IsPlayerTargetingComplete(local))
                 local.HighlightPlayableCards();
         }

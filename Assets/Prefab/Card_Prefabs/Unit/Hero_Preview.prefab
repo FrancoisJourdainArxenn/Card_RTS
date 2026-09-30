@@ -719,7 +719,7 @@ MonoBehaviour:
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
+  m_fontSizeMin: 8
   m_fontSizeMax: 24
   m_fontStyle: 0
   m_HorizontalAlignment: 1
@@ -1474,10 +1474,6 @@ MonoBehaviour:
     owner: {fileID: 0}
     ca: {fileID: 0}
     UniqueCreatureID: 0
-  sourceBuilding:
-    owner: {fileID: 0}
-    ca: {fileID: 0}
-    UniqueBuildingID: 0
   NameText: {fileID: 6801832437530937297}
   subType: {fileID: 8886240278299217661}
   MainCostText: {fileID: 8473048586835849894}
@@ -1490,7 +1486,6 @@ MonoBehaviour:
   CardFaceGlowImage: {fileID: 5169089815149203242}
   TierImage: {fileID: 0}
   RowIcon: {fileID: 5428975367924155416}
-  hoverZoomEnabled: 0
   trackUnlockProgress: 0
 --- !u!222 &3158186617022222924
 CanvasRenderer:

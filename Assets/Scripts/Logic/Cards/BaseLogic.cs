@@ -182,6 +182,9 @@ public class BaseLogic: ILivable
         CurrentUpgradeCost = NextTierData?.upgradeCost ?? 0;
         OnUpgradeCostChanged?.Invoke(this);
         EffectRegistry.NotifyBaseTierUpgraded(this);
+        // Les ressources sont dépensées avant le changement de CurrentTier : le refresh du setter a vu
+        // l'ancien tier, on relance donc celui des héros à condition de tier (texte, pop, jouabilité).
+        owner.RefreshHeroUnlockState();
         ZoneEnemyIndicator.RefreshAll();
         return true;
     }
