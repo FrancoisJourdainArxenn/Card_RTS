@@ -1,5 +1,140 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6775505599074505759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Tech Upgrade
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Tech Upgrade
+  Guid:
+    Data1: -2137365735
+    Data2: 1192031423
+    Data3: 751061926
+    Data4: -1710399653
+  Banks:
+  - {fileID: 1878837468828409511}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 642
+--- !u!114 &-6068777173682085300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Unit Death
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Unit Death
+  Guid:
+    Data1: 442627355
+    Data2: 1229250276
+    Data3: -1636656229
+    Data4: 1465946097
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 904
+--- !u!114 &-5865997419177156453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Fire Hit
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Fire Hit
+  Guid:
+    Data1: 2109327512
+    Data2: 1080056249
+    Data3: -1475006039
+    Data4: -1420513518
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 250
+--- !u!114 &-5370615897577283712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Fire Heavy
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Fire Heavy
+  Guid:
+    Data1: -1026203911
+    Data2: 1251141175
+    Data3: 1345270423
+    Data4: -301377881
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 669
+--- !u!114 &-3184342067512406587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/End Turn
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/End Turn
+  Guid:
+    Data1: -591945202
+    Data2: 1266481994
+    Data3: 884140958
+    Data4: 1664241417
+  Banks:
+  - {fileID: 1878837468828409511}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 695
 --- !u!114 &-2115337105246782419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42,14 +177,27 @@ MonoBehaviour:
   EditorBanks:
   - {fileID: 3485464584100965092}
   - {fileID: 1878837468828409511}
+  - {fileID: 5024258833793265149}
+  - {fileID: 8084447441142132882}
   EditorEvents:
   - {fileID: -2115337105246782419}
+  - {fileID: -6775505599074505759}
+  - {fileID: 4400109796674834054}
+  - {fileID: -6068777173682085300}
+  - {fileID: 9100306145107153190}
+  - {fileID: 4537304430527156277}
+  - {fileID: -5865997419177156453}
+  - {fileID: 3498609665916911687}
+  - {fileID: 4671619706662848908}
+  - {fileID: -5370615897577283712}
+  - {fileID: 2117678187182012852}
+  - {fileID: -3184342067512406587}
   EditorParameters: []
   MasterBanks:
   - {fileID: 1878837468828409511}
   StringsBanks:
   - {fileID: 3485464584100965092}
-  cacheTime: 639240354424574710
+  cacheTime: 639268448383489000
   cacheVersion: 131637
 --- !u!114 &1878837468828409511
 MonoBehaviour:
@@ -66,9 +214,36 @@ MonoBehaviour:
   Path: FMOD/Desktop/Master.bank
   Name: Master
   StudioPath: bank:/Master
-  lastModified: 639240354424574710
+  lastModified: 639268448383478984
   FileSizes: []
   Exists: 1
+--- !u!114 &2117678187182012852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Fire Light 2
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Fire Light 2
+  Guid:
+    Data1: -1302498819
+    Data2: 1260795447
+    Data3: 752554929
+    Data4: 504601962
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 400
 --- !u!114 &3485464584100965092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,8 +259,179 @@ MonoBehaviour:
   Path: FMOD/Desktop/Master.strings.bank
   Name: Master.strings
   StudioPath: bank:/Master.strings
-  lastModified: 639240354424574710
+  lastModified: 639268448383489000
   FileSizes:
   - Name: 
-    Value: 754
+    Value: 1422
   Exists: 1
+--- !u!114 &3498609665916911687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Punch Heavy
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Punch Heavy
+  Guid:
+    Data1: -1282596417
+    Data2: 1212151079
+    Data3: 861102511
+    Data4: -739899228
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 499
+--- !u!114 &4400109796674834054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Game Music
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Game Music
+  Guid:
+    Data1: -155493918
+    Data2: 1328251532
+    Data3: -2103564896
+    Data4: -1915380128
+  Banks:
+  - {fileID: 8084447441142132882}
+  IsStream: 1
+  Is3D: 0
+  IsOneShot: 0
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 184368
+--- !u!114 &4537304430527156277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Fire Medium
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Fire Medium
+  Guid:
+    Data1: -733291128
+    Data2: 1307135640
+    Data3: 1702857119
+    Data4: 1017937069
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 495
+--- !u!114 &4671619706662848908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Fire Light
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Fire Light
+  Guid:
+    Data1: -1177472312
+    Data2: 1155234744
+    Data3: -1575552323
+    Data4: -22634173
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 495
+--- !u!114 &5024258833793265149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Combat.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: FMOD/Desktop/Combat.bank
+  Name: Combat
+  StudioPath: bank:/Combat
+  lastModified: 639268433878914286
+  FileSizes: []
+  Exists: 1
+--- !u!114 &8084447441142132882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c18180ecb35941f4682ae60107b85b7c, type: 3}
+  m_Name: bank:/Musics.bank
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorBankRef
+  Path: FMOD/Desktop/Musics.bank
+  Name: Musics
+  StudioPath: bank:/Musics
+  lastModified: 639268435205705766
+  FileSizes: []
+  Exists: 1
+--- !u!114 &9100306145107153190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb653cd98e289a4e8697a1af55201f2, type: 3}
+  m_Name: event:/Combat/Punch Medium
+  m_EditorClassIdentifier: FMODUnityEditor::FMODUnity.EditorEventRef
+  Path: event:/Combat/Punch Medium
+  Guid:
+    Data1: -1568430763
+    Data2: 1315171552
+    Data3: 1564220592
+    Data4: 1108146653
+  Banks:
+  - {fileID: 5024258833793265149}
+  IsStream: 0
+  Is3D: 0
+  IsOneShot: 1
+  Parameters: []
+  MinDistance: 1
+  MaxDistance: 20
+  Length: 499

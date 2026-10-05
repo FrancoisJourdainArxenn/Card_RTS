@@ -56,6 +56,9 @@ public class CreatureDieCommand : Command
 
         float deathVfxDuration = vfx != null ? vfx.PlayDeath() : 0f;
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayUnitDeath();
+
         if (p.PAreas != null)
         {
             foreach (PlayerArea area in p.PAreas)

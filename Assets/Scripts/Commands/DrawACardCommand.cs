@@ -26,7 +26,11 @@ public class DrawACardCommand : Command {
 
         if (isLocalPlayer || isSolo)
         {
-            AudioManager.Instance.PlayDrawCard();
+            // En solo l'animation tourne aussi pour l'IA (sa main cachée doit compléter la commande),
+            // mais le son de pioche ne doit accompagner que les pioches d'un joueur humain.
+            bool isAI = NetworkSessionData.IsVsAI && p == GlobalSettings.Instance.TopPlayer;
+            if (!isAI && AudioManager.Instance != null)
+                AudioManager.Instance.PlayDrawCard();
 
             if (visualData?.vfxPrefab != null)
             {

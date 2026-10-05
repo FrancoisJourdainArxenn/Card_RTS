@@ -1430,20 +1430,23 @@ public class Player : MonoBehaviour, ILivable
             ExecuteBuildNeutralBase(NeutralBaseVisual.Registry[neutralBaseId], IDFactory.GetUniqueID());
     }
 
-    public void RequestUpgradeBase()
+    // Renvoie true si la demande d'upgrade a été envoyée (réseau) ou appliquée (local).
+    public bool RequestUpgradeBase()
     {
-        if (homeBaseLogic == null || homeBaseLogic.IsMaxTier) return;
+        if (homeBaseLogic == null || homeBaseLogic.IsMaxTier) return false;
 
         if (MainRessourceAvailable < homeBaseLogic.CurrentUpgradeCost)
         {
             new ShowMessageCommand("You don't have enough Ressources to upgrade your Base.", 2f).AddToQueue();
-            return;
+            return false;
         }
 
         if (NetworkSessionData.IsNetworkSession)
+        {
             GameNetworkManager.Instance.UpgradeBaseServerRpc(playerIndex);
-        else
-            homeBaseLogic.TryUpgrade();
+            return true;
+        }
+        return homeBaseLogic.TryUpgrade();
     }
 
     public void ExecuteBuildNeutralBase(NeutralBaseVisual neutralBaseVisual, int baseUniqueID)
