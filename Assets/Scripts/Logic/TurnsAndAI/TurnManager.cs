@@ -141,6 +141,9 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.StartMusic();
+
         if (!NetworkSessionData.IsNetworkSession)
             ApplyTurnMakerModeForSoloSession();
 

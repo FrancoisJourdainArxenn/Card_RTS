@@ -23,6 +23,9 @@ public class EndTurnButton : MonoBehaviour
 
     public void OnClick()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayEndTurnButtonClick();
+
         Player p = GetParticipantPlayer();
         if (TurnManager.Instance != null && p != null)
             TurnManager.Instance.RegisterEndPhase(p);

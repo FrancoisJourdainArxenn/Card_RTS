@@ -289,6 +289,14 @@ public class CreatureAttackVisual : MonoBehaviour
         // simplement rejouée ici, pour que le timing du tween et celui du projectile restent identiques.
         void FireProjectileAt(Vector3 origin, GameObject hitTarget, float duration, System.Action onImpact)
         {
+            // Son d'impact quand le projectile atteint sa cible (unité ou base).
+            System.Action impactCallback = onImpact;
+            onImpact = () =>
+            {
+                if (hitTarget != null) AudioManager.Instance?.PlayUnitHit();
+                impactCallback?.Invoke();
+            };
+
             if (projectilePrefab != null && hitTarget != null)
             {
                 GameObject proj = Instantiate(projectilePrefab, origin, Quaternion.identity);
@@ -332,7 +340,12 @@ public class CreatureAttackVisual : MonoBehaviour
             // Le retour à la position d'origine n'a lieu qu'à la toute fin, une fois tous les tirs résolus.
             float mainProjectileDur = ProjectileDurationFor(windupPosition, target.transform.position);
             attackSeq.AppendCallback(() =>
-                FireProjectileAt(windupPosition, target, mainProjectileDur, () => { ApplyMainImpact(); ShakeCamera(); }));
+            {
+                if (AudioManager.Instance != null && selfID != null
+                    && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(selfID.UniqueID, out CreatureLogic shooter))
+                    AudioManager.Instance.PlayFireForAttack(shooter.Attack);
+                FireProjectileAt(windupPosition, target, mainProjectileDur, () => { ApplyMainImpact(); ShakeCamera(); });
+            });
             attackSeq.AppendInterval(mainProjectileDur);
 
             foreach (AttackHitResult hit in hits)
@@ -361,6 +374,14 @@ public class CreatureAttackVisual : MonoBehaviour
             float leadTime = VisualManager.Instance != null ? VisualManager.Instance.CameraShakeAnticipation : 0.05f;
             float shakeTime = Mathf.Max(0f, moveDur - leadTime);
             attackSeq.InsertCallback(shakeTime, ShakeCamera);
+
+            // Son de punch au contact (fin de la charge), selon l'attaque de l'unité.
+            attackSeq.InsertCallback(moveDur, () =>
+            {
+                if (AudioManager.Instance != null && selfID != null
+                    && CreatureLogic.CreaturesCreatedThisGame.TryGetValue(selfID.UniqueID, out CreatureLogic puncher))
+                    AudioManager.Instance.PlayPunchForAttack(puncher.Attack);
+            });
 
             // Attaque melee classique (sans modificateur) : comportement strictement inchangé.
             // Avec modificateur : une fois la charge terminée (attaquant au contact de sa cible principale),

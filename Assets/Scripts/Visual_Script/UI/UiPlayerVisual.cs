@@ -165,7 +165,8 @@ public class UiPlayerVisual : MonoBehaviour
     public void OnUpgradeButtonClicked()
     {
         if (player == null) return;
-        player.RequestUpgradeBase();
+        if (player.RequestUpgradeBase() && AudioManager.Instance != null)
+            AudioManager.Instance.PlayUpgradeTech();
     }
 
 }
